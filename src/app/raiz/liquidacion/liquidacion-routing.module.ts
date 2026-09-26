@@ -8,6 +8,7 @@ import { MigrarDatosComponent } from './migrar-datos/migrar-datos.component';
 import { RoleGuard } from 'src/app/guards/role.guard';
 import { InformeOpListadoComponent } from './informe-op-listado/informe-op-listado.component';
 import { BorradoresLiqComponent } from './borradores-liq/borradores-liq.component';
+import { InformeOpAnuladosComponent } from './informe-op-anulados/informe-op-anulados.component';
 
 const routes: Routes = [
   {path: '', component:LiqGralComponent,
@@ -19,6 +20,7 @@ const routes: Routes = [
       //{path: 'proveedor', component:LiquidacionesOpComponent},
       {path: 'informes', component:InformeOpListadoComponent},
       {path: 'borradores', component: BorradoresLiqComponent},
+      {path: 'anulados', component: InformeOpAnuladosComponent},
       /* {path: 'migrar', component:MigrarDatosComponent,
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
       data: { roles: ['dev'] }, // Accesible para todos los roles

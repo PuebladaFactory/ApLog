@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { DocumentData, QueryDocumentSnapshot } from '@angular/fire/firestore';
 import { DbFirestoreService, PaginaResultado } from 'src/app/servicios/database/db-firestore.service';
 import { PapeleraEvento } from 'src/app/interfaces/registro-papelera';
+import { ConId } from 'src/app/interfaces/conId';
 
 /**
  * Consulta/paginación sobre `papeleraEventos`, stateless — devuelve páginas, no
@@ -34,5 +35,12 @@ export class PapeleraConsultaService {
       cursor,
       { campo: 'estado', valor: estado },
     );
+  }
+
+  /** Un evento puntual por id (deep link desde otras pantallas, ej.
+   *  InformeOp anulados). null si no existe. */
+  async obtenerEvento(id: string): Promise<ConId<PapeleraEvento> | null> {
+    const data = await this.db.getById<PapeleraEvento>(this.COLECCION, id);
+    return data ? { ...data, id } : null;
   }
 }

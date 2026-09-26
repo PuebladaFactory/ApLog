@@ -1,0 +1,23 @@
+th, td, input, select, option {
+  font-size: 1.3rem;
+}
+
+th.ordenable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+th.ordenable:hover {
+  background-color: #f1f1f1;
+}
+
+.icono-orden {
+  margin-left: 4px;
+  font-size: 0.8em;
+  opacity: 0.35;
+}
+
+.icono-orden.activo {
+  opacity: 1;
+}

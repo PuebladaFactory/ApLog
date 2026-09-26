@@ -644,7 +644,9 @@ dispara ni por las entidades secundarias que toca.
   el orquestador.
 - **InformeOp en la baja de una cerrada: se ANULAN, no se borran.**
   `existeParaOperacion` ignora los anulados, así que la operación restaurada
-  se puede volver a cerrar (genera un par nuevo).
+  se puede volver a cerrar (genera un par nuevo). Con `anulacion` {motivo,
+  usuario, fecha, idEventoPapelera} (tipo `Anulacion` compartido en
+  interfaces/anulacion.ts; `AnulacionLiq` es alias).
 - **Resúmenes:** se revierten solo si `op.resumenProcesado`. La reversión
   usa incrementos con signo (`calcularIncrementos(op, op.valores, -1)`),
   NUNCA leyendo el valor interno de `increment()` (propiedad minificada del
@@ -2429,9 +2431,9 @@ Helpers síncronos en el servicio dueño, divididos por mecanismo:
   falso `idInfOp → null`).
 
 ### UI (raiz/liquidacion)
-- `LiqGralComponent`: pestañas Informes (`liquidacion/informes`) y Borradores
-  (`liquidacion/borradores`). Las del modelo viejo quedan comentadas. El
-  calendario se oculta en Borradores.
+- `LiqGralComponent`: pestañas Informes (`liquidacion/informes`), Borradores
+  (`liquidacion/borradores`) y Anulados (`liquidacion/anulados`). Las del
+  modelo viejo quedan comentadas. El calendario se oculta en Borradores.
 - `InformeOpListadoComponent`: resumen por entidad + detalle expandible.
   "Liquidar" por fila (`liquidaciones.liquidar`) abre `LiquidacionNuevaComponent`.
   El lápiz aparece solo en activo y no bloqueado. Badges de estado y de
@@ -2451,6 +2453,12 @@ Helpers síncronos en el servicio dueño, divididos por mecanismo:
   InformeOp vía `InformeOpEditorComponent` → `editarInformeOp`. editarDatos con
   Guardar/Descartar. Totales en vivo con badge "sin guardar". "Vista previa"
   sin conectar.
+- `InformeOpAnuladosComponent`: InformeOp 'anulado' (baja de operación
+  cerrada) por período/tipo, solo lectura. Muestra `anulacion`
+  (motivo/usuario/fecha); "Ver" abre InformeOpDetalleComponent; "Ver en
+  papelera" navega a `ajustes/papelera?evento=<idEventoPapelera>`
+  (PapeleraComponent admite ese deep link: muestra solo ese evento, con
+  "Ver todos").
 
 ### Columnas (`shared/utils/columnas-liquidacion.util.ts`)
 `columnasPorTipo`, `esColumnaMonto`, `valorColumnaInformeOp`, `etiquetaColumna`.

@@ -43,6 +43,7 @@ export class LiqGralComponent implements OnInit {
   tabs = [
     { id: 'tab6', name: 'Informes', route: 'liquidacion/informes' },
     { id: 'tab7', name: 'Borradores', route: 'liquidacion/borradores' },
+    { id: 'tab8', name: 'Anulados', route: 'liquidacion/anulados' },
     // Camino viejo — rutas comentadas en liquidacion-routing.module.ts:
     // { id: 'tab1', name: 'Clientes', route: 'liquidacion/cliente'},
     // { id: 'tab2', name: 'Choferes', route: 'liquidacion/chofer' },

@@ -81,6 +81,17 @@ export class InformeOpService {
     );
   }
 
+  /** Listener de InformeOp ANULADOS por período/tipo (baja de su operación
+   *  cerrada) — pantalla Anulados de Liquidación. Misma consulta e índice
+   *  que observarPorPeriodo. */
+  observarAnuladosPorPeriodo(
+    desde: string,
+    hasta: string,
+    tipo: 'cliente' | 'chofer' | 'proveedor',
+  ): Observable<ConId<InformeOpNuevo>[]> {
+    return this.db.observarInformesOpPorPeriodo(this.COLECCION, desde, hasta, tipo, ['anulado']);
+  }
+
   /** Guarda anti-duplicado del cierre — ¿ya existe algún InformeOp ACTIVO
    *  para esta operación? El caller (OperacionService.cerrarOperacion) no
    *  necesita conocer el nombre de la colección para esto. */

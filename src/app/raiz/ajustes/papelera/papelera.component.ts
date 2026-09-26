@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { DocumentData, QueryDocumentSnapshot } from '@angular/fire/firestore';
 import Swal from 'sweetalert2';
 import { ConId } from 'src/app/interfaces/conId';
@@ -40,6 +41,9 @@ export class PapeleraComponent implements OnInit {
 
   private usuariosTodos: any[] = [];
 
+  /** Deep link ?evento=<id>: se muestra solo ese evento. */
+  eventoFiltrado: string | null = null;
+
   constructor(
     private consultaServ: PapeleraConsultaService,
     private papeleraService: PapeleraService,
@@ -50,12 +54,19 @@ export class PapeleraComponent implements OnInit {
     private operacionService: OperacionService,
     private storageService: StorageService,
     public usuarioSesion: UsuarioSesionService,
+    private route: ActivatedRoute,
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
     this.usuariosTodos = this.storageService.loadInfo('users');
     this.calcularRangoDefault();
-    this.buscar();
+    const idEvento = this.route.snapshot.queryParamMap.get('evento');
+    if (idEvento) {
+      this.cargarEvento(idEvento);
+    } else {
+      this.buscar();
+    }
   }
 
   /** Default: último mes — rango más amplio que Registro Log porque una baja
@@ -69,6 +80,7 @@ export class PapeleraComponent implements OnInit {
   }
 
   async buscar(): Promise<void> {
+    this.eventoFiltrado = null;
     this.eventos = [];
     this.cursor = null;
     this.hayMas = false;
@@ -77,6 +89,34 @@ export class PapeleraComponent implements OnInit {
 
   async cargarMas(): Promise<void> {
     await this.cargarPagina();
+  }
+
+  /** Muestra un único evento (deep link). Sin paginación. */
+  async cargarEvento(id: string): Promise<void> {
+    this.eventoFiltrado = id;
+    this.eventos = [];
+    this.cursor = null;
+    this.hayMas = false;
+    this.cargando = true;
+    try {
+      const evento = await this.consultaServ.obtenerEvento(id);
+      if (!evento) {
+        Swal.fire('No encontrado', `No existe el evento de papelera ${id}.`, 'warning');
+        return;
+      }
+      this.eventos = [evento];
+    } catch (e: any) {
+      Swal.fire('Error', `No se pudo consultar la papelera: ${e?.message ?? e}`, 'error');
+    } finally {
+      this.cargando = false;
+    }
+  }
+
+  /** Sale del modo evento puntual: limpia el query param y vuelve al listado. */
+  async verTodos(): Promise<void> {
+    this.eventoFiltrado = null;
+    await this.router.navigate([], { relativeTo: this.route, queryParams: { evento: null }, queryParamsHandling: 'merge' });
+    await this.buscar();
   }
 
   private async cargarPagina(): Promise<void> {
@@ -172,7 +212,7 @@ export class PapeleraComponent implements OnInit {
           throw new Error(`Colección principal sin restaurador conocido: ${evento.coleccionPrincipal}`);
       }
       Swal.fire('Confirmado', 'El objeto ha sido restaurado.', 'success');
-      await this.buscar();
+      await (this.eventoFiltrado ? this.cargarEvento(this.eventoFiltrado) : this.buscar());
     } catch (e: any) {
       Swal.fire('Error', `No se pudo restaurar: ${e?.message ?? e}`, 'error');
     } finally {

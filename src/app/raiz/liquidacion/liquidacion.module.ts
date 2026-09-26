@@ -25,6 +25,7 @@ import { InformeOpListadoComponent } from './informe-op-listado/informe-op-lista
 import { LiquidacionNuevaComponent } from './modales/liquidacion-nueva/liquidacion-nueva.component';
 import { BorradoresLiqComponent } from './borradores-liq/borradores-liq.component';
 import { InformeLiqNuevoDetalleComponent } from './modales/informe-liq-nuevo-detalle/informe-liq-nuevo-detalle.component';
+import { InformeOpAnuladosComponent } from './informe-op-anulados/informe-op-anulados.component';
 
 
 
@@ -45,7 +46,8 @@ import { InformeLiqNuevoDetalleComponent } from './modales/informe-liq-nuevo-det
     InformeOpListadoComponent,
     LiquidacionNuevaComponent,
     BorradoresLiqComponent,
-    InformeLiqNuevoDetalleComponent
+    InformeLiqNuevoDetalleComponent,
+    InformeOpAnuladosComponent
 
   ],
   imports: [

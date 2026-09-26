@@ -1,0 +1,72 @@
+<div class="row g-3 mt-2 mb-3">
+    <div class="col-md-3">
+        <select class="form-select" [(ngModel)]="tipoConsulta" (change)="onTipoConsultaChange()">
+            <option value="cliente">Clientes</option>
+            <option value="chofer">Choferes</option>
+            <option value="proveedor">Proveedores</option>
+        </select>
+    </div>
+    <div class="col-md-4">
+        <input class="form-control" type="text" [(ngModel)]="searchText" placeholder="Buscar por razón social" />
+    </div>
+</div>
+
+<div class="panel-box panel-resultados">
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th class="ordenable" (click)="ordenar('fecha')">Fecha op<span class="icono-orden" [class.activo]="ordenColumna === 'fecha'">{{ iconoOrden('fecha') }}</span></th>
+                <th class="ordenable" (click)="ordenar('entidad')">Entidad<span class="icono-orden" [class.activo]="ordenColumna === 'entidad'">{{ iconoOrden('entidad') }}</span></th>
+                <th class="ordenable" (click)="ordenar('contraparte')">Contraparte<span class="icono-orden" [class.activo]="ordenColumna === 'contraparte'">{{ iconoOrden('contraparte') }}</span></th>
+                <th>Chofer</th>
+                <th>Patente</th>
+                <th class="text-end ordenable" (click)="ordenar('total')">Total<span class="icono-orden" [class.activo]="ordenColumna === 'total'">{{ iconoOrden('total') }}</span></th>
+                <th class="ordenable" (click)="ordenar('anulado')">Anulado<span class="icono-orden" [class.activo]="ordenColumna === 'anulado'">{{ iconoOrden('anulado') }}</span></th>
+                <th>Usuario</th>
+                <th>Motivo</th>
+                <th class="text-center">Informe</th>
+                @if (puedeVerPapelera) {
+                    <th class="text-center">Papelera</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @for (inf of filtrados; track inf.idInfOp) {
+                <tr>
+                    <td>{{ inf.fecha }}</td>
+                    <td>{{ nombre(inf) }}</td>
+                    <td>{{ contraparte(inf) }}</td>
+                    <td>{{ chofer(inf) }}</td>
+                    <td>{{ inf.datosOperacion.vehiculo.dominio }}</td>
+                    <td class="text-end">{{ inf.valores.total | formatearValor: '$' }}</td>
+                    <td>{{ inf.anulacion?.fecha ? (inf.anulacion!.fecha | date: 'dd/MM/yyyy HH:mm') : '—' }}</td>
+                    <td>{{ inf.anulacion?.usuario ?? '—' }}</td>
+                    <td>{{ inf.anulacion?.motivo ?? '—' }}</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-outline-primary btn-sm" (click)="verInforme(inf)">Ver</button>
+                    </td>
+                    @if (puedeVerPapelera) {
+                        <td class="text-center">
+                            <button
+                                type="button"
+                                class="btn btn-outline-secondary btn-sm"
+                                [disabled]="!inf.anulacion?.idEventoPapelera"
+                                (click)="verEnPapelera(inf)"
+                            >
+                                Ver en papelera
+                            </button>
+                        </td>
+                    }
+                </tr>
+            } @empty {
+                @if (!cargando) {
+                    <tr><td [attr.colspan]="puedeVerPapelera ? 11 : 10">No hay informes anulados en el período.</td></tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (cargando) {
+    <app-spinner></app-spinner>
+}
