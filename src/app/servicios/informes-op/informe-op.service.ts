@@ -4,7 +4,7 @@ import { QueryDocumentSnapshot, DocumentData, Transaction } from '@angular/fire/
 import { ConId } from 'src/app/interfaces/conId';
 import { Resultado } from 'src/app/interfaces/resultado';
 import { Operacion } from 'src/app/interfaces/operacion';
-import { InformeOpNuevo, Valores } from 'src/app/interfaces/informe-op-nuevo';
+import { InformeOpNuevo, Valores, AnulacionInformeOp } from 'src/app/interfaces/informe-op-nuevo';
 import { DbFirestoreService, EscrituraBatch, PaginaResultado } from 'src/app/servicios/database/db-firestore.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 import { InformeOpFactoryService } from 'src/app/servicios/informes-op/informe-op-factory.service';
@@ -157,10 +157,14 @@ export class InformeOpService {
     return data ? { ...data, id: idInfOp, idInfOp } : null;
   }
 
-  /** Anulación de un InformeOp (baja de su operación cerrada): solo cambia
-   *  el estado. No commitea, no loguea. */
-  agregarAnulacionInformeOp(escrituras: EscrituraBatch[], idInfOp: string): void {
-    this.agregarEscrituraInformeOpParcial(escrituras, idInfOp, { estado: 'anulado' });
+  /** Anulación de un InformeOp (baja de su operación cerrada): estado
+   *  'anulado' + datos de la anulación. No commitea, no loguea. */
+  agregarAnulacionInformeOp(
+    escrituras: EscrituraBatch[],
+    idInfOp: string,
+    anulacion: AnulacionInformeOp,
+  ): void {
+    this.agregarEscrituraInformeOpParcial(escrituras, idInfOp, { estado: 'anulado', anulacion });
   }
 
   /** Reemplazo completo de un InformeOp — cuando el documento cambia de

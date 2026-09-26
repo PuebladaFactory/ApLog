@@ -535,7 +535,7 @@ Tras el rediseño de `Operacion` (objetos embebidos → snapshots `RefCliente`/`
    - `getTipoContratacion(idChofer): 'directo' | 'proveedor' | undefined`
    - `getContratacionChofer(idChofer): ContratacionChofer | undefined`
 
-   **No usar helper genérico de resolución** ni inyectar XxxService en la capa de datos (`DbFirestoreService`) — produce dependencia circular. Cuando la capa de datos necesita un dato resuelto, recibe el valor ya resuelto como parámetro desde la capa de negocio (ver `eliminarInformesPorIdOperacion`: TableroService resuelve `tipoContratacion` y lo pasa).
+   **No usar helper genérico de resolución** ni inyectar XxxService en la capa de datos (`DbFirestoreService`) — produce dependencia circular. Cuando la capa de datos necesita un dato resuelto, recibe el valor ya resuelto como parámetro desde la capa de negocio (ver `eliminarInformesPorIdOperacion` (eliminado — frente Baja de Operación, C3): TableroService resuelve `tipoContratacion` y lo pasa).
 
 **Regla práctica:** antes de meter un `getXxxPorId`, verificar si el dato ya está en el snapshot de la op (`op.proveedor`, `op.vehiculo`). Si está, leerlo de ahí.
 
@@ -1690,7 +1690,7 @@ migradas.
   principal. Marcado con comentarios en `eliminarCliente`/`eliminarChoferConVehiculos`/
   `eliminarProveedorConVehiculos` señalando el motivo puntual en cada sitio.
 - `OperacionService.bajaOperacion`/`restaurarOperacion` (papelera) y
-  `AsignacionService.marcarItemAnulado`/`reactivarItem` (usados hoy solo por
+  `AsignacionService.marcarItemAnulado` (eliminado — frente Baja de Operación, C3)/`reactivarItem` (usados hoy solo por
   `TableroService`, facade vieja intacta) — sin cambios, ver "Deuda — integración de
   callers para bajaOperacion/restaurarOperacion" más abajo, que sigue vigente tal cual.
 - Cualquier módulo sin `XxxService` propio confirmado (Vendedores, Tarifas,
@@ -2246,7 +2246,8 @@ que lo generó, y una pantalla de listado genérica sobre los eventos.
   `'restaurado'`), comportamiento sin cambios.
 - **`// TODO: refactor Papelera` resueltos con fallback a
   `papeleraService.getObjetoEliminado()`:** `TableroService` (fallback de
-  `getTipoContratacion` en la baja legacy `anularOperacionYActualizarTablero`,
+  `getTipoContratacion` en la baja legacy `anularOperacionYActualizarTablero`
+  (eliminado — frente Baja de Operación, C3),
   método hoy sin caller real) y `liquidaciones-op.component.ts` (mismo fallback,
   en la baja de operación cerrada desde Liquidaciones — ver Deuda actualizada
   arriba). **`objeto-papelera.component.ts` resuelto distinto:** `getTarifaLabel`
@@ -2274,7 +2275,7 @@ Restaurar deshabilitado si `estado !== 'activo'`. Tab nuevo ("Papelera (legado)"
 escribiendo a la colección vieja `papelera`/`LogDoc` vía `StorageService`, sin
 cambios. Motivo puntual de **Liquidación**: la baja de una operación cerrada desde
 `liquidaciones-op.component.ts` también elimina los informes de liquidación
-asociados (`eliminarOperacionEInformes`) — antes de poder unificarla con
+asociados (`eliminarOperacionEInformes`, eliminado — frente Baja de Operación, C3) — antes de poder unificarla con
 `OperacionService.bajaOperacion` hay que refactorizar esa eliminación de informes,
 que queda para el frente de Liquidación (ver Deuda actualizada arriba).
 `StorageService.deleteItemPapelera*`/`addSimpleLogPapelera`/
@@ -2525,7 +2526,10 @@ saberlo antes de migrar.
 **Saldada (frente Baja de Operación, Septiembre 2026):** la baja de operación
 cerrada desde Liquidación ya tiene camino nuevo (`bajaOperacionCerrada`,
 ver "Coordinadores"). El texto de abajo queda como historial. El código
-legacy sin callers se elimina en el bloque C3 de ese frente.
+legacy sin callers (`DbFirestoreService.eliminarOperacionEInformes`,
+`DbFirestoreService.eliminarInformesPorIdOperacion`,
+`TableroService.anularOpEnTablero`, `TableroService.anularOperacionYActualizarTablero`
+y `AsignacionService.marcarItemAnulado`) fue eliminado en el bloque C3 de ese frente.
 
 Los coordinadores existen y son atómicos (ver "Coordinadores bajaOperacion / restaurarOperacion
 (Operaciones)" más arriba) pero NO tienen caller nuevo todavía. Pendiente:
@@ -2537,7 +2541,8 @@ Los coordinadores existen y son atómicos (ver "Coordinadores bajaOperacion / re
 - Baja de operación paso a paso (liquidaciones-op / tablero-op, lugar exacto a confirmar):
   migrar a `OperacionService.bajaOperacion(op, motivo)`.
 - Al migrar ambos callers: evaluar eliminar `TableroService.anularOperacionYActualizarTablero`
-  y `DbFirestoreService.eliminarInformesPorIdOperacion` (único caller).
+  y `DbFirestoreService.eliminarInformesPorIdOperacion` (único caller)
+  (eliminados — frente Baja de Operación, C3).
 - `editarOperacion` sigue diferido al refactor de Tarifas (sin cambios respecto a la deuda ya
   registrada).
 - `tablero-op` ya usa `OperacionService.bajaOperacion` para la baja de operaciones
@@ -2549,18 +2554,18 @@ Los coordinadores existen y son atómicos (ver "Coordinadores bajaOperacion / re
     lugar exacto a confirmar en esa sesión).
 - **Hallazgo (sesión de diseño del frente Log, ago-2026):** mientras `PapeleraComponent`
   siga llamando a `TableroService.altaOperacionYActualizarTablero` /
-  `anularOperacionYActualizarTablero`, restaurar y dar de baja una operación generan
+  `anularOperacionYActualizarTablero` (eliminado — frente Baja de Operación, C3), restaurar y dar de baja una operación generan
   **dos registros de log por una sola acción de usuario**, no uno:
   - Restaurar: `altaOperacionYActualizarTablero` loguea `'ALTA'` directo, y después llama
     a `AsignacionService.reactivarItem`, que loguea su propio `'EDITAR'` (vía
     `registrarLog`).
   - Baja: `StorageService.deleteItemPapelera` loguea `'BAJA'`, y después
-    `TableroService.anularOperacionYActualizarTablero` llama a
-    `AsignacionService.marcarItemAnulado`, que loguea su propio `'EDITAR'` — el propio
+    `TableroService.anularOperacionYActualizarTablero` (eliminado — frente Baja de Operación, C3) llama a
+    `AsignacionService.marcarItemAnulado` (eliminado — frente Baja de Operación, C3), que loguea su propio `'EDITAR'` — el propio
     comentario del método ya lo señala (línea ~127-130 de `asignacion.service.ts`).
   - Los coordinadores atómicos (`bajaOperacion`/`restaurarOperacion`) YA evitan esto:
     usan las versiones puras `anularItemEnLista`/`reactivarItemEnLista` (sin log
-    propio) en vez de `marcarItemAnulado`/`reactivarItem`. Migrar los callers de arriba
+    propio) en vez de `marcarItemAnulado` (eliminado — frente Baja de Operación, C3)/`reactivarItem`. Migrar los callers de arriba
     (`PapeleraComponent` → `restaurarOperacion`; baja paso a paso → `bajaOperacion`)
     elimina el duplicado como efecto colateral — no requiere trabajo aparte.
   - Diferido a propósito al frente de Papelera (no al frente de Log): decisión explícita
@@ -2576,7 +2581,8 @@ entrada, sigue habiendo deuda real:**
   `PapeleraComponent` (`raiz/ajustes/papelera/`, la pantalla NUEVA de este frente,
   no la vieja renombrada `PapeleraLegadoComponent`) — el hallazgo de arriba (doble
   log por restaurar/dar de baja una operación, vía
-  `TableroService.altaOperacionYActualizarTablero`/`anularOperacionYActualizarTablero`)
+  `TableroService.altaOperacionYActualizarTablero`/`anularOperacionYActualizarTablero`
+  (eliminado — frente Baja de Operación, C3))
   queda resuelto para este caller: `PapeleraComponent` llama directo a
   `restaurarOperacion(idEvento)`, sin pasar por `TableroService`.
   `bajaOperacion`/`restaurarOperacion` ya no dependen de `LogService`/`LogDoc` —
@@ -2584,13 +2590,13 @@ entrada, sigue habiendo deuda real:**
 - **Sigue sin resolver, a propósito, fuera de este frente:** la baja de operación
   **cerrada** desde Liquidaciones (`liquidaciones-op.component.ts` →
   `openModalBaja`/`bajaInformeOp`) sigue en su camino legacy
-  (`eliminarOperacionEInformes` + `TableroService.anularOpEnTablero` +
+  (`eliminarOperacionEInformes` (eliminado — frente Baja de Operación, C3) + `TableroService.anularOpEnTablero` (eliminado — frente Baja de Operación, C3) +
   `StorageService.addSimpleLogPapelera`) — NO pasa por `bajaOperacion`. Motivo
   puntual (ver también "Fuera de alcance" del Frente Papelera): esa baja también
   elimina los informes de liquidación, que habría que refactorizar antes de
   poder unificarla con el coordinador atómico — queda para el frente de
-  Liquidación. `TableroService.anularOperacionYActualizarTablero` y
-  `DbFirestoreService.eliminarInformesPorIdOperacion` por lo tanto siguen sin
+  Liquidación. `TableroService.anularOperacionYActualizarTablero` (eliminado — frente Baja de Operación, C3) y
+  `DbFirestoreService.eliminarInformesPorIdOperacion` (eliminado — frente Baja de Operación, C3) por lo tanto siguen sin
   eliminarse (siguen intactos, sin caller nuevo agregado en este frente —
   `anularOperacionYActualizarTablero` de hecho quedó sin ningún caller real, ver
   nota en el propio método).

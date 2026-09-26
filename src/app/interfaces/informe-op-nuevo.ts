@@ -1,5 +1,13 @@
 import { RefCliente, RefChofer, RefProveedor, RefVehiculo } from './operacion';
 import { RefTarifaAplicada } from './ref-tarifa-aplicada';
+import { Anulacion } from './anulacion';
+
+/** Anulación de un InformeOp: baja de su operación cerrada
+ *  (OperacionService.bajaOperacionCerrada). idEventoPapelera: evento
+ *  de papelera de la operación dada de baja. */
+export interface AnulacionInformeOp extends Anulacion {
+  idEventoPapelera: string;
+}
 
 export interface InformeOpNuevo {
   idInfOp: string;              // id real del documento Firestore — no se guarda en el
@@ -24,6 +32,9 @@ export interface InformeOpNuevo {
                                  // 'liquidado' — null en 'activo'/'anulado'
 
   observacionInforme: string;   // nota propia del informe, no ligada a la operación
+  anulacion?: AnulacionInformeOp | null;   // solo en 'anulado'. Opcional:
+                                             // los documentos anteriores
+                                             // a C4 no tienen el campo.
 }
 
 export interface DatosOperacionInforme {

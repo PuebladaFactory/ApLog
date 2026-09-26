@@ -23,6 +23,8 @@ import { InformeOpService } from 'src/app/servicios/informes-op/informe-op.servi
 import { ResumenOpCalculatorService } from 'src/app/servicios/reportes/reportes-op/resumen-op-calculator.service';
 import { ReportesOpService } from 'src/app/servicios/reportes/reportes-op/reportes-op.service';
 import { Resultado } from 'src/app/interfaces/resultado';
+import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
+import { AnulacionInformeOp } from 'src/app/interfaces/informe-op-nuevo';
 
 export interface OperacionCreada {
   item:      AsignacionItem;
@@ -66,6 +68,7 @@ export class OperacionService implements OnDestroy {
     private informeOpServ:    InformeOpService,
     private resumenOpCalculator: ResumenOpCalculatorService,
     private reportesOp: ReportesOpService,
+    private usuarioSesion: UsuarioSesionService,
   ) {}
 
   /**
@@ -411,18 +414,19 @@ export class OperacionService implements OnDestroy {
    *  evento de papelera (la operación tal como estaba, objeto principal) +
    *  item del tablero anulado con el motivo. No commitea, no loguea: cada
    *  orquestador (bajaOperacion / bajaOperacionCerrada) suma lo suyo y un
-   *  único log. */
+   *  único log. Devuelve el id del evento de papelera. */
   agregarEscriturasBaja(
     escrituras: EscrituraBatch[],
     op: ConId<Operacion>,
     tablero: Asignacion,
     motivo: string,
-  ): void {
+  ): string {
     escrituras.push({ coleccion: 'operaciones', id: op.idOperacion, data: null, modo: 'eliminar' });
-    this.papeleraService.prepararBajaEnBatch(escrituras, motivo, [
+    const idEvento = this.papeleraService.prepararBajaEnBatch(escrituras, motivo, [
       { coleccion: 'operaciones', id: op.idOperacion, data: this.opToFirestore(op), principal: true },
     ]);
     this.asignacionService.agregarEscrituraAnularItem(escrituras, tablero, op.idOperacion, motivo);
+    return idEvento;
   }
 
   /** Baja de una operación ABIERTA (caller: tablero-op). Transacción: relee
@@ -514,9 +518,15 @@ export class OperacionService implements OnDestroy {
           : [];
         // — fin de lecturas —
 
-        this.agregarEscriturasBaja(escrituras, op, tablero, motivo);
-        this.informeOpServ.agregarAnulacionInformeOp(escrituras, informe.idInfOp);
-        this.informeOpServ.agregarAnulacionInformeOp(escrituras, contraparte.idInfOp);
+        const idEvento = this.agregarEscriturasBaja(escrituras, op, tablero, motivo);
+        const anulacion: AnulacionInformeOp = {
+          motivo,
+          usuario: this.usuarioSesion.getUsuarioActual()?.email ?? 'Desconocido',
+          fecha: new Date().toISOString(),
+          idEventoPapelera: idEvento,
+        };
+        this.informeOpServ.agregarAnulacionInformeOp(escrituras, informe.idInfOp, anulacion);
+        this.informeOpServ.agregarAnulacionInformeOp(escrituras, contraparte.idInfOp, anulacion);
 
         let detalle =
           `Baja de operación ${op.numeroOperacion} (cerrada) desde Liquidación — motivo: ${motivo} — ` +

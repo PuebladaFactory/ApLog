@@ -46,6 +46,7 @@ export class InformeOpFactoryService {
       contraParte,
       idInfLiq: null,
       observacionInforme: '',
+      anulacion: null,
     };
   }
 

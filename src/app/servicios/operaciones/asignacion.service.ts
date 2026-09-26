@@ -163,28 +163,8 @@ export class AsignacionService implements OnDestroy {
     );
   }
 
-  /** Marca un item como anulado por idOperacion. NUNCA filtra ni borra. Log: EDITAR. */
-  async marcarItemAnulado(fecha: string, idOperacion: string, motivo: string): Promise<void> {
-    // TODO: refactor Log — si esta anulación es parte de una baja de op atómica
-    // (batch que también elimina informes y mueve la op a papelera), el log debería
-    // emitirse UNA sola vez en el coordinador de la baja, no acá. Por ahora loguea
-    // su propio EDITAR. Revisar al refactorizar el log.
-    const actual = await this.getTableroPorFecha(fecha);
-    if (!actual) throw new Error(`No existe tablero para la fecha ${fecha}`);
-
-    const items = this.anularItemEnLista(actual.items, idOperacion, motivo);
-    const asignacion: Asignacion = { ...actual, items, timestamp: Date.now() };
-    try {
-      await this.db.setDocSinId(this.COLECCION, fecha, this.toFirestore(asignacion));
-      this.registrarLog('EDITAR', `Item anulado (op ${idOperacion}) en tablero ${fecha}`, fecha, true);
-    } catch (e) {
-      this.registrarLog('EDITAR', `Error al anular item en tablero ${fecha}`, fecha, false);
-      throw e;
-    }
-  }
-
   /** Reactiva un item anulado (estado → 'activa') por idOperacion. Inverso de
-   *  marcarItemAnulado. Usado al restaurar una op desde papelera: el item nunca se
+   *  anularItemEnLista. Usado al restaurar una op desde papelera: el item nunca se
    *  borró, solo se marcó anulado, así que restaurar lo vuelve a activo. Log: EDITAR.
    *  TODO: refactor Log — si la reactivación es parte de una restauración de op
    *  atómica (coordinada por OperacionService.restaurarOperacion en el futuro), el

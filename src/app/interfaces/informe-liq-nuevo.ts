@@ -1,4 +1,5 @@
 import { RefCliente, RefChofer, RefProveedor } from './operacion';
+import { Anulacion } from './anulacion';
 
 /** Informe de liquidación — modelo nuevo (camino paralelo a InformeLiq).
  *  Colección única `informesLiq`: el borrador (ex "proforma") y el emitido
@@ -93,8 +94,5 @@ export interface FacturaElectronicaLiq {
   qrData?: string;
 }
 
-export interface AnulacionLiq {
-  motivo: string;
-  usuario: string;
-  fecha: string;
-}
+/** Alias del tipo compartido (ver interfaces/anulacion.ts). */
+export type AnulacionLiq = Anulacion;

@@ -14,9 +14,9 @@
       @if (fromParent.modo === 'operaciones' || fromParent.modo === 'liquidaciones') {
         <div>
           <div class="form-group isDisabled">
-            <label for="Acompaniante" class="fs-5">Id {{titulo}}</label>
+            <label for="Acompaniante" class="fs-5">N° {{titulo}}</label>
             <div class="input-group">
-              <input class="form-control edicion" type="text" [value]="op.idOperacion">
+              <input class="form-control edicion" type="text" [value]="op.numeroOperacion ?? op.idOperacion">
             </div>
           </div>
           <div class="isDisabled">
@@ -28,8 +28,7 @@
           <div class="isDisabled">
             <label for="Acompaniante" class="fs-5">Chofer</label>
             <div class="input-group">
-              <!-- <input class="form-control edicion" type="text" [value]="op.chofer.datosPersonales.apellido + ' ' + op.chofer.datosPersonales.nombre "> -->
-              <input class="form-control edicion" type="text" >
+              <input class="form-control edicion" type="text" [value]="op.chofer.apellido + ' ' + op.chofer.nombre">
             </div>
           </div>
         </div>

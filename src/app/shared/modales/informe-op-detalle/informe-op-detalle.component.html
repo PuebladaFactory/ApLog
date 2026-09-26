@@ -256,6 +256,16 @@
             @if (informeOp.idInfLiq) {
                 <div><strong>Liquidación:</strong> {{ informeOp.idInfLiq }}</div>
             }
+            @if (informeOp.anulacion) {
+                <hr class="my-2" />
+                <div class="text-danger fw-bold">Informe anulado</div>
+                <div><strong>Motivo:</strong> {{ informeOp.anulacion.motivo }}</div>
+                <div><strong>Usuario:</strong> {{ informeOp.anulacion.usuario }}</div>
+                <div>
+                    <strong>Fecha:</strong>
+                    {{ informeOp.anulacion.fecha | date: "dd/MM/yyyy HH:mm" }}
+                </div>
+            }
         </div>
     </div>
 </div>

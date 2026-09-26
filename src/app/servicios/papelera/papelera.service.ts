@@ -57,12 +57,14 @@ export class PapeleraService {
    *  de su propio `db.commitBatch(escrituras)`.
    *
    *  Exactamente un objeto de `objetos` debe tener `principal: true` — si no,
-   *  throw (inconsistencia real del caller, no un caso a tolerar). */
+   *  throw (inconsistencia real del caller, no un caso a tolerar). Devuelve el
+   *  id del evento generado (lo guardan los objetos que referencian la baja,
+   *  ej. InformeOp anulados). */
   prepararBajaEnBatch(
     escrituras: EscrituraBatch[],
     motivo: string,
     objetos: ObjetoParaPapelera[],
-  ): void {
+  ): string {
     const principales = objetos.filter(o => o.principal);
     if (principales.length !== 1) {
       throw new Error(
@@ -96,6 +98,8 @@ export class PapeleraService {
       const idArchivado = this.idObjetoEliminado(objeto.coleccion, objeto.id);
       escrituras.push({ coleccion: this.COLECCION_OBJETOS, id: idArchivado, data: objeto.data, modo: 'crear' });
     }
+
+    return idEvento;
   }
 
   /** Lee el evento (debe existir y estar 'activo' — si no, throw, no se puede

@@ -1,13 +1,9 @@
 import { Injectable } from '@angular/core';
 import { DbFirestoreService } from '../database/db-firestore.service';
-import { StorageService } from '../storage/storage.service';
-import { ChoferService } from '../choferes/chofer.service';
 import { LogService } from '../log/log.service';
-import { PapeleraService } from '../papelera/papelera.service';
 import { AsignacionService } from '../operaciones/asignacion.service';
 import { OperacionFactoryService } from '../operaciones/operacion-factory.service';
 import { Operacion } from 'src/app/interfaces/operacion';
-import { Chofer } from 'src/app/interfaces/chofer';
 import { ConId } from 'src/app/interfaces/conId';
 
 @Injectable({
@@ -17,10 +13,7 @@ export class TableroService {
 
   constructor(
     private dbFirestore:       DbFirestoreService,
-    private storageService:    StorageService,
-    private choferService:     ChoferService,
     private logService:        LogService,
-    private papeleraService:   PapeleraService,
     private asignacionService: AsignacionService,
     private operacionFactory:  OperacionFactoryService,
   ) {}
@@ -34,46 +27,6 @@ export class TableroService {
     await this.asignacionService.actualizarItem(
       fecha, op.idOperacion, op.observaciones ?? '', op.hojaRuta ?? '',
     );
-  }
-
-  /** Anula el item del tablero sin tocar la op (el caller ya bajó op + informes).
-   *  TODO: fachada provisoria → migrará a OperacionService.bajaOperacion (atómico). */
-  async anularOpEnTablero(op: ConId<Operacion>, motivo: string): Promise<void> {
-    const fecha = this.normalizarFecha(op.fecha);
-    await this.asignacionService.marcarItemAnulado(fecha, op.idOperacion, motivo);
-  }
-
-  /** Baja de op + informes + anulación del item del tablero. A2: retiene la lógica
-   *  de baja de op; la parte de tablero ya usa el modelo nuevo (marcarItemAnulado).
-   *  TODO: fachada provisoria → migrará a OperacionService.bajaOperacion (atómico). */
-  async anularOperacionYActualizarTablero(
-    op: ConId<Operacion>, motivo: string, mensaje: string,
-  ): Promise<void> {
-    const fecha = this.normalizarFecha(op.fecha);
-
-    // --- lógica de op RETENIDA (migra a OperacionService.bajaOperacion) ---
-    await this.storageService.deleteItemPapelera(
-      'operaciones', op, op.idOperacion, 'BAJA', mensaje, motivo,
-    );
-    if (op.estado.ciclo === 'cerrada') {
-      let tipoContratacion = this.choferService.getTipoContratacion(op.chofer.id);
-      if (tipoContratacion === undefined) {
-        // Chofer no está en memoria — probablemente en papelera. Fallback: resolver
-        // contra el objeto archivado antes de fallar (ver PapeleraService).
-        const choferEliminado = await this.papeleraService.getObjetoEliminado<Chofer>('choferes', op.chofer.id);
-        tipoContratacion = choferEliminado?.contratacion.tipo;
-      }
-      if (tipoContratacion === undefined) {
-        throw new Error(
-          `No se pudo resolver la contratación del chofer ${op.chofer.id} ` +
-          `al borrar informes de la op ${op.idOperacion} (ni en memoria ni en papelera).`,
-        );
-      }
-      await this.dbFirestore.eliminarInformesPorIdOperacion(op, tipoContratacion);
-    }
-
-    // --- parte de tablero: MODELO NUEVO ---
-    await this.asignacionService.marcarItemAnulado(fecha, op.idOperacion, motivo);
   }
 
   /** Restaurar op desde papelera: reinicia estado + km, re-guarda la op, reactiva
