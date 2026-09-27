@@ -4,12 +4,14 @@ import { ControlComponent } from './control/control.component';
 import { FacturacionListadoComponent } from './facturacion-listado/facturacion-listado.component';
 import { FacturacionHistoricoComponent } from './facturacion-historico/facturacion-historico.component';
 import { FacturacionEmitidosComponent } from './emitidos/facturacion-emitidos.component';
+import { FacturacionRevertidosComponent } from './revertidos/facturacion-revertidos.component';
 
 const routes: Routes = [
     {path: '', component:ControlComponent,
       children: [
         {path: '', redirectTo: 'emitidos', pathMatch: 'full' },
         {path: 'emitidos', component: FacturacionEmitidosComponent},
+        {path: 'revertidos', component: FacturacionRevertidosComponent},
         // Camino viejo (InformeLiq / resumenLiq) — se retira con la migración de Vantruck:
         //{path: 'listado', component:FacturacionListadoComponent},
         //{path: 'historial', component:FacturacionHistoricoComponent},

@@ -212,6 +212,9 @@ export class PermisosService {
     // Limpiar el tablero borra el borrador en curso — acción destructiva
     // sobre datos ya cargados, no una edición parcial.
     limpiarTablero: 'eliminar',
+    // Revertir un InformeLiq emitido es una transición de estado del
+    // documento (no un delete) — mismo criterio que 'anular'.
+    revertir: 'editar',
   };
 
   // Primer caso real poblado (Bloque 7, tablero-asignaciones) — hasta acá

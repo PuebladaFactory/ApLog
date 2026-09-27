@@ -51,6 +51,19 @@
             </div>
         </div>
 
+        @if (liq.estado === 'revertido' && liq.reversion) {
+            <div class="alert alert-secondary py-2 mb-3">
+                <b>Liquidación revertida</b> el
+                {{ liq.reversion.fecha | date: "dd/MM/yyyy HH:mm" }} por
+                {{ liq.reversion.usuario }} — Motivo: {{ liq.reversion.motivo }}.
+                <br />
+                <small
+                    >Los informes se muestran como estaban al momento de la
+                    reversión.</small
+                >
+            </div>
+        }
+
         @if (editable && liq.estado === 'emitido') {
             <div class="alert alert-warning py-2 mb-3">
                 Informe emitido: los cambios modifican el total de una

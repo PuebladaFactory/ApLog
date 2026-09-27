@@ -1,5 +1,16 @@
-<div class="row g-3 mt-2 mb-3 align-items-center">
-  <div class="col-md-3">
+<div class="row g-3 mt-2 mb-3 align-items-end">
+  <div class="col-md-2">
+    <label class="form-label mb-0">Período desde</label>
+    <input class="form-control" type="month" [(ngModel)]="desde" />
+  </div>
+  <div class="col-md-2">
+    <label class="form-label mb-0">Período hasta</label>
+    <input class="form-control" type="month" [(ngModel)]="hasta" />
+  </div>
+  <div class="col-md-1">
+    <button type="button" class="btn btn-primary w-100" [disabled]="cargando" (click)="consultar()">Consultar</button>
+  </div>
+  <div class="col-md-2">
     <select class="form-select" [ngModel]="filtroTipo" (ngModelChange)="filtroTipo = $event; aplicarFiltros()">
       <option value="todos">Todos</option>
       <option value="cliente">Clientes</option>
@@ -7,7 +18,7 @@
       <option value="proveedor">Proveedores</option>
     </select>
   </div>
-  <div class="col-md-4">
+  <div class="col-md-3">
     <input
       class="form-control"
       type="text"
@@ -16,8 +27,8 @@
       placeholder="Buscar por razón social o N° de informe"
     />
   </div>
-  <div class="col-md-5 text-end text-muted">
-    {{ filtrados.length }} informe(s) pendiente(s) de facturar
+  <div class="col-md-2 text-end text-muted">
+    {{ filtrados.length }} informe(s) revertido(s)
   </div>
 </div>
 
@@ -27,11 +38,6 @@
   [acciones]="acciones"
   [ordenInicial]="ordenInicial"
   [cargando]="cargando"
-  [bloqueada]="procesando"
-  mensajeVacio="No hay informes emitidos pendientes de facturar."
+  mensajeVacio="No hay liquidaciones revertidas en el período consultado."
   (accion)="onAccion($event)"
 ></app-tabla-listado>
-
-@if (procesando) {
-  <app-spinner></app-spinner>
-}

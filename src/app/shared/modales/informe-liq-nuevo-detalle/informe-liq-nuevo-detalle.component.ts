@@ -148,7 +148,17 @@ export class InformeLiqNuevoDetalleComponent implements OnInit {
         this.activeModal.dismiss();
         return;
       }
-      this.informes = await this.informeLiqServ.obtenerInformesOp(this.idInfLiq);
+      if (this.liq.estado === 'revertido') {
+        // Revertido: los InformeOp vivos ya no le pertenecen — se muestran
+        // como estaban al revertir (copia congelada).
+        const copia = await this.informeLiqServ.obtenerSnapshotInformesOp(this.idInfLiq);
+        this.informes = copia ?? [];
+        if (!copia) {
+          Swal.fire({ icon: 'warning', text: 'No se encontró la copia de los informes de esta liquidación revertida.' });
+        }
+      } else {
+        this.informes = await this.informeLiqServ.obtenerInformesOp(this.idInfLiq);
+      }
       this.descuentos = this.liq.descuentos.map(d => ({ concepto: d.concepto, valor: d.valor }));
       this.observaciones = this.liq.observaciones ?? '';
       this.columnas = columnasPorTipo(this.liq.tipo, this.liq.columnas);

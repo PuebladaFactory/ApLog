@@ -5,7 +5,10 @@ import { ConId } from 'src/app/interfaces/conId';
 import { Resultado } from 'src/app/interfaces/resultado';
 import { InformeOpNuevo } from 'src/app/interfaces/informe-op-nuevo';
 import { EstadoOp, Operacion } from 'src/app/interfaces/operacion';
-import { DescuentoLiq, InformeLiqNuevo, PeriodoLiq } from 'src/app/interfaces/informe-liq-nuevo';
+import {
+  DescuentoLiq, InformeLiqNuevo, InformeLiqSnapshot, PeriodoLiq, ReversionLiq,
+} from 'src/app/interfaces/informe-liq-nuevo';
+import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 import { NumeradorService } from 'src/app/servicios/numerador/numerador.service';
@@ -61,10 +64,12 @@ export class InformeLiqService {
   private operacionFactory = inject(OperacionFactoryService);
   private numerador = inject(NumeradorService);
   private logRegistro = inject(LogRegistroService);
+  private usuarioSesion = inject(UsuarioSesionService);
 
   private readonly COLECCION = 'informesLiq';
   private readonly COL_INFORMES_OP = 'informesOp';
   private readonly COL_OPERACIONES = 'operaciones';
+  private readonly COL_SNAPSHOTS = 'informesLiqSnapshots';
 
   /** Tope de InformeOp por liquidación: hasta 3 escrituras por InformeOp
    *  (InformeOp + Operación + contraparte) + InformeLiq + numerador + log
@@ -83,6 +88,17 @@ export class InformeLiqService {
   /** InformeOp vigentes del informe (link inverso idInfLiq). */
   obtenerInformesOp(idInfLiq: string): Promise<ConId<InformeOpNuevo>[]> {
     return this.informeOpServ.obtenerPorInformeLiq(idInfLiq);
+  }
+
+  /** InformeOp de un informe REVERTIDO, desde su copia congelada
+   *  (informesLiqSnapshots/{idInfLiq}). null si no hay copia. Agrega `id`
+   *  (= idInfOp) para que la UI los trate igual que los vivos. */
+  async obtenerSnapshotInformesOp(idInfLiq: string): Promise<ConId<InformeOpNuevo>[] | null> {
+    const snap = await this.db.getById<InformeLiqSnapshot>(this.COL_SNAPSHOTS, idInfLiq);
+    if (!snap) return null;
+    return snap.informesOp
+      .map(inf => ({ ...inf, id: inf.idInfOp }))
+      .sort((a, b) => a.fecha.localeCompare(b.fecha));
   }
 
   /** Borradores en vivo (todas las entidades y tipos), más recientes
@@ -117,6 +133,12 @@ export class InformeLiqService {
   /** Borrado físico — solo para borradores (eliminarBorrador). No commitea. */
   agregarEliminacionInformeLiq(escrituras: EscrituraBatch[], idInfLiq: string): void {
     escrituras.push({ coleccion: this.COLECCION, id: idInfLiq, data: null, modo: 'eliminar' });
+  }
+
+  /** Copia congelada de los InformeOp al revertir (doc id = idInfLiq).
+   *  No commitea. */
+  agregarEscrituraSnapshot(escrituras: EscrituraBatch[], idInfLiq: string, snapshot: InformeLiqSnapshot): void {
+    escrituras.push({ coleccion: this.COL_SNAPSHOTS, id: idInfLiq, data: snapshot, modo: 'crear' });
   }
 
   // =====================================================================
@@ -407,6 +429,86 @@ export class InformeLiqService {
     }
   }
 
+  /** Revierte un InformeLiq EMITIDO (gesto de Facturación). Transacción:
+   *  relee el informe (debe seguir 'emitido' y sin nada cobrado), sus
+   *  InformeOp (deben estar 'liquidado' y apuntar a este informe) y las
+   *  Operaciones. Escribe:
+   *   - InformeLiq: estado 'revertido' + reversion {motivo, usuario, fecha}.
+   *     Conserva número, valores y composición (registro histórico).
+   *   - Copia congelada de los InformeOp (informesLiqSnapshots/{idInfLiq}).
+   *   - InformeOp (este lado): liquidado → activo, idInfLiq = null.
+   *   - Operación: liquidacion.<lado> = false; ciclo 'liquidada' → 'cerrada'.
+   *  La contraparte no cambia. Un log REVERTIR con diff.
+   *  Presupuesto: 2 por InformeOp + informe + copia + log (≤ 303).
+   *  TODO Finanzas: cuando exista la cascada, revertir tiene que descontar
+   *  el informe de resumenFinanzas / cuenta corriente. */
+  async revertirEmitido(idInfLiq: string, motivo: string): Promise<Resultado<void>> {
+    const motivoLimpio = (motivo ?? '').trim();
+    if (!motivoLimpio) return { exito: false, mensaje: 'El motivo de la reversión es obligatorio.' };
+
+    // Afuera del callback (puede reintentarse y tiene que ser puro).
+    const reversion: ReversionLiq = {
+      motivo: motivoLimpio,
+      usuario: this.usuarioSesion.getUsuarioActual()?.email ?? 'Desconocido',
+      fecha: new Date().toISOString(),
+    };
+
+    try {
+      const numero = await this.db.commitEnTransaccion<string | null>(async (tx) => {
+        const escrituras: EscrituraBatch[] = [];
+
+        const liq = await this.leerEmitido(tx, idInfLiq);
+        if ((liq.valoresFinancieros?.totalCobrado ?? 0) !== 0) {
+          throw new Error(
+            `La liquidación ${liq.numeroInterno} tiene importes cobrados/pagados imputados: no se puede revertir.`,
+          );
+        }
+        const informes = await this.leerInformesOp(tx, liq.informesOp);
+        this.validarInformesDelEmitido(informes, idInfLiq);
+        const operaciones = await this.leerOperaciones(tx, informes);
+        // — fin de lecturas —
+
+        this.agregarEscrituraInformeLiqParcial(escrituras, idInfLiq, { estado: 'revertido', reversion });
+        this.agregarEscrituraSnapshot(escrituras, idInfLiq, {
+          fecha: reversion.fecha,
+          informesOp: informes.map(({ id, ...inf }) => inf as InformeOpNuevo),
+        });
+
+        const lado = this.lado(liq.tipo);
+        for (const inf of informes) {
+          this.informeOpServ.agregarEscrituraInformeOpParcial(escrituras, inf.idInfOp, {
+            estado: 'activo',
+            idInfLiq: null,
+          });
+          const op = operaciones.get(inf.idOperacion)!;
+          this.operacionFactory.agregarEscrituraOperacionParcial(
+            escrituras, inf.idOperacion, this.camposReversion(op.estado, lado),
+          );
+        }
+
+        const { id: _i, idInfLiq: _l, ...anterior } = liq as any;
+        await this.logRegistro.agregarAlBatch(
+          escrituras, 'REVERTIR', this.COLECCION, idInfLiq,
+          `Reversión de liquidación ${liq.numeroInterno} — ${liq.tipo} ${nombreEntidadRef(liq.entidad)} — ` +
+          `${informes.length} InformeOp vuelven a 'activo' — ${this.factory.textoPeriodo(liq.periodo)} — motivo: ${motivoLimpio}`,
+          anterior,
+        );
+
+        return { escrituras, resultado: liq.numeroInterno };
+      });
+
+      return {
+        exito: true,
+        mensaje: `Liquidación ${numero} revertida. Sus informes vuelven a estar disponibles para liquidar.`,
+      };
+    } catch (e: any) {
+      await this.logRegistro.registrarError(
+        'REVERTIR', this.COLECCION, idInfLiq, `Error al revertir ${idInfLiq}: ${e?.message ?? e}`,
+      );
+      return { exito: false, mensaje: `Error al revertir la liquidación: ${e?.message ?? e}` };
+    }
+  }
+
   // =====================================================================
   // INTERNOS
   // =====================================================================
@@ -568,6 +670,28 @@ export class InformeLiqService {
     return { ...data, id: idInfLiq, idInfLiq };
   }
 
+  /** Lee el InformeLiq dentro de la transacción y exige estado 'emitido'. */
+  private async leerEmitido(tx: Transaction, idInfLiq: string): Promise<ConId<InformeLiqNuevo>> {
+    const data = await this.db.leerEnTransaccion<InformeLiqNuevo>(tx, this.COLECCION, idInfLiq);
+    if (!data) throw new Error(`No existe el informe de liquidación ${idInfLiq}.`);
+    if (data.estado !== 'emitido') {
+      throw new Error(`El informe ${data.numeroInterno ?? idInfLiq} está en estado '${data.estado}' (se esperaba 'emitido').`);
+    }
+    return { ...data, id: idInfLiq, idInfLiq };
+  }
+
+  /** Reglas sobre los InformeOp de un emitido: siguen en 'liquidado' y
+   *  apuntando a este informe. */
+  private validarInformesDelEmitido(informes: ConId<InformeOpNuevo>[], idInfLiq: string): void {
+    for (const inf of informes) {
+      if (inf.estado !== 'liquidado' || inf.idInfLiq !== idInfLiq) {
+        throw new Error(
+          `Inconsistencia: el informe ${inf.idInfOp} está en '${inf.estado}' con idInfLiq '${inf.idInfLiq}' (se esperaba 'liquidado' en ${idInfLiq}).`,
+        );
+      }
+    }
+  }
+
   /** Relee cada InformeOp por id dentro de la transacción (agrega idInfOp —
    *  patrón ConId). Aborta si falta alguno. */
   private async leerInformesOp(tx: Transaction, ids: string[]): Promise<ConId<InformeOpNuevo>[]> {
@@ -605,6 +729,14 @@ export class InformeLiqService {
       [`estado.liquidacion.${lado}`]: true,
     };
     if (estado.liquidacion[otro]) campos['estado.ciclo'] = 'liquidada';
+    return campos;
+  }
+
+  /** Campos de Operación al revertir la liquidación de un lado:
+   *  liquidacion.<lado> = false, y ciclo 'liquidada' → 'cerrada'. */
+  private camposReversion(estado: EstadoOp, lado: Lado): Record<string, any> {
+    const campos: Record<string, any> = { [`estado.liquidacion.${lado}`]: false };
+    if (estado.ciclo === 'liquidada') campos['estado.ciclo'] = 'cerrada';
     return campos;
   }
 }

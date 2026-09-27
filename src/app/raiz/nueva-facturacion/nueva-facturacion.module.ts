@@ -12,6 +12,7 @@ import { ModalVincularFacturaComponent } from './modal-vincular-factura/modal-vi
 import { FacturacionHistoricoComponent } from './facturacion-historico/facturacion-historico.component';
 import { InformesTablaComponent } from './informes-tabla/informes-tabla.component';
 import { FacturacionEmitidosComponent } from './emitidos/facturacion-emitidos.component';
+import { FacturacionRevertidosComponent } from './revertidos/facturacion-revertidos.component';
 
 
 @NgModule({
@@ -22,6 +23,7 @@ import { FacturacionEmitidosComponent } from './emitidos/facturacion-emitidos.co
     FacturacionHistoricoComponent,
     InformesTablaComponent,
     FacturacionEmitidosComponent,
+    FacturacionRevertidosComponent,
   ],
   imports: [
     CommonModule,

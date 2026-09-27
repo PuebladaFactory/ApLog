@@ -8,6 +8,7 @@ import {
   AccionListado, ColumnaListado, EventoAccionListado, OrdenListado,
 } from 'src/app/interfaces/tabla-listado';
 import { InformeLiqConsultaService } from 'src/app/servicios/informes-liq/informe-liq-consulta.service';
+import { InformeLiqService } from 'src/app/servicios/informes-liq/informe-liq.service';
 import { InformeLiqFactoryService } from 'src/app/servicios/informes-liq/informe-liq-factory.service';
 import { nombreEntidadRef } from 'src/app/shared/utils/entidad-informe.util';
 import { InformeLiqNuevoDetalleComponent } from 'src/app/shared/modales/informe-liq-nuevo-detalle/informe-liq-nuevo-detalle.component';
@@ -16,8 +17,8 @@ type Fila = ConId<InformeLiqNuevo>;
 
 /** Facturación — bandeja de InformeLiqNuevo en estado 'emitido' (pendientes
  *  de facturar), en vivo, de todas las entidades. Tabla: TablaListadoComponent.
- *  Acciones: ver/editar (detalle con modulo='facturacion'). Facturar y
- *  revertir se agregan en los bloques siguientes. Camino paralelo a
+ *  Acciones: ver/editar (detalle con modulo='facturacion') y revertir
+ *  (InformeLiqService.revertirEmitido). Facturar se agrega en F4. Camino paralelo a
  *  FacturacionListadoComponent (modelo viejo, resumenLiq). */
 @Component({
   selector: 'app-facturacion-emitidos',
@@ -32,6 +33,7 @@ export class FacturacionEmitidosComponent implements OnInit, OnDestroy {
   filtroTipo: 'todos' | 'cliente' | 'chofer' | 'proveedor' = 'todos';
   searchText = '';
   cargando = true;
+  procesando = false;
 
   readonly ordenInicial: OrdenListado = { key: 'fechaEmision', asc: false };
 
@@ -47,6 +49,11 @@ export class FacturacionEmitidosComponent implements OnInit, OnDestroy {
 
   readonly acciones: AccionListado<Fila>[] = [
     { id: 'ver', label: 'Ver' },
+    {
+      id: 'revertir', label: 'Revertir', clase: 'btn-outline-danger', permiso: 'facturacion.revertir',
+      // D3: no se revierte un informe con algo cobrado/pagado.
+      deshabilitada: b => (b.valoresFinancieros?.totalCobrado ?? 0) !== 0,
+    },
   ];
 
   private destroy$ = new Subject<void>();
@@ -55,6 +62,7 @@ export class FacturacionEmitidosComponent implements OnInit, OnDestroy {
     private modalService: NgbModal,
     private consulta: InformeLiqConsultaService,
     private factory: InformeLiqFactoryService,
+    private informeLiqServ: InformeLiqService,
   ) {}
 
   ngOnInit(): void {
@@ -94,6 +102,7 @@ export class FacturacionEmitidosComponent implements OnInit, OnDestroy {
   onAccion(e: EventoAccionListado<Fila>): void {
     switch (e.id) {
       case 'ver': this.verDetalle(e.item); break;
+      case 'revertir': this.revertir(e.item); break;
     }
   }
 
@@ -109,5 +118,37 @@ export class FacturacionEmitidosComponent implements OnInit, OnDestroy {
     modalRef.componentInstance.modulo = 'facturacion';
     // La bandeja se actualiza sola (listener); no hace falta manejar el result.
     modalRef.result.catch(() => {});
+  }
+
+  /** Revertir: pide el motivo (obligatorio) y delega en
+   *  InformeLiqService.revertirEmitido, que valida todo fresco en una
+   *  transacción. Sin refresco manual: el listener saca el informe de la
+   *  bandeja al pasar a 'revertido'. */
+  private async revertir(b: Fila): Promise<void> {
+    const r = await Swal.fire({
+      title: `¿Revertir la liquidación ${b.numeroInterno}?`,
+      html:
+        `<p><b>${this.nombre(b)}</b> — ${this.factory.textoPeriodo(b.periodo)}</p>` +
+        `<p>Los ${b.cantidadOperaciones} informe(s) vuelven a <b>Liquidación → Informes</b> para volver a liquidarse. ` +
+        `La liquidación queda como <b>revertida</b>, con su número, en la pestaña Revertidos.</p>`,
+      input: 'textarea',
+      inputLabel: 'Motivo de la reversión',
+      inputPlaceholder: 'Obligatorio',
+      inputValidator: (v: string) => (!v || !v.trim() ? 'El motivo es obligatorio.' : null),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      confirmButtonText: 'Revertir',
+      cancelButtonText: 'Cancelar',
+    });
+    if (!r.isConfirmed) return;
+
+    this.procesando = true;
+    try {
+      const res = await this.informeLiqServ.revertirEmitido(b.idInfLiq, r.value as string);
+      Swal.fire({ icon: res.exito ? 'success' : 'error', text: res.mensaje });
+    } finally {
+      this.procesando = false;
+    }
   }
 }

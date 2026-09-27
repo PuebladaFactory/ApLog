@@ -1,5 +1,6 @@
 import { RefCliente, RefChofer, RefProveedor } from './operacion';
 import { Anulacion } from './anulacion';
+import { InformeOpNuevo } from './informe-op-nuevo';
 
 /** Informe de liquidación — modelo nuevo (camino paralelo a InformeLiq).
  *  Colección única `informesLiq`: el borrador (ex "proforma") y el emitido
@@ -130,3 +131,13 @@ export type AnulacionLiq = Anulacion;
 /** Datos de la reversión de un emitido (quién, cuándo, por qué) — mismo
  *  tipo compartido que Anulacion. */
 export type ReversionLiq = Anulacion;
+
+/** Copia congelada de los InformeOp de un InformeLiq al revertirlo —
+ *  colección `informesLiqSnapshots`, doc id = idInfLiq. El detalle de un
+ *  'revertido' se lee de acá (los InformeOp vivos quedan libres y pueden
+ *  cambiar o re-liquidarse). Cada elemento conserva su `idInfOp`: es un
+ *  elemento de array, no un documento (no aplica el patrón ConId). */
+export interface InformeLiqSnapshot {
+  fecha: string;                  // ISO 8601 con hora — igual a reversion.fecha
+  informesOp: InformeOpNuevo[];
+}
