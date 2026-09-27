@@ -1,3 +1,11 @@
 input, select, option, th, td{
     font-size: 1.3rem;
 }
+
+// Textos sin espacios (paths de Storage, qrData en base64, ids, JSON): sin
+// esto la tabla toma el ancho de la "palabra" más larga y se desborda a lo
+// ancho. 'anywhere' (a diferencia de 'break-word') también reduce el ancho
+// mínimo de la celda, que es lo que cuenta en una tabla con layout automático.
+.celda-larga {
+  overflow-wrap: anywhere;
+}

@@ -116,7 +116,7 @@
                             <td>{{ getUsuario(r.userEmail) }}</td>
                             <td>{{ r.action }}</td>
                             <td>{{ r.coleccion }}</td>
-                            <td>{{ r.details }}</td>
+                            <td class="celda-larga">{{ r.details }}</td>
                             <td>{{ r.idObjet }}</td>
                             <td>
                                 <span
@@ -153,8 +153,8 @@
                                             @for (c of r.cambios; track c.campo) {
                                                 <tr>
                                                     <td>{{ c.campo }}</td>
-                                                    <td class="table-danger">{{ c.anterior | json }}</td>
-                                                    <td class="table-success">{{ c.nuevo | json }}</td>
+                                                    <td class="table-danger celda-larga">{{ c.anterior | json }}</td>
+                                                    <td class="table-success celda-larga">{{ c.nuevo | json }}</td>
                                                 </tr>
                                             }
                                         </tbody>
