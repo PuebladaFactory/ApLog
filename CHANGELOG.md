@@ -1918,6 +1918,45 @@ Detalle completo en `CLAUDE.md` → "Frente Liquidación — InformeLiqNuevo".
 
 ---
 
+## Frente Facturación — InformeLiqNuevo (Septiembre 2026)
+
+- Facturación — camino nuevo sobre `InformeLiqNuevo`, paralelo al viejo
+  (rutas y pestañas viejas comentadas). Pestañas Emitidos (bandeja en vivo),
+  Facturados y Revertidos (consulta por rango de períodos).
+- Revertir un emitido (`revertirEmitido`): estado 'revertido' con motivo;
+  InformeOp vuelven a 'activo' (re-liquidables); copia congelada de los
+  InformeOp en `informesLiqSnapshots`. 'anulado' queda reservado sin
+  escritor.
+- Vincular factura electrónica (`vincularFactura`): QR AFIP leído del PDF,
+  validación de importe y CUIT según el lado (con confirmación si no
+  coincide), PDF en Firebase Storage (`facturas/…`, se guarda el path),
+  unicidad del comprobante con `facturasVinculadas`. Desvincular
+  (`desvincularFactura`) con motivo; el PDF se conserva.
+- Guardas de Finanzas: revertir y desvincular solo con `totalCobrado === 0`;
+  un facturado no se edita.
+- Modelo: `periodoClave` + índice `informesLiq (estado, periodoClave)`;
+  `FacturaElectronicaLiq` normalizada; `reversion`; interfaces
+  `InformeLiqSnapshot` y `FacturaVinculada`.
+- Log: acciones REVERTIR, FACTURAR, DESVINCULAR (y ANULAR reservada), con
+  diff. Permisos: `revertir` y `desvincular` (→ editar).
+- Nuevos: `InformeLiqConsultaService`, `TablaListadoComponent` (tabla
+  genérica del camino nuevo, también en Borradores), util
+  `factura-electronica`, util `abrir-url`, modal `VincularFacturaLiqComponent`.
+  `StorageArchivosService.subirYObtenerPath` / `urlDescarga`. El detalle de
+  InformeLiqNuevo y AjustesLiq pasan a SharedModule.
+- Reglas (solo demo): `informesLiqSnapshots` y `facturasVinculadas` →
+  'finanzas'; `storage.rules` para `facturas/` (solo PDF, < 10 MB).
+- Eliminado `raiz/facturacion/` (módulo muerto) y el link comentado del
+  sidebar.
+- Fix: Papelera — el listado quedaba vacío después de restaurar.
+- Fix: Registro Log — textos largos sin espacios desbordaban la tabla.
+
+Detalle completo en `CLAUDE.md` → "Frente Facturación — InformeLiqNuevo".
+
+**Verificación:** `ng build --configuration=demo` limpio.
+
+---
+
 ### Pendiente
 
 - Módulo Vendedores (incluye lógica de vendedor[] en Cliente)

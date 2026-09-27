@@ -48,8 +48,7 @@ src/app/
 │   ├── choferes/      # CRUD + tarifas + documentación
 │   ├── proveedores/   # CRUD + tarifas
 │   ├── liquidacion/   # Liquidación de operaciones cerradas
-│   ├── facturacion/   
-│   ├── nueva-facturacion/ # Facturación (legacy)
+│   ├── nueva-facturacion/ # Facturación (ruta nuevaFacturacion) — Emitidos/Facturados/Revertidos sobre InformeLiqNuevo
 │   ├── legajos/       # Legajos de choferes
 │   ├── vendedores/    # CRUD + comisiones
 │   ├── reportes/      # (en desarrollo)
@@ -1251,7 +1250,7 @@ barrido de `*appRole`/`esRol()`/`ngClass` sueltos del audit original.
 **Bloque 6 CERRADO.** Verificado por grep: el único `*appRole` que queda en toda la app
 son los 6 sitios de Tarifas (`cliente`/`choferes`/`proveedores` × `gral`/`especial`),
 excluidos a propósito — pertenecen al frente de Tarifas, pendiente y separado de este.
-(`facturacion/modal-detalle` legacy, comentado, (eliminado — frente Facturación, F0) y `acciones-cell-renderer`, wrapper sin
+(`facturacion/modal-detalle` — legacy y comentado; eliminado en el frente Facturación, F0 — y `acciones-cell-renderer`, wrapper sin
 caller activo, también usan `*appRole` pero están fuera de alcance por ser código muerto
 u orfandad ya documentada, no por pertenecer a Tarifas.)
 
@@ -2356,7 +2355,8 @@ decisiones: doc de proyecto `claude/diseno-informe-liq-nuevo.md`.
   (`firestore.rules`: módulo `finanzas`). `idInfLiq` = doc id, patrón ConId (no
   se persiste; se agrega al leer).
 - `estado`: 'borrador' (ex proforma, `numeroInterno` null) | 'emitido' |
-  'facturado' | 'anulado'. Los dos últimos los escribe Facturación (pendiente).
+  'facturado' | 'revertido' | 'anulado'. 'facturado' y 'revertido' los escribe
+  Facturación; 'anulado' está reservado sin escritor (ver "Frente Facturación").
 - `entidad`: snapshot `RefCliente | RefChofer | RefProveedor`.
 - `periodo: {anio, mes 1-12, tramo 'mes'|'1q'|'2q'}`. Una liquidación no mezcla
   meses. El período no se edita en un borrador.
@@ -2392,7 +2392,7 @@ Ediciones:
 - Ruteo de UI: un InformeOp 'activo' se edita en InformeOpListado
   (`InformeOpService.editar`); uno en 'proforma' solo desde Borradores →
   detalle (`InformeLiqService.editarInformeOp`); 'liquidado' → pantalla de
-  emitidos (Facturación, pendiente).
+  emitidos de Facturación (detalle con `modulo='facturacion'`).
 
 ### Escritura: `commitEnTransaccion`
 `DbFirestoreService.commitEnTransaccion<R>(armar)`: mismo contrato
@@ -2466,6 +2466,152 @@ El nombre PERSISTIDO de la columna de monto propio es 'A Cobrar' para todo
 tipo. `etiquetaColumna(nombre, tipo)` lo muestra como 'A Pagar' para
 chofer/proveedor. Cualquier salida nueva (Excel/PDF) debe usar
 `etiquetaColumna`, no el nombre crudo.
+
+## Frente Facturación — InformeLiqNuevo (Septiembre 2026)
+
+Facturación sobre el camino nuevo. Mismo criterio que Liquidación: PARALELO
+al viejo (`FacturacionListado`/`FacturacionHistorico`, `InformesTabla`,
+`ModalVincularFactura`, Supabase no se tocaron; sus rutas y pestañas quedan
+comentadas en `nueva-facturacion` y se retiran con la migración de
+Vantruck). Todo se hizo y probó en demo. Diseño y decisiones D1–D19: doc de
+proyecto `claude/diseno-facturacion-nueva.md`; instrucciones por bloque:
+`claude/instruccion-f0…f5-facturacion.md`.
+
+### Estados y gestos
+
+    borrador ──emitir──▶ emitido ──vincularFactura──▶ facturado
+                          │  ▲                          │
+                      revertir └────desvincularFactura───┘
+                          ▼
+                      revertido
+
+- `'revertido'` es el ÚNICO gesto de salida de un emitido. Guarda
+  `reversion: {motivo, usuario, fecha}` y conserva número interno (no se
+  reutiliza), valores y composición. Sus InformeOp vuelven a 'activo' con
+  `idInfLiq = null` (re-liquidables); la Operación pasa a
+  `liquidacion.<lado> = false` y, si el ciclo era 'liquidada', vuelve a
+  'cerrada'.
+- `'anulado'` + `anulacion`: RESERVADOS, sin escritor. Ningún escenario
+  relevado lo necesita: el no pago es un evento de Finanzas (incobrable), no
+  un error de liquidación; operación errónea → revertir + baja de operación
+  cerrada; bonificación → ajuste o valor 0; nota de crédito → desvincular y
+  revertir/editar. Agregarlo después no requiere migrar datos.
+- Migración de Vantruck: el 'anulado' viejo (`anularLiquidacion`) equivale al
+  'revertido' nuevo.
+- Reglas: un facturado no se edita ni se revierte (primero se desvincula).
+  Revertir y desvincular exigen `valoresFinancieros.totalCobrado === 0`
+  (contrato con Finanzas: 'facturado' es la puerta de cobros/pagos). Un
+  emitido es editable (detalle: `editable` = borrador|emitido y permiso
+  `<modulo>.editar`).
+
+### Modelo (`interfaces/informe-liq-nuevo.ts`)
+- `periodoClave: 'YYYY-MM'` (`InformeLiqFactoryService.clavePeriodo`),
+  persistido al crear y nunca editado. Índice `informesLiq (estado ASC,
+  periodoClave DESC)`: históricos por rango de períodos, aunque crucen años
+  (con `periodo.anio`/`mes` separados no se puede). Demo: backfill manual.
+- `FacturaElectronicaLiq` normalizada: `cuitEmisor`, `cuitReceptor`
+  (strings), `puntoVenta`/`tipoComprobante`/`numero` (number), `cae`,
+  `fecha` ('YYYY-MM-DD'), `importe`, `qrData`, `origen: 'qr'|'manual'` (hoy
+  solo 'qr'), `validacion {importeOk, cuitOk}`, `vinculadaPor`,
+  `fechaVinculacion`.
+- `facturaUrl` = PATH del PDF en Storage (`facturas/{idInfLiq}/{timestamp}_{nombre}`),
+  NO la URL de descarga: la URL de `getDownloadURL` lleva un token permanente
+  que saltea las reglas. Se resuelve al abrir (`InformeLiqService.obtenerUrlFactura`
+  → `StorageArchivosService.urlDescarga`).
+- `informesLiqSnapshots/{idInfLiq}` = `InformeLiqSnapshot {fecha, informesOp: InformeOpNuevo[]}`:
+  copia congelada de los InformeOp al revertir (misma transacción, +1
+  escritura, 0 lecturas extra). El detalle de un revertido lee de acá (los
+  InformeOp vivos ya no le pertenecen).
+- `facturasVinculadas/{cuitEmisor}_{ptoVta}_{tipo}_{nro}` = `FacturaVinculada {idInfLiq, numeroInterno, fechaVinculacion}`:
+  unicidad "una factura → un InformeLiq". Una transacción no puede hacer
+  queries: se lee por id dentro de la tx (mismo principio que
+  `objetosEliminados`). Vincular lo crea, desvincular lo borra.
+- `firestore.rules`: `informesLiqSnapshots` y `facturasVinculadas` → módulo
+  'finanzas'. `storage.rules`: `facturas/{idInfLiq}/{archivo}` — read
+  dev/admin/demo; create dev/admin, solo `application/pdf` < 10 MB; delete
+  dev/admin. (Deployados SOLO en demo.)
+
+### Orquestadores (`InformeLiqService`) — todos con `commitEnTransaccion`
+| Gesto | Lee en tx | Escribe | Log |
+|---|---|---|---|
+| `revertirEmitido(id, motivo)` | liq (emitido, cobrado 0), InformeOp ×N (liquidado, de este informe), operaciones | liq {estado 'revertido', reversion}; InformeOp parcial ×N (activo, idInfLiq null); Operación parcial ×N; snapshot | REVERTIR (diff) |
+| `vincularFactura(id, pdf, textoQr)` | liq (emitido), `facturasVinculadas/{clave}` | liq {estado 'facturado', factura, facturaUrl}; crea índice | FACTURAR (diff; el detalle nota las discrepancias) |
+| `desvincularFactura(id, motivo)` | liq (facturado, cobrado 0) | liq {estado 'emitido', factura null, facturaUrl null}; borra índice | DESVINCULAR (diff; detalle con path del PDF y motivo) |
+- `vincularFactura`: decodifica el QR (puro) → pre-chequeos con lecturas
+  sueltas (solo para no subir un PDF en vano) → sube el PDF (storage-first,
+  lo reversible primero) → transacción → si la transacción falla, borra el
+  PDF (best-effort). La validación se recalcula dentro de la tx con el
+  informe fresco; confirmar discrepancias es responsabilidad de la UI (D8:
+  se permite, queda registrado en `factura.validacion` y en el log).
+- `desvincularFactura` conserva el PDF en Storage (D18).
+- Lecturas: `InformeLiqConsultaService` (solo lectura): `observarPorEstado`
+  (en vivo, una igualdad, sin índice), `consultarPorPeriodo(estados, desde, hasta)`
+  (`DbFirestoreService.consultarPorInYRango`), `obtenerFacturaVinculada(clave)`.
+- Util puro `shared/utils/factura-electronica.util.ts`: `decodificarQrAfip`,
+  `validarFacturaContraInforme` (importe vs `valores.total` ±0,01 — el total
+  ya incluye IVA; CUIT receptor si es cliente, emisor si es chofer/proveedor),
+  `facturaDesdeQr`, `claveComprobante`/`claveComprobanteQr`,
+  `descripcionTipoComprobante`, `numeroComprobante`,
+  `fechaComprobanteLegible`, `listarDiscrepancias`.
+- `StorageArchivosService`: `subirYObtenerPath` y `urlDescarga` nuevos.
+  `subir()`/`subirVarios()`/`ArchivoSubido` quedaron intactos a propósito:
+  Legajos (`cargar-documentos`) y Operaciones (`modal-detalle-op`) persisten
+  el objeto devuelto entero en Firestore.
+- AccionLog: REVERTIR, FACTURAR, DESVINCULAR (y ANULAR, reservado), las
+  cuatro en `LogRegistroService.ACCIONES_CON_DIFF`. AccionPermiso:
+  `revertir` y `desvincular` → 'editar' (`vincularFactura` y `verFactura`
+  ya existían).
+
+### UI (`raiz/nueva-facturacion`, ruta `nuevaFacturacion`)
+- Pestañas: Emitidos (tab3, default) · Facturados (tab4) · Revertidos
+  (tab5). Las viejas ("Informes Emitidos"/"Informes Facturados") quedan
+  comentadas en el routing y en `ControlComponent`.
+- Emitidos (`FacturacionEmitidosComponent`): bandeja en vivo. Acciones Ver
+  (detalle con `modulo='facturacion'`, editable), Facturar
+  (`facturacion.vincularFactura`) y Revertir (`facturacion.revertir`, Swal
+  con motivo obligatorio, deshabilitada si hay algo cobrado).
+- `VincularFacturaLiqComponent` (modal): lee el QR al elegir el PDF
+  (`FacturaQrService`, sin cambios), compara factura vs liquidación, avisa si
+  el comprobante ya está vinculado a otra liquidación y pide confirmación si
+  hay discrepancias. Llama al servicio él mismo: si falla, queda abierto con
+  el PDF ya leído.
+- Facturados / Revertidos: consulta one-shot por rango de períodos (default:
+  últimos 3 meses); tipo y texto se filtran en memoria. Facturados: Ver, Ver
+  factura (`facturacion.verFactura`), Desvincular (`facturacion.desvincular`,
+  motivo obligatorio). Revertidos: Ver (detalle desde el snapshot).
+- Detalle `InformeLiqNuevoDetalleComponent` (movido a
+  `shared/modales/informe-liq-nuevo-detalle`, declarado en SharedModule junto
+  con `AjustesLiqComponent`, ex `DescuentosComponent` de liquidación): bloque
+  de factura + "Ver PDF" en facturado; alerta gris de reversión en revertido;
+  aviso al editar un emitido.
+- `TablaListadoComponent<T>` (`shared/tabla/tabla-listado`, interfaz
+  `interfaces/tabla-listado.ts`): tabla genérica del camino nuevo (columnas
+  con valor/orden/tipo/align/clase, acciones de texto con permiso
+  'modulo.accion', cargando/bloqueada). La usan Borradores, Emitidos,
+  Facturados y Revertidos. El caller filtra y recalcula el array solo al
+  cambiar datos o filtros (no con un getter).
+- `abrirUrlEnPestana` (`shared/utils/abrir-url.util.ts`): abre la pestaña
+  ANTES del await (si se abre después, el bloqueador de ventanas emergentes
+  la frena). Se llama sin awaits previos desde el click.
+- Las fechas 'YYYY-MM-DD' no van por el pipe `date` (las toma como UTC y en
+  Argentina muestra el día anterior): `fechaComprobanteLegible`.
+- Bundle: el modal nuevo vuelve a traer pdfjs + jsQR (`FacturaQrService`),
+  +~0,5 MB al bundle inicial (8,02 → 8,54 MB) porque RaizModule importa los
+  módulos de feature en forma eager (ver Deuda).
+
+### Limpieza y fixes durante el frente
+- F0: eliminado `raiz/facturacion/` (módulo muerto: rutas inexistentes,
+  modal duplicado), su ruta en raiz-routing y los imports en
+  LiquidacionModule y RaizModule.
+- Fix Papelera: restaurar dejaba el listado vacío (`buscar()` se llamaba con
+  `cargando = true` y `cargarPagina()` salía por su guarda). Ahora recarga
+  después del `finally`.
+- Fix Registro Log: textos sin espacios (paths de Storage, `qrData` en
+  base64) desbordaban la tabla. `.celda-larga { overflow-wrap: anywhere; }`
+  en Detalle y en los valores del diff. `anywhere` y no `break-word`: solo
+  `anywhere` reduce el ancho mínimo de la celda, que es lo que manda en una
+  tabla con layout automático.
+- Sidebar: eliminado el link comentado a `/facturacion`.
 
 ## Deuda conocida
 
@@ -2971,8 +3117,9 @@ Vantruck. Registrado acá para que no se pierda de vista al planificar ese proce
   dos botones "Vista previa" (LiquidacionNueva: informe armado en memoria,
   antes de persistir; Detalle: borrador persistido). Sin número interno y con
   marca visible BORRADOR/VISTA PREVIA. Usar `etiquetaColumna`.
-- Camino nuevo de Facturación para emitidos: ver, editar (incluye InformeOp
-  'liquidado'), vincular factura y anular.
+- ~~Camino nuevo de Facturación para emitidos~~ — RESUELTO en el Frente
+  Facturación (Septiembre 2026): ver/editar emitidos, facturar, desvincular y
+  revertir. Ver esa sección y "Deuda — Facturación".
 - Cascada de Finanzas sobre `InformeLiqNuevo` (resumenFinanzas, cuenta
   corriente, aging, movimientos, ledger, informe-liq-cuenta-corriente siguen
   leyendo las colecciones viejas), incluido el impacto de editar un emitido.
@@ -2990,3 +3137,56 @@ Vantruck. Registrado acá para que no se pierda de vista al planificar ese proce
 - Pantallas viejas que leen por `InformeOpService.obtenerPorIdsOperacion`
   (proforma, facturación vieja) no filtran InformeOp 'anulado'. Se retiran
   con el camino viejo.
+
+### Deuda — Facturación (camino InformeLiqNuevo)
+- Excel/PDF: descarga y reimpresión en Emitidos/Facturados/Revertidos
+  (Revertidos con marca REVERTIDO) + las dos "Vista previa" de Liquidación.
+  Generador nuevo (`LiquidacionExportService`), no un adaptador del viejo;
+  usar `etiquetaColumna`. Log REIMPRIMIR (ya existe en AccionLog).
+- Carga manual de la factura cuando el QR no se puede leer (D9;
+  `origen: 'manual'` ya previsto en el tipo).
+- Cascada de Finanzas sobre InformeLiqNuevo: cobros/pagos sobre 'facturado'
+  y estado incobrable en Finanzas (en lugar de un "anular definitivo"). Las
+  guardas `totalCobrado === 0` de revertir/desvincular ya están.
+- `'anulado'` + `anulacion` reservados sin escritor (ver "Frente
+  Facturación → Estados y gestos").
+- Prueba con una factura REAL que coincida en importe y CUIT con un emitido
+  de demo (camino "todo coincide"): pendiente por falta de un PDF adecuado.
+  El camino con discrepancias, unicidad, ver PDF y desvincular sí se probaron.
+- `FacturaQrService`: deja un `console.log` con el texto del QR; carga pdfjs
+  + jsQR en el bundle inicial. Pasarlo a import dinámico cuando se resuelva
+  la deuda de RaizModule.
+- Estilos `col-numero`/`col-moneda` definidos por componente (tabla-listado,
+  informes-tabla): consolidar en un estilo global.
+- Camino viejo de Facturación (se retira con la migración de Vantruck):
+  Supabase con anon key hardcodeada y toggle demo/Vantruck comentando
+  código (las facturas históricas viven ahí: decidir en la migración si se
+  copian a Storage); `anularLiquidacion` en chunks no atómicos, con Finanzas
+  fuera del batch y sin guarda de cobros; `updateItem` de documento entero en
+  vincular y en el detalle viejo (pisa `totalCobrado`); métodos de
+  migración/debug con escrituras masivas en los componentes viejos
+  (`actualizarInformesLiq`, `construirResumenEntidad`,
+  `migrarInformesAFinanzas`, `actualizarObjeto`).
+- Migración a Vantruck, checklist de Facturación: viejo 'anulado' → nuevo
+  'revertido'; `periodoClave` en los documentos migrados; deploy del índice
+  `informesLiq (estado, periodoClave)`, de las rules de
+  `informesLiqSnapshots`/`facturasVinculadas` y de `storage.rules`
+  (`facturas/…`) — más la verificación del bucket (ver "Deuda — verificar
+  bucket de Storage de `pf-logistics`"); poblar `facturasVinculadas` con las
+  facturas históricas para que la unicidad valga también para ellas.
+- Finales de línea mezclados (CRLF/LF según el archivo): definir
+  `.gitattributes` y normalizar en un commit aparte.
+
+### Deuda — RaizModule importa los módulos de feature en forma eager
+`RaizModule` importa en forma EAGER casi todos los módulos de feature
+(Ajustes, Choferes, Legajos, Proveedores, Liquidacion, Vendedores,
+NuevaFacturacion, Finanzas, Reportes), que además se cargan lazy desde
+raiz-routing. Efectos: el lazy loading queda anulado (todo va al bundle
+inicial: causa probable del budget excedido) y el `RouterModule.forChild`
+de cada feature registra sus rutas también en el router de Raiz (hoy no
+ganan porque RaizRoutingModule va primero). No se quita a ciegas: hay
+dependencias reales vía exports (ej. `MigracionComponent`, declarado en
+RaizModule, puede depender de `MigrarDatosComponent`, exportado por
+LiquidacionModule). Frente propio: auditar qué usan realmente
+HomeComponent / SidebarComponent / MigracionComponent y quitar los imports
+eager uno por uno. Detectado en el frente Facturación (F0).
