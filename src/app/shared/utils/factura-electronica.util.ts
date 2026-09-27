@@ -127,3 +127,17 @@ export function descripcionTipoComprobante(codigo: number): string {
 export function numeroComprobante(f: Pick<FacturaElectronicaLiq, 'puntoVenta' | 'numero'>): string {
   return `${String(f.puntoVenta).padStart(4, '0')}-${String(f.numero).padStart(8, '0')}`;
 }
+
+/** Fecha del comprobante 'YYYY-MM-DD' → 'DD/MM/YYYY'. Sin pasar por Date ni
+ *  por el pipe date (que toma ese formato como UTC y corre un día). Pura. */
+export function fechaComprobanteLegible(fecha: string): string {
+  const [a, m, d] = (fecha ?? '').split('-');
+  return a && m && d ? `${d}/${m}/${a}` : (fecha ?? '');
+}
+
+/** Campos en los que la factura no coincide con el informe: 'importe',
+ *  'CUIT' (vacío si coincide todo). Pura. */
+export function listarDiscrepancias(v: ValidacionFactura): string[] {
+  return [v.importeOk ? null : 'importe', v.cuitOk ? null : 'CUIT']
+    .filter((x): x is string => x !== null);
+}

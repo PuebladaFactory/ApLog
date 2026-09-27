@@ -56,7 +56,7 @@ import { tabActivaDesdeUrl } from 'src/app/shared/utils/tabs-url.util';
 export class ControlComponent implements OnInit{
   tabs = [
     { id: 'tab3', name: 'Emitidos', route: 'nuevaFacturacion/emitidos' },
-    // tab4 'Facturados' — llega en F4, entre Emitidos y Revertidos.
+    { id: 'tab4', name: 'Facturados', route: 'nuevaFacturacion/facturados' },
     { id: 'tab5', name: 'Revertidos', route: 'nuevaFacturacion/revertidos' },
     // Camino viejo — rutas comentadas en nueva-facturacion-routing.module.ts:
     // { id: 'tab1', name: 'Informes Emitidos', route: 'nuevaFacturacion/listado' },

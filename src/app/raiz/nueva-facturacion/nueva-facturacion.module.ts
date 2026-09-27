@@ -13,6 +13,8 @@ import { FacturacionHistoricoComponent } from './facturacion-historico/facturaci
 import { InformesTablaComponent } from './informes-tabla/informes-tabla.component';
 import { FacturacionEmitidosComponent } from './emitidos/facturacion-emitidos.component';
 import { FacturacionRevertidosComponent } from './revertidos/facturacion-revertidos.component';
+import { FacturacionFacturadosComponent } from './facturados/facturacion-facturados.component';
+import { VincularFacturaLiqComponent } from './vincular-factura-liq/vincular-factura-liq.component';
 
 
 @NgModule({
@@ -24,6 +26,8 @@ import { FacturacionRevertidosComponent } from './revertidos/facturacion-reverti
     InformesTablaComponent,
     FacturacionEmitidosComponent,
     FacturacionRevertidosComponent,
+    FacturacionFacturadosComponent,
+    VincularFacturaLiqComponent,
   ],
   imports: [
     CommonModule,

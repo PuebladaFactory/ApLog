@@ -17,6 +17,10 @@ import {
 } from 'src/app/shared/modales/informe-op-editor/informe-op-editor.component';
 import { AjustesLiqComponent } from '../ajustes-liq/ajustes-liq.component';
 import { PermisosService } from 'src/app/servicios/permisos/permisos.service';
+import {
+  descripcionTipoComprobante, fechaComprobanteLegible, listarDiscrepancias, numeroComprobante,
+} from 'src/app/shared/utils/factura-electronica.util';
+import { abrirUrlEnPestana } from 'src/app/shared/utils/abrir-url.util';
 
 /** Detalle de un InformeLiqNuevo. Lo abren Liquidación (Borradores,
  *  modulo='liquidaciones') y Facturación (Emitidos, modulo='facturacion').
@@ -26,7 +30,8 @@ import { PermisosService } from 'src/app/servicios/permisos/permisos.service';
  *  InformeLiqService.editarDatos). En cualquier otro estado es solo lectura.
  *  Período y composición no son editables. Relee todo después de cada
  *  guardado. Las transiciones (emitir, eliminar, revertir, facturar) viven en
- *  los listados, no acá. */
+ *  los listados, no acá. En 'facturado' muestra la factura vinculada y
+ *  permite abrir el PDF (permiso `<modulo>.verFactura`). */
 @Component({
   selector: 'app-informe-liq-nuevo-detalle',
   standalone: false,
@@ -90,6 +95,35 @@ export class InformeLiqNuevoDetalleComponent implements OnInit {
 
   get textoPeriodo(): string {
     return this.liq ? this.factory.textoPeriodo(this.liq.periodo) : '';
+  }
+
+  /** Factura vinculada ('facturado'): "Factura A 0003-00001234". */
+  get textoComprobante(): string {
+    const f = this.liq?.factura;
+    return f ? `${descripcionTipoComprobante(f.tipoComprobante)} ${numeroComprobante(f)}` : '';
+  }
+
+  get fechaFactura(): string {
+    return this.liq?.factura ? fechaComprobanteLegible(this.liq.factura.fecha) : '';
+  }
+
+  /** 'importe, CUIT' si se vinculó con discrepancias; '' si coincidía. */
+  get discrepanciasFactura(): string {
+    const f = this.liq?.factura;
+    return f ? listarDiscrepancias(f.validacion).join(', ') : '';
+  }
+
+  get puedeVerFactura(): boolean {
+    return !!this.liq?.facturaUrl && this.permisos.puede(this.modulo, 'verFactura');
+  }
+
+  /** Abre el PDF: la URL se resuelve desde el path guardado. Sin awaits
+   *  antes de abrirUrlEnPestana (la pestaña se abre dentro del click). */
+  verFactura(): void {
+    const path = this.liq?.facturaUrl;
+    if (!path) return;
+    abrirUrlEnPestana(() => this.informeLiqServ.obtenerUrlFactura(path))
+      .catch((e: any) => Swal.fire({ icon: 'error', text: `No se pudo abrir la factura: ${e?.message ?? e}` }));
   }
 
   /** Columnas guardadas en el informe — arman la tabla. */

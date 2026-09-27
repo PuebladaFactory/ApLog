@@ -12,13 +12,15 @@ import { InformeLiqService } from 'src/app/servicios/informes-liq/informe-liq.se
 import { InformeLiqFactoryService } from 'src/app/servicios/informes-liq/informe-liq-factory.service';
 import { nombreEntidadRef } from 'src/app/shared/utils/entidad-informe.util';
 import { InformeLiqNuevoDetalleComponent } from 'src/app/shared/modales/informe-liq-nuevo-detalle/informe-liq-nuevo-detalle.component';
+import { VincularFacturaLiqComponent } from '../vincular-factura-liq/vincular-factura-liq.component';
 
 type Fila = ConId<InformeLiqNuevo>;
 
 /** Facturación — bandeja de InformeLiqNuevo en estado 'emitido' (pendientes
  *  de facturar), en vivo, de todas las entidades. Tabla: TablaListadoComponent.
- *  Acciones: ver/editar (detalle con modulo='facturacion') y revertir
- *  (InformeLiqService.revertirEmitido). Facturar se agrega en F4. Camino paralelo a
+ *  Acciones: ver/editar (detalle con modulo='facturacion'), facturar
+ *  (VincularFacturaLiqComponent → InformeLiqService.vincularFactura) y
+ *  revertir (InformeLiqService.revertirEmitido). Camino paralelo a
  *  FacturacionListadoComponent (modelo viejo, resumenLiq). */
 @Component({
   selector: 'app-facturacion-emitidos',
@@ -49,6 +51,7 @@ export class FacturacionEmitidosComponent implements OnInit, OnDestroy {
 
   readonly acciones: AccionListado<Fila>[] = [
     { id: 'ver', label: 'Ver' },
+    { id: 'facturar', label: 'Facturar', clase: 'btn-outline-success', permiso: 'facturacion.vincularFactura' },
     {
       id: 'revertir', label: 'Revertir', clase: 'btn-outline-danger', permiso: 'facturacion.revertir',
       // D3: no se revierte un informe con algo cobrado/pagado.
@@ -102,6 +105,7 @@ export class FacturacionEmitidosComponent implements OnInit, OnDestroy {
   onAccion(e: EventoAccionListado<Fila>): void {
     switch (e.id) {
       case 'ver': this.verDetalle(e.item); break;
+      case 'facturar': this.facturar(e.item); break;
       case 'revertir': this.revertir(e.item); break;
     }
   }
@@ -117,6 +121,17 @@ export class FacturacionEmitidosComponent implements OnInit, OnDestroy {
     modalRef.componentInstance.idInfLiq = b.idInfLiq;
     modalRef.componentInstance.modulo = 'facturacion';
     // La bandeja se actualiza sola (listener); no hace falta manejar el result.
+    modalRef.result.catch(() => {});
+  }
+
+  /** Facturar: modal de vinculación (lee el QR, valida y llama a
+   *  InformeLiqService.vincularFactura). Sin refresco manual: el listener
+   *  saca el informe de la bandeja al pasar a 'facturado'. */
+  private facturar(b: Fila): void {
+    const modalRef = this.modalService.open(VincularFacturaLiqComponent, {
+      size: 'lg', centered: true, scrollable: true, backdrop: 'static', keyboard: false,
+    });
+    modalRef.componentInstance.liq = b;
     modalRef.result.catch(() => {});
   }
 

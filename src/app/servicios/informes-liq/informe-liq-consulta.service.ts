@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ConId } from 'src/app/interfaces/conId';
-import { EstadoInformeLiqNuevo, InformeLiqNuevo } from 'src/app/interfaces/informe-liq-nuevo';
+import { EstadoInformeLiqNuevo, FacturaVinculada, InformeLiqNuevo } from 'src/app/interfaces/informe-liq-nuevo';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 
 /** Lecturas de InformeLiqNuevo para los listados de Facturación. SOLO
@@ -14,6 +14,7 @@ export class InformeLiqConsultaService {
   private db = inject(DbFirestoreService);
 
   private readonly COLECCION = 'informesLiq';
+  private readonly COL_FACTURAS = 'facturasVinculadas';
   private readonly FORMATO_PERIODO = /^\d{4}-(0[1-9]|1[0-2])$/;
 
   /** En vivo: todos los informes en `estado`. Una sola igualdad → sin
@@ -50,6 +51,15 @@ export class InformeLiqConsultaService {
     return items
       .map(i => this.conId(i))
       .sort((a, b) => b.periodoClave.localeCompare(a.periodoClave) || this.compararRecientes(a, b));
+  }
+
+  /** Índice de unicidad de facturas: a qué InformeLiq está vinculado el
+   *  comprobante `clave` (claveComprobante / claveComprobanteQr del util
+   *  factura-electronica), o null. Lectura previa para avisar en la UI; la
+   *  regla real la aplica InformeLiqService.vincularFactura en su
+   *  transacción. */
+  async obtenerFacturaVinculada(clave: string): Promise<FacturaVinculada | null> {
+    return this.db.getById<FacturaVinculada>(this.COL_FACTURAS, clave);
   }
 
   private conId(i: ConId<InformeLiqNuevo>): ConId<InformeLiqNuevo> {

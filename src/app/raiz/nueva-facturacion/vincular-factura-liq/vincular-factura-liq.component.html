@@ -1,0 +1,123 @@
+<div class="modal-header">
+  <div>
+    <h4 class="modal-title">Vincular factura electrónica</h4>
+    <div class="text-muted">
+      Liquidación <b>{{ liq.numeroInterno }}</b> —
+      <span class="text-capitalize">{{ liq.tipo }}</span> {{ nombreEntidad }} — {{ textoPeriodo }}
+    </div>
+  </div>
+  <button type="button" class="btn-close" [disabled]="guardando" (click)="cancelar()"></button>
+</div>
+
+<div class="modal-body">
+  <div class="mb-3">
+    <label class="form-label">PDF de la factura (con el código QR de AFIP)</label>
+    <input
+      type="file"
+      class="form-control"
+      accept="application/pdf,.pdf"
+      [disabled]="leyendo || guardando"
+      (change)="seleccionarArchivo($event)"
+    />
+    <div class="form-text">El QR se lee automáticamente. Solo PDF, hasta 10 MB.</div>
+  </div>
+
+  @if (leyendo) {
+    <div class="text-muted mb-2">Leyendo el QR del PDF…</div>
+  }
+
+  @if (error) {
+    <div class="alert alert-danger py-2">{{ error }}</div>
+  }
+
+  @if (qr && validacion) {
+    @if (vinculadaA) {
+      <div class="alert alert-danger py-2">
+        Este comprobante ya está vinculado a la liquidación
+        <b>{{ vinculadaA.numeroInterno ?? vinculadaA.idInfLiq }}</b>. Para vincularlo acá,
+        primero hay que desvincularlo de esa liquidación (Facturación → Facturados).
+      </div>
+    }
+
+    <table class="table table-sm align-middle mb-2">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Factura (QR)</th>
+          <th>Liquidación</th>
+          <th class="text-center">Coincide</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Comprobante</th>
+          <td>{{ comprobante }}</td>
+          <td>{{ liq.numeroInterno }}</td>
+          <td></td>
+        </tr>
+        <tr>
+          <th>Fecha</th>
+          <td>{{ fechaFactura }}</td>
+          <td>Emitida {{ liq.fechaEmision }}</td>
+          <td></td>
+        </tr>
+        <tr>
+          <th>CAE</th>
+          <td>{{ qr.codAut }}</td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr>
+          <th>CUIT emisor</th>
+          <td>{{ qr.cuit }}</td>
+          <td>{{ liq.tipo === 'cliente' ? '' : cuitEntidad }}</td>
+          <td class="text-center">
+            @if (liq.tipo !== 'cliente') {
+              <span class="badge" [ngClass]="validacion.cuitOk ? 'bg-success' : 'bg-danger'">
+                {{ validacion.cuitOk ? 'Sí' : 'No' }}
+              </span>
+            }
+          </td>
+        </tr>
+        <tr>
+          <th>CUIT receptor</th>
+          <td>{{ qr.nroDocRec ?? '—' }}</td>
+          <td>{{ liq.tipo === 'cliente' ? cuitEntidad : '' }}</td>
+          <td class="text-center">
+            @if (liq.tipo === 'cliente') {
+              <span class="badge" [ngClass]="validacion.cuitOk ? 'bg-success' : 'bg-danger'">
+                {{ validacion.cuitOk ? 'Sí' : 'No' }}
+              </span>
+            }
+          </td>
+        </tr>
+        <tr>
+          <th>Importe</th>
+          <td class="text-end">{{ qr.importe | formatearValor: "$" }}</td>
+          <td class="text-end">{{ liq.valores.total | formatearValor: "$" }}</td>
+          <td class="text-center">
+            <span class="badge" [ngClass]="validacion.importeOk ? 'bg-success' : 'bg-danger'">
+              {{ validacion.importeOk ? 'Sí' : 'No' }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    @if (discrepancias.length > 0) {
+      <div class="alert alert-warning py-2 mb-0">
+        La factura no coincide con la liquidación en: <b>{{ discrepancias.join(', ') }}</b>.
+        Se puede vincular igual (con confirmación); queda registrado.
+      </div>
+    }
+  }
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-success" [disabled]="!puedeVincular" (click)="vincular()">Vincular</button>
+  <button type="button" class="btn btn-outline-secondary" [disabled]="guardando" (click)="cancelar()">Cancelar</button>
+</div>
+
+@if (guardando) {
+  <app-spinner></app-spinner>
+}
