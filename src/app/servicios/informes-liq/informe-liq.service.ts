@@ -6,8 +6,13 @@ import { Resultado } from 'src/app/interfaces/resultado';
 import { InformeOpNuevo } from 'src/app/interfaces/informe-op-nuevo';
 import { EstadoOp, Operacion } from 'src/app/interfaces/operacion';
 import {
-  DescuentoLiq, InformeLiqNuevo, InformeLiqSnapshot, PeriodoLiq, ReversionLiq,
+  DescuentoLiq, FacturaVinculada, InformeLiqNuevo, InformeLiqSnapshot, PeriodoLiq, ReversionLiq,
 } from 'src/app/interfaces/informe-liq-nuevo';
+import { StorageArchivosService } from 'src/app/servicios/storage-archivos/storage-archivos.service';
+import {
+  DatosQrAfip, claveComprobante, claveComprobanteQr, decodificarQrAfip, descripcionTipoComprobante,
+  facturaDesdeQr, numeroComprobante, validarFacturaContraInforme,
+} from 'src/app/shared/utils/factura-electronica.util';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
@@ -65,11 +70,13 @@ export class InformeLiqService {
   private numerador = inject(NumeradorService);
   private logRegistro = inject(LogRegistroService);
   private usuarioSesion = inject(UsuarioSesionService);
+  private storageArchivos = inject(StorageArchivosService);
 
   private readonly COLECCION = 'informesLiq';
   private readonly COL_INFORMES_OP = 'informesOp';
   private readonly COL_OPERACIONES = 'operaciones';
   private readonly COL_SNAPSHOTS = 'informesLiqSnapshots';
+  private readonly COL_FACTURAS = 'facturasVinculadas';
 
   /** Tope de InformeOp por liquidación: hasta 3 escrituras por InformeOp
    *  (InformeOp + Operación + contraparte) + InformeLiq + numerador + log
@@ -99,6 +106,12 @@ export class InformeLiqService {
     return snap.informesOp
       .map(inf => ({ ...inf, id: inf.idInfOp }))
       .sort((a, b) => a.fecha.localeCompare(b.fecha));
+  }
+
+  /** URL de descarga del PDF de la factura a partir del path guardado en
+   *  facturaUrl (se resuelve al abrir: respeta la sesión y las reglas). */
+  obtenerUrlFactura(path: string): Promise<string> {
+    return this.storageArchivos.urlDescarga(path);
   }
 
   /** Borradores en vivo (todas las entidades y tipos), más recientes
@@ -509,6 +522,168 @@ export class InformeLiqService {
     }
   }
 
+  /** Vincula la factura electrónica (PDF con QR de AFIP) a un InformeLiq
+   *  EMITIDO → 'facturado' (gesto de Facturación).
+   *  1. Decodifica el QR (puro).
+   *  2. Pre-chequeos con lecturas sueltas (informe 'emitido', comprobante no
+   *     vinculado): solo para no subir un PDF que se va a rechazar.
+   *  3. Sube el PDF a Storage (facturas/{idInfLiq}/…) — reversible primero.
+   *  4. Transacción: relee el informe (sigue 'emitido') y
+   *     facturasVinculadas/{clave} (unicidad atómica); escribe informe
+   *     (estado, factura, facturaUrl = PATH), crea el doc de unicidad y un
+   *     log FACTURAR con diff. La validación (importe, CUIT) se recalcula
+   *     con el informe fresco y queda en factura.validacion; confirmar
+   *     discrepancias es responsabilidad de la UI, antes de llamar (D8).
+   *  5. Si la transacción falla, borra el PDF subido (best-effort).
+   *  TODO Finanzas: 'facturado' es el estado que habilita cobros/pagos. */
+  async vincularFactura(idInfLiq: string, archivo: File, textoQr: string): Promise<Resultado<void>> {
+    // 1. QR
+    let qr: DatosQrAfip;
+    try {
+      qr = decodificarQrAfip(textoQr);
+    } catch (e: any) {
+      return { exito: false, mensaje: e?.message ?? String(e) };
+    }
+    const clave = claveComprobanteQr(qr);
+    const comprobante = `${descripcionTipoComprobante(qr.tipoCmp)} ${numeroComprobante({ puntoVenta: qr.ptoVta, numero: qr.nroCmp })}`;
+
+    // 2. Pre-chequeos (no protegidos: la regla real es la de la transacción)
+    const previo = await this.obtenerPorId(idInfLiq);
+    if (!previo) return { exito: false, mensaje: `No existe el informe de liquidación ${idInfLiq}.` };
+    if (previo.estado !== 'emitido') {
+      return { exito: false, mensaje: `El informe está en estado '${previo.estado}': solo se factura un informe emitido.` };
+    }
+    const yaVinculada = await this.db.getById<FacturaVinculada>(this.COL_FACTURAS, clave);
+    if (yaVinculada) {
+      return {
+        exito: false,
+        mensaje: `El comprobante ${comprobante} ya está vinculado a la liquidación ${yaVinculada.numeroInterno ?? yaVinculada.idInfLiq}.`,
+      };
+    }
+
+    // Fuera del callback de la transacción (puede reintentarse y tiene que ser puro).
+    const vinculadaPor = this.usuarioSesion.getUsuarioActual()?.email ?? 'Desconocido';
+    const fechaVinculacion = new Date().toISOString();
+
+    // 3. PDF a Storage
+    let path: string;
+    try {
+      path = await this.storageArchivos.subirYObtenerPath(archivo, `facturas/${idInfLiq}`);
+    } catch (e: any) {
+      return { exito: false, mensaje: `No se pudo subir el PDF de la factura: ${e?.message ?? e}` };
+    }
+
+    // 4. Transacción
+    try {
+      const numero = await this.db.commitEnTransaccion<string | null>(async (tx) => {
+        const escrituras: EscrituraBatch[] = [];
+
+        const liq = await this.leerEmitido(tx, idInfLiq);
+        const vinculada = await this.db.leerEnTransaccion<FacturaVinculada>(tx, this.COL_FACTURAS, clave);
+        if (vinculada) {
+          throw new Error(
+            `El comprobante ${comprobante} ya está vinculado a la liquidación ${vinculada.numeroInterno ?? vinculada.idInfLiq}.`,
+          );
+        }
+        // — fin de lecturas —
+
+        const validacion = validarFacturaContraInforme(qr, liq);
+        const factura = facturaDesdeQr(qr, textoQr, validacion, vinculadaPor, fechaVinculacion);
+
+        this.agregarEscrituraInformeLiqParcial(escrituras, idInfLiq, {
+          estado: 'facturado',
+          factura,
+          facturaUrl: path,
+        });
+        const indice: FacturaVinculada = { idInfLiq, numeroInterno: liq.numeroInterno, fechaVinculacion };
+        escrituras.push({ coleccion: this.COL_FACTURAS, id: clave, data: indice, modo: 'crear' });
+
+        const discrepancias = [
+          validacion.importeOk ? null : 'importe',
+          validacion.cuitOk ? null : 'CUIT',
+        ].filter(Boolean);
+        const { id: _i, idInfLiq: _l, ...anterior } = liq as any;
+        await this.logRegistro.agregarAlBatch(
+          escrituras, 'FACTURAR', this.COLECCION, idInfLiq,
+          `Factura ${comprobante} vinculada a la liquidación ${liq.numeroInterno} — ${liq.tipo} ${nombreEntidadRef(liq.entidad)}` +
+          (discrepancias.length > 0 ? ` — vinculada con discrepancias (${discrepancias.join(', ')})` : ''),
+          anterior,
+        );
+
+        return { escrituras, resultado: liq.numeroInterno };
+      });
+
+      return { exito: true, mensaje: `Factura ${comprobante} vinculada. La liquidación ${numero} pasó a facturada.` };
+    } catch (e: any) {
+      // 5. Compensación: el PDF subido queda huérfano si la transacción falla.
+      try {
+        await this.storageArchivos.eliminarPorUrl(path);
+      } catch {
+        // best-effort
+      }
+      await this.logRegistro.registrarError(
+        'FACTURAR', this.COLECCION, idInfLiq, `Error al vincular factura ${comprobante}: ${e?.message ?? e}`,
+      );
+      return { exito: false, mensaje: `Error al vincular la factura: ${e?.message ?? e}` };
+    }
+  }
+
+  /** Desvincula la factura de un InformeLiq FACTURADO → vuelve a 'emitido'
+   *  (gesto de Facturación). Transacción: relee el informe (sigue
+   *  'facturado', sin nada cobrado — D3); limpia factura y facturaUrl y
+   *  borra el doc de unicidad (el comprobante queda libre para vincularse
+   *  bien). El PDF se CONSERVA en Storage (D18): su path queda en el diff
+   *  del log DESVINCULAR. Motivo obligatorio (va en el detalle del log). */
+  async desvincularFactura(idInfLiq: string, motivo: string): Promise<Resultado<void>> {
+    const motivoLimpio = (motivo ?? '').trim();
+    if (!motivoLimpio) return { exito: false, mensaje: 'El motivo de la desvinculación es obligatorio.' };
+
+    try {
+      const numero = await this.db.commitEnTransaccion<string | null>(async (tx) => {
+        const escrituras: EscrituraBatch[] = [];
+
+        const liq = await this.leerFacturado(tx, idInfLiq);
+        if ((liq.valoresFinancieros?.totalCobrado ?? 0) !== 0) {
+          throw new Error(
+            `La liquidación ${liq.numeroInterno} tiene importes cobrados/pagados imputados: no se puede desvincular la factura.`,
+          );
+        }
+        if (!liq.factura) {
+          throw new Error(`Inconsistencia: la liquidación ${liq.numeroInterno} está facturada pero no tiene factura.`);
+        }
+        // — fin de lecturas —
+
+        const clave = claveComprobante(liq.factura);
+        const comprobante = `${descripcionTipoComprobante(liq.factura.tipoComprobante)} ${numeroComprobante(liq.factura)}`;
+
+        this.agregarEscrituraInformeLiqParcial(escrituras, idInfLiq, {
+          estado: 'emitido',
+          factura: null,
+          facturaUrl: null,
+        });
+        // Borrar un doc que no existe no falla: no hace falta leerlo antes.
+        escrituras.push({ coleccion: this.COL_FACTURAS, id: clave, data: null, modo: 'eliminar' });
+
+        const { id: _i, idInfLiq: _l, ...anterior } = liq as any;
+        await this.logRegistro.agregarAlBatch(
+          escrituras, 'DESVINCULAR', this.COLECCION, idInfLiq,
+          `Factura ${comprobante} desvinculada de la liquidación ${liq.numeroInterno} — vuelve a 'emitido' — ` +
+          `el PDF se conserva en Storage (${liq.facturaUrl ?? 'sin path'}) — motivo: ${motivoLimpio}`,
+          anterior,
+        );
+
+        return { escrituras, resultado: liq.numeroInterno };
+      });
+
+      return { exito: true, mensaje: `Factura desvinculada. La liquidación ${numero} volvió a emitida.` };
+    } catch (e: any) {
+      await this.logRegistro.registrarError(
+        'DESVINCULAR', this.COLECCION, idInfLiq, `Error al desvincular factura de ${idInfLiq}: ${e?.message ?? e}`,
+      );
+      return { exito: false, mensaje: `Error al desvincular la factura: ${e?.message ?? e}` };
+    }
+  }
+
   // =====================================================================
   // INTERNOS
   // =====================================================================
@@ -676,6 +851,16 @@ export class InformeLiqService {
     if (!data) throw new Error(`No existe el informe de liquidación ${idInfLiq}.`);
     if (data.estado !== 'emitido') {
       throw new Error(`El informe ${data.numeroInterno ?? idInfLiq} está en estado '${data.estado}' (se esperaba 'emitido').`);
+    }
+    return { ...data, id: idInfLiq, idInfLiq };
+  }
+
+  /** Lee el InformeLiq dentro de la transacción y exige estado 'facturado'. */
+  private async leerFacturado(tx: Transaction, idInfLiq: string): Promise<ConId<InformeLiqNuevo>> {
+    const data = await this.db.leerEnTransaccion<InformeLiqNuevo>(tx, this.COLECCION, idInfLiq);
+    if (!data) throw new Error(`No existe el informe de liquidación ${idInfLiq}.`);
+    if (data.estado !== 'facturado') {
+      throw new Error(`El informe ${data.numeroInterno ?? idInfLiq} está en estado '${data.estado}' (se esperaba 'facturado').`);
     }
     return { ...data, id: idInfLiq, idInfLiq };
   }

@@ -39,6 +39,22 @@ service firebase.storage {
         && request.auth.token.role in ['dev', 'admin', 'user'];
     }
 
+    // Facturas electrónicas vinculadas a InformeLiqNuevo (Facturación —
+    // InformeLiqService.vincularFactura). Mismo mapeo de roles que
+    // 'finanzas' en firestore.rules: dev/admin sin restricción, demo solo
+    // leer, user/manager sin acceso. Solo PDF, hasta 10 MB. No hay
+    // 'update': cada subida es un objeto nuevo (nombre con timestamp).
+    match /facturas/{idInfLiq}/{archivo} {
+      allow read: if request.auth != null
+        && request.auth.token.role in ['dev', 'admin', 'demo'];
+      allow create: if request.auth != null
+        && request.auth.token.role in ['dev', 'admin']
+        && request.resource.contentType == 'application/pdf'
+        && request.resource.size < 10 * 1024 * 1024;
+      allow delete: if request.auth != null
+        && request.auth.token.role in ['dev', 'admin'];
+    }
+
     // Cualquier otra ruta no listada queda denegada por defecto (fail-safe,
     // mismo criterio que firestore.rules).
     match /{allPaths=**} {

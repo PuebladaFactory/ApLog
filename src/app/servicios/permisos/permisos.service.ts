@@ -215,6 +215,9 @@ export class PermisosService {
     // Revertir un InformeLiq emitido es una transición de estado del
     // documento (no un delete) — mismo criterio que 'anular'.
     revertir: 'editar',
+    // Desvincular la factura de un InformeLiq (facturado → emitido): edición
+    // del documento, igual que vincularFactura.
+    desvincular: 'editar',
   };
 
   // Primer caso real poblado (Bloque 7, tablero-asignaciones) — hasta acá

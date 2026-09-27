@@ -141,3 +141,14 @@ export interface InformeLiqSnapshot {
   fecha: string;                  // ISO 8601 con hora — igual a reversion.fecha
   informesOp: InformeOpNuevo[];
 }
+
+/** Índice de unicidad de facturas electrónicas: una factura → un
+ *  InformeLiq. Colección `facturasVinculadas`, doc id = claveComprobante
+ *  (`{cuitEmisor}_{ptoVta}_{tipoComprobante}_{numero}`, ver
+ *  shared/utils/factura-electronica.util.ts). Lo crea vincularFactura y lo
+ *  borra desvincularFactura. */
+export interface FacturaVinculada {
+  idInfLiq: string;
+  numeroInterno: string | null;
+  fechaVinculacion: string;       // ISO 8601 con hora
+}
