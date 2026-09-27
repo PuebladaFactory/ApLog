@@ -191,6 +191,7 @@ export class PapeleraComponent implements OnInit {
     });
     if (!confirmacion.isConfirmed) return;
 
+    let restaurado = false;
     this.cargando = true;
     try {
       switch (evento.coleccionPrincipal) {
@@ -211,12 +212,18 @@ export class PapeleraComponent implements OnInit {
         default:
           throw new Error(`Colección principal sin restaurador conocido: ${evento.coleccionPrincipal}`);
       }
+      restaurado = true;
       Swal.fire('Confirmado', 'El objeto ha sido restaurado.', 'success');
-      await (this.eventoFiltrado ? this.cargarEvento(this.eventoFiltrado) : this.buscar());
     } catch (e: any) {
       Swal.fire('Error', `No se pudo restaurar: ${e?.message ?? e}`, 'error');
     } finally {
       this.cargando = false;
+    }
+    // Recarga FUERA del try/finally: cargarPagina() no consulta mientras
+    // `cargando` es true (guarda contra consultas superpuestas). Recargar
+    // adentro dejaba el listado vacío.
+    if (restaurado) {
+      await (this.eventoFiltrado ? this.cargarEvento(this.eventoFiltrado) : this.buscar());
     }
   }
 }
