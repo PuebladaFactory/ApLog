@@ -13,6 +13,8 @@ import { InformeLiqFactoryService } from 'src/app/servicios/informes-liq/informe
 import { DatosLiquidacion, InformeLiqService } from 'src/app/servicios/informes-liq/informe-liq.service';
 import { nombreEntidadRef } from 'src/app/shared/utils/entidad-informe.util';
 import { AjustesLiqComponent } from 'src/app/shared/modales/ajustes-liq/ajustes-liq.component';
+import { LiquidacionExportService } from 'src/app/servicios/informes-liq/liquidacion-export.service';
+import { toISODateString } from 'src/app/servicios/fechas/date-range.service';
 
 /** Lo que devuelve el modal al cerrarse con una confirmación. El caller
  *  (InformeOpListadoComponent) llama a InformeLiqService según `accion`. */
@@ -73,6 +75,7 @@ export class LiquidacionNuevaComponent implements OnInit {
     private informeOpServ: InformeOpService,
     private operacionServ: OperacionService,
     private factory: InformeLiqFactoryService,
+    private exportServ: LiquidacionExportService,
   ) {}
 
   ngOnInit(): void {
@@ -197,6 +200,31 @@ export class LiquidacionNuevaComponent implements OnInit {
 
   quitarDescuento(i: number): void {
     this.descuentos = this.descuentos.filter((_, idx) => idx !== i);
+  }
+
+  /** Vista previa (PDF en pestaña nueva) de lo que se va a liquidar, con lo
+   *  que está en pantalla: selección, ajustes, observaciones y columnas.
+   *  Informe armado en memoria con el factory (no se guarda): marca VISTA
+   *  PREVIA, sin número. Sin awaits antes de llamar al servicio (la pestaña
+   *  se abre dentro del click). */
+  vistaPrevia(): void {
+    if (this.seleccion.size === 0) return;
+    const seleccionados = this.seleccionados;
+    const liq = this.factory.crear('', {
+      tipo: this.tipo,
+      entidad: this.entidad,
+      periodo: this.periodo,
+      informesOp: seleccionados,
+      descuentos: this.descuentos,
+      columnas: this.columnasVisibles.map(c => c.nombre),
+      observaciones: this.observaciones.trim(),
+      modo: 'borrador',
+      numeroInterno: null,
+      fecha: toISODateString(new Date()),
+    });
+    this.exportServ
+      .vistaPrevia(liq, seleccionados, { vistaPrevia: true })
+      .catch((e: any) => Swal.fire({ icon: 'error', text: `No se pudo generar la vista previa: ${e?.message ?? e}` }));
   }
 
   /** Confirmación con resumen + alertas repetidas; si confirma, cierra el

@@ -8,7 +8,7 @@
     <input class="form-control" type="month" [(ngModel)]="hasta" />
   </div>
   <div class="col-md-1">
-    <button type="button" class="btn btn-primary w-100" [disabled]="cargando" (click)="consultar()">Consultar</button>
+    <button type="button" class="btn btn-primary w-100" [disabled]="cargando || procesando" (click)="consultar()">Consultar</button>
   </div>
   <div class="col-md-2">
     <select class="form-select" [ngModel]="filtroTipo" (ngModelChange)="filtroTipo = $event; aplicarFiltros()">
@@ -38,6 +38,11 @@
   [acciones]="acciones"
   [ordenInicial]="ordenInicial"
   [cargando]="cargando"
+  [bloqueada]="procesando"
   mensajeVacio="No hay liquidaciones revertidas en el período consultado."
   (accion)="onAccion($event)"
 ></app-tabla-listado>
+
+@if (procesando) {
+  <app-spinner></app-spinner>
+}

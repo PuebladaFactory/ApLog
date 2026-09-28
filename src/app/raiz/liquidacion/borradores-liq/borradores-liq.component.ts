@@ -9,6 +9,8 @@ import {
 } from 'src/app/interfaces/tabla-listado';
 import { InformeLiqService } from 'src/app/servicios/informes-liq/informe-liq.service';
 import { InformeLiqFactoryService } from 'src/app/servicios/informes-liq/informe-liq-factory.service';
+import { LiquidacionExportService } from 'src/app/servicios/informes-liq/liquidacion-export.service';
+import { preguntarFormatoDescarga } from 'src/app/shared/utils/preguntar-descarga.util';
 import { nombreEntidadRef } from 'src/app/shared/utils/entidad-informe.util';
 import { InformeLiqNuevoDetalleComponent } from 'src/app/shared/modales/informe-liq-nuevo-detalle/informe-liq-nuevo-detalle.component';
 
@@ -16,7 +18,8 @@ type Fila = ConId<InformeLiqNuevo>;
 
 /** Borradores de liquidación (InformeLiqNuevo en estado 'borrador') — listado
  *  en vivo de todas las entidades. Tabla: TablaListadoComponent. Acciones:
- *  ver/editar (modal de detalle), emitir, eliminar. Camino paralelo a
+ *  ver/editar (modal de detalle), emitir, eliminar, descargar la proforma
+ *  (PDF/Excel). Después de emitir pregunta si descargar. Camino paralelo a
  *  ProformaComponent (modelo viejo). */
 @Component({
   selector: 'app-borradores-liq',
@@ -47,6 +50,8 @@ export class BorradoresLiqComponent implements OnInit, OnDestroy {
 
   readonly acciones: AccionListado<Fila>[] = [
     { id: 'ver', label: 'Ver' },
+    { id: 'pdf', label: 'PDF', clase: 'btn-outline-secondary', permiso: 'liquidaciones.reimprimir' },
+    { id: 'excel', label: 'Excel', clase: 'btn-outline-secondary', permiso: 'liquidaciones.reimprimir' },
     { id: 'emitir', label: 'Emitir', clase: 'btn-primary', permiso: 'liquidaciones.liquidar' },
     { id: 'eliminar', label: 'Eliminar', clase: 'btn-outline-danger', permiso: 'liquidaciones.eliminar' },
   ];
@@ -57,6 +62,7 @@ export class BorradoresLiqComponent implements OnInit, OnDestroy {
     private modalService: NgbModal,
     private informeLiqServ: InformeLiqService,
     private factory: InformeLiqFactoryService,
+    private exportServ: LiquidacionExportService,
   ) {}
 
   ngOnInit(): void {
@@ -93,6 +99,8 @@ export class BorradoresLiqComponent implements OnInit, OnDestroy {
   onAccion(e: EventoAccionListado<Fila>): void {
     switch (e.id) {
       case 'ver': this.verDetalle(e.item); break;
+      case 'pdf':
+      case 'excel': this.descargar(e.item, e.id); break;
       case 'emitir': this.emitir(e.item); break;
       case 'eliminar': this.eliminar(e.item); break;
     }
@@ -129,9 +137,34 @@ export class BorradoresLiqComponent implements OnInit, OnDestroy {
     if (!r.isConfirmed) return;
 
     this.procesando = true;
+    const res = await this.informeLiqServ.emitirBorrador(b.idInfLiq)
+      .finally(() => (this.procesando = false));
+
+    if (!res.exito) {
+      Swal.fire({ icon: 'error', text: res.mensaje });
+      return;
+    }
+    // Pregunta después de apagar el spinner (si no, el overlay tapa el Swal).
+    const formato = await preguntarFormatoDescarga(res.mensaje);
+    if (formato && res.objeto) {
+      this.procesando = true;
+      try {
+        await this.exportServ.descargarPorId(res.objeto.idInfLiq, formato);
+      } catch (e: any) {
+        Swal.fire({ icon: 'error', text: `No se pudo generar el archivo: ${e?.message ?? e}` });
+      } finally {
+        this.procesando = false;
+      }
+    }
+  }
+
+  /** Descarga directa de la proforma (acciones PDF / Excel), sin confirmación. */
+  async descargar(b: Fila, formato: 'excel' | 'pdf'): Promise<void> {
+    this.procesando = true;
     try {
-      const res = await this.informeLiqServ.emitirBorrador(b.idInfLiq);
-      Swal.fire({ icon: res.exito ? 'success' : 'error', text: res.mensaje });
+      await this.exportServ.descargar(b, formato);
+    } catch (e: any) {
+      Swal.fire({ icon: 'error', text: `No se pudo generar el archivo: ${e?.message ?? e}` });
     } finally {
       this.procesando = false;
     }

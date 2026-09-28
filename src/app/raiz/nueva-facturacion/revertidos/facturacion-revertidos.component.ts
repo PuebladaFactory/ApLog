@@ -8,6 +8,7 @@ import {
 } from 'src/app/interfaces/tabla-listado';
 import { InformeLiqConsultaService } from 'src/app/servicios/informes-liq/informe-liq-consulta.service';
 import { InformeLiqFactoryService } from 'src/app/servicios/informes-liq/informe-liq-factory.service';
+import { LiquidacionExportService } from 'src/app/servicios/informes-liq/liquidacion-export.service';
 import { nombreEntidadRef } from 'src/app/shared/utils/entidad-informe.util';
 import { InformeLiqNuevoDetalleComponent } from 'src/app/shared/modales/informe-liq-nuevo-detalle/informe-liq-nuevo-detalle.component';
 
@@ -16,7 +17,8 @@ type Fila = ConId<InformeLiqNuevo>;
 /** Facturación — histórico de InformeLiqNuevo 'revertido', one-shot por
  *  rango de períodos de liquidación (InformeLiqConsultaService.consultarPorPeriodo,
  *  índice estado + periodoClave). Tipo y texto se filtran en memoria.
- *  Acción: ver (el detalle muestra la copia congelada de los InformeOp). */
+ *  Acciones: ver (el detalle muestra la copia congelada de los InformeOp) y
+ *  descargar PDF/Excel (marca REVERTIDO; InformeOp de la copia congelada). */
 @Component({
   selector: 'app-facturacion-revertidos',
   standalone: false,
@@ -33,6 +35,7 @@ export class FacturacionRevertidosComponent implements OnInit {
   desde = '';
   hasta = '';
   cargando = false;
+  procesando = false;
 
   readonly ordenInicial: OrdenListado = { key: 'periodo', asc: false };
 
@@ -50,12 +53,15 @@ export class FacturacionRevertidosComponent implements OnInit {
 
   readonly acciones: AccionListado<Fila>[] = [
     { id: 'ver', label: 'Ver' },
+    { id: 'pdf', label: 'PDF', clase: 'btn-outline-secondary', permiso: 'facturacion.reimprimir' },
+    { id: 'excel', label: 'Excel', clase: 'btn-outline-secondary', permiso: 'facturacion.reimprimir' },
   ];
 
   constructor(
     private modalService: NgbModal,
     private consulta: InformeLiqConsultaService,
     private factory: InformeLiqFactoryService,
+    private exportServ: LiquidacionExportService,
   ) {}
 
   ngOnInit(): void {
@@ -101,6 +107,8 @@ export class FacturacionRevertidosComponent implements OnInit {
   onAccion(e: EventoAccionListado<Fila>): void {
     switch (e.id) {
       case 'ver': this.verDetalle(e.item); break;
+      case 'pdf':
+      case 'excel': this.descargar(e.item, e.id); break;
     }
   }
 
@@ -110,6 +118,19 @@ export class FacturacionRevertidosComponent implements OnInit {
 
   private clave(fecha: Date): string {
     return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  /** Descarga directa (acciones PDF / Excel), sin confirmación. Log
+   *  REIMPRIMIR (documento con número) en LiquidacionExportService. */
+  private async descargar(b: Fila, formato: 'excel' | 'pdf'): Promise<void> {
+    this.procesando = true;
+    try {
+      await this.exportServ.descargar(b, formato);
+    } catch (e: any) {
+      Swal.fire({ icon: 'error', text: `No se pudo generar el archivo: ${e?.message ?? e}` });
+    } finally {
+      this.procesando = false;
+    }
   }
 
   private verDetalle(b: Fila): void {

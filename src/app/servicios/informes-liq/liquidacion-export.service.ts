@@ -60,6 +60,14 @@ export class LiquidacionExportService {
     }
   }
 
+  /** Igual que `descargar`, releyendo antes el informe (ej. recién emitido o
+   *  guardado: el caller solo tiene el id). */
+  async descargarPorId(idInfLiq: string, formato: FormatoExportacion): Promise<void> {
+    const liq = await this.informeLiqServ.obtenerPorId(idInfLiq);
+    if (!liq) throw new Error('El informe de liquidación ya no existe.');
+    await this.descargar(liq, formato);
+  }
+
   /** PDF en una pestaña nueva, sin descargar (E2). Llamar SINCRÓNICAMENTE
    *  desde el handler del click, sin awaits previos (la pestaña se abre antes
    *  de generar: si no, el bloqueador de ventanas la frena). Usa lo que se le

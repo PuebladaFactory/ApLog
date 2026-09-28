@@ -9,6 +9,7 @@ import {
 import { InformeLiqConsultaService } from 'src/app/servicios/informes-liq/informe-liq-consulta.service';
 import { InformeLiqService } from 'src/app/servicios/informes-liq/informe-liq.service';
 import { InformeLiqFactoryService } from 'src/app/servicios/informes-liq/informe-liq-factory.service';
+import { LiquidacionExportService } from 'src/app/servicios/informes-liq/liquidacion-export.service';
 import { nombreEntidadRef } from 'src/app/shared/utils/entidad-informe.util';
 import {
   descripcionTipoComprobante, fechaComprobanteLegible, listarDiscrepancias, numeroComprobante,
@@ -72,6 +73,8 @@ export class FacturacionFacturadosComponent implements OnInit {
 
   readonly acciones: AccionListado<Fila>[] = [
     { id: 'ver', label: 'Ver' },
+    { id: 'pdf', label: 'PDF', clase: 'btn-outline-secondary', permiso: 'facturacion.reimprimir' },
+    { id: 'excel', label: 'Excel', clase: 'btn-outline-secondary', permiso: 'facturacion.reimprimir' },
     {
       id: 'verFactura', label: 'Ver factura', clase: 'btn-outline-success', permiso: 'facturacion.verFactura',
       visible: b => !!b.facturaUrl,
@@ -88,6 +91,7 @@ export class FacturacionFacturadosComponent implements OnInit {
     private consulta: InformeLiqConsultaService,
     private factory: InformeLiqFactoryService,
     private informeLiqServ: InformeLiqService,
+    private exportServ: LiquidacionExportService,
   ) {}
 
   ngOnInit(): void {
@@ -135,6 +139,8 @@ export class FacturacionFacturadosComponent implements OnInit {
   onAccion(e: EventoAccionListado<Fila>): void {
     switch (e.id) {
       case 'ver': this.verDetalle(e.item); break;
+      case 'pdf':
+      case 'excel': this.descargar(e.item, e.id); break;
       case 'verFactura': this.verFactura(e.item); break;
       case 'desvincular': this.desvincular(e.item); break;
     }
@@ -157,6 +163,19 @@ export class FacturacionFacturadosComponent implements OnInit {
 
   private clave(fecha: Date): string {
     return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  /** Descarga directa (acciones PDF / Excel), sin confirmación. Log
+   *  REIMPRIMIR (documento con número) en LiquidacionExportService. */
+  private async descargar(b: Fila, formato: 'excel' | 'pdf'): Promise<void> {
+    this.procesando = true;
+    try {
+      await this.exportServ.descargar(b, formato);
+    } catch (e: any) {
+      Swal.fire({ icon: 'error', text: `No se pudo generar el archivo: ${e?.message ?? e}` });
+    } finally {
+      this.procesando = false;
+    }
   }
 
   private verDetalle(b: Fila): void {

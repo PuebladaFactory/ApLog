@@ -14,6 +14,8 @@ import {
   ResultadoEdicionInformeOp,
 } from 'src/app/shared/modales/informe-op-editor/informe-op-editor.component';
 import { InformeLiqService } from 'src/app/servicios/informes-liq/informe-liq.service';
+import { LiquidacionExportService } from 'src/app/servicios/informes-liq/liquidacion-export.service';
+import { preguntarFormatoDescarga } from 'src/app/shared/utils/preguntar-descarga.util';
 import {
   LiquidacionNuevaComponent,
   ResultadoLiquidacionNueva,
@@ -90,6 +92,7 @@ export class InformeOpListadoComponent implements OnInit, OnDestroy {
     private operacionServ: OperacionService,
     private dateRangeService: DateRangeService,
     private informeLiqServ: InformeLiqService,
+    private exportServ: LiquidacionExportService,
   ) {}
 
   ngOnInit(): void {
@@ -385,11 +388,27 @@ export class InformeOpListadoComponent implements OnInit, OnDestroy {
     }
 
     this.guardando = true;
+    const res = await (resultado.accion === 'emitir'
+      ? this.informeLiqServ.emitir(resultado.datos)
+      : this.informeLiqServ.crearBorrador(resultado.datos))
+      .finally(() => (this.guardando = false));
+
+    if (!res.exito) {
+      Swal.fire({ icon: 'error', text: res.mensaje });
+      return;
+    }
+    // Pregunta después de apagar el spinner (si no, el overlay tapa el Swal).
+    const formato = await preguntarFormatoDescarga(res.mensaje);
+    if (formato && res.objeto) await this.descargarLiquidacion(res.objeto.idInfLiq, formato);
+  }
+
+  /** Descarga del informe recién creado (proforma o emitido). */
+  private async descargarLiquidacion(idInfLiq: string, formato: 'excel' | 'pdf'): Promise<void> {
+    this.guardando = true;
     try {
-      const res = resultado.accion === 'emitir'
-        ? await this.informeLiqServ.emitir(resultado.datos)
-        : await this.informeLiqServ.crearBorrador(resultado.datos);
-      Swal.fire({ icon: res.exito ? 'success' : 'error', text: res.mensaje });
+      await this.exportServ.descargarPorId(idInfLiq, formato);
+    } catch (e: any) {
+      Swal.fire({ icon: 'error', text: `No se pudo generar el archivo: ${e?.message ?? e}` });
     } finally {
       this.guardando = false;
     }

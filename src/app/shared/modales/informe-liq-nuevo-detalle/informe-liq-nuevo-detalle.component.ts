@@ -21,6 +21,7 @@ import {
   descripcionTipoComprobante, fechaComprobanteLegible, listarDiscrepancias, numeroComprobante,
 } from 'src/app/shared/utils/factura-electronica.util';
 import { abrirUrlEnPestana } from 'src/app/shared/utils/abrir-url.util';
+import { LiquidacionExportService } from 'src/app/servicios/informes-liq/liquidacion-export.service';
 
 /** Detalle de un InformeLiqNuevo. Lo abren Liquidación (Borradores,
  *  modulo='liquidaciones') y Facturación (Emitidos, modulo='facturacion').
@@ -61,6 +62,7 @@ export class InformeLiqNuevoDetalleComponent implements OnInit {
     private informeLiqServ: InformeLiqService,
     private factory: InformeLiqFactoryService,
     private permisos: PermisosService,
+    private exportServ: LiquidacionExportService,
   ) {}
 
   ngOnInit(): void {
@@ -284,6 +286,25 @@ export class InformeLiqNuevoDetalleComponent implements OnInit {
     } finally {
       this.guardando = false;
     }
+  }
+
+  /** Vista previa (PDF en pestaña nueva) con lo que está en pantalla, aunque
+   *  no esté guardado (ajustes, observaciones, columnas; total recalculado).
+   *  Es el documento real del estado (proforma, emitido, facturado,
+   *  revertido): no lleva la marca VISTA PREVIA. Sin awaits antes de llamar
+   *  al servicio (la pestaña se abre dentro del click). */
+  vistaPrevia(): void {
+    if (!this.liq) return;
+    const copia: InformeLiqNuevo = {
+      ...this.liq,
+      descuentos: this.descuentos.map(d => ({ concepto: d.concepto, valor: d.valor })),
+      observaciones: this.observaciones.trim(),
+      columnas: this.columnasSeleccionadas,
+      valores: this.factory.recalcularTotal(this.liq.valores, this.descuentos),
+    };
+    this.exportServ
+      .vistaPrevia(copia, this.informes)
+      .catch((e: any) => Swal.fire({ icon: 'error', text: `No se pudo generar la vista previa: ${e?.message ?? e}` }));
   }
 
   cerrar(): void {

@@ -10,6 +10,7 @@ import {
 import { InformeLiqConsultaService } from 'src/app/servicios/informes-liq/informe-liq-consulta.service';
 import { InformeLiqService } from 'src/app/servicios/informes-liq/informe-liq.service';
 import { InformeLiqFactoryService } from 'src/app/servicios/informes-liq/informe-liq-factory.service';
+import { LiquidacionExportService } from 'src/app/servicios/informes-liq/liquidacion-export.service';
 import { nombreEntidadRef } from 'src/app/shared/utils/entidad-informe.util';
 import { InformeLiqNuevoDetalleComponent } from 'src/app/shared/modales/informe-liq-nuevo-detalle/informe-liq-nuevo-detalle.component';
 import { VincularFacturaLiqComponent } from '../vincular-factura-liq/vincular-factura-liq.component';
@@ -51,6 +52,8 @@ export class FacturacionEmitidosComponent implements OnInit, OnDestroy {
 
   readonly acciones: AccionListado<Fila>[] = [
     { id: 'ver', label: 'Ver' },
+    { id: 'pdf', label: 'PDF', clase: 'btn-outline-secondary', permiso: 'facturacion.reimprimir' },
+    { id: 'excel', label: 'Excel', clase: 'btn-outline-secondary', permiso: 'facturacion.reimprimir' },
     { id: 'facturar', label: 'Facturar', clase: 'btn-outline-success', permiso: 'facturacion.vincularFactura' },
     {
       id: 'revertir', label: 'Revertir', clase: 'btn-outline-danger', permiso: 'facturacion.revertir',
@@ -66,6 +69,7 @@ export class FacturacionEmitidosComponent implements OnInit, OnDestroy {
     private consulta: InformeLiqConsultaService,
     private factory: InformeLiqFactoryService,
     private informeLiqServ: InformeLiqService,
+    private exportServ: LiquidacionExportService,
   ) {}
 
   ngOnInit(): void {
@@ -105,6 +109,8 @@ export class FacturacionEmitidosComponent implements OnInit, OnDestroy {
   onAccion(e: EventoAccionListado<Fila>): void {
     switch (e.id) {
       case 'ver': this.verDetalle(e.item); break;
+      case 'pdf':
+      case 'excel': this.descargar(e.item, e.id); break;
       case 'facturar': this.facturar(e.item); break;
       case 'revertir': this.revertir(e.item); break;
     }
@@ -112,6 +118,19 @@ export class FacturacionEmitidosComponent implements OnInit, OnDestroy {
 
   private nombre(b: InformeLiqNuevo): string {
     return nombreEntidadRef(b.entidad);
+  }
+
+  /** Descarga directa (acciones PDF / Excel), sin confirmación. Log
+   *  REIMPRIMIR (documento con número) en LiquidacionExportService. */
+  private async descargar(b: Fila, formato: 'excel' | 'pdf'): Promise<void> {
+    this.procesando = true;
+    try {
+      await this.exportServ.descargar(b, formato);
+    } catch (e: any) {
+      Swal.fire({ icon: 'error', text: `No se pudo generar el archivo: ${e?.message ?? e}` });
+    } finally {
+      this.procesando = false;
+    }
   }
 
   private verDetalle(b: Fila): void {

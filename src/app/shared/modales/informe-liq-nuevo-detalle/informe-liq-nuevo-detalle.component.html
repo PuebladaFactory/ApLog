@@ -264,8 +264,14 @@
 </div>
 
 <div class="modal-footer">
-    <!-- BOTON PARA LA VISTA PREVIA DEL INFORME COMPLETO, AUN NO IMPLMENTADO -->
-    <button type="button" class="btn btn-outline-info">Vista previa</button>
+    <button
+        type="button"
+        class="btn btn-outline-info"
+        [disabled]="cargando || !liq"
+        (click)="vistaPrevia()"
+    >
+        Vista previa
+    </button>
     <button type="button" class="btn btn-secondary" (click)="cerrar()">
         Cerrar
     </button>
