@@ -5,13 +5,11 @@ import { AsignacionItem } from 'src/app/interfaces/asignacion';
 import { Chofer, Vehiculo, TarifaTipo } from 'src/app/interfaces/chofer';
 import { ConIdType } from 'src/app/interfaces/conId';
 import { tarifaTipoDesdeHabilitadas } from 'src/app/interfaces/tarifa-habilitada';
-import { EntidadTipo } from 'src/app/interfaces/tarifa';
 import { OperacionCreada } from 'src/app/servicios/operaciones/operacion.service';
 import { OperacionFactoryService } from 'src/app/servicios/operaciones/operacion-factory.service';
 import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
-import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
-import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
 import { ValoresTarifaService, CandidatoTarifa, CandidatosLado } from 'src/app/servicios/tarifario/valores-tarifa.service';
+import { ResolucionTarifaOpService } from 'src/app/servicios/tarifario/resolucion-tarifa-op.service';
 import Swal from 'sweetalert2';
 
 /** Grupo de exhibición: una tabla por cliente. Viewmodel efímero del componente. */
@@ -70,9 +68,8 @@ export class OperacionesEditorComponent implements OnInit {
     public  activeModal:          NgbActiveModal,
     private operacionFactory:     OperacionFactoryService,
     private clienteService:       ClienteService,
-    private choferService:        ChoferService,
-    private proveedorService:     ProveedorService,
     private valoresTarifaService: ValoresTarifaService,
+    private resolucionTarifa:     ResolucionTarifaOpService,
   ) {}
 
   // ===========================================================================
@@ -165,39 +162,18 @@ export class OperacionesEditorComponent implements OnInit {
 
   /** Choferes disponibles para resolver el pendiente: los del proveedor de la op. */
   choferesDisponibles(op: Operacion): ConIdType<Chofer>[] {
-    if (!op.proveedor) return [];
-    return this.choferService.getChoferesPorProveedor(op.proveedor.id);
+    return this.resolucionTarifa.choferesDisponibles(op);
   }
 
   /** Resuelve el chofer pendiente: puebla RefChofer, recalcula tarifaTipo con la tarifa
    *  del PROVEEDOR (no del chofer, que la hereda) y re-siembra el tipo original. */
   onChoferSeleccionado(c: OperacionCreada, idChofer: string): void {
-    const op = c.operacion;
-    if (!idChofer) return;
+    const { asignado, tipoRecalculado } = this.resolucionTarifa.asignarChofer(c.operacion, idChofer);
+    if (!asignado) return;
 
-    const chofer = this.choferService.getChoferPorId(idChofer);
-    if (!chofer) return;
-
-    op.chofer = {
-      id:       chofer.id,
-      nombre:   chofer.datosPersonales.nombre,
-      apellido: chofer.datosPersonales.apellido,
-      cuit:     chofer.datosPersonales.cuit,
-    };
-
-    // Recalcular tarifaTipo. Cliente vivo + tarifa secundaria del proveedor.
-    const cliente = this.clienteService.getClientePorId(op.cliente.id);
-    if (cliente) {
-      const tarifaProveedor = op.proveedor
-        ? this.proveedorService.getTarifaTipo(op.proveedor.id)
-        : undefined;
-      const nuevoTipo = this.operacionFactory.recalcularTarifaTipo(cliente, tarifaProveedor);
-
-      // Aplicar el nuevo tipo manteniendo el invariante de datosTarifaX.
-      this.operacionFactory.aplicarTarifaTipo(op, nuevoTipo);
-
-      // Re-sembrar el tipo original (este pasa a ser el nuevo punto de retorno del toggle).
-      this.tarifaOriginal.set(c.item.idItem, { ...nuevoTipo });
+    // Re-sembrar el tipo original (este pasa a ser el nuevo punto de retorno del toggle).
+    if (tipoRecalculado) {
+      this.tarifaOriginal.set(c.item.idItem, { ...tipoRecalculado });
     }
 
     // Sistema nuevo (Bloque 6/7): el chofer recién resuelto cambia los candidatos
@@ -229,24 +205,12 @@ export class OperacionesEditorComponent implements OnInit {
   /** Vehículos disponibles: del proveedor si la op es de proveedor, del chofer si es directa.
    *  Filtro síncrono inline sobre getVehiculosActuales (no suscripción: el editor edita). */
   vehiculosDisponibles(op: Operacion): ConIdType<Vehiculo>[] {
-    const vehiculos = this.choferService.getVehiculosActuales();
-    if (op.proveedor) {
-      return vehiculos.filter(v =>
-        v.asignadoA.tipo === 'proveedor' && v.asignadoA.idProveedor === op.proveedor!.id);
-    }
-    if (op.chofer.id) {
-      return vehiculos.filter(v =>
-        v.asignadoA.tipo === 'chofer' && v.asignadoA.idChofer === op.chofer.id);
-    }
-    return [];
+    return this.resolucionTarifa.vehiculosDisponibles(op);
   }
 
   /** Resuelve el vehículo pendiente: puebla RefVehiculo desde el Vehiculo elegido. */
   onVehiculoSeleccionado(c: OperacionCreada, idVehiculo: string): void {
-    if (!idVehiculo) return;
-    const v = this.choferService.getVehiculoPorId(idVehiculo);
-    if (!v) return;
-    c.operacion.vehiculo = { id: v.id, dominio: v.dominio, categoria: v.categoria };
+    if (!this.resolucionTarifa.asignarVehiculo(c.operacion, idVehiculo)) return;
 
     // Sistema nuevo: la categoría del vehículo recién resuelto puede cambiar qué
     // categoría matchea dentro de la tarifa — recalcular.
@@ -292,18 +256,7 @@ export class OperacionesEditorComponent implements OnInit {
    *  se asume no forzado hasta ese momento, igual que tarifaTipo.eventual en ese
    *  mismo estado transitorio (ver OperacionFactoryService.crearOperacionBase). */
   esEventualForzada(c: OperacionCreada): boolean {
-    const op = c.operacion;
-
-    const cliente = this.clienteService.getClientePorId(op.cliente.id);
-    if (cliente?.tarifasHabilitadas.some(h => h.nivel === 'eventual')) return true;
-
-    if (op.chofer.id === '') return false;
-    const chofer = this.choferService.getChoferPorId(op.chofer.id);
-    if (!chofer) return false;
-
-    return this.proveedorService
-      .resolverTarifasHabilitadasChofer(chofer)
-      .some(h => h.nivel === 'eventual');
+    return this.resolucionTarifa.esEventualForzada(c.operacion);
   }
 
   // ===========================================================================
@@ -319,49 +272,27 @@ export class OperacionesEditorComponent implements OnInit {
    *  TERMINE eligiendo para el cliente — ver esa función y aplicarRef). */
   private recalcularTarifasNuevoSistema(c: OperacionCreada): void {
     const op = c.operacion;
+    const res = this.resolucionTarifa.candidatosOp(op);
 
-    if (op.datosTarifaEventual !== null) {
-      op.tarifaAplicadaCliente = null;
-      op.tarifaAplicadaChofer = null;
+    if (res.estado !== 'ok') {
+      // Eventual (no usa tarifaAplicada*) o chofer/vehículo pendiente: se limpia la
+      // referencia. Entidad no encontrada: se conserva lo que hubiera (mismo
+      // comportamiento que antes de extraer la lógica al servicio).
+      if (res.estado === 'eventual' || res.estado === 'pendiente') {
+        op.tarifaAplicadaCliente = null;
+        op.tarifaAplicadaChofer = null;
+      }
       this.candidatosPorOp.delete(c.item.idItem);
       this.seleccionPorOp.delete(c.item.idItem);
       return;
     }
 
-    if (this.choferPendiente(op) || this.vehiculoPendiente(op)) {
-      op.tarifaAplicadaCliente = null;
-      op.tarifaAplicadaChofer = null;
-      this.candidatosPorOp.delete(c.item.idItem);
-      this.seleccionPorOp.delete(c.item.idItem);
-      return;
-    }
-
-    const cliente = this.clienteService.getClientePorId(op.cliente.id);
-    const chofer = this.choferService.getChoferPorId(op.chofer.id);
-    if (!cliente || !chofer) {
-      this.candidatosPorOp.delete(c.item.idItem);
-      this.seleccionPorOp.delete(c.item.idItem);
-      return;
-    }
-
-    const esProveedor = chofer.contratacion.tipo === 'proveedor';
-    const idEntidadChofer = esProveedor
-      ? (chofer.contratacion as { tipo: 'proveedor'; idProveedor: string }).idProveedor
-      : chofer.id;
-    const entidadTipoChofer: EntidadTipo = esProveedor ? 'proveedor' : 'chofer';
-    const habilitadasChofer = this.proveedorService.resolverTarifasHabilitadasChofer(chofer);
-
-    const ladoCliente = this.valoresTarifaService.listarCandidatosLado(
-      'cliente', cliente.id, cliente.tarifasHabilitadas, op.vehiculo.categoria, op.cliente.id);
-    const ladoChofer = this.valoresTarifaService.listarCandidatosLado(
-      entidadTipoChofer, idEntidadChofer, habilitadasChofer, op.vehiculo.categoria, op.cliente.id);
-
-    this.candidatosPorOp.set(c.item.idItem, { cliente: ladoCliente, chofer: ladoChofer });
+    this.candidatosPorOp.set(c.item.idItem, { cliente: res.cliente, chofer: res.chofer });
     this.seleccionPorOp.delete(c.item.idItem);
     op.tarifaAplicadaCliente = null;
     op.tarifaAplicadaChofer = null;
 
-    this.autoSeleccionarSiCorresponde(c, ladoCliente, 'cliente');
+    this.autoSeleccionarSiCorresponde(c, res.cliente, 'cliente');
     this.sincronizarLadoChofer(c);
   }
 
@@ -414,21 +345,8 @@ export class OperacionesEditorComponent implements OnInit {
   }
 
   private aplicarRef(c: OperacionCreada, cual: 'cliente' | 'chofer', ref: Operacion['tarifaAplicadaCliente']): void {
-    const op = c.operacion;
-    if (cual === 'cliente') {
-      op.tarifaAplicadaCliente = ref;
-      // Personalizada determina también el lado chofer/proveedor (ver
-      // sincronizarLadoChofer) — se espeja automáticamente, no hay selección
-      // propia del lado chofer que pueda pisar esto. Se mira la tarifa
-      // REALMENTE elegida (ref?.nivel), no una habilitación estática del
-      // cliente — así un cliente con Personalizada Y General habilitadas que
-      // termina eligiendo General no arrastra al chofer a espejarse igual.
-      if (ref?.nivel === 'personalizada') {
-        op.tarifaAplicadaChofer = ref;
-      }
-    } else {
-      op.tarifaAplicadaChofer = ref;
-    }
+    // Regla de espejo de Personalizada: ver ResolucionTarifaOpService.aplicarRef.
+    this.resolucionTarifa.aplicarRef(c.operacion, cual, ref);
   }
 
   /** Elegir un candidato en el select principal (Tarifa Cliente / Tarifa Chofer-Prov).
@@ -501,11 +419,7 @@ export class OperacionesEditorComponent implements OnInit {
    *  completar Sección/Categoría a mano en la fila expandible (típico Personalizada). */
   requiereSeccionClienteManual(c: OperacionCreada): boolean {
     const cand = this.candidatoElegidoCliente(c);
-    if (!cand) return false;
-    if (cand.secciones.length > 1) return true;
-    // Personalizada por km con 2+ categorías libres en su única sección: tampoco se
-    // puede resolver sola (no matchean por categoría de vehículo) — mismo picker manual.
-    return cand.modoTarifacion === 'km' && (cand.secciones[0]?.categorias.length ?? 0) > 1;
+    return !!cand && this.resolucionTarifa.requiereSeleccionManual(cand);
   }
 
   requiereSeccionChoferManual(c: OperacionCreada): boolean {
@@ -514,9 +428,7 @@ export class OperacionesEditorComponent implements OnInit {
     // de un candidato propio que quedó obsoleto de una sincronización anterior.
     if (this.clienteEsPersonalizada(c)) return false;
     const cand = this.candidatoElegidoChofer(c);
-    if (!cand) return false;
-    if (cand.secciones.length > 1) return true;
-    return cand.modoTarifacion === 'km' && (cand.secciones[0]?.categorias.length ?? 0) > 1;
+    return !!cand && this.resolucionTarifa.requiereSeleccionManual(cand);
   }
 
   seccionesDisponiblesCliente(c: OperacionCreada) {

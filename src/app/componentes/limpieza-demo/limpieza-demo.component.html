@@ -1,0 +1,83 @@
+<div class="border border-danger rounded-3 p-3 mb-4">
+  <h4 class="text-danger">Limpieza de demo (datos operativos)</h4>
+
+  @if (!esDemo) {
+    <div class="alert alert-danger mb-0">
+      Herramienta deshabilitada: el proyecto actual es <b>{{ proyecto }}</b>. Solo funciona en demo.
+    </div>
+  } @else {
+    <p class="mb-2">
+      Vacía operaciones, tablero, informes, resúmenes, finanzas, log y la papelera de operaciones, y
+      reinicia los numeradores. <b>No toca</b> clientes, choferes, vehículos, proveedores, tarifas,
+      legajos, vendedores, usuarios ni las bajas de entidades en papelera.
+    </p>
+
+    <button type="button" class="btn btn-outline-secondary me-2" [disabled]="ejecutando" (click)="contar()">
+      1. Contar
+    </button>
+
+    @if (progreso) {
+      <span class="text-muted">{{ progreso }}</span>
+    }
+
+    @if (error) {
+      <div class="alert alert-danger mt-3 mb-0">{{ error }}</div>
+    }
+
+    @if (inventario) {
+      <table class="table table-sm mt-3 mb-2" style="max-width: 32rem;">
+        <thead>
+          <tr><th>Colección</th><th class="text-end">Documentos</th></tr>
+        </thead>
+        <tbody>
+          @for (c of inventario.colecciones; track c.coleccion) {
+            <tr><td>{{ c.coleccion }}</td><td class="text-end">{{ c.cantidad }}</td></tr>
+          }
+          <tr class="fw-semibold"><td>Total</td><td class="text-end">{{ totalDocumentos }}</td></tr>
+          <tr>
+            <td>Papelera de operaciones (eventos / objetos)</td>
+            <td class="text-end">{{ inventario.eventosPapelera }} / {{ inventario.objetosPapelera }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="mb-1">Numeradores (se reinician a 0):</p>
+      <ul class="mb-3">
+        @for (n of inventario.numeradores; track n.id) {
+          <li>{{ n.id }}: {{ n.ultimoNumero ?? '—' }}</li>
+        } @empty {
+          <li class="text-muted">sin numeradores</li>
+        }
+      </ul>
+
+      <label class="form-label">
+        Para confirmar, escribí <b>{{ TEXTO_CONFIRMACION }}</b>:
+      </label>
+      <div class="d-flex gap-2" style="max-width: 32rem;">
+        <input
+          #conf
+          type="text"
+          class="form-control"
+          [value]="textoConfirmacion"
+          [disabled]="ejecutando"
+          (input)="textoConfirmacion = conf.value"
+        />
+        <button type="button" class="btn btn-danger text-nowrap" [disabled]="!puedeLimpiar" (click)="limpiar()">
+          2. Limpiar
+        </button>
+      </div>
+    }
+
+    @if (resultado) {
+      <div class="alert alert-success mt-3 mb-0">
+        <b>Limpieza terminada:</b> {{ totalBorrados }} documentos borrados,
+        {{ resultado.eventosPapelera }} eventos y {{ resultado.objetosPapelera }} objetos de papelera,
+        {{ resultado.numeradoresReiniciados }} numeradores reiniciados.
+        <ul class="mb-0 mt-2">
+          <li>Borrá a mano en la consola de Firebase Storage las carpetas <code>facturas/</code> y <code>operaciones/</code> (no <code>legajos/</code>).</li>
+          <li>Borrá los datos del sitio en el navegador (DevTools → Application → Clear storage) y volvé a iniciar sesión: StorageService guarda copias de colecciones en localStorage.</li>
+        </ul>
+      </div>
+    }
+  }
+</div>

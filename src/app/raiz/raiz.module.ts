@@ -5,6 +5,7 @@ import { RaizRoutingModule } from './raiz-routing.module';
 import { HomeComponent } from './home/home.component';
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { MigracionComponent } from '../componentes/migracion/migracion.component';
+import { LimpiezaDemoComponent } from '../componentes/limpieza-demo/limpieza-demo.component';
 
 import { ChoferesModule } from './choferes/choferes.module';
 
@@ -28,6 +29,7 @@ import { ReportesModule } from './reportes/reportes.module';
         HomeComponent,
         SidebarComponent,
         MigracionComponent,
+        LimpiezaDemoComponent,
     ],
     exports: [
         HomeComponent,

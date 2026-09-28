@@ -147,4 +147,32 @@ export class PapeleraService {
   async getObjetoEliminado<T>(coleccion: string, idOriginal: string): Promise<T | null> {
     return this.db.getById<T>(this.COLECCION_OBJETOS, this.idObjetoEliminado(coleccion, idOriginal));
   }
+
+  /** Herramienta de desarrollo (LimpiezaDemoService): arma, SIN commitear,
+   *  el borrado de todos los eventos de papelera cuya entidad principal es
+   *  `coleccionPrincipal` (activos y restaurados) y de los objetos
+   *  archivados que referencian. Borrar un objeto que ya no existe (evento
+   *  restaurado) no falla. Devuelve cantidades para el inventario. */
+  async armarPurgaPorColeccion(
+    coleccionPrincipal: string,
+  ): Promise<{ eventos: number; objetos: number; escrituras: EscrituraBatch[] }> {
+    const eventos = await this.db.getByField<PapeleraEvento>(
+      this.COLECCION_EVENTOS, 'coleccionPrincipal', coleccionPrincipal,
+    );
+    const escrituras: EscrituraBatch[] = [];
+    let objetos = 0;
+    for (const { id, data } of eventos) {
+      for (const ref of data.refs ?? []) {
+        escrituras.push({
+          coleccion: this.COLECCION_OBJETOS,
+          id: this.idObjetoEliminado(ref.coleccion, ref.idOriginal),
+          data: null,
+          modo: 'eliminar',
+        });
+        objetos++;
+      }
+      escrituras.push({ coleccion: this.COLECCION_EVENTOS, id, data: null, modo: 'eliminar' });
+    }
+    return { eventos: eventos.length, objetos, escrituras };
+  }
 }

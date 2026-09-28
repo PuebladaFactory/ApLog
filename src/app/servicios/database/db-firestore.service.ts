@@ -11,6 +11,7 @@ import {
   docData,
   DocumentData,
   DocumentReference,
+  getCountFromServer,
   getDoc,
   getDocs,
   increment,
@@ -2028,6 +2029,47 @@ export class DbFirestoreService {
         })),
       ),
     );
+  }
+
+  // ---- Herramientas de desarrollo (LimpiezaDemoService) ----
+
+  /** Cantidad de documentos de una colección. Agregación en el servidor: no
+   *  descarga los documentos (se factura 1 lectura cada 1000 docs). */
+  async contarDocumentos(coleccion: string): Promise<number> {
+    const colRef = collection(this.firestore, `/Vantruck/datos/${coleccion}`);
+    const snap = await getCountFromServer(colRef);
+    return snap.data().count;
+  }
+
+  /** Todos los documentos de una colección, con su id. Solo para
+   *  colecciones chicas (ej. 'numeradores'). */
+  async obtenerTodosConId<T>(coleccion: string): Promise<{ id: string; data: T }[]> {
+    const colRef = collection(this.firestore, `/Vantruck/datos/${coleccion}`);
+    const snap = await getDocs(colRef);
+    return snap.docs.map(d => ({ id: d.id, data: d.data() as T }));
+  }
+
+  /** Borra TODOS los documentos de primer nivel de una colección, en lotes
+   *  de hasta 500 (un writeBatch por lote; los lotes NO son atómicos entre
+   *  sí). No borra subcolecciones (el modelo no las usa). Destructivo: su
+   *  único caller es LimpiezaDemoService, que tiene guarda de proyecto demo
+   *  y rol dev. Devuelve la cantidad borrada. */
+  async eliminarTodosLosDocumentos(
+    coleccion: string,
+    alAvanzar?: (borrados: number) => void,
+  ): Promise<number> {
+    const colRef = collection(this.firestore, `/Vantruck/datos/${coleccion}`);
+    let total = 0;
+    while (true) {
+      const snap = await getDocs(query(colRef, limit(500)));
+      if (snap.empty) break;
+      const batch = writeBatch(this.firestore);
+      snap.docs.forEach(d => batch.delete(d.ref));
+      await batch.commit();
+      total += snap.size;
+      alAvanzar?.(total);
+    }
+    return total;
   }
 
   /** Genera un doc id nuevo para una colección SIN escribir nada.
