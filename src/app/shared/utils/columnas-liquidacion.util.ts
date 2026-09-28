@@ -1,15 +1,20 @@
 import { ConId } from 'src/app/interfaces/conId';
 import { InformeOpNuevo } from 'src/app/interfaces/informe-op-nuevo';
+import { TipoCeldaDoc } from 'src/app/interfaces/documento-tabular';
 import { nombreEntidadRef } from './entidad-informe.util';
 
 /** Columnas del informe de liquidación — mismos nombres que el camino viejo
  *  (ResumenOpLiquidadasComponent); se persisten como string[] en
- *  InformeLiqNuevo.columnas. Compartido por LiquidacionNuevaComponent (armado)
- *  e InformeLiqNuevoDetalleComponent (detalle/edición). */
+ *  InformeLiqNuevo.columnas. Compartido por LiquidacionNuevaComponent (armado),
+ *  InformeLiqNuevoDetalleComponent (detalle/edición) y armarDocumentoLiq
+ *  (Excel/PDF). */
 export interface ColumnaLiq {
   nombre: string;
   seleccionada: boolean;
 }
+
+/** Tipo de dato de una columna: decide el formato en pantalla y en Excel/PDF. */
+export type TipoColumnaLiq = TipoCeldaDoc;
 
 const COLUMNAS_LIQ: ReadonlyArray<ColumnaLiq> = [
   { nombre: 'Fecha', seleccionada: true },
@@ -28,7 +33,16 @@ const COLUMNAS_LIQ: ReadonlyArray<ColumnaLiq> = [
   { nombre: 'A Cobrar', seleccionada: true },
 ];
 
-const COLUMNAS_MONTO = ['Jornada', 'Ad Km', 'Ad Acomp', 'Extra', 'A Cobrar'];
+/** Columnas que no son texto. Las que no figuran acá son 'texto'. */
+const TIPO_COLUMNA: Readonly<Record<string, TipoColumnaLiq>> = {
+  'Fecha': 'fecha',
+  'Km': 'numero',
+  'Jornada': 'moneda',
+  'Ad Km': 'moneda',
+  'Ad Acomp': 'moneda',
+  'Extra': 'moneda',
+  'A Cobrar': 'moneda',
+};
 
 /** Columnas disponibles para un tipo (sin la columna de la propia entidad),
  *  copias nuevas. Si se pasa `seleccionadas`, marca exactamente esas (caso
@@ -46,13 +60,24 @@ export function columnasPorTipo(
     }));
 }
 
-export function esColumnaMonto(columna: string): boolean {
-  return COLUMNAS_MONTO.includes(columna);
+export function tipoColumna(columna: string): TipoColumnaLiq {
+  return TIPO_COLUMNA[columna] ?? 'texto';
 }
 
-/** Valor de celda por columna, sobre InformeOpNuevo. En 'Cliente' (tipo
+export function esColumnaMonto(columna: string): boolean {
+  return tipoColumna(columna) === 'moneda';
+}
+
+/** Valor CRUDO de una columna sobre un InformeOpNuevo: number para
+ *  'numero'/'moneda', 'YYYY-MM-DD' para 'fecha' (sin pasar por Date), string
+ *  para 'texto'. Única definición de lo que muestra cada columna: la usan la
+ *  pantalla (valorColumnaInformeOp) y la exportación (armarDocumentoLiq).
+ *  Acepta elementos de snapshot (InformeOpNuevo sin `id`). En 'Cliente' (tipo
  *  chofer/proveedor) la contraparte ES el cliente. */
-export function valorColumnaInformeOp(inf: ConId<InformeOpNuevo>, columna: string): string {
+export function valorCrudoColumna(
+  inf: ConId<InformeOpNuevo> | InformeOpNuevo,
+  columna: string,
+): string | number {
   switch (columna) {
     case 'Fecha': return inf.fecha;
     case 'Quincena': return Number(inf.fecha.split('-')[2]) <= 15 ? '1°' : '2°';
@@ -62,14 +87,22 @@ export function valorColumnaInformeOp(inf: ConId<InformeOpNuevo>, columna: strin
     case 'Concepto': return inf.datosOperacion.vehiculo.categoria.nombre;
     case 'Observaciones': return inf.datosOperacion.observaciones ?? '';
     case 'Hoja de Ruta': return inf.datosOperacion.hojaRuta ?? '';
-    case 'Km': return String(inf.datosOperacion.km ?? 0);
-    case 'Jornada': return moneda(inf.valores.tarifaBase);
-    case 'Ad Km': return moneda(inf.valores.kmMonto);
-    case 'Ad Acomp': return moneda(inf.valores.acompaniante);
-    case 'Extra': return moneda(inf.valores.adExtra ?? 0);
-    case 'A Cobrar': return moneda(inf.valores.total);
+    case 'Km': return inf.datosOperacion.km ?? 0;
+    case 'Jornada': return inf.valores.tarifaBase ?? 0;
+    case 'Ad Km': return inf.valores.kmMonto ?? 0;
+    case 'Ad Acomp': return inf.valores.acompaniante ?? 0;
+    case 'Extra': return inf.valores.adExtra ?? 0;
+    case 'A Cobrar': return inf.valores.total ?? 0;
     default: return '';
   }
+}
+
+/** Valor de celda para PANTALLA: el valor crudo formateado (montos como
+ *  "$ 1.234,56"; el resto como texto; la fecha queda 'YYYY-MM-DD', igual que
+ *  antes de X0). */
+export function valorColumnaInformeOp(inf: ConId<InformeOpNuevo>, columna: string): string {
+  const valor = valorCrudoColumna(inf, columna);
+  return tipoColumna(columna) === 'moneda' ? moneda(valor as number) : String(valor);
 }
 
 /** Etiqueta de presentación de una columna según el tipo del informe. El
