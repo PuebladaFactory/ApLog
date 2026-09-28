@@ -7,6 +7,7 @@ import { ConIdType } from 'src/app/interfaces/conId';
 import { NoDisponibilidadChofer } from 'src/app/interfaces/no-disponibilidad-chofer';
 import { DatosTarifaEventual, Operacion } from 'src/app/interfaces/operacion';
 import { Proveedor } from 'src/app/interfaces/proveedor';
+import { Resultado as ResultadoAccion } from 'src/app/interfaces/resultado';
 import { RefTarifaAplicada } from 'src/app/interfaces/ref-tarifa-aplicada';
 import { Tarifa } from 'src/app/interfaces/tarifa';
 import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
@@ -103,6 +104,21 @@ export interface PlanGeneracion {
   resumen: ResumenPlan;
 }
 
+export interface ErrorEjecucion {
+  fecha: string;
+  operacion: string;
+  mensaje: string;
+}
+
+export interface ResultadoEjecucion {
+  /** Doc id en `generacionesPrueba`. */
+  idLote: string;
+  diasProcesados: number;
+  altas: number;
+  cierres: number;
+  errores: ErrorEjecucion[];
+}
+
 type Resultado = OperacionPlaneada | { motivo: string };
 
 /** Generador de operaciones de prueba (solo DEMO) — P3: PLAN.
@@ -114,7 +130,10 @@ type Resultado = OperacionPlaneada | { motivo: string };
  *  ResolucionTarifaOpService (chofer de proveedor, eventual forzada,
  *  candidatos de tarifa, espejo de Personalizada) + ValoresTarifaService
  *  (sección/categoría). Donde una persona elegiría, elige al azar con
- *  semilla (reproducible). Las ejecuciones (alta por día + cierre) son P4.
+ *  semilla (reproducible). `ejecutar` (P4) vuelve a armar el plan con los
+ *  mismos parámetros y lo escribe: alta atómica por día
+ *  (altaDesdeAsignacion) + cierre una por una (cerrarOperacion), igual que la
+ *  UI; registra el lote en `generacionesPrueba`.
  *  Diseño: claude/diseno-generador-operaciones.md. */
 @Injectable({ providedIn: 'root' })
 export class GeneradorOperacionesService {
@@ -132,6 +151,7 @@ export class GeneradorOperacionesService {
 
   private readonly MAX_DIAS = 62;
   private readonly CONCEPTOS_ADICIONAL = ['Peaje', 'Espera', 'Carga adicional', 'Estacionamiento'];
+  private readonly COL_LOTES = 'generacionesPrueba';
 
   esEntornoDemo(): boolean {
     return environment.firebase.projectId === LimpiezaDemoService.PROYECTO_DEMO;
@@ -202,6 +222,145 @@ export class GeneradorOperacionesService {
     }
 
     return { parametros: { ...p }, dias, exclusiones, resumen: this.resumir(p, dias, diasSinCapacidad) };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Ejecución (P4)
+  // ---------------------------------------------------------------------------
+
+  /** Operaciones que ya hay en la base (aviso antes de generar). */
+  async contarOperacionesExistentes(): Promise<number> {
+    this.verificarEntorno();
+    return this.db.contarDocumentos('operaciones');
+  }
+
+  /** Escribe el plan. Lo vuelve a armar con los mismos parámetros (misma
+   *  semilla + mismos datos = el plan que se simuló) para trabajar sobre
+   *  objetos nuevos: altaDesdeAsignacion les asigna ids y números.
+   *  Por día, en orden:
+   *   1. alta atómica del día (operaciones + tablero confirmado + log ALTA)
+   *      con siExisteBorrador 'bloquear' (no pisa un borrador del usuario);
+   *   2. cierre, una por una, de las que el plan marcó para cerrar
+   *      (cerrarOperacion: InformeOp, resúmenes, log CERRAR).
+   *  No es atómico en conjunto: si algo falla, se registra y sigue; si se
+   *  corta, lo escrito queda en un estado válido (ops abiertas/cerradas).
+   *  Para rehacer: Limpieza de demo + generar de nuevo.
+   *  El lote (`generacionesPrueba/{id}`) se registra al empezar ('en curso')
+   *  y se actualiza al terminar (estado, contadores, errores, ids). */
+  async ejecutar(p: ParametrosGenerador, alAvanzar: (mensaje: string) => void): Promise<ResultadoEjecucion> {
+    this.verificarEntorno();
+    alAvanzar('Armando el plan…');
+    const plan = await this.planificar(p);
+
+    const idLote = this.db.generarId(this.COL_LOTES);
+    const errores: ErrorEjecucion[] = [];
+    const idsOperacion: string[] = [];
+    let altas = 0;
+    let cierres = 0;
+    let diasProcesados = 0;
+
+    await this.db.commitBatch([{
+      coleccion: this.COL_LOTES,
+      id: idLote,
+      modo: 'crear',
+      data: {
+        estado: 'en curso',
+        usuario: this.usuarioSesion.getUsuarioActual()?.email ?? 'Desconocido',
+        inicio: new Date().toISOString(),
+        fin: null,
+        parametros: plan.parametros,
+        resumenPlan: {
+          totalOps: plan.resumen.totalOps,
+          aCerrar: plan.resumen.aCerrar,
+          exclusiones: plan.exclusiones.length,
+        },
+        altas: 0,
+        cierres: 0,
+        errores: [],
+        idsOperacion: [],
+      },
+    }]);
+
+    let estado: 'completo' | 'con errores' | 'interrumpido' = 'completo';
+    try {
+      for (const dia of plan.dias) {
+        if (dia.ops.length === 0) continue;
+
+        alAvanzar(`${dia.fecha}: alta de ${dia.ops.length} operación(es)…`);
+        const res = await this.operacionService.altaDesdeAsignacion(
+          dia.fecha, dia.ops.map(o => o.creada), 'bloquear',
+        );
+        diasProcesados++;
+        if (!res.exito) {
+          errores.push({ fecha: dia.fecha, operacion: '(alta del día)', mensaje: res.mensaje });
+          continue;
+        }
+        altas += dia.ops.length;
+        idsOperacion.push(...dia.ops.map(o => o.creada.operacion.idOperacion));
+
+        const aCerrar = dia.ops.filter(o => o.cierre !== null);
+        for (let i = 0; i < aCerrar.length; i++) {
+          const o = aCerrar[i];
+          alAvanzar(`${dia.fecha}: cierre ${i + 1}/${aCerrar.length}…`);
+          const r = await this.cerrar(o);
+          if (r.exito) {
+            cierres++;
+          } else {
+            errores.push({ fecha: dia.fecha, operacion: `N° ${o.creada.operacion.numeroOperacion}`, mensaje: r.mensaje });
+          }
+        }
+      }
+      if (errores.length > 0) estado = 'con errores';
+    } catch (e: any) {
+      estado = 'interrumpido';
+      errores.push({ fecha: '', operacion: '', mensaje: `Generación interrumpida: ${e?.message ?? e}` });
+    }
+
+    // Registro final del lote (best-effort: lo importante ya se escribió).
+    try {
+      await this.db.commitBatch([{
+        coleccion: this.COL_LOTES,
+        id: idLote,
+        modo: 'actualizar',
+        data: {
+          estado,
+          fin: new Date().toISOString(),
+          altas,
+          cierres,
+          errores: errores.slice(0, 200),
+          idsOperacion,
+        },
+      }]);
+    } catch (e) {
+      console.error('No se pudo actualizar el lote de generación', idLote, e);
+    }
+
+    return { idLote, diasProcesados, altas, cierres, errores };
+  }
+
+  /** Cierra una operación como el modal de cierre (ModalDetalleOpComponent):
+   *  km; adicional extra en op.valores.<lado>.adExtraValor + adExtraConcepto
+   *  (el motor nuevo lo lee de ahí); multiplicadores en 1 (vienen así del
+   *  alta) → ValoresTarifaService.calcularCierre → espejo a op.valores
+   *  (aCobrar/aPagar, igual que el modal) → OperacionService.cerrarOperacion. */
+  private async cerrar(o: OperacionPlaneada): Promise<ResultadoAccion<void>> {
+    const op = o.creada.operacion;
+    const decision = o.cierre!;
+
+    op.km = decision.km;
+    if (decision.adicional) {
+      op.adExtraConcepto = decision.adicional.concepto;
+      op.valores.cliente.adExtraValor = decision.adicional.valorCliente;
+      op.valores.chofer.adExtraValor = decision.adicional.valorChofer;
+    }
+
+    this.valoresTarifa.calcularCierre(op);
+    if (op.valoresNuevos) {
+      op.valores.cliente.aCobrar = op.valoresNuevos.cliente.aCobrar;
+      op.valores.chofer.aPagar = op.valoresNuevos.chofer.aPagar;
+    }
+
+    return this.operacionService.cerrarOperacion({ ...op, id: op.idOperacion });
   }
 
   // ---------------------------------------------------------------------------

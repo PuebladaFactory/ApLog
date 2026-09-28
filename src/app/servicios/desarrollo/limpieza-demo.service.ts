@@ -63,6 +63,7 @@ export class LimpiezaDemoService {
     'movimientos',
     'resumenFinanzas',
     'registroLog',
+    'generacionesPrueba',
   ];
 
   get proyecto(): string {

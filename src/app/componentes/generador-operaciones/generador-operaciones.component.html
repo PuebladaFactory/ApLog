@@ -6,73 +6,102 @@
   } @else {
     <p class="mb-3">
       Arma un período de operaciones con clientes, choferes, vehículos y tarifas reales de demo.
-      <b>Simular</b> no escribe nada: muestra lo que se generaría.
+      <b>Simular</b> no escribe nada: muestra lo que se generaría. <b>Generar</b> ejecuta ese plan
+      (alta por día con su tablero + cierres) y queda registrado como lote en <code>generacionesPrueba</code>.
     </p>
 
     <div class="row g-2 mb-3" style="max-width: 60rem;">
       <div class="col-md-3">
         <label class="form-label mb-0">Desde</label>
-        <input type="date" class="form-control" [(ngModel)]="parametros.desde" [disabled]="simulando" />
+        <input type="date" class="form-control" [(ngModel)]="parametros.desde" [disabled]="simulando || ejecutando" />
       </div>
       <div class="col-md-3">
         <label class="form-label mb-0">Hasta</label>
-        <input type="date" class="form-control" [(ngModel)]="parametros.hasta" [disabled]="simulando" />
+        <input type="date" class="form-control" [(ngModel)]="parametros.hasta" [disabled]="simulando || ejecutando" />
       </div>
       <div class="col-md-3">
         <label class="form-label mb-0">Cantidad total</label>
-        <input type="number" class="form-control" min="1" max="2000" step="1" [(ngModel)]="parametros.cantidadTotal" [disabled]="simulando" />
+        <input type="number" class="form-control" min="1" max="2000" step="1" [(ngModel)]="parametros.cantidadTotal" [disabled]="simulando || ejecutando" />
       </div>
       <div class="col-md-3">
         <label class="form-label mb-0">Semilla</label>
         <div class="input-group">
-          <input type="number" class="form-control" step="1" [(ngModel)]="parametros.semilla" [disabled]="simulando" />
-          <button type="button" class="btn btn-outline-secondary" [disabled]="simulando" (click)="nuevaSemilla()" title="Semilla nueva">↻</button>
+          <input type="number" class="form-control" step="1" [(ngModel)]="parametros.semilla" [disabled]="simulando || ejecutando" />
+          <button type="button" class="btn btn-outline-secondary" [disabled]="simulando || ejecutando" (click)="nuevaSemilla()" title="Semilla nueva">↻</button>
         </div>
       </div>
 
       <div class="col-md-3">
         <label class="form-label mb-0">Peso del sábado (0–1)</label>
-        <input type="number" class="form-control" min="0" max="1" step="0.05" [(ngModel)]="parametros.pesoSabado" [disabled]="simulando" />
+        <input type="number" class="form-control" min="0" max="1" step="0.05" [(ngModel)]="parametros.pesoSabado" [disabled]="simulando || ejecutando" />
       </div>
       <div class="col-md-3 d-flex align-items-end">
         <div class="form-check mb-2">
-          <input id="gen-domingos" type="checkbox" class="form-check-input" [(ngModel)]="parametros.incluirDomingos" [disabled]="simulando" />
+          <input id="gen-domingos" type="checkbox" class="form-check-input" [(ngModel)]="parametros.incluirDomingos" [disabled]="simulando || ejecutando" />
           <label for="gen-domingos" class="form-check-label">Incluir domingos</label>
         </div>
       </div>
       <div class="col-md-3">
         <label class="form-label mb-0">Sesgo de clientes (0 = uniforme)</label>
-        <input type="number" class="form-control" min="0" max="3" step="0.1" [(ngModel)]="parametros.sesgoClientes" [disabled]="simulando" />
+        <input type="number" class="form-control" min="0" max="3" step="0.1" [(ngModel)]="parametros.sesgoClientes" [disabled]="simulando || ejecutando" />
       </div>
       <div class="col-md-3">
         <label class="form-label mb-0">Eventuales extra (0–1)</label>
-        <input type="number" class="form-control" min="0" max="1" step="0.01" [(ngModel)]="parametros.pctEventualExtra" [disabled]="simulando" />
+        <input type="number" class="form-control" min="0" max="1" step="0.01" [(ngModel)]="parametros.pctEventualExtra" [disabled]="simulando || ejecutando" />
       </div>
 
       <div class="col-md-3">
         <label class="form-label mb-0">Con acompañante (0–1)</label>
-        <input type="number" class="form-control" min="0" max="1" step="0.01" [(ngModel)]="parametros.pctAcompaniante" [disabled]="simulando" />
+        <input type="number" class="form-control" min="0" max="1" step="0.01" [(ngModel)]="parametros.pctAcompaniante" [disabled]="simulando || ejecutando" />
       </div>
       <div class="col-md-3">
         <label class="form-label mb-0">A cerrar, fechas pasadas (0–1)</label>
-        <input type="number" class="form-control" min="0" max="1" step="0.05" [(ngModel)]="parametros.pctCerrar" [disabled]="simulando" />
+        <input type="number" class="form-control" min="0" max="1" step="0.05" [(ngModel)]="parametros.pctCerrar" [disabled]="simulando || ejecutando" />
       </div>
       <div class="col-md-3">
         <label class="form-label mb-0">Km al cerrar (mín – máx)</label>
         <div class="input-group">
-          <input type="number" class="form-control" min="0" step="1" [(ngModel)]="parametros.kmMin" [disabled]="simulando" />
-          <input type="number" class="form-control" min="0" step="1" [(ngModel)]="parametros.kmMax" [disabled]="simulando" />
+          <input type="number" class="form-control" min="0" step="1" [(ngModel)]="parametros.kmMin" [disabled]="simulando || ejecutando" />
+          <input type="number" class="form-control" min="0" step="1" [(ngModel)]="parametros.kmMax" [disabled]="simulando || ejecutando" />
         </div>
       </div>
       <div class="col-md-3">
         <label class="form-label mb-0">Con adicional al cerrar (0–1)</label>
-        <input type="number" class="form-control" min="0" max="1" step="0.01" [(ngModel)]="parametros.pctAdicionalExtra" [disabled]="simulando" />
+        <input type="number" class="form-control" min="0" max="1" step="0.01" [(ngModel)]="parametros.pctAdicionalExtra" [disabled]="simulando || ejecutando" />
       </div>
     </div>
 
-    <button type="button" class="btn btn-primary" [disabled]="simulando" (click)="simular()">Simular</button>
+    <button type="button" class="btn btn-primary me-2" [disabled]="simulando || ejecutando" (click)="simular()">Simular</button>
+    <button type="button" class="btn btn-success" [disabled]="!puedeEjecutar" (click)="ejecutar()">Generar</button>
     @if (simulando) {
       <span class="text-muted ms-2">Armando el plan…</span>
+    }
+    @if (parametrosCambiaron) {
+      <span class="text-warning ms-2">Cambiaron los parámetros: volvé a simular antes de generar.</span>
+    }
+    @if (ejecutando) {
+      <div class="alert alert-info mt-3 mb-0">
+        <b>Generando…</b> {{ progreso }}<br />
+        <small>No cierres ni recargues esta pestaña hasta que termine.</small>
+      </div>
+    }
+
+    @if (resultado) {
+      <div class="alert mt-3 mb-0" [class.alert-success]="resultado.errores.length === 0" [class.alert-warning]="resultado.errores.length > 0">
+        <b>Generación terminada</b> (lote {{ resultado.idLote }}):
+        {{ resultado.altas }} operaciones dadas de alta en {{ resultado.diasProcesados }} días,
+        {{ resultado.cierres }} cerradas, {{ resultado.errores.length }} error(es).
+        @if (resultado.errores.length > 0) {
+          <ul class="mb-0 mt-2">
+            @for (x of resultado.errores.slice(0, MAX_EXCLUSIONES_VISIBLES); track $index) {
+              <li>{{ x.fecha }} {{ x.operacion }}: {{ x.mensaje }}</li>
+            }
+          </ul>
+          @if (resultado.errores.length > MAX_EXCLUSIONES_VISIBLES) {
+            <small>… y {{ resultado.errores.length - MAX_EXCLUSIONES_VISIBLES }} más (ver el lote en generacionesPrueba).</small>
+          }
+        }
+      </div>
     }
 
     @if (error) {

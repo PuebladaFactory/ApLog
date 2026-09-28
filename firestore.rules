@@ -31,6 +31,10 @@ service cloud.firestore {
         // update, sin delete). Faltaba en el mapa → quedaba denegada a todos.
         'noOperativo': 'operaciones',
 
+        // Herramientas de desarrollo (solo demo): registro de lotes del
+        // generador de operaciones de prueba. Solo dev.
+        'generacionesPrueba': 'desarrollo',
+
         // Tablero de asignaciones: trabajo descartable/editable por
         // naturaleza (borrador), distinto perfil de riesgo que la
         // Operacion real ya persistida — no hereda las restricciones
@@ -101,6 +105,7 @@ service cloud.firestore {
     function permitido(modulo, accion) {
       let r = rol();
       return
+        (modulo == 'desarrollo' && r == 'dev') ||
         (modulo == 'entidades' && (
           r in ['dev','admin'] ||
           (r == 'user' && accion in ['leer','crear','editar']) ||
