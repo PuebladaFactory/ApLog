@@ -1,11 +1,13 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 import { RaizRoutingModule } from './raiz-routing.module';
 import { HomeComponent } from './home/home.component';
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { MigracionComponent } from '../componentes/migracion/migracion.component';
 import { LimpiezaDemoComponent } from '../componentes/limpieza-demo/limpieza-demo.component';
+import { GeneradorOperacionesComponent } from '../componentes/generador-operaciones/generador-operaciones.component';
 
 import { ChoferesModule } from './choferes/choferes.module';
 
@@ -30,12 +32,14 @@ import { ReportesModule } from './reportes/reportes.module';
         SidebarComponent,
         MigracionComponent,
         LimpiezaDemoComponent,
+        GeneradorOperacionesComponent,
     ],
     exports: [
         HomeComponent,
     ],
     imports: [
         CommonModule,
+        FormsModule,
         RaizRoutingModule,
         AjustesModule,
         ChoferesModule,

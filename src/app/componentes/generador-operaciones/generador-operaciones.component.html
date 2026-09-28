@@ -1,0 +1,164 @@
+<div class="border border-primary rounded-3 p-3 mb-4">
+  <h4 class="text-primary">Generador de operaciones de prueba</h4>
+
+  @if (!esDemo) {
+    <div class="alert alert-danger mb-0">Herramienta deshabilitada: solo funciona en demo.</div>
+  } @else {
+    <p class="mb-3">
+      Arma un período de operaciones con clientes, choferes, vehículos y tarifas reales de demo.
+      <b>Simular</b> no escribe nada: muestra lo que se generaría.
+    </p>
+
+    <div class="row g-2 mb-3" style="max-width: 60rem;">
+      <div class="col-md-3">
+        <label class="form-label mb-0">Desde</label>
+        <input type="date" class="form-control" [(ngModel)]="parametros.desde" [disabled]="simulando" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-0">Hasta</label>
+        <input type="date" class="form-control" [(ngModel)]="parametros.hasta" [disabled]="simulando" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-0">Cantidad total</label>
+        <input type="number" class="form-control" min="1" max="2000" step="1" [(ngModel)]="parametros.cantidadTotal" [disabled]="simulando" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-0">Semilla</label>
+        <div class="input-group">
+          <input type="number" class="form-control" step="1" [(ngModel)]="parametros.semilla" [disabled]="simulando" />
+          <button type="button" class="btn btn-outline-secondary" [disabled]="simulando" (click)="nuevaSemilla()" title="Semilla nueva">↻</button>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label mb-0">Peso del sábado (0–1)</label>
+        <input type="number" class="form-control" min="0" max="1" step="0.05" [(ngModel)]="parametros.pesoSabado" [disabled]="simulando" />
+      </div>
+      <div class="col-md-3 d-flex align-items-end">
+        <div class="form-check mb-2">
+          <input id="gen-domingos" type="checkbox" class="form-check-input" [(ngModel)]="parametros.incluirDomingos" [disabled]="simulando" />
+          <label for="gen-domingos" class="form-check-label">Incluir domingos</label>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-0">Sesgo de clientes (0 = uniforme)</label>
+        <input type="number" class="form-control" min="0" max="3" step="0.1" [(ngModel)]="parametros.sesgoClientes" [disabled]="simulando" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-0">Eventuales extra (0–1)</label>
+        <input type="number" class="form-control" min="0" max="1" step="0.01" [(ngModel)]="parametros.pctEventualExtra" [disabled]="simulando" />
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label mb-0">Con acompañante (0–1)</label>
+        <input type="number" class="form-control" min="0" max="1" step="0.01" [(ngModel)]="parametros.pctAcompaniante" [disabled]="simulando" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-0">A cerrar, fechas pasadas (0–1)</label>
+        <input type="number" class="form-control" min="0" max="1" step="0.05" [(ngModel)]="parametros.pctCerrar" [disabled]="simulando" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-0">Km al cerrar (mín – máx)</label>
+        <div class="input-group">
+          <input type="number" class="form-control" min="0" step="1" [(ngModel)]="parametros.kmMin" [disabled]="simulando" />
+          <input type="number" class="form-control" min="0" step="1" [(ngModel)]="parametros.kmMax" [disabled]="simulando" />
+        </div>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-0">Con adicional al cerrar (0–1)</label>
+        <input type="number" class="form-control" min="0" max="1" step="0.01" [(ngModel)]="parametros.pctAdicionalExtra" [disabled]="simulando" />
+      </div>
+    </div>
+
+    <button type="button" class="btn btn-primary" [disabled]="simulando" (click)="simular()">Simular</button>
+    @if (simulando) {
+      <span class="text-muted ms-2">Armando el plan…</span>
+    }
+
+    @if (error) {
+      <div class="alert alert-danger mt-3 mb-0">{{ error }}</div>
+    }
+
+    @if (plan) {
+      <div class="mt-3">
+        <h5>Plan (semilla {{ plan.parametros.semilla }})</h5>
+        <ul class="mb-3">
+          <li>
+            <b>{{ plan.resumen.totalOps }}</b> operaciones en {{ plan.resumen.dias }} días
+            (objetivo {{ plan.resumen.objetivo }}).
+          </li>
+          <li>Directas {{ plan.resumen.directas }} · de proveedor {{ plan.resumen.proveedor }}.</li>
+          <li>
+            Eventuales: {{ plan.resumen.eventualesForzadas }} forzadas por tarifa,
+            {{ plan.resumen.eventualesExtra }} extra.
+          </li>
+          <li>Con acompañante {{ plan.resumen.conAcompaniante }}.</li>
+          <li>A cerrar {{ plan.resumen.aCerrar }} (con adicional {{ plan.resumen.conAdicional }}); el resto queda abierta.</li>
+          @if (plan.resumen.diasSinCapacidad.length > 0) {
+            <li class="text-warning">
+              {{ plan.resumen.diasSinCapacidad.length }} día(s) no llegaron a su objetivo por falta de vehículos o
+              choferes disponibles.
+            </li>
+          }
+        </ul>
+
+        <div class="row g-3">
+          <div class="col-md-4">
+            <h6>Por día</h6>
+            <table class="table table-sm">
+              <thead><tr><th>Fecha</th><th class="text-end">Objetivo</th><th class="text-end">Plan</th></tr></thead>
+              <tbody>
+                @for (d of plan.dias; track d.fecha) {
+                  <tr [class.table-warning]="d.ops.length < d.objetivo">
+                    <td>{{ d.fecha }}</td>
+                    <td class="text-end">{{ d.objetivo }}</td>
+                    <td class="text-end">{{ d.ops.length }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-4">
+            <h6>Por cliente</h6>
+            <table class="table table-sm">
+              <thead><tr><th>Cliente</th><th class="text-end">Ops</th></tr></thead>
+              <tbody>
+                @for (c of plan.resumen.porCliente; track c.cliente) {
+                  <tr><td>{{ c.cliente }}</td><td class="text-end">{{ c.cantidad }}</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-4">
+            <h6>Por tarifa del cliente</h6>
+            <table class="table table-sm">
+              <thead><tr><th>Nivel</th><th class="text-end">Ops</th></tr></thead>
+              <tbody>
+                @for (n of plan.resumen.porNivelTarifaCliente; track n.nivel) {
+                  <tr><td class="text-capitalize">{{ n.nivel }}</td><td class="text-end">{{ n.cantidad }}</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <h6 class="mt-2">Exclusiones ({{ plan.exclusiones.length }})</h6>
+        @if (plan.exclusiones.length === 0) {
+          <p class="text-muted">Ninguna.</p>
+        } @else {
+          <table class="table table-sm">
+            <thead><tr><th>Fecha</th><th>Cliente</th><th>Vehículo</th><th>Motivo</th></tr></thead>
+            <tbody>
+              @for (x of plan.exclusiones.slice(0, MAX_EXCLUSIONES_VISIBLES); track $index) {
+                <tr><td>{{ x.fecha }}</td><td>{{ x.cliente }}</td><td>{{ x.vehiculo }}</td><td>{{ x.motivo }}</td></tr>
+              }
+            </tbody>
+          </table>
+          @if (plan.exclusiones.length > MAX_EXCLUSIONES_VISIBLES) {
+            <p class="text-muted">… y {{ plan.exclusiones.length - MAX_EXCLUSIONES_VISIBLES }} más.</p>
+          }
+        }
+      </div>
+    }
+  }
+</div>

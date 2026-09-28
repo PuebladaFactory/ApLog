@@ -26,6 +26,10 @@ service cloud.firestore {
 
         'operaciones': 'operaciones',
         'informesVenta': 'operaciones',
+        // No-disponibilidad de choferes: la gestiona quien opera el tablero
+        // (modal de choferes no disponibles: alta/edición/desactivación por
+        // update, sin delete). Faltaba en el mapa → quedaba denegada a todos.
+        'noOperativo': 'operaciones',
 
         // Tablero de asignaciones: trabajo descartable/editable por
         // naturaleza (borrador), distinto perfil de riesgo que la
