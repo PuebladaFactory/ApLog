@@ -180,7 +180,8 @@ export class GeneradorOperacionesService {
 
       while (ops.length < objetivo && intentos < objetivo * 4) {
         intentos++;
-        const libres = pool.filter(v => !usadosVehiculo.has(v.id));
+        const libres = pool.filter(v =>
+          !usadosVehiculo.has(v.id) && this.tieneChoferLibre(v, choferes, noDispDia, usadosChofer));
         if (libres.length === 0) break;
 
         const cliente = azar.elegirPonderado(pesosClientes, x => x.peso).cliente;
@@ -322,8 +323,9 @@ export class GeneradorOperacionesService {
   }
 
   /** Candidato al azar; Sección/Categoría automática si se puede (misma regla
-   *  que el editor) y, si no, sección al azar + categoría del vehículo (modo
-   *  categoría) o categoría al azar (Personalizada por km). */
+   *  que el editor). Si no: Personalizada o por km → sección y categoría
+   *  libres (como el picker del editor); General/Especial por categoría →
+   *  sección al azar entre las que incluyen la categoría del vehículo. */
   private elegirRef(azar: Azar, lado: CandidatosLado, op: Operacion): { ref: RefTarifaAplicada | null; motivo: string } {
     if (lado.candidatos.length === 0) {
       return { ref: null, motivo: lado.motivoSinCandidatos ?? 'sin candidatos' };
@@ -335,13 +337,23 @@ export class GeneradorOperacionesService {
       return { ref: r.ref, motivo: r.motivo ?? `sin referencia en '${candidato.nombreTarifa}'` };
     }
 
-    const seccion = azar.elegir(candidato.secciones);
-    const categoria: any = candidato.modoTarifacion === 'km'
-      ? (seccion.categorias.length > 0 ? azar.elegir(seccion.categorias) : null)
-      : seccion.categorias.find((c: any) => c.nombre === op.vehiculo.categoria.nombre) ?? null;
-    if (!categoria) {
-      return { ref: null, motivo: `la sección elegida de '${candidato.nombreTarifa}' no tiene la categoría '${op.vehiculo.categoria.nombre}'` };
+    const libre = candidato.nivel === 'personalizada' || candidato.modoTarifacion === 'km';
+    const nombreCat = op.vehiculo.categoria.nombre;
+    const secciones = candidato.secciones.filter((s: any) => libre
+      ? s.categorias.length > 0
+      : s.categorias.some((c: any) => c.nombre === nombreCat));
+    if (secciones.length === 0) {
+      return {
+        ref: null,
+        motivo: libre
+          ? `'${candidato.nombreTarifa}' no tiene categorías cargadas`
+          : `'${candidato.nombreTarifa}' no tiene la categoría '${nombreCat}' en ninguna sección`,
+      };
     }
+    const seccion: any = azar.elegir(secciones);
+    const categoria: any = libre
+      ? azar.elegir(seccion.categorias)
+      : seccion.categorias.find((c: any) => c.nombre === nombreCat);
     const ref = this.valoresTarifa.armarRefManual(candidato, seccion.orden, categoria.orden);
     return { ref, motivo: ref ? '' : `no se pudo armar la referencia de '${candidato.nombreTarifa}'` };
   }
@@ -387,6 +399,26 @@ export class GeneradorOperacionesService {
       d.setDate(d.getDate() + 1);
     }
     return res;
+  }
+
+  /** Un vehículo solo se puede sortear si tiene quién manejarlo ese día (1 op
+   *  por chofer por día): el de chofer directo, si ese chofer todavía no tiene
+   *  operación; el de proveedor, si al proveedor le queda algún chofer activo,
+   *  disponible y sin operación. Evita sortear vehículos sin chofer posible
+   *  (eso es capacidad, no una exclusión). */
+  private tieneChoferLibre(
+    v: ConIdType<Vehiculo>,
+    choferes: ConIdType<Chofer>[],
+    noDispDia: Set<string>,
+    usadosChofer: Set<string>,
+  ): boolean {
+    const a = v.asignadoA;
+    if (a.tipo === 'chofer') return !usadosChofer.has(a.idChofer);
+    return choferes.some(ch =>
+      ch.contratacion.tipo === 'proveedor'
+      && (ch.contratacion as { tipo: 'proveedor'; idProveedor: string }).idProveedor === a.idProveedor
+      && !noDispDia.has(ch.id)
+      && !usadosChofer.has(ch.id));
   }
 
   /** Mismo criterio que el tablero: una no-disponibilidad cubre la fecha si
