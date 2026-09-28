@@ -276,6 +276,7 @@ Por eso `Proforma CH` tiene mayor prioridad visual que `Proforma CL` en el badge
 | `validar/` | Validación de reglas de negocio |
 | `formato-numerico/` | Formateo de números/moneda estilo Argentina |
 | `fechas/` | Utilidades de fecha |
+| `desarrollo/` | Herramientas SOLO demo (guarda projectId `demoapplog` + rol dev): `LimpiezaDemoService`, `GeneradorOperacionesService` — ver "Herramientas de desarrollo (solo demo)" |
 
 ### Entornos de build
 
@@ -398,6 +399,13 @@ Categorías especiales:
   transcripción (sin consumidor real desde `ModuloPermiso` todavía).
   Verificado con `functions/test-asignaciones-rules.mjs` contra el
   emulador antes de deploy (mismo patrón que `test-emulator.mjs`).
+- `desarrollo`: módulo solo para `dev` (todas las acciones:
+  `(modulo == 'desarrollo' && r == 'dev')` en `permitido()`), para las
+  herramientas de desarrollo de demo. Hoy: `generacionesPrueba` (lotes del
+  generador de operaciones). Ver "Herramientas de desarrollo (solo demo)".
+- `noOperativo` → 'operaciones': agregado en el frente Generador. Faltaba en
+  `moduloDe()` y la lectura directa de no-disponibilidades desde el SDK web
+  fallaba con "Missing or insufficient permissions" (fail-safe).
 
 ## Convenciones
 
@@ -2613,6 +2621,104 @@ proyecto `claude/diseno-facturacion-nueva.md`; instrucciones por bloque:
   tabla con layout automático.
 - Sidebar: eliminado el link comentado a `/facturacion`.
 
+## Herramientas de desarrollo (solo demo) — Limpieza + Generador de operaciones (Septiembre 2026)
+
+Objetivo: vaciar lo operativo de demo y generar un período de operaciones
+realistas (≈500/mes, con tablero y cierres) para probar Tarifas,
+Liquidación y Facturación con volumen. Viven en `/migracion` (ruta con
+RoleGuard dev), debajo de las migraciones. Diseño y decisiones G1–G12: doc
+de proyecto `claude/diseno-generador-operaciones.md`; instrucciones:
+`claude/instruccion-p1…p5-*.md`, `instruccion-p3-1-ajustes-plan.md`,
+`instruccion-fix-reglas-nooperativo.md`.
+
+### Guardas (las dos herramientas)
+- `environment.firebase.projectId === LimpiezaDemoService.PROYECTO_DEMO`
+  ('demoapplog') + rol 'dev' (`UsuarioSesionService.getRol()`). Los
+  servicios lo verifican en cada método público que lee o escribe y lanzan
+  si no se cumple; los componentes muestran "solo funciona en demo" fuera
+  de demo.
+- Regla del proyecto: todo se hace y se prueba en demo; nada va a Vantruck
+  hasta la migración final de datos. Estas herramientas nunca se usan en
+  Vantruck.
+
+### Limpieza de demo (`servicios/desarrollo/limpieza-demo.service.ts`, `componentes/limpieza-demo/`)
+- Allowlist `COLECCIONES_A_VACIAR` (operativas del modelo nuevo):
+  operaciones, asignaciones, informesOp, informesLiq, informesLiqSnapshots,
+  facturasVinculadas, informesVenta, registrosOpEventuales,
+  resumenOpMensual, movimientos, resumenFinanzas, registroLog,
+  generacionesPrueba. Una colección que no está en la lista nunca se borra
+  (fail-safe: el SDK web no puede listar colecciones).
+- Papelera: solo los eventos con `coleccionPrincipal` 'operaciones' y sus
+  objetos (`PapeleraService.armarPurgaPorColeccion`; ids de
+  objetosEliminados `${coleccion}__${idOriginal}`). La papelera de
+  entidades se conserva.
+- Numeradores: se ponen en 0 con 'actualizar' (dev puede editar
+  `numeradores`, no borrarlos; el código recrea el doc si falta).
+- UI en tres pasos: Contar (`DbFirestoreService.contarDocumentos`,
+  getCountFromServer) → escribir "LIMPIAR DEMO" → Limpiar
+  (`DbFirestoreService.eliminarTodosLosDocumentos`, lotes de 500 con
+  progreso). `obtenerTodosConId<T>` también es nuevo (P1).
+- Storage no se toca: los adjuntos de `facturas/` y `operaciones/` quedan
+  huérfanos (borrar a mano desde la consola si hace falta; `legajos/` se
+  conserva). Después de limpiar conviene borrar el almacenamiento local del
+  sitio (StorageService cachea colecciones en localStorage).
+- Purga única del legado (28 colecciones del modelo viejo + `_backup_*`),
+  hecha UNA vez con Firebase CLI (`firebase firestore:delete <ruta>
+  --recursive --project demo`, desde Git Bash) después de un export
+  administrado de Firestore a Cloud Storage. No es parte de la herramienta:
+  la CLI usa las credenciales de la cuenta y no pasa por las reglas.
+
+### ResolucionTarifaOpService (`servicios/tarifario/resolucion-tarifa-op.service.ts`)
+Extraído de `operaciones-editor` (P2) para que el editor y el generador
+usen las mismas reglas: `choferesDisponibles`, `vehiculosDisponibles`,
+`asignarChofer` (→ `{asignado, tipoRecalculado}`), `asignarVehiculo`,
+`esEventualForzada`, `candidatosOp` ('eventual' | 'pendiente' |
+'sinEntidad' | 'ok'), `aplicarRef` (espejo de Personalizada al lado
+chofer), `requiereSeleccionManual`. Sobre los métodos públicos de
+`ValoresTarifaService` / `OperacionFactoryService`.
+
+### Generador (`servicios/desarrollo/generador-operaciones.service.ts`, `componentes/generador-operaciones/`)
+- Dos pasos: **Simular** (`planificar`: no escribe; solo lee
+  `noOperativo`) y **Generar** (`ejecutar`), habilitado solo si los
+  parámetros no cambiaron desde la simulación (`igualesPorContenido`).
+- Azar con semilla: `shared/utils/azar.util.ts` (`Azar`, mulberry32:
+  `siguiente`, `entero`, `chance`, `elegir`, `elegirPonderado`, `mezclar`,
+  `variar`). Misma semilla + mismos datos de demo = mismo plan (los idItem
+  son UUID y no influyen).
+- Plan: días hábiles peso 1, sábado `pesoSabado`, domingos opcionales;
+  objetivo por día = total × peso relativo ±15%. Por día, en cada vuelta se
+  sortean solo vehículos con chofer libre (1 op por vehículo y por chofer
+  por día, G2; no-disponibilidad con el criterio del tablero); cliente con
+  reparto sesgado (orden al azar + pesos Zipf, `sesgoClientes`). Cada op se
+  arma con las mismas piezas que la UI: `crearOperacionesDesdeAsignacion` +
+  `ResolucionTarifaOpService`. Chofer de proveedor al azar (G11); candidato
+  de tarifa al azar (G4); sección/categoría automática si se puede; si no:
+  Personalizada o por km → sección y categoría libres; General/Especial →
+  sección al azar entre las que tienen la categoría del vehículo.
+  Eventuales (forzadas + `pctEventualExtra`): tarifa general de la
+  categoría ±20%, cada lado por separado (G5). Lo que no resuelve tarifa se
+  excluye con motivo (G7). Cierre solo en fechas pasadas (`pctCerrar`),
+  multiplicadores en 1 (G6).
+- Ejecutar: vuelve a planificar con los mismos parámetros (objetos nuevos:
+  `altaDesdeAsignacion` les asigna ids y números); por día
+  `altaDesdeAsignacion(fecha, creadas, 'bloquear')`; después cierre una por
+  una como el modal de cierre (km; adicional en
+  `op.valores.<lado>.adExtraValor` + `adExtraConcepto`; `calcularCierre`;
+  espejo aCobrar/aPagar a `op.valores`; `cerrarOperacion`). No es atómico
+  en conjunto: un error se registra y sigue; lo escrito queda en un estado
+  válido. Rehacer = Limpieza + generar con la misma semilla.
+- Lote `generacionesPrueba/{id}`: 'en curso' al empezar (usuario,
+  parámetros, resumen del plan); al terminar estado ('completo' | 'con
+  errores' | 'interrumpido'), `fin`, altas, cierres, errores (máx. 200),
+  `idsOperacion` (best-effort). Aviso `beforeunload` mientras genera.
+- Reglas (deployadas SOLO en demo): módulo 'desarrollo' para
+  `generacionesPrueba` y `noOperativo` → 'operaciones' (ver "Security
+  Rules"). RaizModule importa FormsModule (el componente usa ngModel).
+- Primer lote (demo, agosto 2026): 508 operaciones en 26 días, 408
+  cerradas (816 InformeOp), 98 registros eventuales, 0 errores. Exclusiones
+  restantes: solo Ofidirect (su tarifa Especial no cubre algunas categorías
+  de vehículo: dato real, no del generador).
+
 ## Deuda conocida
 
 Deuda técnica activa. Actualizar cuando se salda.
@@ -2839,6 +2945,14 @@ en el switch de Asignaciones (Bloques 13-19) — ya no está declarado en Operac
 - Salida: `modalRef.result` resuelve con `OperacionCreada[]` finales (sin las eliminadas);
   dismiss = cancela.
 - Agrupa por `item.idCliente` internamente (viewmodel efímero `GrupoEditor`).
+
+**Reglas de decisión en `ResolucionTarifaOpService` (frente Generador, P2):**
+la resolución de chofer/vehículo pendientes, eventual forzada, candidatos
+de tarifa por lado, espejo de Personalizada y detección de selección manual
+se movieron a `servicios/tarifario/resolucion-tarifa-op.service.ts`, que
+también usa el generador de operaciones de prueba. Lo que sigue describe
+esas reglas (siguen vigentes); el editor ya no inyecta `ChoferService` /
+`ProveedorService` y conserva solo el estado de UI.
 
 **Resolución de pendientes:**
 - Chofer (caso proveedor, `op.chofer.id === ''`): selector con
@@ -3123,17 +3237,17 @@ Vantruck. Registrado acá para que no se pierda de vista al planificar ese proce
 - Cascada de Finanzas sobre `InformeLiqNuevo` (resumenFinanzas, cuenta
   corriente, aging, movimientos, ledger, informe-liq-cuenta-corriente siguen
   leyendo las colecciones viejas), incluido el impacto de editar un emitido.
-- Reportes: `Number(op.cliente.id)` da NaN con ids string.
+- Reportes: `Number(op.cliente.id)` da NaN con ids string → ver "Deuda —
+  Reportes (`resumenOpMensual`)".
 - `revertirInformeLiq` (camino viejo) no restaura `bloqueadoPorContraparte`.
 - Retirar el camino viejo (LiquidacionesOp, Proforma, LiquidacionService,
   LiquidacionBuilderService, rutas comentadas en liquidacion-routing y
   LiqGral) una vez migrado Vantruck.
 - InformeVenta (comisiones) quedan huérfanos al dar de baja una operación
   cerrada.
-- Resúmenes: `ResumenOpCalculatorService.getPeriodo` hace
-  `new Date('YYYY-MM-DD')` (UTC) y lee el mes en hora local: en Argentina
-  una operación del día 1 cae en el mes anterior. Cierre, edición y reversión
-  usan la misma función (consistentes entre sí), pero el mes es incorrecto.
+- Resúmenes: mes corrido por huso horario en
+  `ResumenOpCalculatorService.getPeriodo` → ver "Deuda — Reportes
+  (`resumenOpMensual`)" (confirmado con el generador).
 - Pantallas viejas que leen por `InformeOpService.obtenerPorIdsOperacion`
   (proforma, facturación vieja) no filtran InformeOp 'anulado'. Se retiran
   con el camino viejo.
@@ -3190,3 +3304,96 @@ RaizModule, puede depender de `MigrarDatosComponent`, exportado por
 LiquidacionModule). Frente propio: auditar qué usan realmente
 HomeComponent / SidebarComponent / MigracionComponent y quitar los imports
 eager uno por uno. Detectado en el frente Facturación (F0).
+
+### Deuda — Reportes (`resumenOpMensual`) — confirmada con el generador
+- Mes corrido por huso horario: `ResumenOpCalculatorService.getPeriodo`
+  hace `new Date('YYYY-MM-DD')` (medianoche UTC) y lee
+  `getMonth()`/`getFullYear()` en hora local: en Argentina (UTC−3) una
+  operación del día 1 cae en el mes anterior. Confirmado en demo: las 7
+  operaciones del sábado 01/08/2026 quedaron en los resúmenes `…_2026_7`.
+  Afecta también a Vantruck (producción). Alta, edición y baja usan la
+  misma función (consistentes entre sí). El fix es trivial (tomar año y mes
+  del string) pero NO se aplica suelto: con resúmenes ya escritos, una baja
+  o edición posterior restaría del mes correcto y descuadraría. Se resuelve
+  en el frente Reportes, junto con un recálculo de los resúmenes desde las
+  operaciones.
+- `Number(op.cliente.id)` / `op.chofer.id` / `op.proveedor.id` da NaN con
+  ids string: los resúmenes por entidad colapsan en `cliente_NaN_…`,
+  `chofer_NaN_…`, `proveedor_NaN_…`. Solo el resumen general es útil.
+- Reportes todavía lee `op.valores` / `op.tarifaTipo` (ver "Deuda — campos
+  legacy de Operacion").
+
+### Pendiente — auditar fechas 'YYYY-MM-DD' vs huso horario en toda la app
+Averiguar si la inconsistencia de `getPeriodo` se repite en otros lugares.
+Relevamiento preliminar por patrón (sin verificar caso por caso):
+- `new Date('YYYY-MM-DD').getFullYear()/getMonth()/getDate()` → día
+  anterior en Argentina (el 1/1 cae en el año anterior): `excel.service`,
+  `facturacion-historico`, `facturacion-listado`, `liquidaciones-op`,
+  `proforma`. También `pdf.service` y `cuenta-corriente.service` con
+  `new Date(<fecha>)`.
+- `toISOString().split('T')[0]` (o `slice`) sobre una fecha LOCAL → desde
+  las 21:00 en Argentina da el día siguiente. 16 archivos, entre ellos
+  código vivo: `tablero-asignaciones`, `TableroService`,
+  `tablero-calendario`, `InformeOpFactoryService`, `registro-log`,
+  `papelera`, `baja-objeto`; además Finanzas, `StorageService` y servicios
+  de migración.
+- Pipe `date` sobre strings 'YYYY-MM-DD' (muestra el día anterior):
+  `informe-liq-nuevo-detalle`, `informe-op-anulados`. En Facturación ya se
+  resolvió con `fechaComprobanteLegible`.
+- Comparaciones/ordenamientos con `getTime()` no se ven afectados
+  (corrimiento parejo).
+Criterio a definir: las fechas de negocio son strings 'YYYY-MM-DD' y se
+operan como strings o con helpers en hora local (`toISODateString` de
+`servicios/fechas/date-range.service.ts` ya usa hora local); no usar
+`new Date(string)` ni `toISOString()` para fechas de negocio. Posible util
+único en `servicios/fechas/`. Frente propio o dentro de Reportes.
+
+### Deuda — generador de operaciones y datos de demo
+- Eventuales: cliente y chofer se varían ±20% por separado → puede quedar
+  pago al chofer mayor que el cobro al cliente. Inofensivo para pruebas; si
+  molesta, derivar el valor del chofer del cliente con un margen.
+- Vigencia de tarifas por `activo`, no por fecha (`vigenciaDesde` no se usa
+  al resolver): generar meses pasados usa las tarifas de hoy.
+- `idInfVenta = Date.now() + random(0..999)`: puede colisionar en cierres
+  rápidos (el anti-duplicado de `cerrarOperacion` haría fallar ese cierre).
+  No se manifestó porque los clientes de demo no tienen vendedor
+  (`RefCliente.vendedor` undefined → sin InformeVenta). Revisar en el frente
+  Vendedores.
+- Ofidirect (demo): su Especial no cubre algunas categorías de vehículo →
+  exclusiones en el plan. Completar la tarifa si se quieren 0 exclusiones.
+- La limpieza no toca Storage (ver "Herramientas de desarrollo").
+- `idsOperacion` del lote es un array en el doc: con ~500 ids no hay
+  problema; con varios miles se acercaría al límite de 1 MB por documento.
+- Registradas durante el frente (diseño §10): rutas viejas de tarifas
+  (`clientes|choferes|proveedores/general|especial|personalizada|eventual`)
+  siguen activas y HomeComponent escucha las colecciones viejas (retirar en
+  el cierre de Tarifas); `LogService` viejo sigue escribiendo en `logs`
+  (`AsignacionService.reactivarItem`,
+  `TableroService.altaOperacionYActualizarTablero`, `StorageService`
+  add/update/deleteItem/logSimple); la papelera vieja todavía recibe bajas
+  (vendedores con rol no dev vía `deleteItemPapelera`); Finanzas y
+  Vendedores leen/escriben colecciones purgadas en demo (`resumenLiq`,
+  `infOpLiq*`, `resumenVenta`: sus pantallas quedan vacías en demo; se
+  resuelve en sus frentes); `firestore.rules` conserva el mapeo de las
+  colecciones purgadas.
+
+### Deuda — campos legacy de Operacion (`valores`, `tarifaTipo`, `datosTarifaPersonalizada`)
+Siguen siendo necesarios hoy (verificado en el frente Generador, diseño
+§11):
+- `op.valores`: `valores.<lado>.adExtraValor` es dato real (lo carga el
+  modal de cierre) y solo vive ahí; el motor nuevo lo lee de ahí
+  (`ValoresTarifaService`) e InformeOpEditor también. Reportes lee
+  `op.valores` a propósito (la edición de InformeOp actualiza `op.valores`
+  y el resumen tiene que revertir exactamente lo que sumó). InformeVenta,
+  tablero-op y el Excel viejo leen el espejo.
+- `op.tarifaTipo`: `tarifaTipo.eventual` gobierna el invariante eventual ⇔
+  `datosTarifaEventual` (OperacionFactoryService) y el toggle/badge del
+  editor; Reportes cuenta por `tarifaTipo.<nivel>`.
+- `datosTarifaPersonalizada`: peso muerto en el camino nuevo (solo lo lee
+  el modal viejo `editar-inf-op`).
+Para retirarlos (frente Reportes + cierre de Tarifas): mover
+`adExtraValor` a un campo propio de la op (o tomar `valoresNuevos` como
+fuente); Reportes a `valoresNuevos` + `tarifaAplicada*.nivel` /
+`datosTarifaEventual !== null`; editor y factory a `datosTarifaEventual`
+como única marca de eventual; tablero-op e InformeVenta a `valoresNuevos`;
+retirar `editar-inf-op` / `buscar-tarifa`.

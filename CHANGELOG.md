@@ -1957,6 +1957,37 @@ Detalle completo en `CLAUDE.md` → "Frente Facturación — InformeLiqNuevo".
 
 ---
 
+## Herramientas de desarrollo (solo demo) — Limpieza + Generador de operaciones (Septiembre 2026)
+
+- Limpieza de demo en `/migracion` (guarda proyecto demo + rol dev):
+  allowlist de colecciones operativas, papelera de operaciones, numeradores
+  a 0. Contar → confirmación escrita → Limpiar (lotes de 500).
+- `DbFirestoreService`: `contarDocumentos`, `obtenerTodosConId`,
+  `eliminarTodosLosDocumentos`. `PapeleraService.armarPurgaPorColeccion`.
+- `ResolucionTarifaOpService`: resolución de chofer/vehículo/tarifas
+  extraída de `operaciones-editor` (el editor delega; mismo
+  comportamiento).
+- Generador de operaciones de prueba en `/migracion`: Simular (plan
+  reproducible con semilla, sin escrituras) y Generar (alta por día +
+  cierres por los mismos orquestadores que la UI); lote registrado en
+  `generacionesPrueba`.
+- `shared/utils/azar.util.ts` (PRNG con semilla). RaizModule importa
+  FormsModule.
+- Reglas (solo demo): `noOperativo` → 'operaciones' (faltaba); módulo
+  nuevo 'desarrollo' (solo dev) para `generacionesPrueba`.
+- Demo: export de Firestore, purga única de 28 colecciones del modelo
+  viejo + backups (CLI), limpieza operativa y primer lote (508 operaciones
+  de agosto 2026, 408 cerradas, 0 errores).
+- Confirmado con volumen: resúmenes de Reportes corridos de mes (día 1, huso
+  horario) y con ids NaN — deuda del frente Reportes. Pendiente auditar el
+  manejo de fechas 'YYYY-MM-DD' en toda la app.
+
+Detalle completo en `CLAUDE.md` → "Herramientas de desarrollo (solo demo)".
+
+**Verificación:** `ng build --configuration=demo` limpio.
+
+---
+
 ### Pendiente
 
 - Módulo Vendedores (incluye lógica de vendedor[] en Cliente)
