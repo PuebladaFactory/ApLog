@@ -3,7 +3,7 @@ import { DocumentoTabular, TipoCeldaDoc } from 'src/app/interfaces/documento-tab
 import { LOGO_EMPRESA_BASE64 } from './logo-empresa';
 import { ANCHO_HOJA_HORIZONTAL, fechaHoraActual, formatearCelda, formatearMoneda } from './formato-exportacion';
 
-const MARGEN = 14;          // mm
+const MARGEN = 10;          // mm (lateral y superior)
 const MARGEN_INFERIOR = 16; // mm (lugar para "Página X de Y")
 const COLOR_ENCABEZADO: [number, number, number] = [100, 149, 237];
 const COLOR_ZEBRA: [number, number, number] = [236, 242, 251];
@@ -62,8 +62,11 @@ export class PdfTabularService {
     // ---- Tabla ----
     const fuente = doc.columnas.length <= 9 ? 8 : 7;
     const columnStyles: Record<number, any> = {};
+    // Fecha, números y montos: 'wrap' = la columna toma el ancho de su valor
+    // más largo y NUNCA lo parte en dos líneas. Las de texto ('auto') se
+    // reparten el espacio restante y hacen salto de línea.
     doc.columnas.forEach((c, i) => {
-      columnStyles[i] = { halign: alineacion(c.tipo), cellWidth: (anchoUtil * c.ancho) / anchoTotal };
+      columnStyles[i] = { halign: alineacion(c.tipo), cellWidth: c.tipo === 'texto' ? 'auto' : 'wrap' };
     });
     autoTable(pdf, {
       startY: y + 5,

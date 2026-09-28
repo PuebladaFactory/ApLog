@@ -10,7 +10,9 @@ export type ValorCeldaDoc = string | number;
 export interface ColumnaDoc {
   etiqueta: string;
   tipo: TipoCeldaDoc;
-  /** Ancho aproximado en caracteres (Excel). El PDF lo usa como proporción. */
+  /** Ancho aproximado en caracteres (ancho de columna del Excel). El PDF solo
+   *  lo usa para elegir vertical/horizontal: el ancho real de cada columna lo
+   *  calcula autotable según su contenido. */
   ancho: number;
 }
 
