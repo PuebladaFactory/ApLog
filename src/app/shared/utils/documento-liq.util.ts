@@ -49,6 +49,9 @@ const ANCHO_COLUMNA: Readonly<Record<string, number>> = {
 
 const LEYENDA_PRELIMINAR = 'Documento preliminar — sujeto a revisión.';
 
+/** Columnas de texto cuyo valor va centrado (valores cortos de ancho fijo). */
+const COLUMNAS_CENTRADAS = ['Quincena'];
+
 /** QUÉ dice el documento de un InformeLiqNuevo (Excel y PDF lo dibujan igual).
  *  Pura: no lee Firestore ni cachés, todo sale de los snapshots.
  *  - `informesOp`: los que componen el informe (vivos, o los del snapshot si
@@ -67,6 +70,7 @@ export function armarDocumentoLiq(
   const columnas: ColumnaDoc[] = liq.columnas.map(c => ({
     etiqueta: etiquetaColumna(c, liq.tipo),
     tipo: tipoColumna(c),
+    alineacion: COLUMNAS_CENTRADAS.includes(c) ? ('centro' as const) : undefined,
     ancho: ANCHO_COLUMNA[c] ?? 18,
   }));
   const filas = ordenarInformes(informesOp).map(inf => liq.columnas.map(c => valorCrudoColumna(inf, c)));

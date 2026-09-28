@@ -8,6 +8,7 @@ const FORMATO_MONEDA = '"$" #,##0.00;-"$" #,##0.00';
 const ARGB_ENCABEZADO = 'FF6495ED';
 const ARGB_ZEBRA = 'FFECF2FB';
 const ARGB_MARCA = 'FFC81E1E';
+const HORIZONTAL_EXCEL = { izquierda: 'left', centro: 'center', derecha: 'right' } as const;
 const BORDE = {
   top: { style: 'thin', color: { argb: 'FFB4B4B4' } },
   bottom: { style: 'thin', color: { argb: 'FFB4B4B4' } },
@@ -71,7 +72,11 @@ export class ExcelTabularService {
       const row = ws.getRow(fila);
       valores.forEach((v, i) => {
         const celda = row.getCell(i + 1);
-        this.escribirCelda(celda, v, doc.columnas[i].tipo);
+        const col = doc.columnas[i];
+        this.escribirCelda(celda, v, col.tipo);
+        if (col.alineacion) {
+          celda.alignment = { ...celda.alignment, horizontal: HORIZONTAL_EXCEL[col.alineacion] };
+        }
         celda.border = BORDE;
         if (k % 2 === 1) celda.fill = relleno(ARGB_ZEBRA);
       });

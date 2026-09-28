@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { DocumentoTabular, TipoCeldaDoc } from 'src/app/interfaces/documento-tabular';
+import { ColumnaDoc, DocumentoTabular } from 'src/app/interfaces/documento-tabular';
 import { LOGO_EMPRESA_BASE64 } from './logo-empresa';
 import { ANCHO_HOJA_HORIZONTAL, fechaHoraActual, formatearCelda, formatearMoneda } from './formato-exportacion';
 
@@ -66,7 +66,7 @@ export class PdfTabularService {
     // más largo y NUNCA lo parte en dos líneas. Las de texto ('auto') se
     // reparten el espacio restante y hacen salto de línea.
     doc.columnas.forEach((c, i) => {
-      columnStyles[i] = { halign: alineacion(c.tipo), cellWidth: c.tipo === 'texto' ? 'auto' : 'wrap' };
+      columnStyles[i] = { halign: alineacion(c), cellWidth: c.tipo === 'texto' ? 'auto' : 'wrap' };
     });
     autoTable(pdf, {
       startY: y + 5,
@@ -154,8 +154,11 @@ export class PdfTabularService {
   }
 }
 
-function alineacion(tipo: TipoCeldaDoc): 'left' | 'right' | 'center' {
-  if (tipo === 'moneda' || tipo === 'numero') return 'right';
-  if (tipo === 'fecha') return 'center';
+function alineacion(c: ColumnaDoc): 'left' | 'right' | 'center' {
+  if (c.alineacion) {
+    return c.alineacion === 'centro' ? 'center' : c.alineacion === 'derecha' ? 'right' : 'left';
+  }
+  if (c.tipo === 'moneda' || c.tipo === 'numero') return 'right';
+  if (c.tipo === 'fecha') return 'center';
   return 'left';
 }
