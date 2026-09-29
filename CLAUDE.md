@@ -417,6 +417,7 @@ Categorías especiales:
 - **Formularios:** Reactive Forms (`FormBuilder`). Directivas propias manejan CUIT, solo-letras, solo-números y fechas.
 - **Modales:** `ng-bootstrap NgbModal`. Modales reutilizables en `shared/modales/`, específicos dentro del módulo feature.
 - **Estilo de código:** respetar el estilo existente en cada archivo que se modifique — nombres de variables, indentación, estructura — sin imponer patrones nuevos salvo que se indique explícitamente.
+- **Finales de línea:** LF en todo el repo, definido en `.gitattributes` (`* text=auto eol=lf`; solo `.bat`/`.cmd`/`.ps1` en CRLF) y `.editorconfig` (`end_of_line = lf`). Archivos nuevos en LF. Si una herramienta deja CRLF, Git lo normaliza al commitear.
 
 ## Forma de trabajo
 
@@ -3381,8 +3382,8 @@ Vantruck. Registrado acá para que no se pierda de vista al planificar ese proce
   (`facturas/…`) — más la verificación del bucket (ver "Deuda — verificar
   bucket de Storage de `pf-logistics`"); poblar `facturasVinculadas` con las
   facturas históricas para que la unicidad valga también para ellas.
-- Finales de línea mezclados (CRLF/LF según el archivo): definir
-  `.gitattributes` y normalizar en un commit aparte.
+- ~~Finales de línea mezclados~~ — RESUELTO: `.gitattributes` +
+  `.editorconfig`, todo el repo en LF (ver "Convenciones").
 
 ### Deuda — RaizModule importa los módulos de feature en forma eager
 `RaizModule` importa en forma EAGER casi todos los módulos de feature

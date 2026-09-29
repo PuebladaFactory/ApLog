@@ -2016,6 +2016,15 @@ Detalle completo en `CLAUDE.md` → "Frente Excel/PDF — InformeLiqNuevo".
 
 ---
 
+## Finales de línea normalizados (Septiembre 2026)
+
+- `.gitattributes` (`* text=auto eol=lf`; `.bat`/`.cmd`/`.ps1` en CRLF;
+  binarios marcados) y `.editorconfig` (`end_of_line = lf`).
+- Repositorio y copia de trabajo en LF. Commit solo de finales de línea,
+  sin cambios de contenido.
+
+---
+
 ### Pendiente
 
 Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
@@ -2045,7 +2054,6 @@ Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
   de `servicios/exportacion/`.
 - RaizModule: imports eager de los módulos de feature (lazy loading, bundle
   inicial).
-- `.gitattributes` y normalización de finales de línea (commit aparte).
 
 **Migración a Vantruck (al final)**
 - Migración de datos (entidades, tarifas, operaciones, liquidaciones y
