@@ -2018,10 +2018,38 @@ Detalle completo en `CLAUDE.md` → "Frente Excel/PDF — InformeLiqNuevo".
 
 ### Pendiente
 
-- Módulo Vendedores (incluye lógica de vendedor[] en Cliente)
-- Módulo Liquidaciones
-- Módulo Facturación
-- Módulo Finanzas
-- Módulo Reportes
-- Módulo Ajustes
-- Tarifas (refactorización del sistema completo)
+Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
+
+**Frentes de refactor**
+- Tarifas — cierre: retirar el módulo viejo (pantallas `*-tarifa-gral` /
+  especial / personalizada, rutas `clientes|choferes|proveedores/general|
+  especial|personalizada|eventual`, listeners de HomeComponent/StorageService
+  sobre las colecciones viejas); multiplicidad real en operaciones-editor
+  (hoy el shim `tarifaTipoDesdeHabilitadas`); documentar el tarifario nuevo
+  en CLAUDE.md.
+- Vendedores: lógica de `vendedor[]` en Cliente, InformeVenta (id por
+  `Date.now()`, huérfanos al dar de baja una operación cerrada),
+  `resumenVenta`.
+- Finanzas: cascada sobre InformeLiqNuevo (cobros/pagos sobre 'facturado',
+  cuenta corriente, aging, ledger, incobrable); hoy lee las colecciones
+  viejas.
+- Reportes: `resumenOpMensual` (ids NaN, mes corrido por huso horario,
+  recálculo desde las operaciones), migrar a `valoresNuevos` /
+  `tarifaAplicada*`; retiro de los campos legacy de Operacion.
+- Ajustes: retirar el `LogService` viejo (colección `logs`) y la Papelera
+  legado.
+
+**Transversales**
+- Auditoría de fechas 'YYYY-MM-DD' vs huso horario en toda la app.
+- Excel/PDF de los demás informes sobre `DocumentoTabular` + los renderers
+  de `servicios/exportacion/`.
+- RaizModule: imports eager de los módulos de feature (lazy loading, bundle
+  inicial).
+- `.gitattributes` y normalización de finales de línea (commit aparte).
+
+**Migración a Vantruck (al final)**
+- Migración de datos (entidades, tarifas, operaciones, liquidaciones y
+  facturación, con los checklists registrados en CLAUDE.md), deploy de
+  reglas / índices / `storage.rules` en `pf-logistics`, y retiro del camino
+  viejo (LiquidacionesOp, Proforma, facturación vieja, exportaciones viejas
+  de liquidación).
