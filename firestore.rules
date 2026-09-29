@@ -67,11 +67,18 @@ service cloud.firestore {
         'informesOpProveedores': 'finanzas',
         'infOpLiqClientes': 'finanzas', 'infOpLiqChoferes': 'finanzas',
         'infOpLiqProveedores': 'finanzas',
-        'informesOp': 'finanzas', // colección única nuevo-modelo — sucesora de las 3 de arriba
+        // InformeOp nuevo-modelo (sucesora de las 3 de arriba). Módulo propio
+        // (Frente Reportes, R15): 'user' cierra operaciones y el cierre
+        // consulta + crea el par de InformeOp. Editar/eliminar: solo dev/admin.
+        'informesOp': 'informesOp',
         'informesLiq': 'finanzas', // informes de liquidación nuevo-modelo — sucesora de resumenLiq + proforma
         'informesLiqSnapshots': 'finanzas', // copia congelada de los InformeOp al revertir un InformeLiq (doc id = idInfLiq)
         'facturasVinculadas': 'finanzas', // unicidad de factura electrónica → InformeLiq (doc id = cuitEmisor_ptoVta_tipo_nro)
         'resumenOpMensual': 'finanzas', 'resumenFinanzas': 'finanzas',
+        // Resúmenes de Reportes, modelo nuevo (Frente Reportes). Los escribe
+        // el cierre/edición/baja con set+merge+increment ('user' cierra: crear
+        // + editar, sin leer ni eliminar). Ver permitido().
+        'resumenesOp': 'resumenes',
         'movimientos': 'finanzas',
 
         // Legado activo — solo lectura a propósito (ver CLAUDE.md)
@@ -139,6 +146,16 @@ service cloud.firestore {
         )) ||
         (modulo == 'finanzas' && (
           r in ['dev','admin'] || (r == 'demo' && accion == 'leer')
+        )) ||
+        (modulo == 'informesOp' && (
+          r in ['dev','admin'] ||
+          (r == 'user' && accion in ['leer','crear']) ||
+          (r == 'demo' && accion == 'leer')
+        )) ||
+        (modulo == 'resumenes' && (
+          r in ['dev','admin'] ||
+          (r == 'user' && accion in ['crear','editar']) ||
+          (r == 'demo' && accion == 'leer')
         )) ||
         (modulo == 'legacySoloLectura' && accion == 'leer') ||
         (modulo == 'numeradores' && (

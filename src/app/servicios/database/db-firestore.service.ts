@@ -29,6 +29,7 @@ import {
   Transaction,
   QueryConstraint,
   QueryDocumentSnapshot,
+  SetOptions,
 } from "@angular/fire/firestore";
 import { firstValueFrom, from, Observable } from "rxjs";
 import { map } from "rxjs/operators";
@@ -61,7 +62,7 @@ export interface ResultadoConObjeto {
   objeto: any;
 }
 
-export type ModoEscritura = 'crear' | 'reemplazar' | 'eliminar' | 'actualizar';
+export type ModoEscritura = 'crear' | 'reemplazar' | 'eliminar' | 'actualizar' | 'fusionar';
 
 export interface EscrituraBatch {
   coleccion: string;
@@ -69,7 +70,12 @@ export interface EscrituraBatch {
   /** Cuando modo === 'actualizar', las keys de campos anidados van en
    *  notación de punto (ej. 'contraParte.monto'), NUNCA como objeto
    *  anidado — batch.update() reemplaza el sub-objeto entero si se le
-   *  pasa un objeto, en vez de mergear el campo puntual. */
+   *  pasa un objeto, en vez de mergear el campo puntual.
+   *  Cuando modo === 'fusionar' (set con { merge: true }) es AL REVÉS: los
+   *  campos anidados van como OBJETO anidado (se mergean campo a campo), y
+   *  una key con punto se guardaría como un campo literal con ese nombre.
+   *  'fusionar' crea el documento si no existe — con increment() no hace
+   *  falta leer antes (ej. resúmenes de Reportes, ResumenOpFactoryService). */
   data: any;
   modo: ModoEscritura;
 }
@@ -78,7 +84,7 @@ export interface EscrituraBatch {
  *  set/update/delete con la misma semántica, y eso es lo único que usa
  *  aplicarEscritura(). */
 interface DestinoEscritura {
-  set(ref: DocumentReference<any>, data: any): unknown;
+  set(ref: DocumentReference<any>, data: any, options?: SetOptions): unknown;
   update(ref: DocumentReference<any>, data: any): unknown;
   delete(ref: DocumentReference<any>): unknown;
 }
@@ -1446,6 +1452,8 @@ export class DbFirestoreService {
     const ref = doc(this.firestore, `/Vantruck/datos/${e.coleccion}/${e.id}`);
     if (e.modo === 'crear' || e.modo === 'reemplazar') {
       destino.set(ref, e.data);
+    } else if (e.modo === 'fusionar') {
+      destino.set(ref, e.data, { merge: true });
     } else if (e.modo === 'actualizar') {
       destino.update(ref, e.data);
     } else {

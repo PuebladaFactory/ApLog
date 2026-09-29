@@ -20,6 +20,8 @@ type ModuloReglas =
   | 'tarifas'
   | 'tarifasHistorial'
   | 'finanzas'
+  | 'informesOp'
+  | 'resumenes'
   | 'legacySoloLectura'
   | 'numeradores'
   | 'logs'
@@ -116,6 +118,23 @@ export class PermisosService {
       leer:     { dev: true, admin: true, manager: false, user: false, demo: true },
       crear:    { dev: true, admin: true, manager: false, user: false, demo: false },
       editar:   { dev: true, admin: true, manager: false, user: false, demo: false },
+      eliminar: { dev: true, admin: true, manager: false, user: false, demo: false },
+    },
+    // Frente Reportes (R15): 'user' cierra operaciones → lee (anti-duplicado)
+    // y crea el par de InformeOp. Editar/eliminar siguen siendo dev/admin.
+    // Sin consumidor desde ModuloPermiso todavía — fidelidad con las reglas.
+    informesOp: {
+      leer:     { dev: true, admin: true, manager: false, user: true,  demo: true },
+      crear:    { dev: true, admin: true, manager: false, user: true,  demo: false },
+      editar:   { dev: true, admin: true, manager: false, user: false, demo: false },
+      eliminar: { dev: true, admin: true, manager: false, user: false, demo: false },
+    },
+    // Resúmenes nuevos (resumenesOp): 'user' los escribe al cerrar
+    // (set+merge = crear si no existe, editar si existe), no los lee.
+    resumenes: {
+      leer:     { dev: true, admin: true, manager: false, user: false, demo: true },
+      crear:    { dev: true, admin: true, manager: false, user: true,  demo: false },
+      editar:   { dev: true, admin: true, manager: false, user: true,  demo: false },
       eliminar: { dev: true, admin: true, manager: false, user: false, demo: false },
     },
     legacySoloLectura: {
