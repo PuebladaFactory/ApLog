@@ -1988,6 +1988,34 @@ Detalle completo en `CLAUDE.md` → "Herramientas de desarrollo (solo demo)".
 
 ---
 
+## Frente Excel/PDF — InformeLiqNuevo (Septiembre 2026)
+
+- Excel y PDF de las liquidaciones del camino nuevo: proforma, emitido,
+  facturado (con el comprobante vinculado), revertido (marca REVERTIDO) y
+  vista previa (marca VISTA PREVIA). Servicio nuevo; los viejos no se tocaron.
+- Arquitectura: `armarDocumentoLiq` (pura, QUÉ dice el documento) →
+  `DocumentoTabular` (modelo neutro) → renderers genéricos
+  `PdfTabularService` / `ExcelTabularService` (`servicios/exportacion/`,
+  librerías con import dinámico) → fachada `LiquidacionExportService`.
+- `columnas-liquidacion.util`: `valorCrudoColumna` + `tipoColumna`; la
+  pantalla y la exportación comparten la definición de cada columna.
+- PDF: ancho de columna por contenido (fecha y montos nunca se parten),
+  encabezado repetido, marca de agua, numeración de páginas. Excel: montos
+  como números, pie con fórmulas, impresión A4 al ancho.
+- Liquidación: vista previa en LiquidacionNueva y en el Detalle (con lo que
+  está en pantalla); pregunta Excel / PDF / No descargar al emitir o guardar
+  un borrador; PDF / Excel en Borradores.
+- Facturación: PDF / Excel en Emitidos, Facturados y Revertidos (sin
+  confirmación redundante). Revertidos suma spinner/bloqueo.
+- Log REIMPRIMIR solo al descargar documentos con número. Permiso
+  `reimprimir`.
+
+Detalle completo en `CLAUDE.md` → "Frente Excel/PDF — InformeLiqNuevo".
+
+**Verificación:** `ng build --configuration=demo` limpio.
+
+---
+
 ### Pendiente
 
 - Módulo Vendedores (incluye lógica de vendedor[] en Cliente)

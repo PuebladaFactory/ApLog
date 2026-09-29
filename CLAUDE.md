@@ -271,7 +271,8 @@ Por eso `Proforma CH` tiene mayor prioridad visual que `Proforma CL` en el badge
 | `liquidaciones/` | Cálculo de liquidaciones y transiciones de estado de operación (proformas, InformeLiq) — camino VIEJO (InformeLiq/resumenLiq/proforma), reemplazado por `informes-liq/`; sin tocar hasta retirar el camino viejo |
 | `informes-op/` | `InformeOpService` (+ Factory) — `InformeOpNuevo` en la colección única `informesOp` (un doc por lado de cada operación, con `contraParte`). `armarEscriturasEdicion` (armado sin commit) + `editar` (armado + commit) |
 | `informes-liq/` | `InformeLiqService` + `InformeLiqFactoryService` — `InformeLiqNuevo` en `informesLiq`: borradores, emisión, edición. Ver "Frente Liquidación — InformeLiqNuevo" |
-| `informes/` | Generación de reportes Excel y PDF |
+| `informes/` | Generación de reportes Excel y PDF — camino VIEJO (`ExcelService`/`PdfService`); los documentos de InformeLiqNuevo salen de `exportacion/` + `LiquidacionExportService` |
+| `exportacion/` | Renderers GENÉRICOS de `DocumentoTabular` (no saben de qué informe se trata): `PdfTabularService` (jsPDF + autotable), `ExcelTabularService` (exceljs), formatos y logo compartidos. Librerías con import dinámico — ver "Frente Excel/PDF — InformeLiqNuevo" |
 | `numerador/` | Generación de IDs secuenciales (operaciones, facturas) |
 | `validar/` | Validación de reglas de negocio |
 | `formato-numerico/` | Formateo de números/moneda estilo Argentina |
@@ -2454,13 +2455,14 @@ Helpers síncronos en el servicio dueño, divididos por mecanismo:
   en la que solo se puede desmarcar. Alertas arriba y repetidas en la
   confirmación, ajustes (verde ≥0 / rojo <0), observaciones, columnas (la
   tabla se arma con las seleccionadas). Devuelve `{accion: 'emitir'|'borrador',
-  datos}`. Botón "Vista previa" sin conectar (pendiente Excel/PDF).
+  datos}`. "Vista previa" (PDF en pestaña, marca VISTA PREVIA): ver
+  "Frente Excel/PDF — InformeLiqNuevo".
 - `BorradoresLiqComponent`: listado en vivo (`observarBorradores`), filtro por
   tipo, búsqueda, orden por encabezado. Acciones Ver/Emitir/Eliminar.
 - `InformeLiqNuevoDetalleComponent` (modal): columnas guardadas, edición de
   InformeOp vía `InformeOpEditorComponent` → `editarInformeOp`. editarDatos con
   Guardar/Descartar. Totales en vivo con badge "sin guardar". "Vista previa"
-  sin conectar.
+  con lo que está en pantalla (ver "Frente Excel/PDF — InformeLiqNuevo").
 - `InformeOpAnuladosComponent`: InformeOp 'anulado' (baja de operación
   cerrada) por período/tipo, solo lectura. Muestra `anulacion`
   (motivo/usuario/fecha); "Ver" abre InformeOpDetalleComponent; "Ver en
@@ -2469,7 +2471,10 @@ Helpers síncronos en el servicio dueño, divididos por mecanismo:
   "Ver todos").
 
 ### Columnas (`shared/utils/columnas-liquidacion.util.ts`)
-`columnasPorTipo`, `esColumnaMonto`, `valorColumnaInformeOp`, `etiquetaColumna`.
+`columnasPorTipo`, `tipoColumna` (texto/numero/moneda/fecha), `esColumnaMonto`,
+`valorCrudoColumna` (number para montos/km, 'YYYY-MM-DD' para la fecha — única
+definición de cada columna, la usan la pantalla y el Excel/PDF),
+`valorColumnaInformeOp` (= crudo + formato, para pantalla), `etiquetaColumna`.
 El nombre PERSISTIDO de la columna de monto propio es 'A Cobrar' para todo
 tipo. `etiquetaColumna(nombre, tipo)` lo muestra como 'A Pagar' para
 chofer/proveedor. Cualquier salida nueva (Excel/PDF) debe usar
@@ -2718,6 +2723,97 @@ chofer), `requiereSeleccionManual`. Sobre los métodos públicos de
   cerradas (816 InformeOp), 98 registros eventuales, 0 errores. Exclusiones
   restantes: solo Ofidirect (su tarifa Especial no cubre algunas categorías
   de vehículo: dato real, no del generador).
+
+## Frente Excel/PDF — InformeLiqNuevo (Septiembre 2026)
+
+Documentos Excel y PDF de las liquidaciones del camino nuevo. Servicio
+NUEVO, no un adaptador de los viejos (`ExcelService`/`PdfService` siguen
+sirviendo al camino viejo y a los demás informes de la app, sin tocar).
+Todo se hizo y probó en demo. Diseño y decisiones E1–E8: doc de proyecto
+`claude/diseno-export-liquidacion.md`; instrucciones
+`claude/instruccion-x0…x4-*.md`.
+
+### Arquitectura: QUÉ dice el documento ≠ CÓMO se ve
+
+    InformeLiqNuevo + InformeOp[]
+            │
+            ▼
+    armarDocumentoLiq()  (shared/utils/documento-liq.util.ts, PURA)
+            │  DocumentoTabular (interfaces/documento-tabular.ts, neutro)
+            ├──▶ ExcelTabularService.generar(doc) → Blob   (exportacion/, exceljs)
+            └──▶ PdfTabularService.generar(doc)   → Blob   (exportacion/, jsPDF + autotable)
+
+    LiquidacionExportService (servicios/informes-liq/) — única puerta de los componentes
+
+- El camino viejo tenía el QUÉ (textos, valores, subtotal) duplicado en cada
+  servicio de librería, y ya había divergido. Acá lo decide UNA función pura;
+  los renderers solo dibujan y no saben de InformeLiq (reutilizables para
+  otros informes "tabla con encabezado y pie").
+- `DocumentoTabular`: título, subtítulos, identificador, marca + leyenda,
+  columnas tipadas (`tipo`, `ancho` para el Excel, `alineacion` opcional),
+  filas con valores CRUDOS, `columnaTotal` (para las fórmulas del Excel), pie
+  (subtotal / ajuste / total) y notas.
+- Librerías con `await import(...)`: chunk aparte cuando se retiren los
+  servicios viejos (hoy las importan en forma estática, así que el bundle
+  no cambia todavía).
+
+### Variantes (se derivan del informe; el caller no pasa un "modo")
+
+| Situación | Título | Identificador | Marca |
+|---|---|---|---|
+| `{ vistaPrevia: true }` (LiquidacionNueva, antes de guardar) | Liquidación de Servicios {entidad} | — | VISTA PREVIA |
+| 'borrador' | Proforma {entidad} | — | PROFORMA |
+| 'emitido' / 'facturado' | Liquidación de Servicios {entidad} | N° interno (+ línea del comprobante si está facturado) | — |
+| 'revertido' | Liquidación de Servicios {entidad} | N° interno | REVERTIDO + leyenda (fecha y motivo) |
+
+- Encabezado = el del camino viejo (E4: sin datos del emisor; el documento
+  acompaña a la factura electrónica): logo, título, "Año / Mes / Período
+  liquidado". Pie = Subtotal + ajustes (solo si hay ajustes) + Total, de
+  `liq.valores`. Observaciones como nota. Filas por fecha y chofer.
+  'A Pagar' en chofer/proveedor (`etiquetaColumna`).
+- La vista previa del Detalle NO usa la marca VISTA PREVIA: es la proforma o
+  el emitido real, con lo que está en pantalla.
+- Nombres de archivo saneados: `Liquidacion_LQCL-0001_Entidad_2026-08-1q`,
+  `Proforma_…`, `VistaPrevia_…`, `…_REVERTIDO`.
+
+### Formato
+- PDF (presentación): encabezado de tabla repetido en cada página; ancho de
+  columna POR CONTENIDO (fecha, números y montos con `cellWidth: 'wrap'`,
+  nunca se parten; texto `'auto'` con salto de línea); horizontal si la suma
+  de anchos supera 140; márgenes 10 mm; pie como bloque propio a la derecha;
+  marca de agua diagonal translúcida, "Generado el …" y "Página X de Y" en
+  todas las páginas; Quincena centrada.
+- Excel (para corregir a mano): montos como números con formato moneda,
+  fechas como fechas (Date UTC); pie con FÓRMULAS (Subtotal = SUMA de la
+  columna de monto; Total = Subtotal + ajustes) con el resultado
+  precalculado; total por fila como VALOR (no siempre es la suma visible);
+  sin "Tabla de Excel"; encabezado inmovilizado; A4 ajustado al ancho con el
+  encabezado repetido al imprimir.
+- Fechas 'YYYY-MM-DD' formateadas sin pasar por `Date` (huso horario).
+
+### Fachada `LiquidacionExportService`
+- `obtenerInformesOp(liq)`: vivos, o la copia congelada si está revertido.
+- `descargar(liq, formato, informesOp?)` / `descargarPorId(id, formato)`:
+  genera y descarga; log REIMPRIMIR (escritura suelta) SOLO si el documento
+  tiene número (E5): nada para proforma ni vista previa.
+- `vistaPrevia(liq, informesOp, opciones?)`: PDF en pestaña nueva, sin
+  descargar (E2). La pestaña se abre ANTES de generar (`abrirUrlEnPestana`):
+  llamar sincrónicamente desde el click. La URL del Blob no se revoca (el
+  visor la necesita para descargar/imprimir).
+- `preguntarFormatoDescarga(titulo)` (`shared/utils/preguntar-descarga.util.ts`):
+  Swal Excel / PDF / No descargar en un solo lugar.
+
+### Dónde se usa
+| Lugar | Gesto | Comportamiento |
+|---|---|---|
+| LiquidacionNueva | "Vista previa" | PDF en pestaña (informe armado con `factory.crear`), marca VISTA PREVIA |
+| InformeOpListado | Emitir / Guardar borrador OK | pregunta Excel / PDF / No descargar |
+| Borradores | Emitir OK | pregunta |
+| Borradores | acciones PDF / Excel | descarga directa de la proforma |
+| Detalle | "Vista previa" | PDF con lo que está en pantalla, aunque no esté guardado |
+| Emitidos / Facturados / Revertidos | acciones PDF / Excel | descarga directa (sin la confirmación redundante del camino viejo) |
+Permiso de las descargas: `<modulo>.reimprimir` (E8). La pregunta se hace
+después de apagar el spinner (el overlay tapaba el Swal).
 
 ## Deuda conocida
 
@@ -3227,10 +3323,9 @@ producción, que corre aparte y más adelante, cuando se aborde el traspaso comp
 Vantruck. Registrado acá para que no se pierda de vista al planificar ese proceso.
 
 ### Deuda — Liquidación (camino InformeLiqNuevo)
-- Excel/PDF para `InformeLiqNuevo` (descarga post-emisión, reimpresión) y los
-  dos botones "Vista previa" (LiquidacionNueva: informe armado en memoria,
-  antes de persistir; Detalle: borrador persistido). Sin número interno y con
-  marca visible BORRADOR/VISTA PREVIA. Usar `etiquetaColumna`.
+- ~~Excel/PDF para `InformeLiqNuevo` y los dos botones "Vista previa"~~ —
+  RESUELTO en el Frente Excel/PDF (Septiembre 2026). Ver esa sección y
+  "Deuda — Excel/PDF".
 - ~~Camino nuevo de Facturación para emitidos~~ — RESUELTO en el Frente
   Facturación (Septiembre 2026): ver/editar emitidos, facturar, desvincular y
   revertir. Ver esa sección y "Deuda — Facturación".
@@ -3253,10 +3348,8 @@ Vantruck. Registrado acá para que no se pierda de vista al planificar ese proce
   con el camino viejo.
 
 ### Deuda — Facturación (camino InformeLiqNuevo)
-- Excel/PDF: descarga y reimpresión en Emitidos/Facturados/Revertidos
-  (Revertidos con marca REVERTIDO) + las dos "Vista previa" de Liquidación.
-  Generador nuevo (`LiquidacionExportService`), no un adaptador del viejo;
-  usar `etiquetaColumna`. Log REIMPRIMIR (ya existe en AccionLog).
+- ~~Excel/PDF en Emitidos/Facturados/Revertidos + vistas previas~~ —
+  RESUELTO en el Frente Excel/PDF (Septiembre 2026).
 - Carga manual de la factura cuando el QR no se puede leer (D9;
   `origen: 'manual'` ya previsto en el tipo).
 - Cascada de Finanzas sobre InformeLiqNuevo: cobros/pagos sobre 'facturado'
@@ -3397,3 +3490,20 @@ fuente); Reportes a `valoresNuevos` + `tarifaAplicada*.nivel` /
 `datosTarifaEventual !== null`; editor y factory a `datosTarifaEventual`
 como única marca de eventual; tablero-op e InformeVenta a `valoresNuevos`;
 retirar `editar-inf-op` / `buscar-tarifa`.
+
+### Deuda — Excel/PDF
+- Servicios viejos `ExcelService` / `PdfService`: siguen en uso por el
+  camino viejo de liquidación y facturación (`exportToExcelInforme` /
+  `exportToPdfInforme` en LiquidacionesOp, Proforma, FacturacionListado,
+  FacturacionHistorico y objeto-papelera) y por los demás informes de la app
+  (operaciones, asignaciones, clientes, choferes, resumen de venta,
+  reportes, movimientos). Se retiran los de liquidación con el camino viejo
+  (migración de Vantruck); los demás, en sus frentes, idealmente sobre
+  `DocumentoTabular` + los renderers de `exportacion/`.
+- Mientras los servicios viejos importen exceljs/jspdf en forma estática, el
+  import dinámico de los renderers nuevos no saca esas librerías del bundle
+  inicial (ver también "Deuda — RaizModule").
+- Logo: la copia única está en `exportacion/logo-empresa.ts`; los servicios
+  viejos conservan la suya hasta que se retiren.
+- Los servicios viejos usan `new Date('YYYY-MM-DD').getFullYear()` (ver
+  "Pendiente — auditar fechas").

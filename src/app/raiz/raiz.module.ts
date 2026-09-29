@@ -8,7 +8,6 @@ import { SidebarComponent } from './sidebar/sidebar.component';
 import { MigracionComponent } from '../componentes/migracion/migracion.component';
 import { LimpiezaDemoComponent } from '../componentes/limpieza-demo/limpieza-demo.component';
 import { GeneradorOperacionesComponent } from '../componentes/generador-operaciones/generador-operaciones.component';
-import { PruebaExportLiqComponent } from '../componentes/prueba-export-liq/prueba-export-liq.component';
 
 import { ChoferesModule } from './choferes/choferes.module';
 
@@ -34,7 +33,6 @@ import { ReportesModule } from './reportes/reportes.module';
         MigracionComponent,
         LimpiezaDemoComponent,
         GeneradorOperacionesComponent,
-        PruebaExportLiqComponent,
     ],
     exports: [
         HomeComponent,
