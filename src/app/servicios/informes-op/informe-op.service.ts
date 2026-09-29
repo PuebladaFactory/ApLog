@@ -178,6 +178,21 @@ export class InformeOpService {
     this.agregarEscrituraInformeOpParcial(escrituras, idInfOp, { estado: 'anulado', anulacion });
   }
 
+  /** Alta del PAR de InformeOp del cierre (los que arma crearPar): dos
+   *  escrituras 'crear'. Strippea idInfOp (patrón ConId: es el id del
+   *  documento, no se guarda en el body). No commitea, no loguea — el caller
+   *  (OperacionService.cerrarOperacion) las suma a su transacción. */
+  agregarEscriturasCreacionPar(
+    escrituras: EscrituraBatch[],
+    informeCliente: InformeOpNuevo,
+    informeOtro: InformeOpNuevo,
+  ): void {
+    for (const informe of [informeCliente, informeOtro]) {
+      const { idInfOp, ...data } = informe;
+      escrituras.push({ coleccion: this.COLECCION, id: idInfOp, data, modo: 'crear' });
+    }
+  }
+
   /** Reemplazo completo de un InformeOp — cuando el documento cambia de
    *  forma sustancial (valores/datosOperacion recalculados enteros).
    *  Strippea id/idInfOp antes de escribir (patrón ConId: no se guardan en

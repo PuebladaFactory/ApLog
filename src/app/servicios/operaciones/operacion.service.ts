@@ -1,7 +1,7 @@
 import { Injectable, OnDestroy, inject } from '@angular/core';
 import { BehaviorSubject, Observable, Subject, merge } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { Firestore, Transaction, writeBatch, doc, collection, query, where, getDocs, getDoc } from '@angular/fire/firestore';
+import { Firestore, Transaction, collection, query, where, getDocs } from '@angular/fire/firestore';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { ConId } from 'src/app/interfaces/conId';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
@@ -22,6 +22,7 @@ import { PapeleraService } from 'src/app/servicios/papelera/papelera.service';
 import { InformeOpService } from 'src/app/servicios/informes-op/informe-op.service';
 import { ResumenOpCalculatorService } from 'src/app/servicios/reportes/reportes-op/resumen-op-calculator.service';
 import { ReportesOpService } from 'src/app/servicios/reportes/reportes-op/reportes-op.service';
+import { ResumenOpFactoryService } from 'src/app/servicios/reportes/resumenes-op/resumen-op-factory.service';
 import { Resultado } from 'src/app/interfaces/resultado';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 import { AnulacionInformeOp } from 'src/app/interfaces/informe-op-nuevo';
@@ -69,6 +70,7 @@ export class OperacionService implements OnDestroy {
     private resumenOpCalculator: ResumenOpCalculatorService,
     private reportesOp: ReportesOpService,
     private usuarioSesion: UsuarioSesionService,
+    private resumenOpFactory: ResumenOpFactoryService,
   ) {}
 
   /**
@@ -638,37 +640,41 @@ export class OperacionService implements OnDestroy {
     return { exito: true, mensaje: `Operación ${op.idOperacion} editada correctamente.` };
   }
 
-  /** Cierra una operación: calcula los valores del motor nuevo de Tarifas,
+  /** Cierra una operación — orquestador atómico con commitEnTransaccion
+   *  (Frente Reportes, R2). Calcula los valores del motor nuevo de Tarifas
+   *  (ValoresOpService.calcularValoresCierre, que además espeja op.valores),
    *  arma el par de InformeOpNuevo (InformeOpService.crearPar) y persiste
-   *  todo atómicamente en un único writeBatch — Operación (estado.ciclo →
-   *  'cerrada', informeOpCliente/informeOpChofer, resumenProcesado), los 2
-   *  InformeOpNuevo, los InformeVenta de comisión (si corresponde), el log
-   *  y los resúmenes de Reportes (DbFirestoreService.aplicarUpdatesResumen).
-   *  Reemplaza a ValoresOpService.facturarOperacion →
-   *  DbFirestoreService.guardarFacturasOp (esa cadena queda eliminada).
-   *  Guardas previas al batch: anti-duplicado de InformeOp
-   *  (InformeOpService.existeParaOperacion) y resumenProcesado — mismo
-   *  criterio que tenía guardarFacturasOp. Registrar la tarifa eventual (si
-   *  corresponde) queda deliberadamente FUERA del batch — best-effort ya
-   *  existente en ValoresTarifaService, mismo criterio que el resto de esa
-   *  clase (ver registrarEventualSiCorresponde). */
+   *  todo junto: Operación (estado.ciclo → 'cerrada', informeOpCliente/
+   *  informeOpChofer, resumenProcesado), los 2 InformeOp, los InformeVenta
+   *  de comisión (si corresponde), los resúmenes de Reportes
+   *  (ResumenOpFactoryService.escriturasSuma → colección resumenesOp, modo
+   *  'fusionar', sin lecturas) y el log CERRAR.
+   *  - Pre-chequeos por query FUERA de la transacción (el SDK web no permite
+   *    queries adentro): InformeOp existente (existeParaOperacion) e
+   *    InformeVenta duplicado.
+   *  - Cálculo y armado ANTES de la transacción: `armar` puede reejecutarse
+   *    y tiene que ser puro; adentro solo se relee la op, se valida y se
+   *    suma el log a una copia del array.
+   *  - Guarda real contra doble cierre: la op releída en la transacción
+   *    tiene que seguir 'abierta' y sin resumenProcesado.
+   *  Registrar la tarifa eventual (si corresponde) queda FUERA, después del
+   *  commit — best-effort de ValoresTarifaService (registrarEventualSiCorresponde). */
   async cerrarOperacion(op: ConId<Operacion>, msj: string = 'Cierre de Operación'): Promise<Resultado<void>> {
     try {
+      // — Pre-chequeos (queries, fuera de la transacción) —
       if (await this.informeOpServ.existeParaOperacion(op.idOperacion)) {
         return { exito: false, mensaje: `Ya existe un InformeOp para la operación ${op.idOperacion}.` };
       }
 
-      const docOpRef = doc(this.firestore, `/Vantruck/datos/operaciones/${op.idOperacion}`);
-      const opDocSnap = await getDoc(docOpRef);
-      if (!opDocSnap.exists()) {
-        return { exito: false, mensaje: `No se encontró la operación ${op.idOperacion}.` };
-      }
-      if ((opDocSnap.data() as Operacion).resumenProcesado) {
-        return { exito: false, mensaje: `La operación ${op.idOperacion} ya fue procesada en resúmenes.` };
-      }
-
+      // — Cálculo —
       const { valoresCliente, valoresOtro, tipoOtro, informesVenta } = this.valoresServ.calcularValoresCierre(op);
       const { informeCliente, informeOtro } = this.informeOpServ.crearPar(op, valoresCliente, valoresOtro, tipoOtro);
+
+      for (const infVenta of informesVenta) {
+        if (await this.existeInformeVenta(infVenta.idInfVenta)) {
+          throw new Error(`Ya existe InformeVenta ${infVenta.idInfVenta}`);
+        }
+      }
 
       op.estado = {
         ciclo: 'cerrada',
@@ -678,41 +684,43 @@ export class OperacionService implements OnDestroy {
       op.informeOpCliente = informeCliente.idInfOp;
       op.informeOpChofer = informeOtro.idInfOp;
 
-      const batch = writeBatch(this.firestore);
+      // — Escrituras de negocio (se arman una sola vez) —
+      const escriturasNegocio: EscrituraBatch[] = [
+        {
+          coleccion: 'operaciones',
+          id: op.idOperacion,
+          data: { ...this.opToFirestore(op), resumenProcesado: true },
+          modo: 'actualizar',
+        },
+      ];
+      this.informeOpServ.agregarEscriturasCreacionPar(escriturasNegocio, informeCliente, informeOtro);
+      for (const infVenta of informesVenta) {
+        escriturasNegocio.push({
+          coleccion: 'informesVenta',
+          id: this.db.generarId('informesVenta'),
+          data: infVenta,
+          modo: 'crear',
+        });
+      }
+      escriturasNegocio.push(...this.resumenOpFactory.escriturasSuma(op, 1));
 
-      if (informesVenta.length > 0) {
-        const colVenta = collection(this.firestore, `/Vantruck/datos/informesVenta`);
-        for (const infVenta of informesVenta) {
-          const qVenta = query(colVenta, where('idInfVenta', '==', infVenta.idInfVenta));
-          const snapVenta = await getDocs(qVenta);
-          if (!snapVenta.empty) {
-            throw new Error(`Ya existe InformeVenta ${infVenta.idInfVenta}`);
-          }
-          batch.set(doc(colVenta), infVenta);
+      // — Transacción: relectura + validación + log —
+      await this.db.commitEnTransaccion<void>(async (tx) => {
+        const actual = await this.leerOperacionEnTransaccion(tx, op.idOperacion);
+        if (actual.estado?.ciclo !== 'abierta') {
+          throw new Error(
+            `La operación ${actual.numeroOperacion} ya no está abierta (ciclo '${actual.estado?.ciclo}').`,
+          );
         }
-      }
+        if (actual.resumenProcesado) {
+          throw new Error(`La operación ${actual.numeroOperacion} ya fue procesada en resúmenes.`);
+        }
+        // — fin de lecturas —
 
-      // idInfOp NO se persiste en el body (patrón ConId — informe-op-nuevo.ts):
-      // es el id del documento y se agrega al leer.
-      const { idInfOp: idInfOpCliente, ...bodyCliente } = informeCliente;
-      const { idInfOp: idInfOpOtro, ...bodyOtro } = informeOtro;
-      batch.set(doc(this.firestore, `/Vantruck/datos/informesOp/${idInfOpCliente}`), bodyCliente);
-      batch.set(doc(this.firestore, `/Vantruck/datos/informesOp/${idInfOpOtro}`), bodyOtro);
-
-      const entradaLog = this.logRegistro.construirEntradaSuelta('CERRAR', 'operaciones', op.idOperacion, msj);
-      if (entradaLog) {
-        batch.set(doc(this.firestore, `/Vantruck/datos/registroLog/${entradaLog.id}`), entradaLog.entrada);
-      }
-
-      batch.update(docOpRef, { ...this.opToFirestore(op), resumenProcesado: true });
-
-      const updates = this.resumenOpCalculator.generarUpdates(op);
-      if (!updates || updates.length === 0) {
-        throw new Error('No se generaron updates de resumen.');
-      }
-      await this.db.aplicarUpdatesResumen(batch, updates);
-
-      await batch.commit();
+        const escrituras = [...escriturasNegocio];
+        await this.logRegistro.agregarAlBatch(escrituras, 'CERRAR', 'operaciones', op.idOperacion, msj);
+        return { escrituras, resultado: undefined };
+      });
 
       if (op.datosTarifaEventual !== null) {
         await this.valoresTarifaServ.registrarEventualSiCorresponde(op);
@@ -725,6 +733,16 @@ export class OperacionService implements OnDestroy {
       );
       return { exito: false, mensaje: `Error al cerrar la operación: ${e?.message ?? e}.` };
     }
+  }
+
+  /** Pre-chequeo de duplicado de InformeVenta (query one-shot, fuera de
+   *  transacción). Mismo criterio que tenía el cierre con writeBatch. */
+  private async existeInformeVenta(idInfVenta: number): Promise<boolean> {
+    const qVenta = query(
+      collection(this.firestore, `/Vantruck/datos/informesVenta`),
+      where('idInfVenta', '==', idInfVenta),
+    );
+    return !(await getDocs(qVenta)).empty;
   }
 
   /** Delegado a OperacionFactoryService.opToFirestore — misma lógica exacta,
