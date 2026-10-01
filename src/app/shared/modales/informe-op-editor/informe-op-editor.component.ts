@@ -8,6 +8,8 @@ import { OperacionService } from 'src/app/servicios/operaciones/operacion.servic
 import { InformeOpService } from 'src/app/servicios/informes-op/informe-op.service';
 import { ValoresTarifaService } from 'src/app/servicios/tarifario/valores-tarifa.service';
 import { TarifarioService } from 'src/app/servicios/tarifario/tarifario.service';
+import { ValoresOpClienteService } from 'src/app/servicios/valores-op/valores-op-cliente/valores-op-cliente.service';
+import { ValoresOpChoferService } from 'src/app/servicios/valores-op/valores-op-chofer/valores-op-chofer.service';
 import { NivelTarifa, ModoTarifacion } from 'src/app/interfaces/tarifa';
 import { nombreEntidadInforme, claseBadgeEstadoInforme } from 'src/app/shared/utils/entidad-informe.util';
 import { InformeOpDetalleComponent } from 'src/app/shared/modales/informe-op-detalle/informe-op-detalle.component';
@@ -23,9 +25,10 @@ export interface ResultadoContraparteEdicion {
 }
 
 export interface ResultadoEdicionInformeOp {
-  /** Snapshot de la Operación ANTES de la edición — necesario para el delta
-   *  de resúmenes (ResumenOpCalculatorService.generarDeltaUpdates, usado por
-   *  InformeOpService.editar). Viene de this.operacion (cargado en ngOnInit,
+  /** Snapshot de la Operación ANTES de la edición — necesario para los
+   *  resúmenes de Reportes (ResumenOpFactoryService.escriturasEdicion: resta
+   *  el aporte viejo y suma el nuevo; lo usa InformeOpService.armarEscriturasEdicion).
+   *  Viene de this.operacion (cargado en ngOnInit,
    *  nunca mutado acá — operacionEditada es un structuredClone aparte). */
   operacionVieja: ConId<Operacion>;
   operacion: ConId<Operacion>;
@@ -96,6 +99,8 @@ export class InformeOpEditorComponent implements OnInit {
     private informeOpServ: InformeOpService,
     private valoresTarifaServ: ValoresTarifaService,
     private tarifarioServ: TarifarioService,
+    private valoresOpCliente: ValoresOpClienteService,
+    private valoresOpChofer: ValoresOpChoferService,
   ) {}
 
   get esLadoCliente(): boolean {
@@ -287,32 +292,34 @@ export class InformeOpEditorComponent implements OnInit {
       return;
     }
 
-    let valoresPropios: ValoresInformeOp;
-    let totalPropio: number;
-
-    if (this.esLadoCliente) {
-      const v = operacionRecalculada.valoresNuevos.cliente;
-      totalPropio = v.aCobrar;
-      valoresPropios = {
-        tarifaBase: v.tarifaBase,
-        tarifaBaseManual: operacionRecalculada.tarifaBaseManualCliente ?? null,
-        acompaniante: v.acompValor,
-        kmMonto: v.kmAdicional,
-        adExtra: v.adExtraValor ?? 0,
-        total: v.aCobrar,
-      };
-    } else {
-      const v = operacionRecalculada.valoresNuevos.chofer;
-      totalPropio = v.aPagar;
-      valoresPropios = {
-        tarifaBase: v.tarifaBase,
-        tarifaBaseManual: operacionRecalculada.tarifaBaseManualChofer ?? null,
-        acompaniante: v.acompValor,
-        kmMonto: v.kmAdicional,
-        adExtra: v.adExtraValor ?? 0,
-        total: v.aPagar,
-      };
+    // Contraparte congelada (proforma/liquidado/anulado): sus InformeOp no
+    // cambian, así que el lado contrario de valoresNuevos vuelve al de la op
+    // original — km y acompañantes son de la op y calcularCierre recalcula los
+    // DOS lados. Así op.valoresNuevos (fuente de los resúmenes) refleja lo que
+    // realmente está liquidado.
+    if (this.contraparte && this.contraparte.estado !== 'activo' && this.operacion.valoresNuevos) {
+      if (this.esLadoCliente) {
+        operacionRecalculada.valoresNuevos.chofer = { ...this.operacion.valoresNuevos.chofer };
+      } else {
+        operacionRecalculada.valoresNuevos.cliente = { ...this.operacion.valoresNuevos.cliente };
+      }
     }
+
+    // Valores de los InformeOp con el MISMO criterio que el cierre
+    // (ValoresOpCliente/ChoferService: tarifaBase × multiplicador, total =
+    // suma de componentes). Además espejan valoresNuevos → op.valores de cada
+    // lado (operacionRecalculada es un clon: this.operacion no se toca).
+    const valoresCliente: ValoresInformeOp = {
+      ...this.valoresOpCliente.calcularValoresCliente(operacionRecalculada),
+      tarifaBaseManual: operacionRecalculada.tarifaBaseManualCliente ?? null,
+    };
+    const valoresChofer: ValoresInformeOp = {
+      ...this.valoresOpChofer.calcularValoresChofer(operacionRecalculada),
+      tarifaBaseManual: operacionRecalculada.tarifaBaseManualChofer ?? null,
+    };
+
+    const valoresPropios = this.esLadoCliente ? valoresCliente : valoresChofer;
+    const totalPropio = valoresPropios.total;
 
     const informeEditado: ConId<InformeOpNuevo> = {
       ...this.informeOp,
@@ -330,32 +337,8 @@ export class InformeOpEditorComponent implements OnInit {
 
     if (this.contraparte) {
       if (this.contraparte.estado === 'activo') {
-        let valoresContra: ValoresInformeOp;
-        let totalContra: number;
-
-        if (this.esLadoCliente) {
-          const v = operacionRecalculada.valoresNuevos.chofer;
-          totalContra = v.aPagar;
-          valoresContra = {
-            tarifaBase: v.tarifaBase,
-            tarifaBaseManual: operacionRecalculada.tarifaBaseManualChofer ?? null,
-            acompaniante: v.acompValor,
-            kmMonto: v.kmAdicional,
-            adExtra: v.adExtraValor ?? 0,
-            total: v.aPagar,
-          };
-        } else {
-          const v = operacionRecalculada.valoresNuevos.cliente;
-          totalContra = v.aCobrar;
-          valoresContra = {
-            tarifaBase: v.tarifaBase,
-            tarifaBaseManual: operacionRecalculada.tarifaBaseManualCliente ?? null,
-            acompaniante: v.acompValor,
-            kmMonto: v.kmAdicional,
-            adExtra: v.adExtraValor ?? 0,
-            total: v.aCobrar,
-          };
-        }
+        const valoresContra = this.esLadoCliente ? valoresChofer : valoresCliente;
+        const totalContra = valoresContra.total;
 
         const informeContraCompleto: ConId<InformeOpNuevo> = {
           ...this.contraparte,
