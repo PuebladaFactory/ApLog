@@ -1,6 +1,7 @@
 /** Modelo NUEVO de resúmenes de operaciones (Frente Reportes) — colección
- *  `resumenesOp`, en paralelo a `resumenOpMensual` (modelo viejo, ver
- *  resumen-op-base.ts). Un documento por mes y clave:
+ *  `resumenesOp`. Reemplaza a `resumenOpMensual` (modelo viejo, retirado del
+ *  código al cierre del frente; la colección queda en Vantruck hasta la
+ *  migración). Un documento por mes y clave:
  *    general_YYYY_MM
  *    cliente_{idCliente}_YYYY_MM
  *    chofer_{idChofer}_YYYY_MM          (chofer directo)

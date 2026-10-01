@@ -60,6 +60,7 @@ export class LimpiezaDemoService {
     'informesVenta',
     'registrosOpEventuales',
     'resumenOpMensual',
+    'resumenesOp',
     'movimientos',
     'resumenFinanzas',
     'registroLog',

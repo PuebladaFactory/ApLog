@@ -45,11 +45,6 @@ import { InformeLiq, ValoresFinancieros } from "src/app/interfaces/informe-liq";
 import { NumeradorService } from "../numerador/numerador.service";
 
 import { MovimientoFinanciero } from "src/app/interfaces/movimiento-financiero";
-import {
-  ResumenOpCalculatorService,
-  UpdateResumen,
-} from "../reportes/reportes-op/resumen-op-calculator.service";
-import { KeyResumen } from "../reportes/reportes-op/reportes-op.service";
 
 export interface Resultado {
   exito: boolean;
@@ -121,7 +116,6 @@ export class DbFirestoreService {
 
   constructor(
     private numeradorService: NumeradorService,
-    private resumenOpCalculator: ResumenOpCalculatorService,
   ) {}
 
   /*   getAll(componente:string) {
@@ -938,78 +932,6 @@ export class DbFirestoreService {
     );
   }
 
-  /** Aplica los updates de resumen (ResumenOpCalculatorService.generarUpdates)
-   *  a un WriteBatch ya abierto por el caller — decide únicamente CÓMO
-   *  escribir (crear el doc base si no existe + aplicar el increment),
-   *  nunca QUÉ escribir (esa decisión es de ResumenOpCalculatorService).
-   *  Reemplaza al bloque de resúmenes que vivía adentro de
-   *  guardarFacturasOp (eliminado) — la orquestación completa del cierre
-   *  vive ahora en OperacionService.cerrarOperacion, que arma su propio
-   *  batch y llama a esta primitiva. */
-  async aplicarUpdatesResumen(batch: WriteBatch, updates: UpdateResumen[]): Promise<void> {
-    for (const upd of updates) {
-      const ref = doc(this.firestore, upd.path);
-      const snap = await getDoc(ref);
-
-      if (!snap.exists()) {
-        const base = this.buildBaseData(upd.key);
-        batch.set(ref, base);
-      }
-
-      batch.update(ref, {
-        ...upd.data,
-        updatedAt: Date.now(),
-      });
-    }
-  }
-
-  private buildBaseData(k: KeyResumen): any {
-    const periodo = k.anio * 100 + k.mes;
-
-    return {
-      periodo,
-      anio: k.anio,
-      mes: k.mes,
-      tipo: k.tipo,
-
-      ...(k.tipo === "entidad" && {
-        entidadId: k.entidadId,
-        tipoEntidad: k.tipoEntidad,
-      }),
-
-      cliente: {
-        acompValor: 0,
-        kmAdicional: 0,
-        tarifaBase: 0,
-        adExtraValor: 0,
-        total: 0,
-      },
-
-      chofer: {
-        acompValor: 0,
-        kmAdicional: 0,
-        tarifaBase: 0,
-        adExtraValor: 0,
-        total: 0,
-      },
-
-      tarifaTipo: {
-        general: 0,
-        especial: 0,
-        eventual: 0,
-        personalizada: 0,
-      },
-
-      cantidadOps: 0,
-      kmRecorridos: 0,
-      acompanianteOps: 0,
-      acompanianteCantidadTotal: 0,
-      ganancia: 0,
-
-      updatedAt: Date.now(),
-    };
-  }
-
   update(componente: string, item: any, uid: any) {
     //this.dataCollection = collection(this.firestore, `/estacionamiento/datos/${componente}`);
     const estacionamiento1DocumentReference = doc(
@@ -1710,171 +1632,6 @@ export class DbFirestoreService {
     console.log("🏁 Asignación de números internos finalizada.");
   }
 
-  /**
-   * Actualiza, de forma atómica (batch):
-   *  - La Operacion (en /Vantruck/datos/operaciones)
-   *  - El InformeOp original (colección recibida por parámetro)
-   *  - La contra-parte del InformeOp (localizada con el método auxiliar)
-   *  - (Opcional) El InformeLiq (si modo !== 'liquidacion')
-   *
-   * Si alguno de los documentos que deben existir NO existe, cancela todo.
-   */
-  async actualizarOperacionInformeOpYFactura(
-    operacionActualizada: Operacion,
-    informeOriginalActualizado: ConId<InformeOp>,
-    coleccionInformeOriginal: string,
-    modo: string,
-    contraParteActualizada: ConId<InformeOp>,
-    coleccionContraParte: string,
-    facturaActualizada?: ConId<InformeLiq>,
-    coleccionFactura?: string,
-  ): Promise<Resultado> {
-    try {
-      // ------------------------------------------------------
-      // 1) Verificaciones de existencia (pre-check)
-      // ------------------------------------------------------
-
-      // 1.1) Operación
-      const { opDocRef, operacionDocData } =
-        await this.obtenerOperacionPorIdOperacion(
-          operacionActualizada.idOperacion,
-        );
-      if (!opDocRef) {
-        return {
-          exito: false,
-          mensaje: `No existe Operacion con idOperacion ${operacionActualizada.idOperacion}.`,
-        };
-      }
-
-      // 1.2) InformeOp original
-      const informeOriginalRef = doc(
-        this.firestore,
-        `/Vantruck/datos/${coleccionInformeOriginal}/${informeOriginalActualizado.id}`,
-      );
-      const informeOriginalSnap = await getDoc(informeOriginalRef);
-      if (!informeOriginalSnap.exists()) {
-        return {
-          exito: false,
-          mensaje: `No existe el InformeOp original con id ${informeOriginalActualizado.id} en ${coleccionInformeOriginal}.`,
-        };
-      }
-
-      // 1.3) Contra-parte (YA NO SE BUSCA, SOLO SE VALIDA EXISTENCIA)
-      const contraParteRef = doc(
-        this.firestore,
-        `/Vantruck/datos/${coleccionContraParte}/${contraParteActualizada.id}`,
-      );
-
-      const contraParteSnap = await getDoc(contraParteRef);
-
-      if (!contraParteSnap.exists()) {
-        return {
-          exito: false,
-          mensaje: `No existe la contra-parte con id ${contraParteActualizada.id} en ${coleccionContraParte}.`,
-        };
-      }
-
-      // 1.4) InformeLiq (solo si corresponde)
-      let facturaRef: DocumentReference<DocumentData> | null = null;
-      if (modo !== "liquidacion") {
-        if (!facturaActualizada || !coleccionFactura) {
-          return {
-            exito: false,
-            mensaje:
-              "Se esperaba un InformeLiq y su colección, pero no fueron proporcionados.",
-          };
-        }
-        facturaRef = doc(
-          this.firestore,
-          `/Vantruck/datos/${coleccionFactura}/${facturaActualizada.id}`,
-        );
-        const facturaSnap = await getDoc(facturaRef);
-        if (!facturaSnap.exists()) {
-          return {
-            exito: false,
-            mensaje: `No existe la factura (InformeLiq) con id ${facturaActualizada.id} en ${coleccionFactura}.`,
-          };
-        }
-      }
-
-      // ------------------------------------------------------
-      // 2) Batch: actualizar todos juntos
-      // ------------------------------------------------------
-      const batch = writeBatch(this.firestore);
-
-      // 2.1) Actualizar Operacion completa (o solo campos necesarios)
-      //      Podés usar update si sabés que todas las keys existen; aquí uso set con merge true.
-      batch.set(opDocRef, operacionActualizada, { merge: true });
-
-      // 2.2) Actualizar InformeOp original
-      const { id: _, ...informeOriginalSinId } = informeOriginalActualizado;
-      batch.update(informeOriginalRef, informeOriginalSinId);
-
-      // 2.3) Contra-parte (AHORA SE ACTUALIZA COMPLETA)
-      const { id: _idContra, ...contraParteSinId } = contraParteActualizada;
-
-      batch.update(contraParteRef, contraParteSinId);
-
-      // 2.4) Factura (opcional)
-      if (modo !== "liquidacion" && facturaRef) {
-        const { id: _fid, ...facturaSinId } = facturaActualizada!;
-        batch.update(facturaRef, facturaSinId);
-      }
-
-      // 2.5) (Opcional) Si querés forzar coherencias especiales por "modo",
-      //      podés setear flags o campos acá con batch.update(...) en los documentos que correspondan.
-
-      // =========================
-      // 🔥 RESUMENES (DELTA)
-      // =========================
-
-      const updates = this.resumenOpCalculator.generarDeltaUpdates(
-        operacionDocData!,
-        operacionActualizada,
-      );
-
-      console.log("0)db service: updates:", updates);
-
-      for (const upd of updates) {
-        const ref = doc(this.firestore, upd.path);
-
-        //const snap = await getDoc(ref);
-        //console.log("EXISTE DOC:", snap.exists());
-        //console.log("DATA:", snap.data());
-
-        batch.set(
-          ref,
-          {
-            periodo: upd.key.anio * 100 + upd.key.mes,
-            anio: upd.key.anio,
-            mes: upd.key.mes,
-            tipo: upd.key.tipo,
-
-            ...(upd.key.tipo === "entidad" && {
-              entidadId: upd.key.entidadId,
-              tipoEntidad: upd.key.tipoEntidad,
-            }),
-
-            ...upd.data,
-            updatedAt: Date.now(),
-          },
-          { merge: true },
-        );
-      }
-
-      // 3) Commit
-      await batch.commit();
-
-      return {
-        exito: true,
-        mensaje: "Actualización realizada correctamente y de forma atómica.",
-      };
-    } catch (err: any) {
-      console.error("Error en actualizarOperacionInformeOpYFactura:", err);
-      return { exito: false, mensaje: `Error: ${err?.message || err}` };
-    }
-  }
-
   // ------------------------------------------
   // MÉTODO AUXILIAR: Buscar contra-parte
   // ------------------------------------------
@@ -1942,28 +1699,6 @@ export class DbFirestoreService {
     }
 
     return null;
-  }
-
-  // ------------------------------------------
-  // AUX: Obtener Operacion por idOperacion
-  // ------------------------------------------
-  private async obtenerOperacionPorIdOperacion(idOperacion: string): Promise<{
-    opDocRef: DocumentReference<DocumentData> | null;
-    operacionDocData: Operacion | null;
-  }> {
-    const operacionesRef = collection(
-      this.firestore,
-      "/Vantruck/datos/operaciones",
-    );
-    const qOp = query(operacionesRef, where("idOperacion", "==", idOperacion));
-    const snap = await getDocs(qOp);
-
-    if (snap.empty) {
-      return { opDocRef: null, operacionDocData: null };
-    }
-
-    const d = snap.docs[0];
-    return { opDocRef: d.ref, operacionDocData: d.data() as Operacion };
   }
 
   /**

@@ -9,7 +9,7 @@ import {
   TipoEntidadResumen,
 } from 'src/app/interfaces/resumen-op-nuevo';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
-import { FilaResumen } from 'src/app/servicios/reportes/reportes-op/tabla-resumen-config.service';
+import { FilaResumen } from './tabla-resumen-config.service';
 import { diasOperativos, mesesDelRango } from 'src/app/shared/utils/periodo.util';
 import { ResumenOpFactoryService } from './resumen-op-factory.service';
 

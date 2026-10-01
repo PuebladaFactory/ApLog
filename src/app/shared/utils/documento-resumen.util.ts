@@ -3,7 +3,7 @@ import {
   ColumnaResumen,
   FilaResumen,
   ModoVista,
-} from 'src/app/servicios/reportes/reportes-op/tabla-resumen-config.service';
+} from 'src/app/servicios/reportes/resumenes-op/tabla-resumen-config.service';
 
 /** Lo que necesita el Excel/PDF del resumen: exactamente lo que dibuja la
  *  pantalla (TablaResumenComponent). */

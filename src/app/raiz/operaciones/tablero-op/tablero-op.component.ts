@@ -11,7 +11,6 @@ import { OperacionService } from 'src/app/servicios/operaciones/operacion.servic
 import Swal from 'sweetalert2';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
-import { ReportesOpService } from 'src/app/servicios/reportes/reportes-op/reportes-op.service';
 import { CargaAsignacionComponent } from '../carga-asignacion/carga-asignacion.component';
 import { NivelTarifa } from 'src/app/interfaces/tarifa';
 import { EtiquetaNivelTarifaPipe } from 'src/app/shared/pipes/etiqueta-nivel-tarifa.pipe';
@@ -133,7 +132,6 @@ private resizeStartWidth = 0;
     private operacionService: OperacionService,
     private formatoNum: FormatoNumericoService,
     private excelServ: ExcelService,
-    private reportesOp: ReportesOpService
   ) {}
 
   // =====================
@@ -832,23 +830,6 @@ onResizeEnd = () => {
     //console.log("op", op);
     
     return op.estado === 'Abierta';
-  }
-
-  async crearResumenOp(){
-    //console.log(this.operacionesPeriodo.length);
-    
-    this.isLoading = true;
-    const res = await this.reportesOp.reconstruirResumenes(this.operacionesPeriodo);
-
-    if (!res.exito) {
-      this.isLoading = false;
-      console.warn(res.mensaje);
-      console.table(this.reportesOp.getErrores());
-    }
-    if(res.exito){
-      this.isLoading = false;
-      console.info(res.mensaje);
-    }
   }
 
 }

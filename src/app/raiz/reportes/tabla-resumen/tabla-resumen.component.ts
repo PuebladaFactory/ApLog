@@ -6,7 +6,7 @@ import {
   FilaResumen,
   ModoVista,
   TablaResumenConfigService,
-} from "src/app/servicios/reportes/reportes-op/tabla-resumen-config.service";
+} from "src/app/servicios/reportes/resumenes-op/tabla-resumen-config.service";
 
 /** Tabla de resumen de operaciones (totales / promedios / porcentajes con
  *  la botonera) + fila de totales del período. Las filas las arma
