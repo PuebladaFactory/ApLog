@@ -147,6 +147,7 @@
                                     class="form-check-input"
                                     id="acompaniante"
                                     [(ngModel)]="acompaniante"
+                                    (ngModelChange)="onAcompanianteChange($event)"
                                     name="acompaniante"
                                 />
                                 <label
@@ -162,6 +163,7 @@
                                 <input
                                     type="text"
                                     inputmode="numeric"
+                                    #inputAcompanianteCant
                                     class="form-control form-control-sm input-cantidad-acompaniante"
                                     [(ngModel)]="acompanianteCant"
                                     name="acompanianteCant"

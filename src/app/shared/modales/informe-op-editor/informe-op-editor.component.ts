@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import Swal from 'sweetalert2';
 import { ConId } from 'src/app/interfaces/conId';
@@ -49,6 +49,26 @@ export interface ResultadoEdicionInformeOp {
 export class InformeOpEditorComponent implements OnInit {
 
   @Input() informeOp!: ConId<InformeOpNuevo>;
+
+  @ViewChild('inputAcompanianteCant') inputAcompanianteCant?: ElementRef<HTMLInputElement>;
+
+  /** Check de acompañante: tildar → cantidad 1 (mínimo) y foco en la
+   *  cantidad (texto seleccionado); destildar → cantidad 0. El adicional
+   *  se recalcula solo (valoresEnVivo es un getter). El foco va en un
+   *  setTimeout porque en este ciclo el input todavía está disabled. */
+  onAcompanianteChange(tildado: boolean): void {
+    this.acompaniante = tildado;
+    if (tildado) {
+      this.acompanianteCant = 1;
+      setTimeout(() => {
+        const input = this.inputAcompanianteCant?.nativeElement;
+        input?.focus();
+        input?.select();
+      });
+    } else {
+      this.acompanianteCant = 0;
+    }
+  }
 
   operacion!: ConId<Operacion>;
   contraparte: ConId<InformeOpNuevo> | null = null;
