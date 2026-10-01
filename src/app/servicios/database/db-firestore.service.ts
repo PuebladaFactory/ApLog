@@ -2049,6 +2049,21 @@ export class DbFirestoreService {
     return snap.data().count;
   }
 
+  /** Consulta one-shot por rango de UN campo (desde ≤ campo ≤ hasta), con el
+   *  id del documento (patrón ConId). Sin orderBy: no requiere índice
+   *  compuesto. Usada por el recálculo de resúmenes (operaciones por
+   *  'fecha', resumenesOp por 'periodo'). */
+  async consultarPorRango<T>(
+    coleccion: string,
+    campo: string,
+    desde: string | number,
+    hasta: string | number,
+  ): Promise<ConId<T>[]> {
+    const colRef = collection(this.firestore, `/Vantruck/datos/${coleccion}`);
+    const snap = await getDocs(query(colRef, where(campo, '>=', desde), where(campo, '<=', hasta)));
+    return snap.docs.map(d => ({ id: d.id, ...(d.data() as T) }));
+  }
+
   /** Todos los documentos de una colección, con su id. Solo para
    *  colecciones chicas (ej. 'numeradores'). */
   async obtenerTodosConId<T>(coleccion: string): Promise<{ id: string; data: T }[]> {

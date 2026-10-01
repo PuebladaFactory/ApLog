@@ -1,0 +1,121 @@
+<div class="border border-primary rounded-3 p-3 mb-4">
+  <h4 class="text-primary">Recálculo de resúmenes de Reportes (resumenesOp)</h4>
+
+  @if (!esDemo) {
+    <div class="alert alert-danger">
+      Proyecto <b>{{ proyecto }}</b> — NO es demo. Ejecutar reemplaza los resúmenes de Reportes de
+      este proyecto para el rango elegido.
+    </div>
+  }
+
+  <p class="mb-2">
+    Recalcula los resúmenes de un rango de meses desde las operaciones cerradas y liquidadas, y los
+    compara con lo guardado. <b>Simular</b> no escribe nada. <b>Ejecutar</b> reemplaza los
+    resúmenes del rango y borra los que sobran.
+  </p>
+
+  <div class="d-flex flex-wrap gap-2 align-items-end mb-2">
+    <div>
+      <label class="form-label small mb-0">Desde</label>
+      <input #desdeInput type="month" class="form-control form-control-sm"
+        [value]="desde" [disabled]="ejecutando"
+        (change)="cambiarRango(desdeInput.value, hasta)" />
+    </div>
+    <div>
+      <label class="form-label small mb-0">Hasta</label>
+      <input #hastaInput type="month" class="form-control form-control-sm"
+        [value]="hasta" [disabled]="ejecutando"
+        (change)="cambiarRango(desde, hastaInput.value)" />
+    </div>
+    <button type="button" class="btn btn-outline-primary btn-sm" [disabled]="ejecutando" (click)="simular()">
+      1. Simular y verificar
+    </button>
+    @if (progreso) {
+      <span class="text-muted">{{ progreso }}</span>
+    }
+  </div>
+
+  @if (error) {
+    <div class="alert alert-danger mt-2 mb-0">{{ error }}</div>
+  }
+
+  @if (simulacion) {
+    <ul class="mt-3 mb-2">
+      <li>Operaciones leídas: {{ simulacion.opsLeidas }} — abiertas (excluidas): {{ simulacion.opsAbiertas }}
+        — sumadas: {{ simulacion.opsSumadas }} — con fuente legacy: {{ simulacion.opsLegacy }}</li>
+      <li>Resúmenes recalculados: {{ simulacion.docsRecalculados }} — guardados en el rango: {{ simulacion.docsGuardados }}
+        — iguales: {{ simulacion.iguales }} — con diferencias: {{ simulacion.diferencias.length }}</li>
+    </ul>
+
+    @if (simulacion.meses.length > 0) {
+      <table class="table table-sm mb-3" style="max-width: 40rem;">
+        <thead>
+          <tr>
+            <th>Período</th><th class="text-end">Ops</th><th class="text-end">Facturado</th>
+            <th class="text-end">Costo</th><th class="text-end">Ganancia</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (m of simulacion.meses; track m.periodo) {
+            <tr>
+              <td>{{ m.periodo }}</td>
+              <td class="text-end">{{ m.cantidadOps }}</td>
+              <td class="text-end">{{ m.facturado | number: '1.2-2' }}</td>
+              <td class="text-end">{{ m.costo | number: '1.2-2' }}</td>
+              <td class="text-end">{{ m.ganancia | number: '1.2-2' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+
+    @if (simulacion.errores.length > 0) {
+      <div class="alert alert-warning">
+        <b>{{ simulacion.errores.length }} operaciones con error</b> (no se pueden sumar; Ejecutar queda bloqueado):
+        <ul class="mb-0">
+          @for (e of simulacion.errores; track e.idOperacion) {
+            <li>Op {{ e.numeroOperacion ?? e.idOperacion }}: {{ e.mensaje }}</li>
+          }
+        </ul>
+      </div>
+    }
+
+    @if (simulacion.diferencias.length > 0) {
+      <p class="mb-1">Diferencias (se muestran hasta {{ MAX_DIFERENCIAS }}):</p>
+      <ul class="small mb-3">
+        @for (d of diferenciasVisibles; track d.id) {
+          <li>
+            <code>{{ d.id }}</code> — {{ d.estado }}
+            @if (d.campos.length > 0) {
+              <ul>
+                @for (c of d.campos; track c) {
+                  <li>{{ c }}</li>
+                }
+              </ul>
+            }
+          </li>
+        }
+      </ul>
+    } @else {
+      <div class="alert alert-success">Lo guardado coincide con lo recalculado.</div>
+    }
+
+    <label class="form-label">
+      Para ejecutar, escribí el id del proyecto <b>{{ proyecto }}</b>:
+    </label>
+    <div class="d-flex gap-2" style="max-width: 32rem;">
+      <input #conf type="text" class="form-control" [value]="textoConfirmacion" [disabled]="ejecutando"
+        (input)="textoConfirmacion = conf.value" />
+      <button type="button" class="btn btn-primary text-nowrap" [disabled]="!puedeEjecutar" (click)="ejecutar()">
+        2. Ejecutar
+      </button>
+    </div>
+  }
+
+  @if (resultado) {
+    <div class="alert alert-success mt-3 mb-0">
+      <b>Recálculo terminado:</b> {{ resultado.escritos }} resúmenes escritos, {{ resultado.borrados }} borrados.
+      Volvé a simular para verificar (debería dar 0 diferencias).
+    </div>
+  }
+</div>
