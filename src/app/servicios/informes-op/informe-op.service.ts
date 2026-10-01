@@ -9,8 +9,7 @@ import { DbFirestoreService, EscrituraBatch, PaginaResultado } from 'src/app/ser
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 import { InformeOpFactoryService } from 'src/app/servicios/informes-op/informe-op-factory.service';
 import { OperacionFactoryService } from 'src/app/servicios/operaciones/operacion-factory.service';
-import { ResumenOpCalculatorService, UpdateResumen } from 'src/app/servicios/reportes/reportes-op/resumen-op-calculator.service';
-import { ReportesOpService } from 'src/app/servicios/reportes/reportes-op/reportes-op.service';
+import { ResumenOpFactoryService } from 'src/app/servicios/reportes/resumenes-op/resumen-op-factory.service';
 import { ResultadoEdicionInformeOp } from 'src/app/shared/modales/informe-op-editor/informe-op-editor.component';
 
 /** Coordinador de InformeOpNuevo — construcción del PAR cliente/contraparte
@@ -31,8 +30,7 @@ export class InformeOpService {
   private logRegistro = inject(LogRegistroService);
   private factory = inject(InformeOpFactoryService);
   private operacionFactory = inject(OperacionFactoryService);
-  private resumenOpCalculator = inject(ResumenOpCalculatorService);
-  private reportesOp = inject(ReportesOpService);
+  private resumenOpFactory = inject(ResumenOpFactoryService);
 
   private readonly COLECCION = 'informesOp';
 
@@ -214,7 +212,10 @@ export class InformeOpService {
   /** Arma TODAS las escrituras de la edición de un InformeOp, sin commitear:
    *  Operación + InformeOp editado + contraparte (completo o solo
    *  contraParte.monto, según su estado — nada si está 'anulado') + logs +
-   *  delta de resúmenes. Pública para que otros orquestadores (ej.
+   *  resúmenes de Reportes (ResumenOpFactoryService.escriturasEdicion:
+   *  resta el aporte de operacionVieja y suma el de operacion, desde
+   *  valoresNuevos, colección resumenesOp, sin lecturas). Pública para que
+   *  otros orquestadores (ej.
    *  InformeLiqService.editarInformeOp, que además recalcula el InformeLiq)
    *  reutilicen exactamente la misma lógica y sumen sus propias escrituras
    *  antes de un único commit. */
@@ -252,8 +253,7 @@ export class InformeOpService {
       await this.logRegistro.agregarAlBatch(escrituras, 'EDITAR', this.COLECCION, contraparte.idInfOp, msj);
     }
 
-    const updates: UpdateResumen[] = this.resumenOpCalculator.generarDeltaUpdates(operacionVieja, operacion);
-    await this.reportesOp.agregarEscriturasResumen(escrituras, updates);
+    escrituras.push(...this.resumenOpFactory.escriturasEdicion(operacionVieja, operacion));
 
     return escrituras;
   }

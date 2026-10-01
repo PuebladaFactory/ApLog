@@ -20,8 +20,6 @@ import { NumeradorService } from 'src/app/servicios/numerador/numerador.service'
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 import { PapeleraService } from 'src/app/servicios/papelera/papelera.service';
 import { InformeOpService } from 'src/app/servicios/informes-op/informe-op.service';
-import { ResumenOpCalculatorService } from 'src/app/servicios/reportes/reportes-op/resumen-op-calculator.service';
-import { ReportesOpService } from 'src/app/servicios/reportes/reportes-op/reportes-op.service';
 import { ResumenOpFactoryService } from 'src/app/servicios/reportes/resumenes-op/resumen-op-factory.service';
 import { Resultado } from 'src/app/interfaces/resultado';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
@@ -67,8 +65,6 @@ export class OperacionService implements OnDestroy {
     private logRegistro:      LogRegistroService,
     private papeleraService:  PapeleraService,
     private informeOpServ:    InformeOpService,
-    private resumenOpCalculator: ResumenOpCalculatorService,
-    private reportesOp: ReportesOpService,
     private usuarioSesion: UsuarioSesionService,
     private resumenOpFactory: ResumenOpFactoryService,
   ) {}
@@ -472,9 +468,11 @@ export class OperacionService implements OnDestroy {
 
   /** Baja de una operación CERRADA desde Liquidación, a partir de uno de sus
    *  InformeOp (caller: InformeOpListado). Transacción: relee el InformeOp,
-   *  su contraparte, la operación, el tablero y los resúmenes; valida;
-   *  arma agregarEscriturasBaja + anulación de los dos InformeOp +
-   *  reversión de resúmenes + un único log BAJA. Los InformeOp NO se borran:
+   *  su contraparte, la operación y el tablero; valida; arma
+   *  agregarEscriturasBaja + anulación de los dos InformeOp + reversión de
+   *  resúmenes (ResumenOpFactoryService.escriturasSuma(op, -1), colección
+   *  resumenesOp, sin lecturas; solo si resumenProcesado) + un único log
+   *  BAJA. Los InformeOp NO se borran:
    *  quedan 'anulado' (InformeOpListado solo consulta activo/proforma).
    *  TODO: InformeVenta del cierre (comisiones) quedan sin tocar. */
   async bajaOperacionCerrada(idInfOp: string, motivo: string): Promise<Resultado<void>> {
@@ -514,11 +512,12 @@ export class OperacionService implements OnDestroy {
             `de la operación ${op.numeroOperacion}. Baja abortada.`,
           );
         }
-        const omitidos = op.resumenProcesado
-          ? await this.reportesOp.agregarEscriturasResumenReversion(
-              tx, escrituras, this.resumenOpCalculator.generarUpdatesEliminacion(op))
-          : [];
         // — fin de lecturas —
+
+        // Reversión de resúmenes (resumenesOp): sin lecturas, modo 'fusionar'.
+        if (op.resumenProcesado) {
+          escrituras.push(...this.resumenOpFactory.escriturasSuma(op, -1));
+        }
 
         const idEvento = this.agregarEscriturasBaja(escrituras, op, tablero, motivo);
         const anulacion: AnulacionInformeOp = {
@@ -534,7 +533,6 @@ export class OperacionService implements OnDestroy {
           `Baja de operación ${op.numeroOperacion} (cerrada) desde Liquidación — motivo: ${motivo} — ` +
           `InformeOp anulados: ${informe.idInfOp}, ${contraparte.idInfOp}`;
         if (!op.resumenProcesado) detalle += ' — sin reversión de resúmenes (no procesada)';
-        if (omitidos.length > 0) detalle += ` — resúmenes inexistentes omitidos: ${omitidos.join(', ')}`;
         await this.logRegistro.agregarAlBatch(escrituras, 'BAJA', 'operaciones', op.idOperacion, detalle);
 
         return { escrituras, resultado: op.numeroOperacion };
