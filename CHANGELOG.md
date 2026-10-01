@@ -2025,6 +2025,47 @@ Detalle completo en `CLAUDE.md` → "Frente Excel/PDF — InformeLiqNuevo".
 
 ---
 
+## Frente Reportes — resúmenes de operaciones (Septiembre–Octubre 2026)
+
+- Colección nueva `resumenesOp` (reemplaza a `resumenOpMensual`): ids
+  deterministas con id de entidad string y mes de dos dígitos; período desde
+  el string de la fecha (`periodoDeFecha`, sin el corrimiento de huso
+  horario); conteo de niveles de tarifa por lado.
+- Fuente de verdad: la Operacion (`valoresNuevos`, tarifaBase ×
+  multiplicador), con fallback a `op.valores` / `op.tarifaTipo` para ops
+  históricas. Factory pura `ResumenOpFactoryService`.
+- Modo `'fusionar'` en `EscrituraBatch` (`set` + merge): resúmenes sin
+  lecturas previas, sin carreras y sin pisar sub-mapas.
+- Cierre de operación en `commitEnTransaccion` con guarda contra doble
+  cierre; edición de InformeOp (resta lo viejo / suma lo nuevo por clave) y
+  baja de cerrada sobre la misma factory.
+- Editor de InformeOp: vuelve a espejar `valoresNuevos` → `op.valores` y
+  guarda la tarifaBase multiplicada (como el cierre); la contraparte
+  congelada ya no se recalcula. Check de acompañante: 1 al tildar (con foco),
+  0 al destildar.
+- Reglas: `informesOp` y `resumenesOp` en módulos propios; `user` puede
+  cerrar operaciones (desplegado solo en demo).
+- Recálculo en `/migracion` (simular/verificar + ejecutar con el id del
+  proyecto; rol dev; también para la migración de Vantruck). Demo agosto
+  2026 recalculado y verificado (0 diferencias).
+- Pantallas general y por entidad: entidades de los servicios nuevos, fila
+  Total, botonera Totales / Promedios / Porcentajes, tabla de operaciones por
+  nivel de tarifa, ops por día sobre días del mes sin domingos, tope de 36
+  meses.
+- Excel y PDF del resumen: libro de 3 hojas (`LibroTabular` +
+  `generarLibro` en los renderers de `servicios/exportacion/`), encabezado
+  compacto.
+- Retiro del camino viejo (`ReportesOpService`, `ResumenOpCalculatorService`,
+  `ResumenBuilderService`, métodos muertos de DbFirestore / Excel / Log /
+  Storage); `LimpiezaDemo` vacía también `resumenesOp`.
+
+Detalle completo en `CLAUDE.md` → "Frente Reportes — resúmenes de
+operaciones".
+
+**Verificación:** `ng build --configuration=demo` limpio.
+
+---
+
 ### Pendiente
 
 Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
@@ -2042,9 +2083,9 @@ Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
 - Finanzas: cascada sobre InformeLiqNuevo (cobros/pagos sobre 'facturado',
   cuenta corriente, aging, ledger, incobrable); hoy lee las colecciones
   viejas.
-- Reportes: `resumenOpMensual` (ids NaN, mes corrido por huso horario,
-  recálculo desde las operaciones), migrar a `valoresNuevos` /
-  `tarifaAplicada*`; retiro de los campos legacy de Operacion.
+- Campos legacy de Operacion (`valores`, `tarifaTipo`,
+  `datosTarifaPersonalizada`): retirar con el cierre de Tarifas (Reportes
+  ya usa `valoresNuevos`; queda su fallback legacy hasta migrar Vantruck).
 - Ajustes: retirar el `LogService` viejo (colección `logs`) y la Papelera
   legado.
 
@@ -2058,6 +2099,8 @@ Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
 **Migración a Vantruck (al final)**
 - Migración de datos (entidades, tarifas, operaciones, liquidaciones y
   facturación, con los checklists registrados en CLAUDE.md), deploy de
-  reglas / índices / `storage.rules` en `pf-logistics`, y retiro del camino
+  reglas / índices / `storage.rules` en `pf-logistics` (incluidas las de
+  `informesOp` / `resumenesOp`), Recálculo de `resumenesOp` sobre el
+  histórico y borrado de `resumenOpMensual`, y retiro del camino
   viejo (LiquidacionesOp, Proforma, facturación vieja, exportaciones viejas
   de liquidación).

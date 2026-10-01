@@ -20,9 +20,9 @@ import { ResultadoEdicionInformeOp } from 'src/app/shared/modales/informe-op-edi
  *  caller (OperacionService.cerrarOperacion) los agregue a su propio batch
  *  atómico junto con la actualización de la Operación y los resúmenes.
  *
- *  editar() se agrega en un chunk posterior de este mismo frente (integra
- *  con actualizarOperacionInformeOpYFactura, cuya forma nueva todavía no
- *  está diseñada) — no está acá a propósito. */
+ *  editar() / armarEscriturasEdicion(): edición de un InformeOp; los
+ *  resúmenes se ajustan con ResumenOpFactoryService.escriturasEdicion
+ *  (frente Reportes). */
 @Injectable({ providedIn: 'root' })
 export class InformeOpService {
 

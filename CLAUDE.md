@@ -272,12 +272,13 @@ Por eso `Proforma CH` tiene mayor prioridad visual que `Proforma CL` en el badge
 | `informes-op/` | `InformeOpService` (+ Factory) — `InformeOpNuevo` en la colección única `informesOp` (un doc por lado de cada operación, con `contraParte`). `armarEscriturasEdicion` (armado sin commit) + `editar` (armado + commit) |
 | `informes-liq/` | `InformeLiqService` + `InformeLiqFactoryService` — `InformeLiqNuevo` en `informesLiq`: borradores, emisión, edición. Ver "Frente Liquidación — InformeLiqNuevo" |
 | `informes/` | Generación de reportes Excel y PDF — camino VIEJO (`ExcelService`/`PdfService`); los documentos de InformeLiqNuevo salen de `exportacion/` + `LiquidacionExportService` |
-| `exportacion/` | Renderers GENÉRICOS de `DocumentoTabular` (no saben de qué informe se trata): `PdfTabularService` (jsPDF + autotable), `ExcelTabularService` (exceljs), formatos y logo compartidos. Librerías con import dinámico — ver "Frente Excel/PDF — InformeLiqNuevo" |
+| `exportacion/` | Renderers GENÉRICOS de `DocumentoTabular` (`generar`) y `LibroTabular` (`generarLibro`, varias hojas con varias tablas) — no saben de qué informe se trata: `PdfTabularService` (jsPDF + autotable), `ExcelTabularService` (exceljs), formatos y logo compartidos. Librerías con import dinámico — ver "Frente Excel/PDF — InformeLiqNuevo" y "Frente Reportes" |
+| `reportes/resumenes-op/` | Resúmenes mensuales de operaciones (`resumenesOp`): `ResumenOpFactoryService` (pura: aporte de una op, claves, escrituras de cierre/edición/baja, agregados del Recálculo), `ResumenOpConsultaService` (solo lectura, pantallas), `TablaResumenConfigService` (columnas y fórmulas por modo), `ResumenOpExportService` (Excel/PDF) — ver "Frente Reportes" |
 | `numerador/` | Generación de IDs secuenciales (operaciones, facturas) |
 | `validar/` | Validación de reglas de negocio |
 | `formato-numerico/` | Formateo de números/moneda estilo Argentina |
 | `fechas/` | Utilidades de fecha |
-| `desarrollo/` | Herramientas SOLO demo (guarda projectId `demoapplog` + rol dev): `LimpiezaDemoService`, `GeneradorOperacionesService` — ver "Herramientas de desarrollo (solo demo)" |
+| `desarrollo/` | Herramientas de `/migracion`. SOLO demo (guarda projectId `demoapplog` + rol dev): `LimpiezaDemoService`, `GeneradorOperacionesService` — ver "Herramientas de desarrollo (solo demo)". En cualquier proyecto (rol dev + confirmación escrita del id de proyecto; se usa en la migración de Vantruck): `RecalculoResumenesService` — ver "Frente Reportes" |
 
 ### Entornos de build
 
@@ -407,6 +408,17 @@ Categorías especiales:
 - `noOperativo` → 'operaciones': agregado en el frente Generador. Faltaba en
   `moduloDe()` y la lectura directa de no-disponibilidades desde el SDK web
   fallaba con "Missing or insufficient permissions" (fail-safe).
+- `informesOp` → módulo propio 'informesOp' (frente Reportes): `dev`/`admin`
+  todo; `user` leer + crear (el cierre de una operación crea el par de
+  InformeOp); `demo` leer. Antes estaba en 'finanzas' y el cierre fallaba
+  por reglas con `user`.
+- `resumenesOp` → módulo 'resumenes': `dev`/`admin` todo; `user` crear +
+  editar, sin leer ni eliminar (el cierre escribe incrementos con
+  `set`+merge, que las reglas evalúan como create o update según exista el
+  doc); `demo` leer. `PermisosService.matrizBase` tiene las dos entradas
+  por fidelidad. Verificado con `functions/test-cierre-rules.mjs` contra el
+  emulador (16/16). Desplegado SOLO en demo. `resumenOpMensual` sigue en
+  'finanzas' hasta la migración (la colección vieja existe en Vantruck).
 
 ## Convenciones
 
@@ -647,19 +659,21 @@ dispara ni por las entidades secundarias que toca.
   `OperacionService.agregarEscriturasBaja` (delete op + papelera + item de
   tablero anulado), `AsignacionService.leerTableroEnTransaccion` /
   `agregarEscrituraAnularItem`, `InformeOpService.leerEnTransaccion` /
-  `agregarAnulacionInformeOp`, `ResumenOpCalculatorService.generarUpdatesEliminacion`
-  + `ReportesOpService.agregarEscriturasResumenReversion` (omite resúmenes
-  inexistentes, no crea el doc base). Un único log BAJA por gesto, lo pone
-  el orquestador.
+  `agregarAnulacionInformeOp`, `ResumenOpFactoryService.escriturasSuma(op, -1)`
+  (resta en `resumenesOp` con `'fusionar'`, sin lecturas — ver "Frente
+  Reportes"). Un único log BAJA por gesto, lo pone el orquestador.
 - **InformeOp en la baja de una cerrada: se ANULAN, no se borran.**
   `existeParaOperacion` ignora los anulados, así que la operación restaurada
   se puede volver a cerrar (genera un par nuevo). Con `anulacion` {motivo,
   usuario, fecha, idEventoPapelera} (tipo `Anulacion` compartido en
   interfaces/anulacion.ts; `AnulacionLiq` es alias).
-- **Resúmenes:** se revierten solo si `op.resumenProcesado`. La reversión
-  usa incrementos con signo (`calcularIncrementos(op, op.valores, -1)`),
-  NUNCA leyendo el valor interno de `increment()` (propiedad minificada del
-  SDK; así estaba antes y podía no restar nada, en silencio).
+- **Resúmenes:** se revierten solo si `op.resumenProcesado`. Desde el frente
+  Reportes, `escriturasSuma(op, -1)` resta el MISMO aporte que sumó el
+  cierre, calculado desde la op (NUNCA leyendo el valor interno de
+  `increment()`: propiedad minificada del SDK; así estaba antes del frente
+  Operaciones y podía no restar nada, en silencio). Si el doc del resumen no
+  existía, el merge lo crea en negativo y el Recálculo lo detecta (antes se
+  omitía en silencio).
 - **restaurarOperacion** SIEMPRE deja la op en 'abierta' (`estadoInicial()`,
   `km: 0`, `resumenProcesado: false`, `informeOpCliente/Chofer: ''`). Los
   InformeOp no se reconstruyen.
@@ -2651,7 +2665,7 @@ de proyecto `claude/diseno-generador-operaciones.md`; instrucciones:
 - Allowlist `COLECCIONES_A_VACIAR` (operativas del modelo nuevo):
   operaciones, asignaciones, informesOp, informesLiq, informesLiqSnapshots,
   facturasVinculadas, informesVenta, registrosOpEventuales,
-  resumenOpMensual, movimientos, resumenFinanzas, registroLog,
+  resumenOpMensual, resumenesOp, movimientos, resumenFinanzas, registroLog,
   generacionesPrueba. Una colección que no está en la lista nunca se borra
   (fail-safe: el SDK web no puede listar colecciones).
 - Papelera: solo los eventos con `coleccionPrincipal` 'operaciones' y sus
@@ -2815,6 +2829,150 @@ Todo se hizo y probó en demo. Diseño y decisiones E1–E8: doc de proyecto
 | Emitidos / Facturados / Revertidos | acciones PDF / Excel | descarga directa (sin la confirmación redundante del camino viejo) |
 Permiso de las descargas: `<modulo>.reimprimir` (E8). La pregunta se hace
 después de apagar el spinner (el overlay tapaba el Swal).
+
+## Frente Reportes — resúmenes de operaciones (Septiembre–Octubre 2026)
+
+Resúmenes mensuales de operaciones (general y por entidad) reconstruidos
+sobre una colección NUEVA, `resumenesOp`, que reemplaza a `resumenOpMensual`
+(ids `NaN` por entidad, mes corrido por huso horario, delta de edición que no
+veía los cambios del editor nuevo y pisaba sub-mapas, carreras en el cierre).
+Todo se hizo y probó en demo. Diseño y decisiones R1–R16: doc de proyecto
+`claude/diseno-reportes.md`; instrucciones `claude/instruccion-r1…r9-*.md`,
+`instruccion-r6a-botonera-modo.md`, `instruccion-r6-1-niveles.md`,
+`instruccion-r7a-encabezado-compacto.md`.
+
+### Estrategia: híbrido
+- Agregados precalculados, escritos en el MISMO batch/transacción del gesto
+  que cambia montos (cierre, edición de InformeOp, baja de cerrada) +
+  herramienta de Recálculo idempotente que los rehace desde las operaciones
+  y muestra las diferencias contra lo guardado (drift).
+- Fuente de verdad: la Operacion (`op.valoresNuevos`, tarifaBase ×
+  multiplicador del lado). Descuentos/ajustes del InformeLiq quedan fuera
+  (resumen operativo, previo a la liquidación).
+
+### Modelo (`interfaces/resumen-op-nuevo.ts`)
+- `resumenesOp/{id}` con ids deterministas, mes con dos dígitos:
+  `general_2026_08`, `cliente_{id}_2026_08`, `chofer_{id}_2026_08`,
+  `proveedor_{id}_2026_08`. Por operación: general + cliente + (proveedor si
+  la op tiene proveedor; si no, chofer). El chofer de un proveedor no tiene
+  resumen propio: su operación cuenta para el proveedor.
+- Identidad (`tipo`, `tipoEntidad` y `entidadId` string — null en general —,
+  `anio`, `mes`, `periodo` = anio*100+mes) + métricas: `cantidadOps`,
+  `kmRecorridos`, `acompanianteOps`, `acompanianteCantidadTotal`,
+  `cliente`/`chofer` (`LadoResumen`: tarifaBase, kmAdicional, acompValor,
+  adExtraValor, total y `niveles` {general, especial, personalizada,
+  eventual} = conteo de operaciones POR LADO), `ganancia`, `actualizado`.
+- El resumen de una entidad guarda los dos lados (el de un cliente incluye
+  costo y ganancia).
+- Período SIEMPRE desde el string: `periodoDeFecha('YYYY-MM-DD')`
+  (`shared/utils/periodo.util.ts`, sin `Date`). En el mismo util:
+  `sufijoMes`, `mesesDelRango`, `diasOperativos`, `ultimos12Meses`,
+  `tituloPeriodo`, `errorPeriodoReporte`.
+
+### Factory pura (`ResumenOpFactoryService`, sin Firestore)
+- `aporteDeOperacion(op)`: métricas de una operación. Lados desde
+  `valoresNuevos` (tarifaBase multiplicada; total = aCobrar / aPagar); nivel
+  por lado desde `tarifaAplicadaCliente/Chofer.nivel`, o 'eventual' en los
+  dos lados si hay `datosTarifaEventual`. Acompañantes:
+  `acompaniante ? (acompanianteCant ?? 1) : 0` (criterio único; antes había
+  tres).
+- Fallback legacy (`usaFuenteLegacy`): sin `valoresNuevos` (o sin
+  `tarifaAplicada` de un lado) → `op.valores` (tarifaBase ya multiplicada) y
+  el nivel de `op.tarifaTipo` en los dos lados. Para ops históricas de
+  Vantruck; lo usan el Recálculo y el camino en vivo.
+- `clavesDeOperacion`, `escriturasSuma(op, ±1)` (cierre +1, baja −1),
+  `escriturasEdicion(opVieja, opNueva)` (resta lo viejo en SUS claves y suma
+  lo nuevo en las suyas, neteo por clave, omite claves sin diferencia: cubre
+  un cambio de fecha o de entidad), `agregados(ops)` (Recálculo), `sumar`.
+
+### Escritura: modo `'fusionar'` de `EscrituraBatch`
+- `'fusionar'` = `set(ref, data, { merge: true })` (WriteBatch y
+  Transaction). Con `increment()` crea el doc si no existe y mergea los mapas
+  anidados: sin lecturas previas, sin carrera entre los dos primeros cierres
+  del mes, sin pisar sub-mapas.
+- Regla INVERSA a `'actualizar'`: con merge, los campos anidados van como
+  OBJETO anidado (`{cliente: {total: increment(x)}}`); una clave con punto
+  se guardaría como un campo literal llamado "cliente.total".
+- Cada escritura lleva los campos de identidad como valores fijos
+  (idempotentes) + los incrementos + `actualizado`.
+
+### Gestos
+| Gesto | Orquestador | Resúmenes |
+|---|---|---|
+| Cierre | `OperacionService.cerrarOperacion`, ahora en `commitEnTransaccion`: lee la op fresca y aborta si no está 'abierta' o ya tiene `resumenProcesado` (guarda real contra doble cierre); `existeParaOperacion` y el duplicado de InformeVenta quedan como pre-chequeo (son queries). Escribe op + par de InformeOp + InformeVenta + log CERRAR + resúmenes | `escriturasSuma(op, +1)` |
+| Edición de InformeOp (activo o dentro de un InformeLiq) | `InformeOpService.armarEscriturasEdicion` (`editar` / `InformeLiqService.editarInformeOp`) | `escriturasEdicion(opVieja, opNueva)` |
+| Baja de op cerrada | `OperacionService.bajaOperacionCerrada` | `escriturasSuma(op, −1)` si `resumenProcesado` |
+| Restauración | — | no toca (la op vuelve 'abierta'; al cerrarla de nuevo suma) |
+| Liquidar / emitir / facturar / revertir | — | no tocan (no cambian montos de la op) |
+
+- Editor de InformeOp (`InformeOpEditorComponent`): después de
+  `calcularCierre` reutiliza `ValoresOpClienteService` /
+  `ValoresOpChoferService` → espeja `valoresNuevos` a `op.valores` y guarda
+  en el InformeOp la tarifaBase multiplicada (igual que el cierre). Con la
+  contraparte congelada (proforma/liquidada), el lado contrario de
+  `valoresNuevos` vuelve al de la op original.
+- Editores viejos (`editar-tarifa-op`, `editar-inf-op`): NO tocan
+  resúmenes (camino viejo).
+
+### Recálculo (`servicios/desarrollo/recalculo-resumenes.service.ts`, `componentes/recalculo-resumenes/`, en `/migracion`)
+- Por rango de meses (YYYY-MM). Lee las operaciones del rango
+  (`DbFirestoreService.consultarPorRango`: un campo, sin índice compuesto),
+  suma las que no están 'abierta' con `agregados` y compara doc por doc
+  contra lo guardado: nuevo / distinto (con los campos) / sobra. "Simular"
+  es también el "verificar": no escribe.
+- "Ejecutar": confirmación escrita del id del proyecto; recalcula de nuevo,
+  reemplaza (set sin merge) los docs del rango y borra los que sobran. Se
+  BLOQUEA si hay operaciones con error. No es atómico entre lotes de 500 pero
+  es idempotente: si se corta, se vuelve a ejecutar.
+- Guarda: rol dev en CUALQUIER proyecto (a diferencia de Limpieza y
+  Generador), porque se usa en la migración de Vantruck.
+- Demo, agosto 2026: 508 leídas, 93 abiertas, 415 sumadas, 0 legacy; 65
+  docs; facturado 125.018.682, costo 91.629.055, ganancia 33.389.627.
+  Ejecutado → re-simulación con 0 diferencias.
+
+### Pantallas (`raiz/reportes/`)
+- Ruta con RoleGuard dev/admin/demo (`user` no entra).
+- `ResumenOpConsultaService`: lectura por ids deterministas
+  (`getDocObservable` por mes + `combineLatest`), sin queries ni índices
+  compuestos; tope 36 meses; `armarTabla` → una fila por mes (meses sin datos
+  en cero) + fila Total.
+- Resumen general y resumen por entidad (entidades desde `ClienteService` /
+  `ChoferService` / `ProveedorService`; choferes de proveedor fuera del
+  combo; inactivos marcados "(inactivo)").
+- `TablaResumenComponent` + `TablaResumenConfigService`: botonera de radios
+  Totales / Promedios / Porcentajes; tabla principal + "Operaciones por nivel
+  de tarifa" (general: cliente + chofer; entidad: solo su lado), las dos con
+  el mismo modo; fila Total (promedios y porcentajes sobre los totales del
+  período). Ops/día y promedios por día: días del mes sin domingos
+  (`diasOperativos`; el mes en curso hasta hoy, los futuros 0). Totales en
+  enteros; promedios con 1 decimal (es-AR).
+
+### Excel/PDF del resumen
+- `LibroTabular` / `HojaDoc` / `TablaDoc` / `GrupoColumnasDoc` en
+  `interfaces/documento-tabular.ts`, al lado de `DocumentoTabular`; tipos de
+  celda 'porcentaje' y 'decimal'; `ValorCeldaDoc` admite null ("—").
+- `generarLibro` en `ExcelTabularService` y `PdfTabularService` (el
+  `generar(doc)` de liquidación no cambió): 3 hojas (Totales / Promedios /
+  Porcentajes), cada una con la tabla principal + la de niveles y el
+  encabezado agrupado Cliente/Chofer; título y subtítulos a la altura del
+  logo, a la derecha; en el PDF, márgenes compactos (8/10 mm).
+- `armarLibroResumen` (`shared/utils/documento-resumen.util.ts`, pura,
+  mismas `valueFn` que la pantalla) → `ResumenOpExportService.descargar(datos,
+  'excel' | 'pdf')`.
+
+### Retiro del camino viejo
+Borrados: `ReportesOpService`, `ResumenOpCalculatorService`,
+`ResumenBuilderService`, `interfaces/resumen-op-base.ts` /
+`resumen-op-tabla.ts`, `DbFirestoreService.aplicarUpdatesResumen` /
+`buildBaseData` / `actualizarOperacionInformeOpYFactura` /
+`obtenerOperacionPorIdOperacion`, `ExcelService.exportarResumenOperaciones`
+y sus helpers, `LogRegistroService.construirEntradaSuelta`,
+`StorageService.resumenOpMensual$`, `tablero-op.crearResumenOp`.
+`TablaResumenConfigService` pasó a `servicios/reportes/resumenes-op/` (la
+carpeta `reportes-op/` ya no existe). Se conservan: la colección
+`resumenOpMensual` en Vantruck y su mapeo en `firestore.rules` /
+`LimpiezaDemoService` (hasta la migración) y `buscarContraParteInformeOp` (lo
+usa `editar-inf-op`).
 
 ## Deuda conocida
 
@@ -3333,17 +3491,16 @@ Vantruck. Registrado acá para que no se pierda de vista al planificar ese proce
 - Cascada de Finanzas sobre `InformeLiqNuevo` (resumenFinanzas, cuenta
   corriente, aging, movimientos, ledger, informe-liq-cuenta-corriente siguen
   leyendo las colecciones viejas), incluido el impacto de editar un emitido.
-- Reportes: `Number(op.cliente.id)` da NaN con ids string → ver "Deuda —
-  Reportes (`resumenOpMensual`)".
+- ~~Reportes: ids NaN en los resúmenes por entidad~~ — RESUELTO en el Frente
+  Reportes (`resumenesOp`).
 - `revertirInformeLiq` (camino viejo) no restaura `bloqueadoPorContraparte`.
 - Retirar el camino viejo (LiquidacionesOp, Proforma, LiquidacionService,
   LiquidacionBuilderService, rutas comentadas en liquidacion-routing y
   LiqGral) una vez migrado Vantruck.
 - InformeVenta (comisiones) quedan huérfanos al dar de baja una operación
   cerrada.
-- Resúmenes: mes corrido por huso horario en
-  `ResumenOpCalculatorService.getPeriodo` → ver "Deuda — Reportes
-  (`resumenOpMensual`)" (confirmado con el generador).
+- ~~Resúmenes: mes corrido por huso horario~~ — RESUELTO en el Frente
+  Reportes (`periodoDeFecha`).
 - Pantallas viejas que leen por `InformeOpService.obtenerPorIdsOperacion`
   (proforma, facturación vieja) no filtran InformeOp 'anulado'. Se retiran
   con el camino viejo.
@@ -3399,23 +3556,40 @@ LiquidacionModule). Frente propio: auditar qué usan realmente
 HomeComponent / SidebarComponent / MigracionComponent y quitar los imports
 eager uno por uno. Detectado en el frente Facturación (F0).
 
-### Deuda — Reportes (`resumenOpMensual`) — confirmada con el generador
-- Mes corrido por huso horario: `ResumenOpCalculatorService.getPeriodo`
-  hace `new Date('YYYY-MM-DD')` (medianoche UTC) y lee
-  `getMonth()`/`getFullYear()` en hora local: en Argentina (UTC−3) una
-  operación del día 1 cae en el mes anterior. Confirmado en demo: las 7
-  operaciones del sábado 01/08/2026 quedaron en los resúmenes `…_2026_7`.
-  Afecta también a Vantruck (producción). Alta, edición y baja usan la
-  misma función (consistentes entre sí). El fix es trivial (tomar año y mes
-  del string) pero NO se aplica suelto: con resúmenes ya escritos, una baja
-  o edición posterior restaría del mes correcto y descuadraría. Se resuelve
-  en el frente Reportes, junto con un recálculo de los resúmenes desde las
-  operaciones.
-- `Number(op.cliente.id)` / `op.chofer.id` / `op.proveedor.id` da NaN con
-  ids string: los resúmenes por entidad colapsan en `cliente_NaN_…`,
-  `chofer_NaN_…`, `proveedor_NaN_…`. Solo el resumen general es útil.
-- Reportes todavía lee `op.valores` / `op.tarifaTipo` (ver "Deuda — campos
-  legacy de Operacion").
+### Deuda — Reportes (`resumenesOp`)
+- ~~`resumenOpMensual`: mes corrido por huso horario, ids NaN por entidad,
+  lectura de `op.valores` / `op.tarifaTipo`~~ — RESUELTO en el Frente
+  Reportes (Octubre 2026): colección nueva `resumenesOp`, `periodoDeFecha`,
+  ids string, fuente `valoresNuevos`. Ver "Frente Reportes".
+- Migración a Vantruck, checklist de Reportes: deploy de las reglas de
+  `informesOp` (módulo 'informesOp') y `resumenesOp` (módulo 'resumenes') en
+  `pf-logistics` junto con el código nuevo (sin ellas, `user` no puede cerrar
+  operaciones); Recálculo de todo el histórico (rol dev + id del proyecto),
+  simulando primero un rango con operaciones históricas para validar el
+  fallback legacy con datos reales (nivel de `op.tarifaTipo` contado en los
+  dos lados; las ops con error bloquean la ejecución); después, borrar la
+  colección `resumenOpMensual`, su mapeo en `firestore.rules` y en
+  `LimpiezaDemoService`, y los índices compuestos de su query que se habían
+  creado desde la consola.
+- Fallback legacy de `aporteDeOperacion`: también lo usa el camino en vivo,
+  así que editar o dar de baja una op histórica sin `valoresNuevos` suma o
+  resta desde `op.valores`. Se retira con los campos legacy de Operacion.
+- `app-filtro-periodo` (shared): "últimos 12 meses" calcula el desde con
+  `setMonth(getMonth() - 11)` → los días 29–31 puede desbordar al mes
+  siguiente y el rango queda de 11 meses. No se corrigió (componente
+  compartido); el valor inicial de las pantallas de Reportes sale de
+  `ultimos12Meses` (periodo.util), que no tiene el problema. Corregir con
+  `periodo.util` cuando se toque el componente.
+- Pantallas: un listener por mes y por clave (12 docs para un año). Con el
+  tope de 36 meses está bien; para rangos mayores, pasar a una query por
+  `periodo` con índice.
+- Editores viejos (`editar-tarifa-op`, `editar-inf-op`): no actualizan
+  `resumenesOp` (tampoco actualizaban `resumenOpMensual`). Se retiran con el
+  camino viejo de Liquidación.
+- Cierre: `existeParaOperacion` y el anti-duplicado de InformeVenta siguen
+  siendo queries fuera de la transacción (el SDK web no las permite
+  adentro); la guarda real es el estado de la op leído en la transacción. Un
+  id determinista para InformeVenta lo resolvería (frente Vendedores).
 
 ### Pendiente — auditar fechas 'YYYY-MM-DD' vs huso horario en toda la app
 Averiguar si la inconsistencia de `getPeriodo` se repite en otros lugares.
@@ -3440,7 +3614,9 @@ Criterio a definir: las fechas de negocio son strings 'YYYY-MM-DD' y se
 operan como strings o con helpers en hora local (`toISODateString` de
 `servicios/fechas/date-range.service.ts` ya usa hora local); no usar
 `new Date(string)` ni `toISOString()` para fechas de negocio. Posible util
-único en `servicios/fechas/`. Frente propio o dentro de Reportes.
+único en `servicios/fechas/`. Frente propio (decisión R8 del frente
+Reportes: la auditoría quedó fuera). Semilla: `shared/utils/periodo.util.ts`
+(`periodoDeFecha` toma año y mes del string, sin `Date`), usado por Reportes.
 
 ### Deuda — generador de operaciones y datos de demo
 - Eventuales: cliente y chofer se varían ±20% por separado → puede quedar
@@ -3476,19 +3652,22 @@ Siguen siendo necesarios hoy (verificado en el frente Generador, diseño
 §11):
 - `op.valores`: `valores.<lado>.adExtraValor` es dato real (lo carga el
   modal de cierre) y solo vive ahí; el motor nuevo lo lee de ahí
-  (`ValoresTarifaService`) e InformeOpEditor también. Reportes lee
-  `op.valores` a propósito (la edición de InformeOp actualiza `op.valores`
-  y el resumen tiene que revertir exactamente lo que sumó). InformeVenta,
-  tablero-op y el Excel viejo leen el espejo.
+  (`ValoresTarifaService`) e InformeOpEditor también. Desde el frente
+  Reportes, el editor de InformeOp vuelve a espejar `valoresNuevos` →
+  `op.valores` (tarifaBase multiplicada, como el cierre) y Reportes ya NO
+  lee `op.valores`, salvo el fallback legacy de ops históricas sin
+  `valoresNuevos`. InformeVenta, tablero-op y el Excel viejo leen el espejo.
 - `op.tarifaTipo`: `tarifaTipo.eventual` gobierna el invariante eventual ⇔
   `datosTarifaEventual` (OperacionFactoryService) y el toggle/badge del
-  editor; Reportes cuenta por `tarifaTipo.<nivel>`.
+  editor; Reportes solo lo lee en el fallback legacy (nivel de las ops sin
+  `tarifaAplicada*`).
 - `datosTarifaPersonalizada`: peso muerto en el camino nuevo (solo lo lee
   el modal viejo `editar-inf-op`).
-Para retirarlos (frente Reportes + cierre de Tarifas): mover
+Para retirarlos (cierre de Tarifas + migración de Vantruck): mover
 `adExtraValor` a un campo propio de la op (o tomar `valoresNuevos` como
-fuente); Reportes a `valoresNuevos` + `tarifaAplicada*.nivel` /
-`datosTarifaEventual !== null`; editor y factory a `datosTarifaEventual`
+fuente); ~~Reportes a `valoresNuevos` + `tarifaAplicada*.nivel` /
+`datosTarifaEventual !== null`~~ (hecho en el frente Reportes; queda su
+fallback legacy hasta migrar Vantruck); editor y factory a `datosTarifaEventual`
 como única marca de eventual; tablero-op e InformeVenta a `valoresNuevos`;
 retirar `editar-inf-op` / `buscar-tarifa`.
 
@@ -3498,7 +3677,8 @@ retirar `editar-inf-op` / `buscar-tarifa`.
   `exportToPdfInforme` en LiquidacionesOp, Proforma, FacturacionListado,
   FacturacionHistorico y objeto-papelera) y por los demás informes de la app
   (operaciones, asignaciones, clientes, choferes, resumen de venta,
-  reportes, movimientos). Se retiran los de liquidación con el camino viejo
+  movimientos; el resumen de Reportes ya sale de `generarLibro`, ver
+  "Frente Reportes"). Se retiran los de liquidación con el camino viejo
   (migración de Vantruck); los demás, en sus frentes, idealmente sobre
   `DocumentoTabular` + los renderers de `exportacion/`.
 - Mientras los servicios viejos importen exceljs/jspdf en forma estática, el
