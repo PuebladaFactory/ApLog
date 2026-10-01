@@ -1,5 +1,6 @@
 import { Component, Input, OnChanges } from "@angular/core";
-import { ExcelService } from "src/app/servicios/informes/excel/excel.service";
+import Swal from "sweetalert2";
+import { ResumenOpExportService } from "src/app/servicios/reportes/resumenes-op/resumen-op-export.service";
 import {
   ColumnaResumen,
   FilaResumen,
@@ -37,14 +38,18 @@ export class TablaResumenComponent implements OnChanges {
 
   modo: ModoVista = "totales";
   columnas: ColumnaResumen[] = [];
+  columnasNiveles: ColumnaResumen[] = [];
+
+  descargando = false;
 
   constructor(
     private config: TablaResumenConfigService,
-    private excelService: ExcelService,
+    private exportServ: ResumenOpExportService,
   ) {}
 
   ngOnChanges(): void {
     this.columnas = this.config.getColumnas(this.tipo, this.tipoEntidad) ?? [];
+    this.columnasNiveles = this.config.getColumnasNiveles(this.tipo, this.tipoEntidad);
   }
 
   seleccionarModo(modo: ModoVista): void {
@@ -88,14 +93,28 @@ export class TablaResumenComponent implements OnChanges {
     return "";
   }
 
-  exportarExcel(): void {
-    this.excelService.exportarResumenOperaciones(
-      this.filas,
-      this.columnas,
-      this.tituloPeriodo,
-      this.razonSocial,
-      this.tipo,
-      this.tipoEntidad,
-    );
+  /** Excel o PDF con las 3 vistas (una hoja por modo, tabla principal +
+   *  niveles), con los mismos valores que la pantalla. */
+  async descargar(formato: "excel" | "pdf"): Promise<void> {
+    this.descargando = true;
+    try {
+      await this.exportServ.descargar(
+        {
+          filas: this.filas,
+          total: this.total,
+          columnas: this.columnas,
+          columnasNiveles: this.columnasNiveles,
+          tipo: this.tipo,
+          tipoEntidad: this.tipoEntidad,
+          razonSocial: this.razonSocial,
+          tituloPeriodo: this.tituloPeriodo,
+        },
+        formato,
+      );
+    } catch (e: any) {
+      Swal.fire("No se pudo generar el archivo", e?.message ?? String(e), "error");
+    } finally {
+      this.descargando = false;
+    }
   }
 }

@@ -25,7 +25,12 @@ export function fechaIsoAUtc(fecha: string): Date | null {
 
 /** Texto de una celda según su tipo (para el PDF). */
 export function formatearCelda(valor: ValorCeldaDoc, tipo: TipoCeldaDoc): string {
+  if (valor === null) return '—';
   switch (tipo) {
+    case 'porcentaje':
+      return `${((Number(valor) || 0) * 100).toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} %`;
+    case 'decimal':
+      return (Number(valor) || 0).toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
     case 'moneda': return formatearMoneda(Number(valor) || 0);
     case 'numero': return (Number(valor) || 0).toLocaleString('es-AR');
     case 'fecha': return formatearFechaIso(String(valor ?? ''));

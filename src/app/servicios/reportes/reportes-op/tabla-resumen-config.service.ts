@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { MetricasResumen } from "src/app/interfaces/resumen-op-nuevo";
+import { MetricasResumen, NivelResumen } from "src/app/interfaces/resumen-op-nuevo";
 
 export type TipoVistaResumen = "entidad" | "general";
 export type TipoEntidadResumen = "cliente" | "chofer" | "proveedor";
@@ -47,6 +47,61 @@ export class TablaResumenConfigService {
     }else return null
   }
 
+  /** Columnas de la tabla "Operaciones por nivel de tarifa" (R6.1): una por
+   *  nivel y por lado. General: cliente + chofer; entidad: solo el lado de
+   *  la entidad (cliente → cliente; chofer/proveedor → chofer).
+   *  totales = cantidad de ops; promedios = ops por día operativo;
+   *  porcentajes = % de las ops del período. */
+  getColumnasNiveles(
+    tipo: TipoVistaResumen,
+    tipoEntidad?: TipoEntidadResumen,
+  ): ColumnaResumen[] {
+    const lados: ("cliente" | "chofer")[] =
+      tipo === "general"
+        ? ["cliente", "chofer"]
+        : tipoEntidad === "cliente"
+          ? ["cliente"]
+          : ["chofer"];
+
+    const niveles: { valor: NivelResumen; label: string }[] = [
+      { valor: "general", label: "General" },
+      { valor: "especial", label: "Especial" },
+      { valor: "personalizada", label: "Personalizada" },
+      { valor: "eventual", label: "Eventual" },
+    ];
+
+    return lados.flatMap((lado) =>
+      niveles.map((n): ColumnaResumen => ({
+        key: `nivel_${n.valor}_${lado}`,
+        label: n.label,
+        tipo: "number",
+        visible: true,
+        valueFn: (r, modo) => {
+          const cantidad = r[lado].niveles[n.valor];
+          switch (modo) {
+            case "totales":
+              return cantidad;
+            case "promedios":
+              return this.promedio(cantidad, r.diasOperativos);
+            case "porcentajes":
+              return this.porcentaje(cantidad, r.cantidadOps);
+          }
+        },
+        tooltip: (modo) => {
+          const ladoTexto = lado === "cliente" ? "cliente" : "chofer/proveedor";
+          switch (modo) {
+            case "totales":
+              return `Operaciones con tarifa ${n.label.toLowerCase()} (lado ${ladoTexto})`;
+            case "promedios":
+              return `Operaciones con tarifa ${n.label.toLowerCase()} por día operativo (lado ${ladoTexto})`;
+            case "porcentajes":
+              return `Porcentaje de las operaciones con tarifa ${n.label.toLowerCase()} (lado ${ladoTexto})`;
+          }
+        },
+      })),
+    );
+  }
+
   formatValue(valor: number | null, tipo: string, modo: ModoVista): string {
     if (valor === null) return "-";
 
@@ -61,7 +116,11 @@ export class TablaResumenConfigService {
       }).format(valor);
     }
 
-    return valor.toFixed(1);
+    // Cantidades: enteras en Totales; 1 decimal en Promedios (es-AR).
+    if (modo === "totales") {
+      return Math.round(valor).toLocaleString("es-AR");
+    }
+    return valor.toLocaleString("es-AR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   }
 
   // =========================

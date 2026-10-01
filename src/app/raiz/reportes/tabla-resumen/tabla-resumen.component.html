@@ -22,7 +22,14 @@
                         </label>
                     }
                 </div>
-                <button class="btn btn-sm btn-outline-info" (click)="exportarExcel()">Descargar</button>
+                <div class="btn-group btn-group-sm" role="group" aria-label="Descargar">
+                    <button class="btn btn-outline-success" [disabled]="descargando" (click)="descargar('excel')">
+                        Excel
+                    </button>
+                    <button class="btn btn-outline-danger" [disabled]="descargando" (click)="descargar('pdf')">
+                        PDF
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -97,6 +104,70 @@
                                         {{ format(col.valueFn(total, modo), col.tipo) }}
                                     </td>
                                 }
+                            }
+                        </tr>
+                    </tfoot>
+                }
+            </table>
+        </div>
+
+        <!-- Operaciones por nivel de tarifa (R6.1) — mismo modo que la tabla principal -->
+        <div class="card-header border-top">
+            <h5 class="mb-0">Operaciones por nivel de tarifa</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm table-hover table-border mb-0 tabla-resumen align-middle">
+                <thead>
+                    <tr>
+                        <th class="text-center bg-light"></th>
+                        @if (esGeneral) {
+                            <th colspan="4" class="text-center bg-primary text-white">Cliente</th>
+                            <th colspan="4" class="text-center bg-secondary text-white">Chofer</th>
+                        } @else {
+                            <th
+                                colspan="4"
+                                class="text-center text-white"
+                                [ngClass]="{
+                                    'bg-primary': tipoEntidad === 'cliente',
+                                    'bg-secondary': tipoEntidad === 'chofer' || tipoEntidad === 'proveedor',
+                                }"
+                            >
+                                {{ tipoEntidad === 'cliente' ? 'Cliente' : 'Chofer' }}
+                            </th>
+                        }
+                    </tr>
+                    <tr>
+                        <th class="text-start bg-info-subtle">Periodo</th>
+                        @for (col of columnasNiveles; track col.key) {
+                            <th class="text-center">
+                                {{ col.label }}
+                                <i class="bi bi-info-circle ms-1" [attr.title]="col.tooltip?.(modo)"></i>
+                            </th>
+                        }
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @for (r of filas; track r.periodo) {
+                        <tr>
+                            <td>{{ r.etiqueta }}</td>
+                            @for (col of columnasNiveles; track col.key) {
+                                <td class="text-center" [style]="getStylesCeldas(col)">
+                                    {{ format(col.valueFn(r, modo), col.tipo) }}
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+
+                @if (total) {
+                    <tfoot>
+                        <tr class="fila-total">
+                            <td>{{ total.etiqueta }}</td>
+                            @for (col of columnasNiveles; track col.key) {
+                                <td class="text-center" [style]="getStylesCeldas(col)">
+                                    {{ format(col.valueFn(total, modo), col.tipo) }}
+                                </td>
                             }
                         </tr>
                     </tfoot>

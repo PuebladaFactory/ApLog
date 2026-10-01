@@ -3,9 +3,12 @@
  *  renderers de Excel y PDF, que no saben de qué informe se trata. Los
  *  valores van CRUDOS (number para numero/moneda, 'YYYY-MM-DD' para fecha):
  *  el formato es responsabilidad de cada renderer. */
-export type TipoCeldaDoc = 'texto' | 'numero' | 'moneda' | 'fecha';
+/** 'porcentaje': valor como fracción (0.253 → 25,3 %). 'decimal': número
+ *  con 1 decimal (promedios). */
+export type TipoCeldaDoc = 'texto' | 'numero' | 'moneda' | 'fecha' | 'porcentaje' | 'decimal';
 
-export type ValorCeldaDoc = string | number;
+/** null = "no aplica" (los renderers dibujan "—"). */
+export type ValorCeldaDoc = string | number | null;
 
 export interface ColumnaDoc {
   etiqueta: string;
@@ -45,4 +48,42 @@ export interface DocumentoTabular {
   columnaTotal: number | null;
   pie: LineaPieDoc[];
   notas: string[];
+}
+
+// ── Libro de varias hojas / varias tablas (Reportes) ─────────────────
+// Al lado de DocumentoTabular (que sigue siendo el documento de
+// liquidación, con pie y fórmulas). Lo dibujan ExcelTabularService.
+// generarLibro y PdfTabularService.generarLibro.
+
+/** Fila de encabezado agrupador sobre las columnas (ej. "Cliente" sobre 4
+ *  columnas). La suma de `span` debe igualar la cantidad de columnas. */
+export interface GrupoColumnasDoc {
+  etiqueta: string;
+  span: number;
+}
+
+export interface TablaDoc {
+  /** Título encima de la tabla; null si no lleva. */
+  titulo: string | null;
+  grupos: GrupoColumnasDoc[];
+  columnas: ColumnaDoc[];
+  /** Mismo orden que `columnas`. */
+  filas: ValorCeldaDoc[][];
+  /** Fila de totales ya calculada (negrita); null si no lleva. */
+  filaTotal: ValorCeldaDoc[] | null;
+}
+
+export interface HojaDoc {
+  /** Nombre de la hoja de Excel (máx. 31, sin caracteres inválidos). */
+  nombre: string;
+  titulo: string;
+  subtitulos: string[];
+  tablas: TablaDoc[];
+  notas: string[];
+}
+
+export interface LibroTabular {
+  /** Sin extensión, ya saneado para el sistema de archivos. */
+  nombreArchivo: string;
+  hojas: HojaDoc[];
 }
