@@ -1,16 +1,27 @@
 import { Injectable } from "@angular/core";
-import { ResumenOpBase } from "src/app/interfaces/resumen-op-base";
+import { MetricasResumen } from "src/app/interfaces/resumen-op-nuevo";
 
 export type TipoVistaResumen = "entidad" | "general";
 export type TipoEntidadResumen = "cliente" | "chofer" | "proveedor";
 export type ModoVista = "totales" | "promedios" | "porcentajes";
+
+/** Una fila de la tabla de resumen: las métricas del modelo nuevo
+ *  (resumenesOp) + lo que necesita la vista. La fila de totales del período
+ *  tiene etiqueta 'Total', anio/mes/periodo en 0 y diasOperativos = suma. */
+export interface FilaResumen extends MetricasResumen {
+  etiqueta: string;          // 'MM-YYYY' o 'Total'
+  anio: number;
+  mes: number;
+  periodo: number;
+  diasOperativos: number;    // divisor de Ops/día (días sin domingos)
+}
 
 export interface ColumnaResumen {
   key: string;
   label: string;
   tipo: "number" | "currency";
   visible: boolean;
-  valueFn: (r: ResumenOpBase, modo: ModoVista) => number | null;
+  valueFn: (r: FilaResumen, modo: ModoVista) => number | null;
   tooltip?: (modo: ModoVista) => string;
 }
 
@@ -80,7 +91,7 @@ export class TablaResumenConfigService {
             case "totales":
               return r.cantidadOps;
             case "promedios":
-              return this.promedio(r.cantidadOps, 30);
+              return this.promedio(r.cantidadOps, r.diasOperativos);
             case "porcentajes":
               return null;
           }
@@ -91,7 +102,7 @@ export class TablaResumenConfigService {
               return "Cantidad total de operaciones en el mes";
 
             case "promedios":
-              return "Promedio de operaciones por día (30 días)";
+              return "Promedio de operaciones por día operativo (días del mes sin domingos; mes en curso: hasta hoy)";
 
             case "porcentajes":
               return "No aplica";
@@ -380,7 +391,7 @@ export class TablaResumenConfigService {
   // =========================
   private columnasValores(
     origen: "cliente" | "chofer",
-    totalFn: (r: ResumenOpBase) => number,
+    totalFn: (r: FilaResumen) => number,
   ): ColumnaResumen[] {
     return [
       {

@@ -1,56 +1,54 @@
-import { Component, Input, OnChanges, OnInit } from "@angular/core";
-import { ResumenOp, ResumenOpBase } from "src/app/interfaces/resumen-op-base";
+import { Component, Input, OnChanges } from "@angular/core";
 import { ExcelService } from "src/app/servicios/informes/excel/excel.service";
 import {
   ColumnaResumen,
+  FilaResumen,
   ModoVista,
   TablaResumenConfigService,
-  TipoVistaResumen,
 } from "src/app/servicios/reportes/reportes-op/tabla-resumen-config.service";
 
+/** Tabla de resumen de operaciones (totales / promedios / porcentajes con
+ *  la botonera) + fila de totales del período. Las filas las arma
+ *  ResumenOpConsultaService.armarTabla. */
 @Component({
   standalone: false,
   selector: "app-tabla-resumen",
   styleUrl: "./tabla-resumen.component.scss",
   templateUrl: "./tabla-resumen.component.html",
 })
-export class TablaResumenComponent implements OnChanges, OnInit {
-  @Input() resumenes: ResumenOp[] = [];
-  @Input() tipo: 'general' | 'entidad' = "general";
+export class TablaResumenComponent implements OnChanges {
+  @Input() filas: FilaResumen[] = [];
+  @Input() total: FilaResumen | null = null;
+  @Input() tipo: "general" | "entidad" = "general";
   @Input() tituloPeriodo: string = "";
   @Input() razonSocial: string = "";
-  @Input() tipoEntidad?: 'cliente' | 'chofer' | 'proveedor'; 
+  @Input() tipoEntidad?: "cliente" | "chofer" | "proveedor";
+
+  private static contador = 0;
+
+  /** Sufijo único por instancia para name/id de los radios del modo. */
+  readonly idGrupoModo = `modo-resumen-${++TablaResumenComponent.contador}`;
+
+  readonly modos: { valor: ModoVista; etiqueta: string }[] = [
+    { valor: "totales", etiqueta: "Totales" },
+    { valor: "promedios", etiqueta: "Promedios" },
+    { valor: "porcentajes", etiqueta: "Porcentajes" },
+  ];
 
   modo: ModoVista = "totales";
-
-  private columnasMap = new Map<string, ColumnaResumen>();
-
   columnas: ColumnaResumen[] = [];
 
   constructor(
     private config: TablaResumenConfigService,
     private excelService: ExcelService,
   ) {}
-  ngOnInit(): void {
-    //console.log("tipo: ", this.tipo);
+
+  ngOnChanges(): void {
+    this.columnas = this.config.getColumnas(this.tipo, this.tipoEntidad) ?? [];
   }
 
-  ngOnChanges() {
-    let columnasServicio = this.config.getColumnas(this.tipo, this.tipoEntidad);
-    if(columnasServicio) this.columnas = columnasServicio
-    //console.log("this.columnas:  ", this.columnas);
-
-    /*     this.columnasMap.clear();
-    this.columnas.forEach((c) => this.columnasMap.set(c.key, c));
-    this.columnas.forEach((c) => //console.log("key: ", c.key));
-    
-     */
-  }
-
-  toggleModo() {
-    const order: ModoVista[] = ["totales", "promedios", "porcentajes"];
-    const index = order.indexOf(this.modo);
-    this.modo = order[(index + 1) % order.length];
+  seleccionarModo(modo: ModoVista): void {
+    this.modo = modo;
   }
 
   format(valor: number | null, tipo: string): string {
@@ -61,78 +59,43 @@ export class TablaResumenComponent implements OnChanges, OnInit {
     return this.tipo === "general";
   }
 
-  get columnasCliente(): ColumnaResumen[] {
-    return this.columnas.filter((c) => c.key.includes("_cliente"));
-  }
-
-  get columnasChofer(): ColumnaResumen[] {
-    return this.columnas.filter((c) => c.key.includes("_chofer"));
-  }
-
-  get columnasBase(): ColumnaResumen[] {
-    return this.columnas.filter((c) => !c.key.includes("_"));
-  }
-
-  formatearPeriodo(r: ResumenOpBase): string {
-    return `${r.mes.toString().padStart(2, "0")}-${r.anio}`;
-  }
-
-  getTooltip(key: string): string {
-    const col = this.columnasMap.get(key);
-
-    if (!col || !col.tooltip) return "";
-
-    return col.tooltip(this.modo);
-  }
-
-  getCellClasses(col: ColumnaResumen, r: ResumenOpBase): any {
+  /** Coloreo de la ganancia: en porcentajes por margen (>25% verde,
+   *  10–25% amarillo, ≤10% rojo); en totales/promedios por signo. */
+  getCellClasses(col: ColumnaResumen, r: FilaResumen): Record<string, boolean> {
+    if (col.key !== "ganancia") return {};
     const value = col.valueFn(r, this.modo);
-
     if (value === null) return {};
-
-    // GANANCIA
-
-    if (col.key === "ganancia") {
-      return {
-        "bg-success-soft text-success fw-semibold": value > 0,
-        "bg-danger-soft text-danger fw-semibold": value < 0,
-      };
-    }
-
-    // MARGEN (ganancia en %)
-    if (col.key === "ganancia" && this.modo === "porcentajes") {
+    if (this.modo === "porcentajes") {
       return {
         "bg-success-soft text-success fw-semibold": value > 0.25,
-        "bg-warning-soft text-warning fw-semibold":
-          value > 0.1 && value <= 0.25,
+        "bg-warning-soft text-warning fw-semibold": value > 0.1 && value <= 0.25,
         "bg-danger-soft text-danger fw-semibold": value <= 0.1,
       };
     }
-
-    return {};
+    return {
+      "bg-success-soft text-success fw-semibold": value > 0,
+      "bg-danger-soft text-danger fw-semibold": value < 0,
+    };
   }
 
-  getSylesCeldas(col: ColumnaResumen): string {
+  getStylesCeldas(col: ColumnaResumen): string {
     if (col.key.includes("_cliente") || col.key === "facturado") {
       return "background-color: #e7f1ff;";
     }
     if (col.key.includes("_chofer") || col.key === "costo") {
       return "background-color: #f1f3f5;";
-    }   
+    }
     return "";
   }
 
-  exportarExcel() {    
-
+  exportarExcel(): void {
     this.excelService.exportarResumenOperaciones(
-      this.resumenes,
+      this.filas,
       this.columnas,
       this.tituloPeriodo,
       this.razonSocial,
       this.tipo,
       this.tipoEntidad,
-
     );
   }
-
 }

@@ -18,9 +18,9 @@ import saveAs from "file-saver";
 import { InformeLiq } from "src/app/interfaces/informe-liq";
 import { OpVenta, ResumenVenta } from "src/app/interfaces/resumen-venta";
 import { Workbook } from "exceljs";
-import { ResumenOpBase } from "src/app/interfaces/resumen-op-base";
 import {
   ColumnaResumen,
+  FilaResumen,
   ModoVista,
 } from "../../reportes/reportes-op/tabla-resumen-config.service";
 
@@ -1715,7 +1715,7 @@ export class ExcelService {
   /* EXPORTAR RESUMEN DE OP */
   ///////////////////////////////////////
   async exportarResumenOperaciones(
-    resumenes: ResumenOpBase[],
+    resumenes: FilaResumen[],
     columnas: ColumnaResumen[],
     periodo: string,
     razonSocial: string,
@@ -1765,7 +1765,7 @@ export class ExcelService {
   private async crearHoja(
     workbook: ExcelJS.Workbook,
     nombre: string,
-    resumenes: ResumenOpBase[],
+    resumenes: FilaResumen[],
     columnas: ColumnaResumen[],
     modo: ModoVista,
     periodo: string,

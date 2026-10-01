@@ -1,9 +1,11 @@
 import { Component, OnInit } from "@angular/core";
-import { Observable, of } from "rxjs";
+import { Observable, map, of } from "rxjs";
 import { PeriodoFiltro } from "src/app/interfaces/periodo-filtro";
-import { ResumenOpGeneralMensual } from "src/app/interfaces/resumen-op-base";
-import { ReportesOpService } from "src/app/servicios/reportes/reportes-op/reportes-op.service";
-import Swal from "sweetalert2";
+import {
+  DatosTablaResumen,
+  ResumenOpConsultaService,
+} from "src/app/servicios/reportes/resumenes-op/resumen-op-consulta.service";
+import { errorPeriodoReporte, tituloPeriodo, ultimos12Meses } from "src/app/shared/utils/periodo.util";
 
 @Component({
   selector: "app-resumen-op-general",
@@ -12,96 +14,27 @@ import Swal from "sweetalert2";
   styleUrl: "./resumen-op-general.component.scss",
 })
 export class ResumenOpGeneralComponent implements OnInit {
-  resumenes$!: Observable<ResumenOpGeneralMensual[]>;
+  datos$: Observable<DatosTablaResumen | null> = of(null);
   periodo!: PeriodoFiltro;
+  tituloPeriodo = "";
+  errorPeriodo = "";
 
-  tituloPeriodo: string = "";
+  constructor(private consulta: ResumenOpConsultaService) {}
 
-  constructor(private reportesOp: ReportesOpService) {}
-
-  ngOnInit() {
-    this.periodo = this.getUltimos12Meses();
-    this.tituloPeriodo = this.armarTitulo(this.periodo);
-    this.cargarDatos();
+  ngOnInit(): void {
+    this.aplicarPeriodo(ultimos12Meses());
   }
 
-  onPeriodoChange(p: PeriodoFiltro) {
+  onPeriodoChange(p: PeriodoFiltro): void {
+    this.aplicarPeriodo(p);
+  }
+
+  private aplicarPeriodo(p: PeriodoFiltro): void {
     this.periodo = p;
-    //console.log("this.periodo", p);
-
-    this.tituloPeriodo = this.armarTitulo(p);
-
-    if (!this.periodoValido(this.periodo)) {
-      this.resumenes$ = of([]); // 👈 devolvés vacío
-      this.mensajesError(
-        'El período "desde" no puede ser mayor a "hasta"',
-        false,
-      );
-      return;
-    }
-
-    this.resumenes$ = this.reportesOp.getResumen(this.periodo, 'general');
-
-    //this.cargarDatos();
+    this.tituloPeriodo = tituloPeriodo(p);
+    this.errorPeriodo = errorPeriodoReporte(p, ResumenOpConsultaService.MAX_MESES) ?? "";
+    this.datos$ = this.errorPeriodo
+      ? of(null)
+      : this.consulta.observarGeneral(p).pipe(map(rs => this.consulta.armarTabla(rs)));
   }
-
-  private cargarDatos() {
-    this.resumenes$ = this.reportesOp.getResumen(this.periodo, 'general');
-  }
-
-  private getUltimos12Meses(): PeriodoFiltro {
-    const hoy = new Date();
-
-    const hasta = {
-      anio: hoy.getFullYear(),
-      mes: hoy.getMonth() + 1,
-    };
-
-    const desdeDate = new Date(hoy);
-    desdeDate.setMonth(desdeDate.getMonth() - 11);
-
-    const desde = {
-      anio: desdeDate.getFullYear(),
-      mes: desdeDate.getMonth() + 1,
-    };
-
-    return {
-      tipo: "ultimos-12",
-      desde,
-      hasta,
-    };
-  }
-
-  armarTitulo(p: PeriodoFiltro): string {
-    if (p.tipo === "ultimos-12") {
-      return "Últimos 12 meses";
-    }
-
-    if (p.tipo === "anio") {
-      return `Año ${p.anio}`;
-    }
-
-    if (p.tipo === "rango" && p.desde && p.hasta) {
-      const desde = `${p.desde.mes.toString().padStart(2, "0")}-${p.desde.anio}`;
-      const hasta = `${p.hasta.mes.toString().padStart(2, "0")}-${p.hasta.anio}`;
-
-      return `${desde} → ${hasta}`;
-    }
-
-    return "";
-  }
-
-  private periodoValido(p: PeriodoFiltro): boolean {
-    return p.desde.anio * 100 + p.desde.mes <= p.hasta.anio * 100 + p.hasta.mes;
-  }
-
-  mensajesError(msj: string, resultado: boolean) {
-    Swal.fire({
-      icon: !resultado ? "error" : "success",
-      //title: "Oops...",
-      text: `${msj}`,
-      //footer: `${msj}`
-    });
-  }
-  
 }

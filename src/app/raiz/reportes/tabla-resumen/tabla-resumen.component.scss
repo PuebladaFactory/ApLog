@@ -44,3 +44,8 @@ td,td{
 .bg-warning-soft {
   background-color: rgba(255, 193, 7, 0.15);
 }
+
+.tabla-resumen .fila-total td {
+  font-weight: 700 !important;
+  border-top: 2px solid #adb5bd;
+}

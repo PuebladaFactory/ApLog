@@ -293,7 +293,9 @@ export class ResumenOpFactoryService {
     };
   }
 
-  private sumar(a: MetricasResumen, b: MetricasResumen): MetricasResumen {
+  /** Suma campo a campo de dos conjuntos de métricas (pura). Pública: la
+   *  usa también ResumenOpConsultaService para la fila de totales. */
+  sumar(a: MetricasResumen, b: MetricasResumen): MetricasResumen {
     return {
       cantidadOps: a.cantidadOps + b.cantidadOps,
       kmRecorridos: a.kmRecorridos + b.kmRecorridos,

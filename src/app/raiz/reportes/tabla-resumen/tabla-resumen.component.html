@@ -1,194 +1,106 @@
-@if (resumenes.length > 0) {
+@if (filas.length > 0) {
     <div class="card">
-        <div
-            class="card-header d-flex justify-content-between align-items-center"
-        >
+        <div class="card-header d-flex justify-content-between align-items-center">
             <h4>
                 Resumen:
-                <span class="fw-bold">
-                    {{ tituloPeriodo }}
-                </span>
+                <span class="fw-bold">{{ tituloPeriodo }}</span>
             </h4>
-            <div>
-                <button
-                    class="btn btn-sm btn-outline-info"
-                    (click)="exportarExcel()"
-                >
-                    Descargar
-                </button>
-                <button
-                    class="btn btn-sm btn-outline-primary"
-                    (click)="toggleModo()"
-                >
-                    {{ modo }}
-                </button>
+            <div class="d-flex align-items-center gap-2">
+                <div class="btn-group btn-group-sm" role="group" aria-label="Tipo de resumen">
+                    @for (m of modos; track m.valor) {
+                        <input
+                            type="radio"
+                            class="btn-check"
+                            autocomplete="off"
+                            [name]="idGrupoModo"
+                            [id]="idGrupoModo + '-' + m.valor"
+                            [checked]="modo === m.valor"
+                            (change)="seleccionarModo(m.valor)"
+                        />
+                        <label class="btn btn-outline-primary" [attr.for]="idGrupoModo + '-' + m.valor">
+                            {{ m.etiqueta }}
+                        </label>
+                    }
+                </div>
+                <button class="btn btn-sm btn-outline-info" (click)="exportarExcel()">Descargar</button>
             </div>
         </div>
 
         <div class="table-responsive">
-            <table
-                class="table table-sm table-hover table-border mb-0 tabla-resumen align-middle"
-            >
+            <table class="table table-sm table-hover table-border mb-0 tabla-resumen align-middle">
                 <thead>
-                    <!-- FILA 1 -->
                     <tr>
                         <th class="text-center bg-light"></th>
-
-                        <!-- Operación -->
-                        <th colspan="4" class="text-center bg-light">
-                            Operación
-                        </th>
-
-                        <!-- Totales -->
+                        <th colspan="4" class="text-center bg-light">Operación</th>
                         <th colspan="3" class="text-center bg-info">Totales</th>
-
                         @if (esGeneral) {
-                            <th
-                                colspan="4"
-                                class="text-center bg-primary text-white"
-                            >
-                                Cliente
-                            </th>
-
-                            <th
-                                colspan="4"
-                                class="text-center bg-secondary text-white"
-                            >
-                                Chofer
-                            </th>
+                            <th colspan="4" class="text-center bg-primary text-white">Cliente</th>
+                            <th colspan="4" class="text-center bg-secondary text-white">Chofer</th>
                         } @else {
                             <th
                                 colspan="4"
                                 class="text-center text-white"
                                 [ngClass]="{
                                     'bg-primary': tipoEntidad === 'cliente',
-                                    'bg-secondary':
-                                        tipoEntidad === 'chofer' ||
-                                        tipoEntidad === 'proveedor',
+                                    'bg-secondary': tipoEntidad === 'chofer' || tipoEntidad === 'proveedor',
                                 }"
                             >
                                 Valores
                             </th>
                         }
                     </tr>
-                    <!-- FILA 2 -->
                     <tr>
                         <th class="text-start bg-info-subtle">Periodo</th>
-                        <!-- Operación -->
-                        <!--                     <th class="text-center">
-                        Ops
-                        <i
-                            class="bi bi-info-circle ms-1"
-                            [attr.title]="getTooltip('ops')"
-                        ></i>
-                    </th>
-                    <th class="text-center">
-                        Km
-                        <i
-                            class="bi bi-info-circle ms-1"
-                            [attr.title]="getTooltip('km')"
-                        ></i>
-                    </th>
-                    <th class="text-center">
-                        Acomp Ops
-                        <i
-                            class="bi bi-info-circle ms-1"
-                            [attr.title]="getTooltip('acompOps')"
-                        ></i>
-                    </th>
-                    <th class="text-center">
-                        Acomp Prom
-                        <i
-                            class="bi bi-info-circle ms-1"
-                            [attr.title]="getTooltip('acompCant')"
-                        ></i>
-                    </th>
- -->
-                        <!-- Totales -->
-                        <!--                     <th class="text-center">
-                        Facturado
-                        <i
-                            class="bi bi-info-circle ms-1"
-                            [attr.title]="getTooltip('facturado')"
-                        ></i>
-                    </th>
-                    <th class="text-center">
-                        Costo
-                        <i
-                            class="bi bi-info-circle ms-1"
-                            [attr.title]="getTooltip('costo')"
-                        ></i>
-                    </th>
-                    <th class="text-center">
-                        Ganancia
-                        <i
-                            class="bi bi-info-circle ms-1"
-                            [attr.title]="getTooltip('ganancia')"
-                        ></i>
-                    </th> -->
-
-                        <!-- Dinámicos -->
                         @for (col of columnas; track col.key) {
-                            <th class="text-center">
-                                {{ col.label }}
-                                <i
-                                    class="bi bi-info-circle ms-1"
-                                    [attr.title]="col.tooltip?.(modo)"
-                                ></i>
-                            </th>
+                            @if (col.visible) {
+                                <th class="text-center">
+                                    {{ col.label }}
+                                    <i class="bi bi-info-circle ms-1" [attr.title]="col.tooltip?.(modo)"></i>
+                                </th>
+                            }
                         }
-                        <!--    @if (esGeneral) {
-                        @for (col of columnasCliente; track col.key) {
-                            <th class="text-center">
-                                {{ col.label }}
-                                <i
-                                    class="bi bi-info-circle ms-1"
-                                    [attr.title]="col.tooltip?.(modo)"
-                                ></i>
-                            </th>
-                        }
-
-                        @for (col of columnasChofer; track col.key) {
-                            <th class="text-center">
-                                {{ col.label }}
-                                <i
-                                    class="bi bi-info-circle ms-1"
-                                    [attr.title]="col.tooltip?.(modo)"
-                                ></i>
-                            </th>
-                        }
-                    }  -->
                     </tr>
                 </thead>
 
                 <tbody>
-                    @for (r of resumenes; track r.mes) {
+                    @for (r of filas; track r.periodo) {
                         <tr>
-                            <td>{{ formatearPeriodo(r) }}</td>
+                            <td>{{ r.etiqueta }}</td>
                             @for (col of columnas; track col.key) {
                                 @if (col.visible) {
                                     <td
-                                        [class.col-moneda]="
-                                            col.tipo === 'currency'
-                                        "
-                                        [class.text-center]="
-                                            col.tipo !== 'currency'
-                                        "
+                                        [class.col-moneda]="col.tipo === 'currency'"
+                                        [class.text-center]="col.tipo !== 'currency'"
                                         [ngClass]="getCellClasses(col, r)"
-                                        [style]="getSylesCeldas(col)"
+                                        [style]="getStylesCeldas(col)"
                                     >
-                                        {{
-                                            format(
-                                                col.valueFn(r, modo),
-                                                col.tipo
-                                            )
-                                        }}
+                                        {{ format(col.valueFn(r, modo), col.tipo) }}
                                     </td>
                                 }
                             }
                         </tr>
                     }
                 </tbody>
+
+                @if (total) {
+                    <tfoot>
+                        <tr class="fila-total">
+                            <td>{{ total.etiqueta }}</td>
+                            @for (col of columnas; track col.key) {
+                                @if (col.visible) {
+                                    <td
+                                        [class.col-moneda]="col.tipo === 'currency'"
+                                        [class.text-center]="col.tipo !== 'currency'"
+                                        [ngClass]="getCellClasses(col, total)"
+                                        [style]="getStylesCeldas(col)"
+                                    >
+                                        {{ format(col.valueFn(total, modo), col.tipo) }}
+                                    </td>
+                                }
+                            }
+                        </tr>
+                    </tfoot>
+                }
             </table>
         </div>
     </div>

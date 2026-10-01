@@ -1,10 +1,20 @@
 import { Component, OnInit } from "@angular/core";
-import { Observable, of } from "rxjs";
+import { Observable, map, of, tap } from "rxjs";
 import { PeriodoFiltro } from "src/app/interfaces/periodo-filtro";
-import { ResumenOpBase, ResumenOpEntidadMensual } from "src/app/interfaces/resumen-op-base";
-import { ReportesOpService } from "src/app/servicios/reportes/reportes-op/reportes-op.service";
-import { StorageService } from "src/app/servicios/storage/storage.service";
-import Swal from "sweetalert2";
+import { TipoEntidadResumen } from "src/app/interfaces/resumen-op-nuevo";
+import { ClienteService } from "src/app/servicios/clientes/cliente.service";
+import { ChoferService } from "src/app/servicios/choferes/chofer.service";
+import { ProveedorService } from "src/app/servicios/proveedores/proveedor.service";
+import {
+  DatosTablaResumen,
+  ResumenOpConsultaService,
+} from "src/app/servicios/reportes/resumenes-op/resumen-op-consulta.service";
+import { errorPeriodoReporte, tituloPeriodo, ultimos12Meses } from "src/app/shared/utils/periodo.util";
+
+interface OpcionEntidad {
+  id: string;
+  nombre: string;
+}
 
 @Component({
   selector: "app-resumen-op-entidad",
@@ -13,184 +23,100 @@ import Swal from "sweetalert2";
   styleUrl: "./resumen-op-entidad.component.scss",
 })
 export class ResumenOpEntidadComponent implements OnInit {
-  tipoEntidad: "cliente" | "chofer" | "proveedor" = "cliente";
-
-  entidades: any[] = [];
-  entidadSeleccionada?: number;
+  tipoEntidad: TipoEntidadResumen = "cliente";
+  entidades$: Observable<OpcionEntidad[]> = of([]);
+  entidadSeleccionada?: string;
 
   periodo!: PeriodoFiltro;
+  tituloPeriodo = "";
+  errorPeriodo = "";
+  datos$: Observable<DatosTablaResumen | null> | null = null;
 
-  resumenes$!: Observable<ResumenOpEntidadMensual[]> | null;
-
-  tipo: "general" | "entidad" = "entidad";
-  entidadId?: number;
-
-  tituloPeriodo: string = "";
-
-  razonSocial: string = "";
+  private nombres = new Map<string, string>();
 
   constructor(
-    private storageService: StorageService,
-    private reportesOp: ReportesOpService,
+    private consulta: ResumenOpConsultaService,
+    private clienteService: ClienteService,
+    private choferService: ChoferService,
+    private proveedorService: ProveedorService,
   ) {}
 
   ngOnInit(): void {
-    this.periodo = this.getUltimos12Meses();
-    this.tituloPeriodo = this.armarTitulo(this.periodo);
+    this.periodo = ultimos12Meses();
+    this.tituloPeriodo = tituloPeriodo(this.periodo);
     this.cargarEntidades();
-    this.cargarDatos();
   }
 
-  cargarEntidades() {
-    if (this.tipoEntidad === "cliente") {
-      this.entidades = this.storageService.loadInfo("clientes") || [];
-      this.entidades = this.entidades.sort((a, b) =>
-        a.razonSocial.localeCompare(b.razonSocial),
-      );
-    }
-
-    if (this.tipoEntidad === "chofer") {
-      this.entidades = this.storageService.loadInfo("choferes") || [];
-      this.entidades = this.entidades.sort((a, b) =>
-        a.apellido.localeCompare(b.apellido),
-      );
-    }
-
-    if (this.tipoEntidad === "proveedor") {
-      this.entidades = this.storageService.loadInfo("proveedores") || [];
-      this.entidades = this.entidades.sort((a, b) =>
-        a.razonSocial.localeCompare(b.razonSocial),
-      );
-    }
-    //console.log("this.entidades: ", this.entidades);
+  get razonSocial(): string {
+    return this.entidadSeleccionada ? this.nombres.get(this.entidadSeleccionada) ?? "" : "";
   }
 
-  onTipoEntidadChange() {
-    this.cargarEntidades();
+  onTipoEntidadChange(tipo: TipoEntidadResumen): void {
+    this.tipoEntidad = tipo;
     this.entidadSeleccionada = undefined;
+    this.datos$ = null;
+    this.cargarEntidades();
   }
 
-  onEntidadChange() {
-    if (!this.entidadSeleccionada) return;
-    this.resumenes$ = null;
+  onEntidadChange(id: string | undefined): void {
+    this.entidadSeleccionada = id;
     this.cargarDatos();
   }
 
-  cargarDatos() {
-    if (!this.entidadSeleccionada) return;
-    ////console.log("this.periodo: ", this.periodo);
-    ////console.log("this.tipo: ", this.tipo);
-    ////console.log("this.entidadSeleccionada: ", this.entidadSeleccionada);
-
-    this.resumenes$ = this.reportesOp.getResumen(
-      this.periodo,
-      this.tipo,
-      this.entidadSeleccionada,
-      this.tipoEntidad,
-    );    
-    
-  }
-
-  private getUltimos12Meses(): PeriodoFiltro {
-    const hoy = new Date();
-
-    const hasta = {
-      anio: hoy.getFullYear(),
-      mes: hoy.getMonth() + 1,
-    };
-
-    const desdeDate = new Date(hoy);
-    desdeDate.setMonth(desdeDate.getMonth() - 11);
-
-    const desde = {
-      anio: desdeDate.getFullYear(),
-      mes: desdeDate.getMonth() + 1,
-    };
-
-    return {
-      tipo: "ultimos-12",
-      desde,
-      hasta,
-    };
-  }
-
-  armarTitulo(p: PeriodoFiltro): string {
-    if (p.tipo === "ultimos-12") {
-      return "Últimos 12 meses";
-    }
-
-    if (p.tipo === "anio") {
-      return `Año ${p.anio}`;
-    }
-
-    if (p.tipo === "rango" && p.desde && p.hasta) {
-      const desde = `${p.desde.mes.toString().padStart(2, "0")}-${p.desde.anio}`;
-      const hasta = `${p.hasta.mes.toString().padStart(2, "0")}-${p.hasta.anio}`;
-
-      return `${desde} → ${hasta}`;
-    }
-
-    return "";
-  }
-
-  private periodoValido(p: PeriodoFiltro): boolean {
-    return p.desde.anio * 100 + p.desde.mes <= p.hasta.anio * 100 + p.hasta.mes;
-  }
-
-  mensajesError(msj: string, resultado: boolean) {
-    Swal.fire({
-      icon: !resultado ? "error" : "success",
-      //title: "Oops...",
-      text: `${msj}`,
-      //footer: `${msj}`
-    });
-  }
-
-  getRazonSocial(id: number): string {
-    this.razonSocial = "";
-    let entidad: any;
-    switch (this.tipoEntidad) {
-      case "cliente": {
-        entidad = this.entidades.find((e) => e.idCliente === id);
-        if (entidad) this.razonSocial = entidad.razonSocial;
-        break;
-      }
-      case "chofer": {
-        entidad = this.entidades.find((e) => e.idChofer === id);
-        if (entidad) this.razonSocial = entidad.apellido + " " + entidad.nombre;
-        break;
-      }
-      case "proveedor": {
-        entidad = this.entidades.find((e) => e.idProveedor === id);
-        if (entidad) this.razonSocial = entidad.razonSocial;
-        break;
-      }
-      default: {
-        entidad = null;
-        break;
-      }
-    }
-
-    return this.razonSocial;
-  }
-
-  onPeriodoChange(p: PeriodoFiltro) {
+  onPeriodoChange(p: PeriodoFiltro): void {
     this.periodo = p;
-    //console.log("this.periodo", p);
+    this.tituloPeriodo = tituloPeriodo(p);
+    this.cargarDatos();
+  }
 
-    this.tituloPeriodo = this.armarTitulo(p);
-
-    if (!this.periodoValido(this.periodo)) {
-      this.resumenes$ = of([]); // 👈 devolvés vacío
-      this.mensajesError(
-        'El período "desde" no puede ser mayor a "hasta"',
-        false,
+  /** Lista del tipo elegido desde los servicios de entidad (ids string).
+   *  Choferes de proveedor excluidos: su operación cuenta para el
+   *  proveedor (decisión R4). Inactivos con "(inactivo)". */
+  private cargarEntidades(): void {
+    let fuente$: Observable<OpcionEntidad[]>;
+    if (this.tipoEntidad === "cliente") {
+      fuente$ = this.clienteService.clientes$.pipe(
+        map(cs => cs.map(c => this.opcion(c.id, c.razonSocial, c.activo))),
       );
+    } else if (this.tipoEntidad === "chofer") {
+      fuente$ = this.choferService.choferes$.pipe(
+        map(cs => cs
+          .filter(c => c.contratacion?.tipo !== "proveedor")
+          .map(c => this.opcion(
+            c.id,
+            `${c.datosPersonales?.apellido ?? ""} ${c.datosPersonales?.nombre ?? ""}`.trim(),
+            c.activo,
+          ))),
+      );
+    } else {
+      fuente$ = this.proveedorService.proveedores$.pipe(
+        map(ps => ps.map(p => this.opcion(p.id, p.razonSocial, p.activo))),
+      );
+    }
+    this.entidades$ = fuente$.pipe(
+      map(os => [...os].sort((a, b) => a.nombre.localeCompare(b.nombre))),
+      tap(os => {
+        this.nombres = new Map(os.map(o => [o.id, o.nombre] as [string, string]));
+      }),
+    );
+  }
+
+  private opcion(id: string, nombre: string, activo: boolean): OpcionEntidad {
+    return { id, nombre: activo ? nombre : `${nombre} (inactivo)` };
+  }
+
+  private cargarDatos(): void {
+    if (!this.entidadSeleccionada) {
+      this.datos$ = null;
       return;
     }
-
-    //this.resumenes$ = this.reportesOp.getResumen(this.periodo);
-
-    this.cargarDatos();
+    this.errorPeriodo = errorPeriodoReporte(this.periodo, ResumenOpConsultaService.MAX_MESES) ?? "";
+    if (this.errorPeriodo) {
+      this.datos$ = null;
+      return;
+    }
+    this.datos$ = this.consulta
+      .observarEntidad(this.periodo, this.tipoEntidad, this.entidadSeleccionada)
+      .pipe(map(rs => this.consulta.armarTabla(rs)));
   }
 }
