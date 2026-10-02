@@ -12,3 +12,14 @@ th, td, span, strong {
     cursor: not-allowed;
     opacity:0.5;
 }
+
+/* Valores numéricos: alineados a la derecha con dígitos de ancho fijo.
+   Misma definición que informes-tabla (deuda: consolidar en un estilo global). */
+.col-numero {
+  text-align: right;
+  font-variant-numeric: tabular-nums !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  padding-left: 0.4rem !important;
+  padding-right: 0.4rem !important;
+  font-weight: 500 !important;
+}

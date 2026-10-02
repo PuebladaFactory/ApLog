@@ -21,6 +21,10 @@ export class ComisionVentaConsultaService {
 
   private db = inject(DbFirestoreService);
 
+  /** Mes elegido en el Tablero de comisiones ('YYYY-MM'), recordado durante
+   *  la sesión (al salir y volver a la pestaña). null = mes actual. */
+  mesTablero: string | null = null;
+
   observarDelMes(periodo: number): Observable<ConId<ComisionVenta>[]> {
     return this.db.observarPorCampo<ComisionVenta>(ComisionVentaFactoryService.COLECCION, 'periodo', periodo);
   }

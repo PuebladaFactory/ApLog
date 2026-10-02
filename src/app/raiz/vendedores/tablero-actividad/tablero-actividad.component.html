@@ -13,18 +13,20 @@
 
   @if (!cargando && tablero) {
     @if (vendedores.length === 0) {
-      <div class="alert alert-info">Sin comisiones en el mes ni saldos pendientes de meses anteriores.</div>
+      <div class="alert alert-info">
+        Sin vendedores con clientes asignados, comisiones en el mes ni saldos pendientes de meses anteriores.
+      </div>
     } @else {
       <div class="table-responsive">
         <table class="table table-bordered align-middle">
           <thead class="table-light">
             <tr>
               <th>Vendedor</th>
-              <th class="text-end">Ops del mes</th>
-              <th class="text-end">Comisiones del mes</th>
-              <th class="text-end">Liquidado del mes</th>
-              <th class="text-end" title="Saldos pendientes de meses anteriores (cierres tardíos, ajustes, bajas)">Arrastre</th>
-              <th class="text-end table-success">Saldo a liquidar</th>
+              <th class="col-numero">Ops del mes</th>
+              <th class="col-numero">Comisiones del mes</th>
+              <th class="col-numero">Liquidado del mes</th>
+              <th class="col-numero" title="Saldos pendientes de meses anteriores (cierres tardíos, ajustes, bajas)">Arrastre</th>
+              <th class="col-numero table-success">Saldo a liquidar</th>
               <th style="width: 200px;"></th>
             </tr>
           </thead>
@@ -37,11 +39,11 @@
                     <span class="badge bg-secondary ms-2">Inactivo</span>
                   }
                 </td>
-                <td class="text-end">{{ v.cantidadOps }}</td>
-                <td class="text-end">{{ v.comisionesMes | formatearValor: '$' }}</td>
-                <td class="text-end">{{ v.liquidadoMes | formatearValor: '$' }}</td>
-                <td class="text-end">{{ v.arrastre | formatearValor: '$' }}</td>
-                <td class="text-end table-success fw-bold">{{ v.saldoALiquidar | formatearValor: '$' }}</td>
+                <td class="col-numero">{{ v.cantidadOps }}</td>
+                <td class="col-numero">{{ v.comisionesMes | formatearValor: '$' }}</td>
+                <td class="col-numero">{{ v.liquidadoMes | formatearValor: '$' }}</td>
+                <td class="col-numero">{{ v.arrastre | formatearValor: '$' }}</td>
+                <td class="col-numero table-success fw-bold">{{ v.saldoALiquidar | formatearValor: '$' }}</td>
                 <td class="text-center text-nowrap">
                   <button type="button" class="btn btn-sm btn-success me-1"
                     [disabled]="!puedeLiquidar || (v.saldoALiquidar < 0.01 && v.saldoALiquidar > -0.01)"
@@ -54,50 +56,54 @@
               @if (expandidos.has(v.idVendedor)) {
                 <tr>
                   <td colspan="7" class="bg-light">
-                    <table class="table table-sm table-hover mb-0">
-                      <thead>
-                        <tr>
-                          <th>N.º op</th>
-                          <th>Fecha</th>
-                          <th class="text-end">Base</th>
-                          <th class="text-end">%</th>
-                          <th class="text-end">Comisión</th>
-                          <th class="text-end">Liquidado</th>
-                          <th class="text-end">Saldo</th>
-                          <th class="text-center">Estado</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        @for (cl of v.clientes; track cl.idCliente) {
-                          <tr class="table-secondary">
-                            <td colspan="4"><strong>{{ cl.razonSocial }}</strong></td>
-                            <td class="text-end"><strong>{{ cl.monto | formatearValor: '$' }}</strong></td>
-                            <td></td>
-                            <td class="text-end"><strong>{{ cl.saldo | formatearValor: '$' }}</strong></td>
-                            <td></td>
+                    @if (v.clientes.length === 0) {
+                      <div class="text-muted py-1">Sin comisiones en el mes ni saldos pendientes.</div>
+                    } @else {
+                      <table class="table table-sm table-hover mb-0">
+                        <thead>
+                          <tr>
+                            <th class="col-numero">N.º op</th>
+                            <th>Fecha</th>
+                            <th class="col-numero">Base</th>
+                            <th class="col-numero">%</th>
+                            <th class="col-numero">Comisión</th>
+                            <th class="col-numero">Liquidado</th>
+                            <th class="col-numero">Saldo</th>
+                            <th class="text-center">Estado</th>
                           </tr>
-                          @for (l of cl.lineas; track l.id) {
-                            <tr>
-                              <td>
-                                {{ l.numeroOperacion }}
-                                @if (l.arrastre) {
-                                  <span class="badge bg-light text-dark border ms-1">arrastre</span>
-                                }
-                              </td>
-                              <td>{{ l.fecha }}</td>
-                              <td class="text-end">{{ l.base | formatearValor: '$' }}</td>
-                              <td class="text-end">{{ l.porcentaje }}%</td>
-                              <td class="text-end">{{ l.monto | formatearValor: '$' }}</td>
-                              <td class="text-end">{{ l.montoLiquidado | formatearValor: '$' }}</td>
-                              <td class="text-end">{{ l.saldo | formatearValor: '$' }}</td>
-                              <td class="text-center">
-                                <span class="badge" [ngClass]="claseEstado(l.estado)">{{ etiquetaEstado(l.estado) }}</span>
-                              </td>
+                        </thead>
+                        <tbody>
+                          @for (cl of v.clientes; track cl.idCliente) {
+                            <tr class="table-secondary">
+                              <td colspan="4"><strong>{{ cl.razonSocial }}</strong></td>
+                              <td class="col-numero"><strong>{{ cl.monto | formatearValor: '$' }}</strong></td>
+                              <td></td>
+                              <td class="col-numero"><strong>{{ cl.saldo | formatearValor: '$' }}</strong></td>
+                              <td></td>
                             </tr>
+                            @for (l of cl.lineas; track l.id) {
+                              <tr>
+                                <td class="col-numero">
+                                  @if (l.arrastre) {
+                                    <span class="badge bg-light text-dark border me-1">arrastre</span>
+                                  }
+                                  {{ l.numeroOperacion }}
+                                </td>
+                                <td>{{ l.fecha }}</td>
+                                <td class="col-numero">{{ l.base | formatearValor: '$' }}</td>
+                                <td class="col-numero">{{ l.porcentaje }}%</td>
+                                <td class="col-numero">{{ l.monto | formatearValor: '$' }}</td>
+                                <td class="col-numero">{{ l.montoLiquidado | formatearValor: '$' }}</td>
+                                <td class="col-numero">{{ l.saldo | formatearValor: '$' }}</td>
+                                <td class="text-center">
+                                  <span class="badge" [ngClass]="claseEstado(l.estado)">{{ etiquetaEstado(l.estado) }}</span>
+                                </td>
+                              </tr>
+                            }
                           }
-                        }
-                      </tbody>
-                    </table>
+                        </tbody>
+                      </table>
+                    }
                   </td>
                 </tr>
               }
@@ -106,11 +112,11 @@
           <tfoot>
             <tr class="table-secondary fw-bold">
               <td>TOTAL</td>
-              <td class="text-end">{{ tablero.totales.cantidadOps }}</td>
-              <td class="text-end">{{ tablero.totales.comisionesMes | formatearValor: '$' }}</td>
-              <td class="text-end">{{ tablero.totales.liquidadoMes | formatearValor: '$' }}</td>
-              <td class="text-end">{{ tablero.totales.arrastre | formatearValor: '$' }}</td>
-              <td class="text-end table-success">{{ tablero.totales.saldoALiquidar | formatearValor: '$' }}</td>
+              <td class="col-numero">{{ tablero.totales.cantidadOps }}</td>
+              <td class="col-numero">{{ tablero.totales.comisionesMes | formatearValor: '$' }}</td>
+              <td class="col-numero">{{ tablero.totales.liquidadoMes | formatearValor: '$' }}</td>
+              <td class="col-numero">{{ tablero.totales.arrastre | formatearValor: '$' }}</td>
+              <td class="col-numero table-success">{{ tablero.totales.saldoALiquidar | formatearValor: '$' }}</td>
               <td></td>
             </tr>
           </tfoot>

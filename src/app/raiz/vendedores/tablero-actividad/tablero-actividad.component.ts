@@ -4,6 +4,7 @@ import { ComisionVentaConsultaService } from 'src/app/servicios/vendedores/comis
 import { VendedorService } from 'src/app/servicios/vendedores/vendedor.service';
 import { LiquidacionVentaService } from 'src/app/servicios/vendedores/liquidacion-venta.service';
 import { PermisosService } from 'src/app/servicios/permisos/permisos.service';
+import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
 import Swal from 'sweetalert2';
 import { periodoDeFecha } from 'src/app/shared/utils/periodo.util';
 import {
@@ -17,8 +18,10 @@ const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio',
 
 /** Tablero de comisiones del mes (Frente Vendedores): resumen por vendedor
  *  (comisiones del mes, liquidado, arrastre de meses anteriores y saldo a
- *  liquidar) con detalle por cliente y operación. Solo lectura en este
- *  bloque; Liquidar se suma en V6 y Excel/PDF en V7. */
+ *  liquidar) con detalle por cliente y operación, y Liquidar por vendedor.
+ *  Muestra también, en cero, a los vendedores activos con clientes
+ *  asignados. El mes elegido se recuerda durante la sesión
+ *  (ComisionVentaConsultaService.mesTablero). Excel/PDF en V7. */
 @Component({
   selector: 'app-tablero-actividad',
   standalone: false,
@@ -42,20 +45,23 @@ export class TableroActividadComponent implements OnInit, OnDestroy {
     private vendedorService: VendedorService,
     private liquidacionService: LiquidacionVentaService,
     private permisos: PermisosService,
+    private clienteService: ClienteService,
   ) {
     const hoy = new Date();
-    this.mes = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+    this.mes = this.consulta.mesTablero
+      ?? `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
     this.periodo$ = new BehaviorSubject<number>(periodoDeFecha(`${this.mes}-01`).periodo);
   }
 
   ngOnInit(): void {
     const tablero$ = this.periodo$.pipe(switchMap(p => this.consulta.observarTablero(p)));
-    combineLatest([tablero$, this.vendedorService.vendedores$])
+    // vendedores$ y clientes$: nombres, estado y asignaciones (vendedores en cero).
+    combineLatest([tablero$, this.vendedorService.vendedores$, this.clienteService.clientes$])
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: ([tablero]) => {
           this.tablero = tablero;
-          this.vendedores = [...tablero.vendedores]
+          this.vendedores = this.conVendedoresEnCero(tablero.vendedores)
             .sort((a, b) => this.nombre(a.idVendedor).localeCompare(this.nombre(b.idVendedor)));
           this.cargando = false;
           this.error = '';
@@ -67,6 +73,24 @@ export class TableroActividadComponent implements OnInit, OnDestroy {
       });
   }
 
+  /** Suma, con valores en 0, a los vendedores ACTIVOS con al menos un
+   *  cliente asignado que no tienen comisiones ni saldo en el tablero. */
+  private conVendedoresEnCero(conDatos: VendedorTableroComision[]): VendedorTableroComision[] {
+    const presentes = new Set(conDatos.map(v => v.idVendedor));
+    const enCero: VendedorTableroComision[] = this.vendedorService.getVendedoresActuales()
+      .filter(v => v.activo && !presentes.has(v.id) && this.vendedorService.asignacionesDe(v.id).length > 0)
+      .map(v => ({
+        idVendedor: v.id,
+        clientes: [],
+        cantidadOps: 0,
+        comisionesMes: 0,
+        liquidadoMes: 0,
+        arrastre: 0,
+        saldoALiquidar: 0,
+      }));
+    return [...conDatos, ...enCero];
+  }
+
   get tituloMes(): string {
     const [anio, mes] = this.mes.split('-').map(Number);
     return `${MESES[mes - 1]} ${anio}`;
@@ -75,6 +99,7 @@ export class TableroActividadComponent implements OnInit, OnDestroy {
   cambiarMes(valor: string): void {
     if (!/^\d{4}-\d{2}$/.test(valor ?? '') || valor === this.mes) return;
     this.mes = valor;
+    this.consulta.mesTablero = valor;
     this.expandidos.clear();
     this.cargando = true;
     this.periodo$.next(periodoDeFecha(`${valor}-01`).periodo);
