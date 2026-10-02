@@ -22,6 +22,7 @@ type ModuloReglas =
   | 'finanzas'
   | 'informesOp'
   | 'resumenes'
+  | 'comisiones'
   | 'legacySoloLectura'
   | 'numeradores'
   | 'logs'
@@ -132,6 +133,15 @@ export class PermisosService {
     // Resúmenes nuevos (resumenesOp): 'user' los escribe al cerrar
     // (set+merge = crear si no existe, editar si existe), no los lee.
     resumenes: {
+      leer:     { dev: true, admin: true, manager: false, user: false, demo: true },
+      crear:    { dev: true, admin: true, manager: false, user: true,  demo: false },
+      editar:   { dev: true, admin: true, manager: false, user: true,  demo: false },
+      eliminar: { dev: true, admin: true, manager: false, user: false, demo: false },
+    },
+    // Comisiones de venta (comisionesVenta, Frente Vendedores): 'user' las
+    // escribe al cerrar (set+merge = crear si no existe, editar si existe),
+    // no las lee. Sin consumidor desde ModuloPermiso — fidelidad con las reglas.
+    comisiones: {
       leer:     { dev: true, admin: true, manager: false, user: false, demo: true },
       crear:    { dev: true, admin: true, manager: false, user: true,  demo: false },
       editar:   { dev: true, admin: true, manager: false, user: true,  demo: false },

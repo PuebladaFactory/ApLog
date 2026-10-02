@@ -1,5 +1,6 @@
 import { TarifaTipo } from "./tarifa-gral-cliente";
 import { RefTarifaAplicada } from "./ref-tarifa-aplicada";
+import { AsignacionVenta } from "./vendedor-nuevo";
 
 /** Un archivo adjunto a una Operación (remito, comprobante, foto de entrega, etc.).
  *  Sin categorías ni historial de versiones — a diferencia de Documentacion (Legajos),
@@ -74,9 +75,13 @@ export interface RefCliente {
   id: string;
   razonSocial: string;
   cuit: number;
-  // Histórico: vendedores que cobran comisión por la operación (congelados al alta).
-  // Comisión es por operación, no del vendedor vigente del cliente.
+  // LEGACY (modelo viejo de Vendedores): nunca se pobló en el modelo nuevo.
+  // Se retira con la migración de Vantruck.
   vendedor?: string[];
+  // Frente Vendedores: snapshot de Cliente.comisionesVenta congelado al ALTA
+  // (la comisión es por operación, histórica: no del vendedor vigente).
+  // Opcional: las ops anteriores no lo tienen (el Recálculo puede completarlo).
+  comisiones?: AsignacionVenta[];
 }
 
 export interface RefChofer {

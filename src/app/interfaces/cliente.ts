@@ -1,5 +1,6 @@
 import { Direccion } from "./chofer";
 import { RefTarifaHabilitada } from "./tarifa-habilitada";
+import { AsignacionVenta } from "./vendedor-nuevo";
 
 export interface Cliente {
     idCliente: string;
@@ -14,8 +15,13 @@ export interface Cliente {
     tarifaAsignada: boolean;
     // TODO: refactor Tarifas — reemplazar por RefTarifaHabilitada
     idTarifa: string;
-    // TODO: migrar lógica de vendedores cuando se refactorice ese módulo
+    // LEGACY (modelo viejo de Vendedores): ids de vendedor. Sin uso en el
+    // camino nuevo; se retira con la migración de Vantruck.
     vendedor: string[];
+    // Frente Vendedores: vendedores asignados con su % de comisión (la
+    // asignación vive acá). Opcional: los docs actuales no lo tienen. Lo
+    // escribe VendedorService; se copia al snapshot de la op al alta.
+    comisionesVenta?: AsignacionVenta[];
     activo: boolean;
     visible?: boolean;
 }

@@ -23,6 +23,9 @@ service cloud.firestore {
         'documentacionHistorial': 'legajos',
         'vencimientos': 'vencimientos',
         'vendedores': 'vendedores',
+        // Frente Vendedores: liquidaciones de comisiones (sucesora de
+        // resumenVenta, que nunca estuvo mapeada). Mismo perfil que vendedores.
+        'liquidacionesVenta': 'vendedores',
 
         'operaciones': 'operaciones',
         'informesVenta': 'operaciones',
@@ -79,6 +82,11 @@ service cloud.firestore {
         // el cierre/edición/baja con set+merge+increment ('user' cierra: crear
         // + editar, sin leer ni eliminar). Ver permitido().
         'resumenesOp': 'resumenes',
+        // Comisiones de venta por operación (Frente Vendedores, sucesora de
+        // informesVenta). Las escribe el cierre/edición/baja con
+        // set+merge+increment ('user' cierra: crear + editar, sin leer ni
+        // eliminar). Ver permitido().
+        'comisionesVenta': 'comisiones',
         'movimientos': 'finanzas',
 
         // Legado activo — solo lectura a propósito (ver CLAUDE.md)
@@ -153,6 +161,11 @@ service cloud.firestore {
           (r == 'demo' && accion == 'leer')
         )) ||
         (modulo == 'resumenes' && (
+          r in ['dev','admin'] ||
+          (r == 'user' && accion in ['crear','editar']) ||
+          (r == 'demo' && accion == 'leer')
+        )) ||
+        (modulo == 'comisiones' && (
           r in ['dev','admin'] ||
           (r == 'user' && accion in ['crear','editar']) ||
           (r == 'demo' && accion == 'leer')
