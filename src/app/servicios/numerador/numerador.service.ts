@@ -78,6 +78,29 @@ export class NumeradorService {
     };
   }
 
+  /** Próximo número de liquidación de comisiones de venta (LVEN-0000)
+   *  DENTRO de una transacción: devuelve el número y la escritura del
+   *  contador para que el caller la sume a su EscrituraBatch[]
+   *  (commitEnTransaccion). Mismo patrón que leerProximoNumeroInterno: el
+   *  número solo se consume si commitea la transacción completa. */
+  async leerProximoNumeroLiquidacionVenta(
+    tx: Transaction,
+  ): Promise<{ numero: string; escritura: EscrituraBatch }> {
+    const prefijo = 'LVEN';
+    const snap = await tx.get(doc(this.firestore, `Vantruck/datos/numeradores/${prefijo}`));
+    const ultimo = snap.exists() ? ((snap.data() as { ultimoNumero?: number }).ultimoNumero ?? 0) : 0;
+    const nuevo = ultimo + 1;
+    return {
+      numero: `${prefijo}-${nuevo.toString().padStart(4, '0')}`,
+      escritura: {
+        coleccion: 'numeradores',
+        id: prefijo,
+        data: { ultimoNumero: nuevo },
+        modo: snap.exists() ? 'actualizar' : 'crear',
+      },
+    };
+  }
+
   /** Reserva N números de operación consecutivos en una transacción atómica.
    *  El contador solo AVANZA: si el alta posterior falla, los números quedan como
    *  hueco (aceptable — numeroOperacion es correlativo visible, no id técnico).

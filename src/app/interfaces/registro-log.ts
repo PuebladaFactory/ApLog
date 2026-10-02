@@ -9,7 +9,8 @@ export type AccionLog =
   | 'REVERTIR'    // reversión de un InformeLiq emitido (InformeOp → activo) — lleva diff
   | 'FACTURAR'    // vinculación de factura electrónica (emitido → facturado) — lleva diff
   | 'DESVINCULAR' // desvinculación de factura (facturado → emitido) — lleva diff
-  | 'ANULAR'      // RESERVADA — ningún flujo la usa hoy (InformeLiq 'anulado') — lleva diff
+  | 'ANULAR'      // anulación de una liquidación de comisiones (LiquidacionVentaService) — lleva diff. InformeLiq 'anulado' sigue reservado.
+  | 'PAGAR'       // pago registrado de una liquidación de comisiones (emitida → pagada) — sin diff
   // Acciones operativas sin mutación de datos — no hay batch de negocio al cual
   // atarse, se escriben sueltas. Ampliar esta lista a medida que se necesiten
   // (cobros/pagos y liquidación cuando se implemente Finanzas, etc.).

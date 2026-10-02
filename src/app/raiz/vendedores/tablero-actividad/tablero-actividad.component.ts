@@ -2,6 +2,9 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { BehaviorSubject, combineLatest, Subject, switchMap, takeUntil } from 'rxjs';
 import { ComisionVentaConsultaService } from 'src/app/servicios/vendedores/comision-venta-consulta.service';
 import { VendedorService } from 'src/app/servicios/vendedores/vendedor.service';
+import { LiquidacionVentaService } from 'src/app/servicios/vendedores/liquidacion-venta.service';
+import { PermisosService } from 'src/app/servicios/permisos/permisos.service';
+import Swal from 'sweetalert2';
 import { periodoDeFecha } from 'src/app/shared/utils/periodo.util';
 import {
   EstadoLineaComision,
@@ -37,6 +40,8 @@ export class TableroActividadComponent implements OnInit, OnDestroy {
   constructor(
     private consulta: ComisionVentaConsultaService,
     private vendedorService: VendedorService,
+    private liquidacionService: LiquidacionVentaService,
+    private permisos: PermisosService,
   ) {
     const hoy = new Date();
     this.mes = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
@@ -86,6 +91,40 @@ export class TableroActividadComponent implements OnInit, OnDestroy {
   nombre(idVendedor: string): string {
     const v = this.vendedorService.getVendedorPorId(idVendedor);
     return v ? this.vendedorService.nombre(v) : `Vendedor ${idVendedor}`;
+  }
+
+  get puedeLiquidar(): boolean {
+    return this.permisos.puede('vendedores', 'editar');
+  }
+
+  /** Emite la liquidación del vendedor con todo su saldo hasta fin del mes
+   *  mostrado. El servicio relee y aborta si el saldo cambió. */
+  async liquidar(v: VendedorTableroComision): Promise<void> {
+    if (!this.tablero || Math.abs(v.saldoALiquidar) < 0.01) return;
+    const cantidad = v.clientes.reduce((acc, cl) => acc + cl.lineas.filter(l => Math.abs(l.saldo) >= 0.01).length, 0);
+    const total = v.saldoALiquidar.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
+    const negativo = v.saldoALiquidar < 0
+      ? '<br><b>El total es negativo:</b> son ajustes a descontar al vendedor.'
+      : '';
+    const res = await Swal.fire({
+      title: `¿Liquidar a ${this.nombre(v.idVendedor)}?`,
+      html: `Todo el saldo pendiente hasta fin de ${this.tituloMes}:<br>` +
+        `<b>${total}</b> (${cantidad} comisiones).${negativo}`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Liquidar',
+      cancelButtonText: 'Cancelar',
+    });
+    if (!res.isConfirmed) return;
+
+    this.cargando = true;
+    const r = await this.liquidacionService.emitir(v.idVendedor, this.tablero.periodo, v.saldoALiquidar);
+    this.cargando = false;
+    if (r.exito) {
+      Swal.fire('Liquidación emitida', `${r.mensaje} Se puede ver, pagar o anular desde el Historial.`, 'success');
+    } else {
+      Swal.fire('No se pudo liquidar', r.mensaje, 'error');
+    }
   }
 
   esInactivo(idVendedor: string): boolean {

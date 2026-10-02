@@ -25,7 +25,7 @@
               <th class="text-end">Liquidado del mes</th>
               <th class="text-end" title="Saldos pendientes de meses anteriores (cierres tardíos, ajustes, bajas)">Arrastre</th>
               <th class="text-end table-success">Saldo a liquidar</th>
-              <th style="width: 110px;"></th>
+              <th style="width: 200px;"></th>
             </tr>
           </thead>
           <tbody>
@@ -42,7 +42,10 @@
                 <td class="text-end">{{ v.liquidadoMes | formatearValor: '$' }}</td>
                 <td class="text-end">{{ v.arrastre | formatearValor: '$' }}</td>
                 <td class="text-end table-success fw-bold">{{ v.saldoALiquidar | formatearValor: '$' }}</td>
-                <td class="text-center">
+                <td class="text-center text-nowrap">
+                  <button type="button" class="btn btn-sm btn-success me-1"
+                    [disabled]="!puedeLiquidar || (v.saldoALiquidar < 0.01 && v.saldoALiquidar > -0.01)"
+                    (click)="liquidar(v)">Liquidar</button>
                   <button type="button" class="btn btn-sm btn-outline-primary" (click)="toggle(v.idVendedor)">
                     {{ expandidos.has(v.idVendedor) ? 'Ocultar' : 'Detalle' }}
                   </button>

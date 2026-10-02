@@ -20,7 +20,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 export class RegistroLogComponent implements OnInit {
 
   readonly colecciones = COLECCIONES_REGISTRO_LOG;
-  readonly acciones: AccionLog[] = ['ALTA', 'EDITAR', 'BAJA', 'RESTAURAR', 'CERRAR', 'EMITIR', 'REVERTIR', 'FACTURAR', 'DESVINCULAR', 'REIMPRIMIR', 'DESCARGAR', 'LOGIN', 'LOGOUT'];
+  readonly acciones: AccionLog[] = ['ALTA', 'EDITAR', 'BAJA', 'RESTAURAR', 'CERRAR', 'EMITIR', 'REVERTIR', 'FACTURAR', 'DESVINCULAR', 'ANULAR', 'PAGAR', 'REIMPRIMIR', 'DESCARGAR', 'LOGIN', 'LOGOUT'];
 
   // ---- Filtros server-side (disparan una consulta nueva a Firestore) ----
   fechaDesde = '';
