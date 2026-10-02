@@ -36,6 +36,7 @@ export class VendedoresListadoComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.columnas = [
+      { field: 'id', header: 'Id', visible: false, width: 110 },
       { field: 'apellidoNombre', header: 'Vendedor', visible: true, width: 220 },
       { field: 'cuit', header: 'CUIT', visible: true, width: 120 },
       { field: 'celular', header: 'Celular', visible: true, width: 120 },
@@ -78,6 +79,7 @@ export class VendedoresListadoComponent implements OnInit, OnDestroy {
       this.filtroEstado === 'todos' ? true : this.filtroEstado === 'activos' ? v.activo : !v.activo);
 
     this.filas = visibles.map(v => ({
+      id: v.id,
       apellidoNombre: this.vendedorService.nombre(v),
       cuit: this.formatCuit(v.datosPersonales.cuit),
       celular: v.datosPersonales.celular,
