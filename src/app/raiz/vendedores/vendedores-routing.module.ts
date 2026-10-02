@@ -1,26 +1,21 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { VendedorControlComponent } from './vendedor-control/vendedor-control.component';
-import { VendedorAltaComponent } from './vendedor-alta/vendedor-alta.component';
-import { RoleGuard } from 'src/app/guards/role.guard';
 import { VendedoresListadoComponent } from './vendedores-listado/vendedores-listado.component';
 import { TableroActividadComponent } from './tablero-actividad/tablero-actividad.component';
 import { VendedorHistorialComponent } from './vendedor-historial/vendedor-historial.component';
 
+// Acceso al módulo: dev/admin/demo (guard en raiz-routing). El alta/edición
+// de vendedores es un modal (VendedorAltaComponent), sin ruta propia.
 const routes: Routes = [
   {path: '', component:VendedorControlComponent,
-  children: [ 
-    {path: '', redirectTo: 'tableroVendedores', pathMatch: 'full' },                                    
-    {path: 'alta', component:VendedorAltaComponent,
-          canActivate: [RoleGuard],
-          data: { roles: ['dev', 'admin', 'manager'] }, // no se permiten usuarios
-        },        
-    {path: 'listado', component:VendedoresListadoComponent},    
-    {path: 'tableroVendedores', component:TableroActividadComponent},    
-    {path: 'historial', component:VendedorHistorialComponent},    
-    
+  children: [
+    {path: '', redirectTo: 'tableroVendedores', pathMatch: 'full' },
+    {path: 'listado', component:VendedoresListadoComponent},
+    {path: 'tableroVendedores', component:TableroActividadComponent},
+    {path: 'historial', component:VendedorHistorialComponent},
 ]  },
-  
+
 ];
 
 @NgModule({

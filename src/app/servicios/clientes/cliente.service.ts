@@ -100,8 +100,13 @@ export class ClienteService implements OnDestroy {
   }
 
   async editarCliente(original: ConIdType<Cliente>, data: ClienteFormData): Promise<void> {
+    // Frente Vendedores: las asignaciones (comisionesVenta) las escribe
+    // VendedorService, no este form. Se toman del cliente VIVO al guardar
+    // para no pisar una asignación hecha mientras el modal estaba abierto.
+    const vivo = this.getClientePorId(original.id);
     const clienteEditado = {
       ...this.clienteFactoryService.editarCliente(original, data),
+      ...(vivo?.comisionesVenta !== undefined ? { comisionesVenta: vivo.comisionesVenta } : {}),
       id: original.id,
       type: (original as any).type,
     } as ConIdType<Cliente>;

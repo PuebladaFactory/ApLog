@@ -1,13 +1,22 @@
-import { Component, Input, OnInit, TemplateRef } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
-import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { Component, Input, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import Swal from 'sweetalert2';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
-import { Asignacion, Vendedor } from 'src/app/interfaces/vendedor';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { DatosPersonalesVendedor, VendedorNuevo } from 'src/app/interfaces/vendedor-nuevo';
 import { ValidarService } from 'src/app/servicios/validar/validar.service';
-import Swal from 'sweetalert2';
+import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
+import { PermisosService } from 'src/app/servicios/permisos/permisos.service';
+import { AsignacionCliente, VendedorService } from 'src/app/servicios/vendedores/vendedor.service';
+
+/** Fila de la tabla de clientes asignados del modal. */
+interface FilaAsignacion {
+  idCliente: string;
+  razonSocial: string;
+  porcentaje: number | null;
+  otros: number;        // % que tienen en ese cliente los otros vendedores
+}
 
 @Component({
   selector: 'app-vendedor-alta',
@@ -15,332 +24,197 @@ import Swal from 'sweetalert2';
   templateUrl: './vendedor-alta.component.html',
   styleUrl: './vendedor-alta.component.scss'
 })
-export class VendedorAltaComponent implements OnInit{
+export class VendedorAltaComponent implements OnInit {
 
-  @Input() fromParent:any
-  
-  componente:string = "vendedores"
-  form:any;  
-  soloVista: boolean = false;
-  clientes!: ConId<Cliente>[];
-  clientesAsignados!: ConId<Cliente>[];
-  asignaciones: Asignacion[] = [];
-  asignacion!: Asignacion;
-  isLoading: boolean = false;
-  vendedor!: Vendedor;
-  vendedorEditar!: ConIdType<Vendedor>;
-  clienteSeleccionado!: ConId<Cliente>;
-  porcentajeAsignado: number = 0;
-  asignacionEditar!: Asignacion;
-  accionCliente: string = "";  
-  modo: string  = "";
-  clientesModificados: ConId<Cliente>[] = [];
-  nuevaAsignacion: boolean = false;
+  @Input() fromParent!: { modo: 'alta' | 'edicion' | 'vista'; item: ConId<VendedorNuevo> | null };
 
+  modo: 'alta' | 'edicion' | 'vista' = 'alta';
+  vendedor: ConId<VendedorNuevo> | null = null;
+  soloVista = false;
+  guardando = false;
+
+  form: FormGroup;
+  asignaciones: FilaAsignacion[] = [];
+  clientesDisponibles: ConIdType<Cliente>[] = [];
+  clienteNuevo = '';
+  porcentajeNuevo: number | null = null;
 
   constructor(
-    private fb: FormBuilder, 
-    private storageService: StorageService, 
-    private modalService: NgbModal, 
-    public activeModal: NgbActiveModal,    
-    private dbFirestore: DbFirestoreService,
+    private fb: FormBuilder,
+    public activeModal: NgbActiveModal,
+    private vendedorService: VendedorService,
+    private clienteService: ClienteService,
+    private permisos: PermisosService,
   ) {
-    this.form = this.fb.group({      
-      nombre: ["", [Validators.required, Validators.maxLength(30)]], 
-      apellido: ["",[Validators.required, Validators.maxLength(30)]], 
-      cuit: ["",[
-        Validators.required,
-        Validators.minLength(13),
-        Validators.maxLength(13), // Ajustado para incluir los guiones
-        ValidarService.cuitValido,
-      ],],                  
-      email: ["",[Validators.required, Validators.email]],
-      celularContacto: ["",[Validators.required,Validators.minLength(10), Validators.maxLength(10)]],
-      
+    this.form = this.fb.group({
+      nombre: ['', [Validators.required, Validators.maxLength(30)]],
+      apellido: ['', [Validators.required, Validators.maxLength(30)]],
+      cuit: ['', [Validators.required, ValidarService.cuitValido]],
+      email: ['', [Validators.required, Validators.email]],
+      celular: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(10)]],
     });
-   
-   }
+  }
 
   ngOnInit(): void {
-    console.log("0)", this.fromParent);
-    
-    this.clientes = this.storageService.loadInfo('clientes');
-    this.clientes = this.clientes.sort((a, b) =>
-          a.razonSocial.localeCompare(b.razonSocial)
-        );
-    console.log("1)", this.fromParent);
-    this.modo = this.fromParent.modo;
-    
-    if(this.fromParent.modo === "vista"){
-      this.soloVista = true;
-      this.armarForm();
-    }else if(this.fromParent.modo === "alta") {       
-      this.soloVista = false;
-    } else if(this.fromParent.modo === "edicion"){
-      this.soloVista = false;
-      this.vendedorEditar = this.fromParent.item;      
-      this.armarForm();
+    this.modo = this.fromParent?.modo ?? 'alta';
+    this.vendedor = this.fromParent?.item ?? null;
+    this.soloVista = this.modo === 'vista';
+
+    if (this.vendedor) {
+      const dp = this.vendedor.datosPersonales;
+      this.form.patchValue({
+        nombre: dp.nombre,
+        apellido: dp.apellido,
+        cuit: this.formatCuit(dp.cuit),
+        email: dp.email,
+        celular: dp.celular,
+      });
+      this.asignaciones = this.vendedorService.asignacionesDe(this.vendedor.id).map(a => ({
+        idCliente: a.idCliente,
+        razonSocial: this.clienteService.getClientePorId(a.idCliente)?.razonSocial ?? a.idCliente,
+        porcentaje: a.porcentaje,
+        otros: this.vendedorService.porcentajeOtros(a.idCliente, this.vendedor!.id),
+      })).sort((a, b) => a.razonSocial.localeCompare(b.razonSocial));
     }
-
-   }
-
-  armarForm(){
-    this.form.patchValue({
-      nombre: this.vendedorEditar.datosPersonales.nombre, 
-      apellido: this.vendedorEditar.datosPersonales.apellido, 
-      cuit: this.formatCuit(this.vendedorEditar.datosPersonales.cuit),
-      email: this.vendedorEditar.datosPersonales.mail,
-      celularContacto: this.vendedorEditar.datosPersonales.celular,
-    });
-    this.asignaciones = this.vendedorEditar.asignaciones
+    if (this.soloVista) this.form.disable();
+    this.actualizarDisponibles();
   }
 
-  async onSubmit(){  
-    /* if(this.asignaciones.length === 0 ) return this.mensajesError('Debe asignar un cliente al vendedor');  */
-    let titulo = this.fromParent.modo === "alta" ? 'el alta' : 'la edición'
+  get titulo(): string {
+    return this.modo === 'alta' ? 'Alta de Vendedor' : this.modo === 'edicion' ? 'Edición de Vendedor' : 'Vendedor';
+  }
+
+  get puedeReactivar(): boolean {
+    return this.soloVista && !!this.vendedor && !this.vendedor.activo
+      && this.permisos.puede('vendedores', 'editar');
+  }
+
+  hasError(control: string, error: string): boolean {
+    const c = this.form.get(control);
+    return !!c && c.hasError(error) && (c.touched || c.dirty);
+  }
+
+  // ── Asignaciones ────────────────────────────────────────────────
+
+  disponible(fila: FilaAsignacion): number {
+    return Math.max(0, 100 - fila.otros);
+  }
+
+  filaInvalida(fila: FilaAsignacion): boolean {
+    const p = fila.porcentaje;
+    return p === null || !Number.isFinite(p) || p <= 0 || p > this.disponible(fila);
+  }
+
+  get disponibleNuevo(): number {
+    return this.clienteNuevo ? Math.max(0, 100 - this.vendedorService.porcentajeOtros(this.clienteNuevo, this.vendedor?.id ?? null)) : 100;
+  }
+
+  agregarAsignacion(): void {
+    const cliente = this.clienteService.getClientePorId(this.clienteNuevo);
+    const p = this.porcentajeNuevo;
+    if (!cliente) return this.error('Seleccioná un cliente.');
+    if (p === null || !Number.isFinite(p) || p <= 0 || p > this.disponibleNuevo) {
+      return this.error(`El porcentaje tiene que ser mayor que 0 y hasta ${this.disponibleNuevo}% (lo disponible en ese cliente).`);
+    }
+    this.asignaciones = [...this.asignaciones, {
+      idCliente: cliente.id,
+      razonSocial: cliente.razonSocial,
+      porcentaje: p,
+      otros: this.vendedorService.porcentajeOtros(cliente.id, this.vendedor?.id ?? null),
+    }].sort((a, b) => a.razonSocial.localeCompare(b.razonSocial));
+    this.clienteNuevo = '';
+    this.porcentajeNuevo = null;
+    this.actualizarDisponibles();
+  }
+
+  quitarAsignacion(idCliente: string): void {
+    this.asignaciones = this.asignaciones.filter(a => a.idCliente !== idCliente);
+    this.actualizarDisponibles();
+  }
+
+  private actualizarDisponibles(): void {
+    const asignados = new Set(this.asignaciones.map(a => a.idCliente));
+    this.clientesDisponibles = this.clienteService.getClientesActuales()
+      .filter(c => c.activo && !asignados.has(c.id))
+      .sort((a, b) => a.razonSocial.localeCompare(b.razonSocial));
+  }
+
+  // ── Guardar / reactivar ─────────────────────────────────────────
+
+  async guardar(): Promise<void> {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return this.error('Revisá los datos personales.');
+    }
+    const invalida = this.asignaciones.find(a => this.filaInvalida(a));
+    if (invalida) return this.error(`Revisá el porcentaje de ${invalida.razonSocial}.`);
 
     const confirmacion = await Swal.fire({
-      title: `¿Confirma ${titulo} del Vendedor?`,      
-      icon: "warning",
+      title: `¿Confirmás ${this.modo === 'alta' ? 'el alta' : 'la edición'} del vendedor?`,
+      icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Confirmar",
-      cancelButtonText: "Cancelar"
-    })
-    if (confirmacion.isConfirmed) {      
-      this.armarVendedor();
-      const existe = await this.dbFirestore.existeCuit('vendedores', this.vendedor.datosPersonales.cuit);
-      console.log("2)vendedor: ", this.vendedor, "existe: ", existe);
-      if(this.modo === 'alta' && existe) return this.mensajesError('Error: Ya existe un vendedor con ese CUIT. Alta cancelada');
-      if(this.modo === 'edicion' && !existe) return this.mensajesError('Error: No se puede encontrar ningún vendedor con ese CUIT. Edición cancelada');
-      if(this.modo === 'alta'){
-        this.storageService.addItem("vendedores", this.vendedor, this.vendedor.idVendedor, "ALTA", `Alta del vendedor ${this.vendedor.datosPersonales.apellido} + ${this.vendedor.datosPersonales.nombre}`);
-        this.editarCliente();
-      } else {        
-        this.storageService.updateItem("vendedores", this.vendedor, this.vendedor.idVendedor, "EDICION", `Edición del vendedor ${this.vendedor.datosPersonales.apellido} + ${this.vendedor.datosPersonales.nombre}`, this.vendedorEditar.id);
-        this.editarCliente();
-      }
-
-        
-    }       
-   
-    
-  }
-
-  armarVendedor(){
-    let formValue = this.form.value;
-    console.log("0)formValue", formValue);
-    
-    // Eliminar los guiones del CUIT
-    let cuitSinGuiones = formValue.cuit.replace(/-/g, '');       
-        
-    this.vendedor = {      
-      idVendedor: this.fromParent.modo === "alta" ? new Date().getTime() + Math.floor(Math.random() * 1000) : this.vendedorEditar.idVendedor,
-      datosPersonales: {
-          nombre: formValue.nombre,
-          apellido: formValue.apellido,
-          cuit: cuitSinGuiones,
-          celular: formValue.celularContacto,
-          mail: formValue.email,
-      },
-      asignaciones: this.asignaciones,
-      activo: true,
-      
-    };                
-    console.log("1)this.vendedor", this.vendedor);
-  }
-
-  hasError(controlName: string, errorName: string): boolean {
-    const control = this.form.get(controlName);
-    return control?.hasError(errorName) && control.touched;
-  }
-    
-  mensajesError(msj:string){
-    Swal.fire({
-      icon: "error",
-      //title: "Oops...",
-      text: `${msj}`
-      //footer: `${msj}`
+      confirmButtonText: 'Confirmar',
+      cancelButtonText: 'Cancelar',
     });
-  }
-  
-  formatCuit(cuitNumber: number | string): string {
-    // Convertir el número a string, si no lo es
-    const cuitString = cuitNumber.toString();
-  
-    // Validar que tiene exactamente 11 dígitos
-    if (cuitString.length !== 11 || isNaN(Number(cuitString))) {
-      throw new Error('El CUIT debe ser un número de 11 dígitos');
-    }
-  
-    // Insertar los guiones en las posiciones correctas
-    return `${cuitString.slice(0, 2)}-${cuitString.slice(2, 10)}-${cuitString.slice(10)}`;
-  }
+    if (!confirmacion.isConfirmed) return;
 
-  openModal(modalRef: TemplateRef<any>, accion:string): void {   
-    this.accionCliente = accion;
-    if(this.accionCliente === 'alta'){
-      this.nuevaAsignacion = true;
-      this.porcentajeAsignado = 0
-    }
-    const modal = this.modalService.open(modalRef, { centered: true });
-  }
+    const v = this.form.getRawValue();
+    const datos: DatosPersonalesVendedor = {
+      nombre: String(v.nombre).trim(),
+      apellido: String(v.apellido).trim(),
+      cuit: Number(String(v.cuit).replace(/\D/g, '')),
+      celular: String(v.celular).trim(),
+      email: String(v.email).trim(),
+    };
+    const asignaciones: AsignacionCliente[] = this.asignaciones.map(a => ({
+      idCliente: a.idCliente,
+      porcentaje: a.porcentaje as number,
+    }));
 
-  getCliente(id:number){ // TODO: migrar a string cuando se refactorice este módulo
-    let cliente
-    cliente = this.clientes.find(c=> String(c.idCliente) === String(id)) // TODO: migrar a string cuando se refactorice este módulo
-    if(cliente){
-      return cliente.razonSocial
-    } else {
-      return ""
+    this.guardando = true;
+    try {
+      await this.vendedorService.guardarVendedor(
+        this.modo === 'alta' ? 'alta' : 'edicion', datos, asignaciones, this.vendedor ?? undefined,
+      );
+      this.guardando = false;
+      await Swal.fire('Confirmado', `${this.modo === 'alta' ? 'Alta' : 'Edición'} del vendedor registrada.`, 'success');
+      this.activeModal.close(true);
+    } catch (e: any) {
+      this.guardando = false;
+      this.error(e?.message ?? String(e));
     }
   }
 
-  changeCliente(e: any) {
-    //////////console.log()(e.target.value)
-    
-    let clienteSelec = this.clientes.find( c=> { 
-        return String(c.idCliente) === String(Number(e.target.value)) // TODO: migrar a string cuando se refactorice este módulo
-    });   
-    
-    if(clienteSelec) this.clienteSeleccionado = clienteSelec;                
+  async reactivar(): Promise<void> {
+    if (!this.vendedor) return;
+    const res = await Swal.fire({
+      title: `¿Reactivar a ${this.vendedorService.nombre(this.vendedor)}?`,
+      text: 'Sus clientes no se reasignan: se cargan de nuevo editándolo.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Reactivar',
+      cancelButtonText: 'Cancelar',
+    });
+    if (!res.isConfirmed) return;
+    this.guardando = true;
+    try {
+      await this.vendedorService.reactivar(this.vendedor);
+      this.guardando = false;
+      await Swal.fire('Confirmado', 'El vendedor fue reactivado.', 'success');
+      this.activeModal.close(true);
+    } catch (e: any) {
+      this.guardando = false;
+      this.error(e?.message ?? String(e));
+    }
   }
 
-  changePorcentaje(event: any) {
-    let valor = Number(event.target.value);
-
-    // Validar rango (0–100)
-    if (isNaN(valor) || valor < 0 || valor > 100) {
-      alert('El multiplicador debe estar entre 0 y 100');
-
-      // Reasignar valor válido
-      valor = 1;
-      this.porcentajeAsignado = valor;
-
-      // Forzar actualización visual del input
-      event.target.value = valor.toString();
-
-      return;
-    }
-
-    
+  private error(msj: string): void {
+    Swal.fire({ icon: 'error', text: msj });
   }
 
-  guardarClienteAsignado(modal: any) {
-    if (this.clienteSeleccionado && this.porcentajeAsignado && this.accionCliente === 'alta') {
-      this.asignacion = {
-        idAsignacion: new Date().getTime() + Math.floor(Math.random() * 1000),
-        idCliente : Number(this.clienteSeleccionado.idCliente), // TODO: migrar a string cuando se refactorice este módulo
-        porcentaje: this.porcentajeAsignado
-      }
-      this.asignaciones.push(this.asignacion)
-      console.log("this.asignacion", this.asignacion);
-
-    } else if(this.accionCliente === 'edicion'){
-      const index = this.asignaciones.findIndex(obj => obj.idAsignacion === this.asignacionEditar.idAsignacion);
-      if (index !== -1) {
-        this.asignaciones.splice(index, 1);
-        this.asignacion = {
-          idAsignacion: new Date().getTime() + Math.floor(Math.random() * 1000),
-          idCliente : Number(this.clienteSeleccionado.idCliente), // TODO: migrar a string cuando se refactorice este módulo
-          porcentaje: this.porcentajeAsignado
-        }
-        this.asignaciones.push(this.asignacion)
-      }
-    }
-
-
-    modal.close(); // El finally del modal se encarga de limpiar
+  private formatCuit(cuit: number): string {
+    const s = String(cuit ?? '');
+    if (!/^\d{11}$/.test(s)) return s;
+    return `${s.slice(0, 2)}-${s.slice(2, 10)}-${s.slice(10)}`;
   }
-
-  eliminarAsignacion(indice:number){
-  
-      console.log("llega aca?");
-      
-  
-      Swal.fire({
-        title: `Desea eliminar la asignación del vendedor?`,
-        //text: "You won't be able to revert this!",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Confirmar",
-        cancelButtonText: "Cancelar"
-      }).then((result) => {
-        if (result.isConfirmed) {     
-          this.asignaciones.splice(indice, 1);    
-          Swal.fire({
-            title: "Confirmado",
-            text: `Asignación eliminada`,
-            icon: "success"
-          })           
-        }
-      });       
-      
-    }
-  
-    editarAsignacion(modalRef: TemplateRef<any>, asignacion: Asignacion, indice:number){    
-      this.asignacionEditar = asignacion;
-      this.porcentajeAsignado = asignacion.porcentaje;
-      this.nuevaAsignacion = false;
-      let clienteSel = this.clientes.find( c=> { 
-        return String(c.idCliente) === String(asignacion.idCliente) // TODO: migrar a string cuando se refactorice este módulo
-      });   
-      if(clienteSel){this.clienteSeleccionado = clienteSel}
-      this.openModal(modalRef, 'edicion')
-  
-    }
-
-    async editarCliente(){
-      this.isLoading = true;
-      console.log("EDITAR CLIENTE => vendedor: ",this.vendedor);
-      
-      this.vendedor.asignaciones.map(a=>{
-        let clienteSel = this.clientes.find( c=> { 
-          return String(c.idCliente) === String(a.idCliente) // TODO: migrar a string cuando se refactorice este módulo
-        }); 
-        console.log("EDITAR CLIENTE => clienteSel", clienteSel);
-                 
-        if(clienteSel){
-          if (!clienteSel.vendedor) {
-            clienteSel.vendedor = [];
-          }
-
-          // Verificar si ya existe
-          const existe = clienteSel.vendedor.includes(String(this.vendedor.idVendedor)); // TODO: migrar a string cuando se refactorice este módulo
-
-          // Agregar si no existe
-          if (!existe) {
-            clienteSel.vendedor.push(String(this.vendedor.idVendedor)); // TODO: migrar a string cuando se refactorice este módulo
-          }
-          this.clientesModificados.push(clienteSel);
-          
-        } else {
-          this.mensajesError("Error en la modificación de los clientes")
-        }
-      });
-      console.log("EDITAR CLIENTE => this.clientesModificados: ", this.clientesModificados);
-      
-      const respuesta = await this.dbFirestore.actualizarMultiple(this.clientesModificados, 'clientes');
-      if(respuesta.exito){
-        
-        Swal.fire({
-        title: "Confirmado",
-        text: `${this.modo} exitosa`,
-        icon: "success"
-        }).then((result)=>{
-          if (result.isConfirmed) {
-            this.activeModal.close();
-          }
-        });         
-       } else {
-        this.isLoading = false;
-        this.mensajesError(respuesta.mensaje)
-       }
-      
-    }
-
-
 }

@@ -1,16 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { Vendedor } from 'src/app/interfaces/vendedor';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { VendedorService } from 'src/app/servicios/vendedores/vendedor.service';
 import { tabActivaDesdeUrl } from 'src/app/shared/utils/tabs-url.util';
 
 @Component({
   selector: 'app-vendedor-control',
   standalone: false,
-  template: ` 
+  template: `
   <div class="d-flex justify-content-between mt-3">
-    <h1>Vendedores</h1>    
-  </div>   
+    <h1>Vendedores</h1>
+  </div>
   <div class="tab-container">
     @for (tab of tabs; track tab) {
       <div
@@ -24,8 +23,8 @@ import { tabActivaDesdeUrl } from 'src/app/shared/utils/tabs-url.util';
   <!-- <app-tablero-calendario [modo]="modo" [ngClass]="{'invisible': ocultarCalendario}"></app-tablero-calendario> -->
   <div class="d-flex justify-content-center">
     <div style="width:420px">
-        <app-tablero-fechas defaultTipo="mes" [ngClass]="{'invisible': ocultarCalendario}"></app-tablero-fechas>  
-    </div>    
+        <app-tablero-fechas defaultTipo="mes" [ngClass]="{'invisible': ocultarCalendario}"></app-tablero-fechas>
+    </div>
   </div>
   <router-outlet></router-outlet>
 
@@ -37,7 +36,7 @@ export class VendedorControlComponent implements OnInit {
   modo: string = 'vendedores';
   tabs = [
     { id: 'tab1', name: 'Tablero de Actividad', route: 'vendedores/tableroVendedores' },
-    { id: 'tab2', name: 'Listado', route: 'vendedores/listado', alias: ['vendedores/alta'] },
+    { id: 'tab2', name: 'Listado', route: 'vendedores/listado' },
     { id: 'tab3', name: 'Historial', route: 'vendedores/historial' },
   ];
 
@@ -54,12 +53,13 @@ export class VendedorControlComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private storageService: StorageService,
+    private vendedorService: VendedorService,
   ) {}
 
   ngOnInit(): void {
-    this.storageService.listenForChanges<Vendedor>("vendedores");
-    //this.selectTab("tab1");
+    // Listener en memoria de vendedores (modelo nuevo). Solo se abre acá:
+    // la ruta del módulo es dev/admin/demo, los roles que leen 'vendedores'.
+    this.vendedorService.init();
   }
 
   selectTab(tabId: string) {

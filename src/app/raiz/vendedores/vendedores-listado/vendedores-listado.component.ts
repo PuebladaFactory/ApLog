@@ -1,15 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
-import { VendedorAltaComponent } from '../vendedor-alta/vendedor-alta.component';
-import { Subject, takeUntil } from 'rxjs';
-import { Vendedor } from 'src/app/interfaces/vendedor';
-import { ConId, ConIdType } from 'src/app/interfaces/conId';
-import { Cliente } from 'src/app/interfaces/cliente';
+import { combineLatest, Subject, takeUntil } from 'rxjs';
 import Swal from 'sweetalert2';
-import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
-import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
+import { ConId } from 'src/app/interfaces/conId';
+import { VendedorNuevo } from 'src/app/interfaces/vendedor-nuevo';
+import { AccionTablaGenerica, ColumnaTablaGenerica } from 'src/app/interfaces/tabla-generica';
+import { VendedorService } from 'src/app/servicios/vendedores/vendedor.service';
+import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
+import { VendedorAltaComponent } from '../vendedor-alta/vendedor-alta.component';
+
+type FiltroEstado = 'activos' | 'inactivos' | 'todos';
 
 @Component({
   selector: 'app-vendedores-listado',
@@ -17,183 +17,128 @@ import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-s
   templateUrl: './vendedores-listado.component.html',
   styleUrl: './vendedores-listado.component.scss'
 })
-export class VendedoresListadoComponent implements OnInit {
+export class VendedoresListadoComponent implements OnInit, OnDestroy {
 
+  columnas: ColumnaTablaGenerica[] = [];
+  filas: any[] = [];
+  accionesTabla: AccionTablaGenerica[] = [];
+  filtroEstado: FiltroEstado = 'activos';
+  isLoading = false;
+
+  private vendedores: ConId<VendedorNuevo>[] = [];
   private destroy$ = new Subject<void>();
-  vendedores: ConId<Vendedor>[] = [];
-  vendedorEditar!: ConId<Vendedor>;
-  clientes!: ConId<Cliente>[];
-  componente: string = "vendedores";
-  isLoading: boolean = false;
-  clientesModificados: ConId<Cliente>[] = [];
 
   constructor(
-    private storageService: StorageService,
+    private vendedorService: VendedorService,
+    private clienteService: ClienteService,
     private modalService: NgbModal,
-    private dbFirestore: DbFirestoreService,
-    public usuarioSesion: UsuarioSesionService,
-  ){}
+  ) {}
 
-  ngOnInit(): void {   
-    
-    this.storageService
-      .getObservable<ConIdType<Vendedor>>('vendedores')
+  ngOnInit(): void {
+    this.columnas = [
+      { field: 'apellidoNombre', header: 'Vendedor', visible: true, width: 220 },
+      { field: 'cuit', header: 'CUIT', visible: true, width: 120 },
+      { field: 'celular', header: 'Celular', visible: true, width: 120 },
+      { field: 'email', header: 'Email', visible: true, width: 220 },
+      { field: 'clientes', header: 'Clientes asignados', visible: true, width: 360 },
+      {
+        field: 'estado', header: 'Estado', visible: true, width: 100,
+        claseCelda: (fila) => (fila._objeto.activo ? 'bg-success' : 'bg-secondary'),
+      },
+    ];
+
+    this.accionesTabla = [
+      { tipo: 'ver', handler: (fila) => this.abrirModal('vista', fila._objeto) },
+      {
+        tipo: 'editar', handler: (fila) => this.abrirModal('edicion', fila._objeto),
+        disabled: (fila) => !fila._objeto.activo,
+      },
+      {
+        tipo: 'eliminar', handler: (fila) => this.desactivar(fila._objeto),
+        disabled: (fila) => !fila._objeto.activo,
+      },
+    ];
+
+    // Se rearma también cuando cambian los clientes (asignaciones).
+    combineLatest([this.vendedorService.vendedores$, this.clienteService.clientes$])
       .pipe(takeUntil(this.destroy$))
-      .subscribe((data) => {
-        console.log("data: ", data);
-        this.vendedores = data;
-        console.log("this.vendedores", this.vendedores);
-        
+      .subscribe(([vendedores]) => {
+        this.vendedores = vendedores;
+        this.armarTabla();
       });
-    //this.vendedores = this.storageService.loadInfo('vendedores')
-    this.clientes = this.storageService.loadInfo('clientes')
+  }
+
+  cambiarFiltro(valor: FiltroEstado): void {
+    this.filtroEstado = valor;
+    this.armarTabla();
+  }
+
+  private armarTabla(): void {
+    const visibles = this.vendedores.filter(v =>
+      this.filtroEstado === 'todos' ? true : this.filtroEstado === 'activos' ? v.activo : !v.activo);
+
+    this.filas = visibles.map(v => ({
+      apellidoNombre: this.vendedorService.nombre(v),
+      cuit: this.formatCuit(v.datosPersonales.cuit),
+      celular: v.datosPersonales.celular,
+      email: v.datosPersonales.email,
+      clientes: this.textoClientes(v.id),
+      estado: v.activo ? 'Activo' : 'Inactivo',
+      _objeto: v,
+    }));
+  }
+
+  private textoClientes(idVendedor: string): string {
+    const asignaciones = this.vendedorService.asignacionesDe(idVendedor);
+    if (asignaciones.length === 0) return 'Sin clientes asignados';
+    return asignaciones
+      .map(a => `${this.clienteService.getClientePorId(a.idCliente)?.razonSocial ?? a.idCliente} (${a.porcentaje}%)`)
+      .sort((a, b) => a.localeCompare(b))
+      .join(', ');
+  }
+
+  abrirModal(modo: 'alta' | 'edicion' | 'vista', vendedor?: ConId<VendedorNuevo>): void {
+    const modalRef = this.modalService.open(VendedorAltaComponent, {
+      windowClass: 'myCustomModalClass',
+      centered: true,
+      size: 'lg',
+    });
+    modalRef.componentInstance.fromParent = { modo, item: vendedor ?? null };
+  }
+
+  async desactivar(vendedor: ConId<VendedorNuevo>): Promise<void> {
+    const res = await Swal.fire({
+      title: `¿Desactivar a ${this.vendedorService.nombre(vendedor)}?`,
+      text: 'Se quitan sus asignaciones de clientes. Las comisiones ya generadas se conservan. Se puede reactivar desde "Ver".',
+      icon: 'warning',
+      input: 'text',
+      inputPlaceholder: 'Motivo',
+      inputValidator: (valor) => (!valor?.trim() ? 'Ingresá el motivo' : null),
+      showCancelButton: true,
+      confirmButtonText: 'Desactivar',
+      cancelButtonText: 'Cancelar',
+    });
+    if (!res.isConfirmed) return;
+
+    this.isLoading = true;
+    try {
+      await this.vendedorService.desactivar(vendedor, String(res.value).trim());
+      this.isLoading = false;
+      Swal.fire('Confirmado', 'El vendedor fue desactivado.', 'success');
+    } catch (e: any) {
+      this.isLoading = false;
+      Swal.fire('Error', `No se pudo desactivar el vendedor: ${e?.message ?? e}`, 'error');
+    }
+  }
+
+  private formatCuit(cuit: number): string {
+    const s = String(cuit ?? '');
+    if (!/^\d{11}$/.test(s)) return s || '—';
+    return `${s.slice(0, 2)}-${s.slice(2, 10)}-${s.slice(10)}`;
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
-
-
-  openModal(modos: string) {
-    const modalRef = this.modalService.open(VendedorAltaComponent, {
-      windowClass: 'myCustomModalClass',
-      centered: true,
-      size: 'md',
-    });
-
-    modalRef.componentInstance.fromParent = {
-      modo: modos,
-      item: this.vendedorEditar,
-    };
-
-
-  }
-
-  getCliente(id:number):string{
-    let cliente = this.clientes.find(c=> String(c.idCliente) === String(id));
-    return cliente? cliente.razonSocial : 'Sin datos'
-  }
-
-  editarVendedor(vendedor: ConId<Vendedor>){
-    this.vendedorEditar = vendedor;
-    this.openModal('edicion');
-  }
-
-  eliminarVendedor(vendedor: ConId<Vendedor>){
-    this.vendedorEditar = vendedor;
-
-        Swal.fire({
-          title: '¿Dar de baja el vendedor?',
-          text: 'No se podrá revertir esta acción',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonText: 'Confirmar',
-          cancelButtonText: 'Cancelar',
-        }).then((result) => {
-          if (result.isConfirmed) {
-            this.openModalBaja();
-          }
-        });
-  }
-
-  async openModalBaja() {
-      const modalRef = this.modalService.open(BajaObjetoComponent, {
-        windowClass: 'myCustomModalClass',
-        centered: true,
-        scrollable: true,
-        size: 'sm',
-      });
-  
-      modalRef.componentInstance.fromParent = {
-        modo: 'Vendedor',
-        item: this.vendedorEditar,
-      };
-  
-      modalRef.result.then((result) => {
-        
-        if (result !== undefined) {
-          this.isLoading = true;
-          this.storageService.deleteItemPapelera(
-            this.componente,
-            this.vendedorEditar,
-            this.vendedorEditar.idVendedor,
-            'BAJA',
-            `Baja de Vendedor ${this.vendedorEditar.datosPersonales.apellido} ${this.vendedorEditar.datosPersonales.nombre}`,
-            result
-          );
-          this.eliminarClientes()
-          /* Swal.fire({
-            title: 'Confirmado',
-            text: 'El Cliente ha sido dado de baja',
-            icon: 'success',
-          }); */
-        }
-      });
-    }
-
-  async eliminarClientes(){
-        
-    console.log("EDITAR CLIENTE => vendedorEditar: ",this.vendedorEditar);
-    
-    this.vendedorEditar.asignaciones.map(a=>{
-      let clienteSel = this.clientes.find( c=> { 
-        return String(c.idCliente) === String(a.idCliente)
-      }); 
-      console.log("EDITAR CLIENTE => clienteSel", clienteSel);
-                
-      if(clienteSel){
-        if (!clienteSel.vendedor) {
-          clienteSel.vendedor = [];
-        }
-
-        // Buscar el indice del idVendedor en el cliente
-        const index = clienteSel.vendedor.indexOf(String(this.vendedorEditar.idVendedor));
-
-        // 3) Si no existe → error
-        if (index === -1) {
-          throw new Error(`El vendedor con id ${this.vendedorEditar.idVendedor} no se encuentra en el cliente ${clienteSel.razonSocial}`);
-        }
-
-        // 4) Eliminar del array
-        clienteSel.vendedor.splice(index, 1);
-        this.clientesModificados.push(clienteSel);
-        
-      } else {
-        this.isLoading = false;
-        this.mensajesError("Error en la modificación de los clientes")
-      }
-    });
-    console.log("EDITAR CLIENTE => this.clientesModificados: ", this.clientesModificados);
-    if(this.clientesModificados.length > 0){
-      const respuesta = await this.dbFirestore.actualizarMultiple(this.clientesModificados, 'clientes');
-      if(respuesta.exito){
-        this.isLoading = false;
-        Swal.fire({
-              title: 'Confirmado',
-              text: 'El Cliente ha sido dado de baja',
-              icon: 'success',
-            });        
-        } else {
-        this.isLoading = false;
-        this.mensajesError(respuesta.mensaje)
-        }
-    } else {
-      this.isLoading = false;
-      this.mensajesError("Error en la modificación de los clientes")
-    }
-    
-    
-  }
-
-  mensajesError(msj:string){
-    Swal.fire({
-      icon: "error",
-      //title: "Oops...",
-      text: `${msj}`
-      //footer: `${msj}`
-    });
-  }
 }
-
-
