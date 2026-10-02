@@ -6,6 +6,7 @@ import { ConId } from 'src/app/interfaces/conId';
 import { VendedorNuevo } from 'src/app/interfaces/vendedor-nuevo';
 import { AccionTablaGenerica, ColumnaTablaGenerica } from 'src/app/interfaces/tabla-generica';
 import { VendedorService } from 'src/app/servicios/vendedores/vendedor.service';
+import { ComisionVentaConsultaService } from 'src/app/servicios/vendedores/comision-venta-consulta.service';
 import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
 import { VendedorAltaComponent } from '../vendedor-alta/vendedor-alta.component';
 
@@ -32,6 +33,7 @@ export class VendedoresListadoComponent implements OnInit, OnDestroy {
     private vendedorService: VendedorService,
     private clienteService: ClienteService,
     private modalService: NgbModal,
+    private comisionConsulta: ComisionVentaConsultaService,
   ) {}
 
   ngOnInit(): void {
@@ -109,9 +111,20 @@ export class VendedoresListadoComponent implements OnInit, OnDestroy {
   }
 
   async desactivar(vendedor: ConId<VendedorNuevo>): Promise<void> {
+    // Advertencia (no bloquea): saldo de comisiones pendiente de liquidar.
+    let aviso = '';
+    try {
+      const saldo = await this.comisionConsulta.saldoPendienteDe(vendedor.id);
+      if (Math.abs(saldo) >= 0.01) {
+        aviso = ` Tiene ${saldo.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })} ` +
+          'de comisiones pendientes de liquidar: se van a poder liquidar desde el Tablero.';
+      }
+    } catch {
+      aviso = ' (No se pudo consultar su saldo de comisiones.)';
+    }
     const res = await Swal.fire({
       title: `¿Desactivar a ${this.vendedorService.nombre(vendedor)}?`,
-      text: 'Se quitan sus asignaciones de clientes. Las comisiones ya generadas se conservan. Se puede reactivar desde "Ver".',
+      text: 'Se quitan sus asignaciones de clientes. Las comisiones ya generadas se conservan. Se puede reactivar desde "Ver".' + aviso,
       icon: 'warning',
       input: 'text',
       inputPlaceholder: 'Motivo',

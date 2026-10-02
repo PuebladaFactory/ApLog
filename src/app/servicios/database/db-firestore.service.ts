@@ -882,6 +882,16 @@ export class DbFirestoreService {
     return collectionData(q, { idField: 'id' }) as Observable<ConId<T>[]>;
   }
 
+  /** Listener en vivo de los documentos de `coleccion` con `campo != valor`.
+   *  Una sola desigualdad → índice simple automático (sin índice compuesto).
+   *  Firestore excluye los documentos que no tienen el campo. Agrega `id`
+   *  (doc id). Primer uso: comisiones con saldo pendiente (saldo != 0). */
+  observarDistintoDe<T>(coleccion: string, campo: string, valor: any): Observable<ConId<T>[]> {
+    const colRef = collection(this.firestore, `/Vantruck/datos/${coleccion}`);
+    const q = query(colRef, where(campo, '!=', valor));
+    return collectionData(q, { idField: 'id' }) as Observable<ConId<T>[]>;
+  }
+
   /** Consulta one-shot: `campoIn in valores` + rango inclusivo sobre
    *  `campoRango`, ordenada por `campoRango`. Requiere índice compuesto
    *  (campoIn, campoRango) en firestore.indexes.json. `valores`: 1 a 30

@@ -1,111 +1,122 @@
-<div>
+<div class="mt-3">
+  <div class="d-flex align-items-center gap-2 mb-3">
+    <button type="button" class="btn btn-outline-secondary" (click)="desplazarMes(-1)" title="Mes anterior">‹</button>
+    <input #mesInput type="month" class="form-control" style="width: 190px;"
+      [value]="mes" (change)="cambiarMes(mesInput.value)" />
+    <button type="button" class="btn btn-outline-secondary" (click)="desplazarMes(1)" title="Mes siguiente">›</button>
+    <h2 class="m-0 ms-3">Comisiones de {{ tituloMes }}</h2>
+  </div>
 
-    <h2 class="mb-4">Informes de Venta por Vendedor</h2>
+  @if (error) {
+    <div class="alert alert-danger">{{ error }}</div>
+  }
 
-    <!-- ============================ -->
-    <!--   SECCIÓN POR VENDEDOR       -->
-    <!-- ============================ -->
-    @if(vendedorGrupos.length > 0 ){
-        @for (vg of vendedorGrupos; track vg) {
-            <div class="mb-5 bg-light border rounded border-2 rounded-5 border-dark-subtle">
-
-                <!-- Encabezado vendedor -->
-                <div class="d-flex justify-content-between w-100">
-                    <div class="p-3 ms-2 mt-2 border bg-warning rounded mb-3 rounded-5 " style="width: 250px;">
-                        <h3 class="m-0">
-                            {{ vg.vendedor.datosPersonales.apellido }}, {{ vg.vendedor.datosPersonales.nombre }}
-                        </h3>
-                        
-                        <div class="mt-1 fs-2">
-                            <strong>Total a pagar:</strong>
-                            <span class="text-success fw-bold">
-                                @if(vg.estadoPago){
-                                    {{ 0 | formatearValor:'$' }}                    
-                                } @else {
-                                    {{ vg.totalVendedor | formatearValor:'$' }}                    
-                                }                            
-                            </span>
-                        </div>
-                    </div>
-                    <!-- <div><button class="btn btn-outline-info" (click)="corregirInfVenta(vg)">Corregir Informes</button></div> -->
-                    @if(!vg.estadoPago){
-                        <div class="me-3 mt-2">
-                            <app-btn-agregar name="Pagar" (click)="pagarVendedor(vg)" [ngClass]="{'isDisabled':usuarioSesion.esRol('demo')}"></app-btn-agregar>
-                        </div>
-                    }
-
-                </div>
-                
-                
-                <!-- Tabla de clientes -->
-                <div class="table-responsive">
-                    <table class="table table-striped table-bordered align-middle">
-
-                        <thead class="">
-                            <tr>
-                                <th style="width: 25%;">Cliente</th>
-                                <th style="width: 8%;">Cant. Op</th>
-                                <th style="width: 15%;">A Cobrar</th>
-                                <th style="width: 15%;">A Pagar</th>
-                                <th style="width: 7%;">Comisión</th>
-                                <th class="table-success" style="width: 20%;">Valor Comisión</th>
-                                <th style="width: 10%;">Estado</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-
-                            <!-- FILA POR CLIENTE -->
-                            @for (cg of vg.clientes; track cg) {
-                                <tr>
-                                    <td>{{ cg.cliente.razonSocial }}</td>
-                                    <td>{{ cg.cantidadOperaciones }}</td>
-
-                                    <td>{{ cg.totalCobrar | formatearValor:'$' }}</td>
-                                    <td>{{ cg.totalPagar | formatearValor:'$'}}</td>
-
-                                    <td>{{ cg.comision }}%</td>
-
-                                    <td class="fw-bold" class="table-success">
-                                    {{ cg.valorComision | formatearValor:'$' }}
-                                    </td>
-
-                                    <td class="text-center">
-                                        @if(vg.estadoPago){
-                                            <span class="badge bg-success">Pagado</span>
-                                        }
-                                        @if (!vg.estadoPago) {
-                                            <span class="badge bg-warning text-dark">Pendiente</span>
-                                        }                                                                                
-                                    </td>
-                                </tr> 
-                            }
-                        
-
-                            <!-- TOTAL FINAL -->
-                            <tr class="table-secondary fw-bold">
-                                <td colspan="5" class="text-start">TOTAL:</td>
-                                <td class="table-success">
-                                {{ vg.totalVendedor | formatearValor:'$' }}
-                                </td>
-                                <td></td>
-                            </tr>
-
-                        </tbody>
-                    </table>
-                </div>
-
-
-            </div>
-        } 
+  @if (!cargando && tablero) {
+    @if (vendedores.length === 0) {
+      <div class="alert alert-info">Sin comisiones en el mes ni saldos pendientes de meses anteriores.</div>
     } @else {
-        <div class="alert alert-info">
-            Sin datos.
-        </div>
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Vendedor</th>
+              <th class="text-end">Ops del mes</th>
+              <th class="text-end">Comisiones del mes</th>
+              <th class="text-end">Liquidado del mes</th>
+              <th class="text-end" title="Saldos pendientes de meses anteriores (cierres tardíos, ajustes, bajas)">Arrastre</th>
+              <th class="text-end table-success">Saldo a liquidar</th>
+              <th style="width: 110px;"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (v of vendedores; track v.idVendedor) {
+              <tr>
+                <td>
+                  <strong>{{ nombre(v.idVendedor) }}</strong>
+                  @if (esInactivo(v.idVendedor)) {
+                    <span class="badge bg-secondary ms-2">Inactivo</span>
+                  }
+                </td>
+                <td class="text-end">{{ v.cantidadOps }}</td>
+                <td class="text-end">{{ v.comisionesMes | formatearValor: '$' }}</td>
+                <td class="text-end">{{ v.liquidadoMes | formatearValor: '$' }}</td>
+                <td class="text-end">{{ v.arrastre | formatearValor: '$' }}</td>
+                <td class="text-end table-success fw-bold">{{ v.saldoALiquidar | formatearValor: '$' }}</td>
+                <td class="text-center">
+                  <button type="button" class="btn btn-sm btn-outline-primary" (click)="toggle(v.idVendedor)">
+                    {{ expandidos.has(v.idVendedor) ? 'Ocultar' : 'Detalle' }}
+                  </button>
+                </td>
+              </tr>
+              @if (expandidos.has(v.idVendedor)) {
+                <tr>
+                  <td colspan="7" class="bg-light">
+                    <table class="table table-sm table-hover mb-0">
+                      <thead>
+                        <tr>
+                          <th>N.º op</th>
+                          <th>Fecha</th>
+                          <th class="text-end">Base</th>
+                          <th class="text-end">%</th>
+                          <th class="text-end">Comisión</th>
+                          <th class="text-end">Liquidado</th>
+                          <th class="text-end">Saldo</th>
+                          <th class="text-center">Estado</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (cl of v.clientes; track cl.idCliente) {
+                          <tr class="table-secondary">
+                            <td colspan="4"><strong>{{ cl.razonSocial }}</strong></td>
+                            <td class="text-end"><strong>{{ cl.monto | formatearValor: '$' }}</strong></td>
+                            <td></td>
+                            <td class="text-end"><strong>{{ cl.saldo | formatearValor: '$' }}</strong></td>
+                            <td></td>
+                          </tr>
+                          @for (l of cl.lineas; track l.id) {
+                            <tr>
+                              <td>
+                                {{ l.numeroOperacion }}
+                                @if (l.arrastre) {
+                                  <span class="badge bg-light text-dark border ms-1">arrastre</span>
+                                }
+                              </td>
+                              <td>{{ l.fecha }}</td>
+                              <td class="text-end">{{ l.base | formatearValor: '$' }}</td>
+                              <td class="text-end">{{ l.porcentaje }}%</td>
+                              <td class="text-end">{{ l.monto | formatearValor: '$' }}</td>
+                              <td class="text-end">{{ l.montoLiquidado | formatearValor: '$' }}</td>
+                              <td class="text-end">{{ l.saldo | formatearValor: '$' }}</td>
+                              <td class="text-center">
+                                <span class="badge" [ngClass]="claseEstado(l.estado)">{{ etiquetaEstado(l.estado) }}</span>
+                              </td>
+                            </tr>
+                          }
+                        }
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+          <tfoot>
+            <tr class="table-secondary fw-bold">
+              <td>TOTAL</td>
+              <td class="text-end">{{ tablero.totales.cantidadOps }}</td>
+              <td class="text-end">{{ tablero.totales.comisionesMes | formatearValor: '$' }}</td>
+              <td class="text-end">{{ tablero.totales.liquidadoMes | formatearValor: '$' }}</td>
+              <td class="text-end">{{ tablero.totales.arrastre | formatearValor: '$' }}</td>
+              <td class="text-end table-success">{{ tablero.totales.saldoALiquidar | formatearValor: '$' }}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
     }
-
+  }
 </div>
-@if (isLoading) {
+
+@if (cargando) {
   <app-spinner></app-spinner>
 }
-

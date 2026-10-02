@@ -20,20 +20,12 @@ import { tabActivaDesdeUrl } from 'src/app/shared/utils/tabs-url.util';
       </div>
     }
   </div>
-  <!-- <app-tablero-calendario [modo]="modo" [ngClass]="{'invisible': ocultarCalendario}"></app-tablero-calendario> -->
-  <div class="d-flex justify-content-center">
-    <div style="width:420px">
-        <app-tablero-fechas defaultTipo="mes" [ngClass]="{'invisible': ocultarCalendario}"></app-tablero-fechas>
-    </div>
-  </div>
   <router-outlet></router-outlet>
-
     `,
   styleUrl: './vendedor-control.component.scss'
 })
 export class VendedorControlComponent implements OnInit {
 
-  modo: string = 'vendedores';
   tabs = [
     { id: 'tab1', name: 'Tablero de Actividad', route: 'vendedores/tableroVendedores' },
     { id: 'tab2', name: 'Listado', route: 'vendedores/listado' },
@@ -43,12 +35,6 @@ export class VendedorControlComponent implements OnInit {
   /** Pestaña activa derivada de la URL real (ver tabs-url.util). */
   get selectedTab(): string {
     return tabActivaDesdeUrl(this.tabs, this.router.url);
-  }
-
-  /** El calendario no aplica a Listado ni Historial. Se deriva de la
-   *  pestaña activa (antes se seteaba en el click y quedaba mal con F5). */
-  get ocultarCalendario(): boolean {
-    return this.selectedTab === 'tab2' || this.selectedTab === 'tab3';
   }
 
   constructor(
