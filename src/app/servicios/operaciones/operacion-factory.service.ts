@@ -50,9 +50,13 @@ export class OperacionFactoryService {
         id:           cliente.id,
         razonSocial:  cliente.razonSocial,
         cuit:         cliente.cuit,
-        // TODO: refactor Vendedores — poblar vendedor en el RefCliente desde el cliente vivo al
-        // crear la op (comisión histórica por operación). Hasta entonces queda undefined y la
-        // asignación de comisiones no corre para ops nuevas (acceso protegido por && en valores-op).
+        // Frente Vendedores: snapshot de las asignaciones del cliente,
+        // congelado al ALTA (la comisión es por operación, histórica). Copia
+        // de cada entrada; siempre array (vacío si no tiene vendedores).
+        comisiones: (cliente.comisionesVenta ?? []).map(a => ({
+          idVendedor: a.idVendedor,
+          porcentaje: a.porcentaje,
+        })),
       },
       chofer: chofer
         ? {

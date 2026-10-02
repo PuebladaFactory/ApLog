@@ -1,7 +1,7 @@
 import { Injectable, OnDestroy, inject } from '@angular/core';
 import { BehaviorSubject, Observable, Subject, merge } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { Firestore, Transaction, collection, query, where, getDocs } from '@angular/fire/firestore';
+import { Firestore, Transaction } from '@angular/fire/firestore';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { ConId } from 'src/app/interfaces/conId';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
@@ -21,6 +21,7 @@ import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.
 import { PapeleraService } from 'src/app/servicios/papelera/papelera.service';
 import { InformeOpService } from 'src/app/servicios/informes-op/informe-op.service';
 import { ResumenOpFactoryService } from 'src/app/servicios/reportes/resumenes-op/resumen-op-factory.service';
+import { ComisionVentaFactoryService } from 'src/app/servicios/vendedores/comision-venta-factory.service';
 import { Resultado } from 'src/app/interfaces/resultado';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 import { AnulacionInformeOp } from 'src/app/interfaces/informe-op-nuevo';
@@ -67,6 +68,7 @@ export class OperacionService implements OnDestroy {
     private informeOpServ:    InformeOpService,
     private usuarioSesion: UsuarioSesionService,
     private resumenOpFactory: ResumenOpFactoryService,
+    private comisionVentaFactory: ComisionVentaFactoryService,
   ) {}
 
   /**
@@ -474,7 +476,9 @@ export class OperacionService implements OnDestroy {
    *  resumenesOp, sin lecturas; solo si resumenProcesado) + un único log
    *  BAJA. Los InformeOp NO se borran:
    *  quedan 'anulado' (InformeOpListado solo consulta activo/proforma).
-   *  TODO: InformeVenta del cierre (comisiones) quedan sin tocar. */
+   *  Comisiones de venta: ComisionVentaFactoryService.escriturasBaja (monto a
+   *  0 + anulada, 'fusionar' sin lecturas; si ya estaban liquidadas, el saldo
+   *  queda negativo = ajuste en la próxima liquidación). */
   async bajaOperacionCerrada(idInfOp: string, motivo: string): Promise<Resultado<void>> {
     try {
       const numero = await this.db.commitEnTransaccion<number>(async (tx) => {
@@ -519,6 +523,11 @@ export class OperacionService implements OnDestroy {
           escrituras.push(...this.resumenOpFactory.escriturasSuma(op, -1));
         }
 
+        // Comisiones de venta (comisionesVenta): sin lecturas, modo 'fusionar'.
+        // Una op sin snapshot de comisiones no genera escrituras.
+        const escriturasComision = this.comisionVentaFactory.escriturasBaja(op);
+        escrituras.push(...escriturasComision);
+
         const idEvento = this.agregarEscriturasBaja(escrituras, op, tablero, motivo);
         const anulacion: AnulacionInformeOp = {
           motivo,
@@ -533,6 +542,9 @@ export class OperacionService implements OnDestroy {
           `Baja de operación ${op.numeroOperacion} (cerrada) desde Liquidación — motivo: ${motivo} — ` +
           `InformeOp anulados: ${informe.idInfOp}, ${contraparte.idInfOp}`;
         if (!op.resumenProcesado) detalle += ' — sin reversión de resúmenes (no procesada)';
+        if (escriturasComision.length > 0) {
+          detalle += ` — comisiones de venta anuladas: ${escriturasComision.length}`;
+        }
         await this.logRegistro.agregarAlBatch(escrituras, 'BAJA', 'operaciones', op.idOperacion, detalle);
 
         return { escrituras, resultado: op.numeroOperacion };
@@ -643,13 +655,16 @@ export class OperacionService implements OnDestroy {
    *  (ValoresOpService.calcularValoresCierre, que además espeja op.valores),
    *  arma el par de InformeOpNuevo (InformeOpService.crearPar) y persiste
    *  todo junto: Operación (estado.ciclo → 'cerrada', informeOpCliente/
-   *  informeOpChofer, resumenProcesado), los 2 InformeOp, los InformeVenta
-   *  de comisión (si corresponde), los resúmenes de Reportes
+   *  informeOpChofer, resumenProcesado), los 2 InformeOp, las comisiones de
+   *  venta (ComisionVentaFactoryService.escriturasCierre → colección
+   *  comisionesVenta, 'fusionar', id {idOperacion}_{idVendedor}; solo si el
+   *  snapshot op.cliente.comisiones tiene vendedores), los resúmenes de Reportes
    *  (ResumenOpFactoryService.escriturasSuma → colección resumenesOp, modo
    *  'fusionar', sin lecturas) y el log CERRAR.
    *  - Pre-chequeos por query FUERA de la transacción (el SDK web no permite
-   *    queries adentro): InformeOp existente (existeParaOperacion) e
-   *    InformeVenta duplicado.
+   *    queries adentro): InformeOp existente (existeParaOperacion). Las
+   *    comisiones no necesitan pre-chequeo: su id determinista no se puede
+   *    duplicar.
    *  - Cálculo y armado ANTES de la transacción: `armar` puede reejecutarse
    *    y tiene que ser puro; adentro solo se relee la op, se valida y se
    *    suma el log a una copia del array.
@@ -665,14 +680,8 @@ export class OperacionService implements OnDestroy {
       }
 
       // — Cálculo —
-      const { valoresCliente, valoresOtro, tipoOtro, informesVenta } = this.valoresServ.calcularValoresCierre(op);
+      const { valoresCliente, valoresOtro, tipoOtro } = this.valoresServ.calcularValoresCierre(op);
       const { informeCliente, informeOtro } = this.informeOpServ.crearPar(op, valoresCliente, valoresOtro, tipoOtro);
-
-      for (const infVenta of informesVenta) {
-        if (await this.existeInformeVenta(infVenta.idInfVenta)) {
-          throw new Error(`Ya existe InformeVenta ${infVenta.idInfVenta}`);
-        }
-      }
 
       op.estado = {
         ciclo: 'cerrada',
@@ -692,14 +701,7 @@ export class OperacionService implements OnDestroy {
         },
       ];
       this.informeOpServ.agregarEscriturasCreacionPar(escriturasNegocio, informeCliente, informeOtro);
-      for (const infVenta of informesVenta) {
-        escriturasNegocio.push({
-          coleccion: 'informesVenta',
-          id: this.db.generarId('informesVenta'),
-          data: infVenta,
-          modo: 'crear',
-        });
-      }
+      escriturasNegocio.push(...this.comisionVentaFactory.escriturasCierre(op));
       escriturasNegocio.push(...this.resumenOpFactory.escriturasSuma(op, 1));
 
       // — Transacción: relectura + validación + log —
@@ -731,16 +733,6 @@ export class OperacionService implements OnDestroy {
       );
       return { exito: false, mensaje: `Error al cerrar la operación: ${e?.message ?? e}.` };
     }
-  }
-
-  /** Pre-chequeo de duplicado de InformeVenta (query one-shot, fuera de
-   *  transacción). Mismo criterio que tenía el cierre con writeBatch. */
-  private async existeInformeVenta(idInfVenta: number): Promise<boolean> {
-    const qVenta = query(
-      collection(this.firestore, `/Vantruck/datos/informesVenta`),
-      where('idInfVenta', '==', idInfVenta),
-    );
-    return !(await getDocs(qVenta)).empty;
   }
 
   /** Delegado a OperacionFactoryService.opToFirestore — misma lógica exacta,

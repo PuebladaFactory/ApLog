@@ -10,6 +10,7 @@ import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.
 import { InformeOpFactoryService } from 'src/app/servicios/informes-op/informe-op-factory.service';
 import { OperacionFactoryService } from 'src/app/servicios/operaciones/operacion-factory.service';
 import { ResumenOpFactoryService } from 'src/app/servicios/reportes/resumenes-op/resumen-op-factory.service';
+import { ComisionVentaFactoryService } from 'src/app/servicios/vendedores/comision-venta-factory.service';
 import { ResultadoEdicionInformeOp } from 'src/app/shared/modales/informe-op-editor/informe-op-editor.component';
 
 /** Coordinador de InformeOpNuevo — construcción del PAR cliente/contraparte
@@ -22,7 +23,8 @@ import { ResultadoEdicionInformeOp } from 'src/app/shared/modales/informe-op-edi
  *
  *  editar() / armarEscriturasEdicion(): edición de un InformeOp; los
  *  resúmenes se ajustan con ResumenOpFactoryService.escriturasEdicion
- *  (frente Reportes). */
+ *  (frente Reportes) y las comisiones de venta con
+ *  ComisionVentaFactoryService.escriturasEdicion (frente Vendedores). */
 @Injectable({ providedIn: 'root' })
 export class InformeOpService {
 
@@ -31,6 +33,7 @@ export class InformeOpService {
   private factory = inject(InformeOpFactoryService);
   private operacionFactory = inject(OperacionFactoryService);
   private resumenOpFactory = inject(ResumenOpFactoryService);
+  private comisionVentaFactory = inject(ComisionVentaFactoryService);
 
   private readonly COLECCION = 'informesOp';
 
@@ -254,6 +257,9 @@ export class InformeOpService {
     }
 
     escrituras.push(...this.resumenOpFactory.escriturasEdicion(operacionVieja, operacion));
+    // Comisiones de venta: Δ de monto por vendedor del snapshot ('fusionar' +
+    // increment, sin lecturas). Sin cambio del total a cobrar → nada.
+    escrituras.push(...this.comisionVentaFactory.escriturasEdicion(operacionVieja, operacion));
 
     return escrituras;
   }
