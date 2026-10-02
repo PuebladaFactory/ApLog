@@ -58,6 +58,8 @@ export class LimpiezaDemoService {
     'informesLiqSnapshots',
     'facturasVinculadas',
     'informesVenta',
+    'comisionesVenta',
+    'liquidacionesVenta',
     'registrosOpEventuales',
     'resumenOpMensual',
     'resumenesOp',

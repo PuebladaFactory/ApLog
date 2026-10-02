@@ -148,7 +148,9 @@ export class ComisionVentaFactoryService {
     };
   }
 
-  private identidad(op: Operacion, c: ComisionCalculada): Record<string, any> {
+  /** Campos de identidad de una comisión (valores fijos). Pública para el
+   *  Recálculo de comisiones (/migracion): misma fuente que el camino en vivo. */
+  identidad(op: Operacion, c: ComisionCalculada): Record<string, any> {
     const p = periodoDeFecha(op.fecha);
     return {
       idOperacion: op.idOperacion,

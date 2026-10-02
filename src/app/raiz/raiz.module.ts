@@ -9,6 +9,7 @@ import { MigracionComponent } from '../componentes/migracion/migracion.component
 import { LimpiezaDemoComponent } from '../componentes/limpieza-demo/limpieza-demo.component';
 import { GeneradorOperacionesComponent } from '../componentes/generador-operaciones/generador-operaciones.component';
 import { RecalculoResumenesComponent } from '../componentes/recalculo-resumenes/recalculo-resumenes.component';
+import { RecalculoComisionesComponent } from '../componentes/recalculo-comisiones/recalculo-comisiones.component';
 
 import { ChoferesModule } from './choferes/choferes.module';
 
@@ -35,6 +36,7 @@ import { ReportesModule } from './reportes/reportes.module';
         LimpiezaDemoComponent,
         GeneradorOperacionesComponent,
         RecalculoResumenesComponent,
+        RecalculoComisionesComponent,
     ],
     exports: [
         HomeComponent,
