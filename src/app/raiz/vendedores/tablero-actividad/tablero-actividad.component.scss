@@ -23,3 +23,13 @@ th, td, span, strong {
   padding-right: 0.4rem !important;
   font-weight: 500 !important;
 }
+
+/* Celdas numéricas que deben ir en negrita (encabezados, saldo a liquidar,
+   subtotales por cliente y fila TOTAL): .col-numero fija font-weight 500 con
+   !important y pisa fw-bold / la herencia del <tr>; acá se restituye. */
+th.col-numero,
+.col-numero.fw-bold,
+tr.fw-bold > .col-numero,
+.col-numero strong {
+  font-weight: 700 !important;
+}
