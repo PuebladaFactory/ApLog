@@ -564,7 +564,13 @@ export class OperacionService implements OnDestroy {
    *  op estaba 'cerrada' antes de la baja, sus InformeOp quedaron
    *  'anulados' (no se reconstruyen, ver bajaOperacionCerrada) — hay que
    *  volver a cerrarla manualmente después de restaurar, lo que genera un
-   *  par de InformeOp nuevo. */
+   *  par de InformeOp nuevo.
+   *  Vuelve al estado del ALTA: se descarta todo lo cargado al cerrar o al
+   *  editar el InformeOp (km, acompañantes, multiplicadores, adicional extra,
+   *  tarifa base manual) y se recalculan valoresNuevos / op.valores con la
+   *  tarifa congelada del alta (calcularCierre: sin resolver jerarquía). Se
+   *  conservan tarifaAplicada*, datosTarifaEventual y el snapshot de
+   *  comisiones (cliente.comisiones). */
   async restaurarOperacion(idEvento: string): Promise<Resultado<void>> {
 
     const escrituras: EscrituraBatch[] = [];
@@ -588,6 +594,26 @@ export class OperacionService implements OnDestroy {
     op.informeOpCliente = '';
     op.informeOpChofer = '';
 
+    // Datos que se cargan al cerrar o al editar el InformeOp: vuelven al
+    // valor del alta (mismos defaults que OperacionFactoryService). Sin esto,
+    // el próximo cierre repetía la tarifa manual, los acompañantes, el
+    // multiplicador y el adicional extra de antes de la baja.
+    op.acompaniante = false;
+    op.acompanianteCant = 0;
+    op.multiplicadorCliente = 1;
+    op.multiplicadorChofer = 1;
+    op.tarifaBaseManualCliente = null;
+    op.tarifaBaseManualChofer = null;
+    delete op.adExtraConcepto;
+    op.valores = {
+      cliente: { acompValor: 0, kmAdicional: 0, tarifaBase: 0, aCobrar: 0 },
+      chofer:  { acompValor: 0, kmAdicional: 0, tarifaBase: 0, aPagar:  0 },
+    };
+    // Valores del alta con la tarifa congelada (sin volver a resolver la
+    // jerarquía) + espejo en op.valores, igual que altaDesdeAsignacion.
+    const recalculo = this.valoresTarifaServ.calcularCierre(op);
+    this.calcularValoresIniciales(op);
+
     const tablero = await this.asignacionService.getTableroPorFecha(op.fecha);
     if (!tablero) {
       return {
@@ -608,7 +634,9 @@ export class OperacionService implements OnDestroy {
     );
 
     await this.logRegistro.agregarAlBatch(
-      escrituras, 'RESTAURAR', 'operaciones', op.idOperacion, `Operación ${op.idOperacion} restaurada desde papelera`,
+      escrituras, 'RESTAURAR', 'operaciones', op.idOperacion,
+      `Operación ${op.idOperacion} restaurada desde papelera (valores del alta)` +
+        (recalculo.errores.length > 0 ? ` — recálculo: ${recalculo.errores.join(' | ')}` : ''),
     );
 
     try {
