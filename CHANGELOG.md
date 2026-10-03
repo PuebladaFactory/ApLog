@@ -2066,6 +2066,44 @@ operaciones".
 
 ---
 
+## Frente Vendedores — comisiones de venta (Octubre 2026)
+
+- Vendedores corregidos en el lugar (`VendedorNuevo`: datos personales +
+  `activo`); `VendedorService` con listener en memoria, normaliza el
+  formato viejo; desactivar/reactivar en vez de borrar.
+- Asignación en `Cliente.comisionesVenta` (suma ≤ 100 por cliente) y
+  snapshot `RefCliente.comisiones` congelado en el alta de la op.
+- Colección nueva `comisionesVenta` (id `{idOperacion}_{idVendedor}`,
+  modelo saldo = monto − liquidado): cierre, edición de InformeOp y baja de
+  cerrada escriben con 'fusionar' + increment, sin lecturas. Reemplaza a
+  `informesVenta`.
+- Colección nueva `liquidacionesVenta` (`LVEN-0001`): emitir con todo el
+  saldo hasta el mes de corte (validación del total en la transacción),
+  pagar / revertir pago / anular, cada gesto con su log (`AccionLog`
+  'PAGAR'). Reemplaza a `resumenVenta`.
+- Pantallas nuevas: Tablero del mes (arrastre, vendedores en cero,
+  Liquidar), Listado en tabla con modal de alta/edición/asignación,
+  Historial de liquidaciones con detalle y acciones.
+- Excel/PDF de la liquidación y del tablero sobre los renderers de
+  `servicios/exportacion/` (`ComisionesExportService`).
+- Recálculo de comisiones en `/migracion` (simular + ejecutar con el id del
+  proyecto). `LimpiezaDemo` vacía `comisionesVenta` y `liquidacionesVenta`.
+- Reglas: `comisionesVenta` (módulo 'comisiones') y `liquidacionesVenta`
+  ('vendedores'); ruta del módulo solo dev/admin/demo (desplegado solo en
+  demo; 17/17 en el emulador).
+- Fix fuera del frente: restaurar una operación vuelve al estado del alta
+  (sin tarifa base manual, acompañantes, multiplicadores ni adicional extra
+  del cierre).
+- Retiro del camino viejo (componentes viejos, `exportarResumenVenta*`,
+  interfaces viejas, cachés de `StorageService`, listener de Home, campo sin
+  uso de `OperacionService`).
+
+Detalle completo en `CLAUDE.md` → "Frente Vendedores — comisiones de venta".
+
+**Verificación:** `ng build --configuration=demo` limpio.
+
+---
+
 ### Pendiente
 
 Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
@@ -2077,9 +2115,6 @@ Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
   sobre las colecciones viejas); multiplicidad real en operaciones-editor
   (hoy el shim `tarifaTipoDesdeHabilitadas`); documentar el tarifario nuevo
   en CLAUDE.md.
-- Vendedores: lógica de `vendedor[]` en Cliente, InformeVenta (id por
-  `Date.now()`, huérfanos al dar de baja una operación cerrada),
-  `resumenVenta`.
 - Finanzas: cascada sobre InformeLiqNuevo (cobros/pagos sobre 'facturado',
   cuenta corriente, aging, ledger, incobrable); hoy lee las colecciones
   viejas.
@@ -2095,12 +2130,16 @@ Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
   de `servicios/exportacion/`.
 - RaizModule: imports eager de los módulos de feature (lazy loading, bundle
   inicial).
+- Estilo global `.col-numero` (hoy repetido en Vendedores e
+  `informes-tabla`).
 
 **Migración a Vantruck (al final)**
 - Migración de datos (entidades, tarifas, operaciones, liquidaciones y
   facturación, con los checklists registrados en CLAUDE.md), deploy de
   reglas / índices / `storage.rules` en `pf-logistics` (incluidas las de
-  `informesOp` / `resumenesOp`), Recálculo de `resumenesOp` sobre el
-  histórico y borrado de `resumenOpMensual`, y retiro del camino
-  viejo (LiquidacionesOp, Proforma, facturación vieja, exportaciones viejas
-  de liquidación).
+  `informesOp` / `resumenesOp` / `comisionesVenta` / `liquidacionesVenta`),
+  Recálculo de `resumenesOp` y de `comisionesVenta` sobre el histórico,
+  vendedores y asignaciones (mapa de idCliente viejo), lo pagado con
+  `resumenVenta`, borrado de `resumenOpMensual` / `informesVenta` /
+  `resumenVenta`, y retiro del camino viejo (LiquidacionesOp, Proforma,
+  facturación vieja, exportaciones viejas de liquidación).

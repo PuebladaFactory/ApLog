@@ -50,7 +50,7 @@ src/app/
 │   ├── liquidacion/   # Liquidación de operaciones cerradas
 │   ├── nueva-facturacion/ # Facturación (ruta nuevaFacturacion) — Emitidos/Facturados/Revertidos sobre InformeLiqNuevo
 │   ├── legajos/       # Legajos de choferes
-│   ├── vendedores/    # CRUD + comisiones
+│   ├── vendedores/    # Vendedores, asignación a clientes, comisiones y liquidaciones
 │   ├── reportes/      # (en desarrollo)
 │   ├── finanzas/      # (en desarrollo)
 │   └── ajustes/       # Usuarios, log de actividad, papelera
@@ -186,7 +186,7 @@ Escritura (alta/edición/baja simple, y baja/restauración con papelera):
 
 ### Capa de datos
 
-`DbFirestoreService` (`servicios/database/db-firestore.service.ts`) envuelve todas las operaciones de Firestore. Todas las colecciones viven bajo `/Vantruck/datos/`. Colecciones principales: `operaciones`, `clientes`, `choferes`, `proveedores`, `tarifasGralCliente/Esp/Pers`, `tarifasGralChofer/Esp`, `facturaCliente`, `facturaChofer`, `liquidaciones`, `legajos`, `vendedores`, `logs`, `registroLog`, `users`.
+`DbFirestoreService` (`servicios/database/db-firestore.service.ts`) envuelve todas las operaciones de Firestore. Todas las colecciones viven bajo `/Vantruck/datos/`. Colecciones principales: `operaciones`, `clientes`, `choferes`, `proveedores`, `tarifasGralCliente/Esp/Pers`, `tarifasGralChofer/Esp`, `facturaCliente`, `facturaChofer`, `liquidaciones`, `legajos`, `vendedores`, `comisionesVenta`, `liquidacionesVenta`, `logs`, `registroLog`, `users`.
 
 ### Sistema de tarifas
 
@@ -274,11 +274,12 @@ Por eso `Proforma CH` tiene mayor prioridad visual que `Proforma CL` en el badge
 | `informes/` | Generación de reportes Excel y PDF — camino VIEJO (`ExcelService`/`PdfService`); los documentos de InformeLiqNuevo salen de `exportacion/` + `LiquidacionExportService` |
 | `exportacion/` | Renderers GENÉRICOS de `DocumentoTabular` (`generar`) y `LibroTabular` (`generarLibro`, varias hojas con varias tablas) — no saben de qué informe se trata: `PdfTabularService` (jsPDF + autotable), `ExcelTabularService` (exceljs), formatos y logo compartidos. Librerías con import dinámico — ver "Frente Excel/PDF — InformeLiqNuevo" y "Frente Reportes" |
 | `reportes/resumenes-op/` | Resúmenes mensuales de operaciones (`resumenesOp`): `ResumenOpFactoryService` (pura: aporte de una op, claves, escrituras de cierre/edición/baja, agregados del Recálculo), `ResumenOpConsultaService` (solo lectura, pantallas), `TablaResumenConfigService` (columnas y fórmulas por modo), `ResumenOpExportService` (Excel/PDF) — ver "Frente Reportes" |
+| `vendedores/` | Vendedores y comisiones de venta: `VendedorService` (listener en memoria; alta/edición/asignación, desactivar/reactivar), `ComisionVentaFactoryService` (pura: escrituras de cierre/edición/baja sobre `comisionesVenta`), `ComisionVentaConsultaService` (solo lectura: mes, pendientes, tablero), `LiquidacionVentaService` (emitir/pagar/revertir/anular en transacción), `ComisionesExportService` (Excel/PDF) — ver "Frente Vendedores" |
 | `numerador/` | Generación de IDs secuenciales (operaciones, facturas) |
 | `validar/` | Validación de reglas de negocio |
 | `formato-numerico/` | Formateo de números/moneda estilo Argentina |
 | `fechas/` | Utilidades de fecha |
-| `desarrollo/` | Herramientas de `/migracion`. SOLO demo (guarda projectId `demoapplog` + rol dev): `LimpiezaDemoService`, `GeneradorOperacionesService` — ver "Herramientas de desarrollo (solo demo)". En cualquier proyecto (rol dev + confirmación escrita del id de proyecto; se usa en la migración de Vantruck): `RecalculoResumenesService` — ver "Frente Reportes" |
+| `desarrollo/` | Herramientas de `/migracion`. SOLO demo (guarda projectId `demoapplog` + rol dev): `LimpiezaDemoService`, `GeneradorOperacionesService` — ver "Herramientas de desarrollo (solo demo)". En cualquier proyecto (rol dev + confirmación escrita del id de proyecto; se usa en la migración de Vantruck): `RecalculoResumenesService` — ver "Frente Reportes"; `RecalculoComisionesService` — ver "Frente Vendedores" |
 
 ### Entornos de build
 
@@ -419,6 +420,14 @@ Categorías especiales:
   por fidelidad. Verificado con `functions/test-cierre-rules.mjs` contra el
   emulador (16/16). Desplegado SOLO en demo. `resumenOpMensual` sigue en
   'finanzas' hasta la migración (la colección vieja existe en Vantruck).
+- `comisionesVenta` → módulo 'comisiones' (frente Vendedores): `dev`/`admin`
+  todo; `user` crear + editar (el cierre escribe con `set`+merge); `demo`
+  leer. `liquidacionesVenta` → 'vendedores' (`dev`/`admin` todo; `demo`
+  leer). Ruta del módulo Vendedores: `dev`/`admin`/`demo`.
+  `PermisosService.matrizBase` por fidelidad. Verificado con
+  `functions/test-vendedores-rules.mjs` contra el emulador (17/17).
+  Desplegado SOLO en demo. `informesVenta` → 'operaciones' se conserva hasta
+  la migración (la colección vieja existe en Vantruck).
 
 ## Convenciones
 
@@ -595,7 +604,7 @@ type OperacionRuntime = Omit<Operacion, 'chofer'> & {
 
 #### vendedor en RefCliente
 
-Se agregó `vendedor?: string[]` a `RefCliente` (snapshot). La comisión de vendedor es **por operación** (histórica), no del vendedor vigente del cliente → va al snapshot, congelada al alta. Opcional porque las ops históricas no lo tienen. **Pendiente:** el factory (`OperacionFactoryService`) debe poblar `vendedor` al crear la op (TODO marcado); hasta entonces queda `undefined` y la asignación de comisiones no corre para ops nuevas (acceso protegido por `&&`).
+Se agregó `vendedor?: string[]` a `RefCliente` (snapshot). La comisión de vendedor es **por operación** (histórica), no del vendedor vigente del cliente → va al snapshot, congelada al alta. ~~Pendiente: el factory debía poblar `vendedor`~~ — RESUELTO en el Frente Vendedores con otro campo: `RefCliente.comisiones` (`{ idVendedor, porcentaje }[]`, lo puebla `OperacionFactoryService`). `vendedor` quedó legacy, sin uso; se retira en la migración de Vantruck.
 
 #### Métodos/bloques comentados (código muerto del modelo viejo)
 
@@ -679,8 +688,9 @@ dispara ni por las entidades secundarias que toca.
   InformeOp no se reconstruyen.
 - **Item de asignación:** nunca se borra, se anula/reactiva
   (`anularItemEnLista`/`reactivarItemEnLista`).
-- **Fuera de alcance:** InformeVenta del cierre (comisiones) quedan sin tocar
-  en la baja de una cerrada.
+- ~~Fuera de alcance: InformeVenta del cierre (comisiones) quedan sin tocar
+  en la baja de una cerrada~~ — RESUELTO en el Frente Vendedores: la baja
+  de una cerrada escribe `escriturasBaja` sobre `comisionesVenta`.
 
 ### Decisiones de arquitectura — frente tablero-asignaciones
 
@@ -2664,7 +2674,8 @@ de proyecto `claude/diseno-generador-operaciones.md`; instrucciones:
 ### Limpieza de demo (`servicios/desarrollo/limpieza-demo.service.ts`, `componentes/limpieza-demo/`)
 - Allowlist `COLECCIONES_A_VACIAR` (operativas del modelo nuevo):
   operaciones, asignaciones, informesOp, informesLiq, informesLiqSnapshots,
-  facturasVinculadas, informesVenta, registrosOpEventuales,
+  facturasVinculadas, informesVenta, comisionesVenta, liquidacionesVenta,
+  registrosOpEventuales,
   resumenOpMensual, resumenesOp, movimientos, resumenFinanzas, registroLog,
   generacionesPrueba. Una colección que no está en la lista nunca se borra
   (fail-safe: el SDK web no puede listar colecciones).
@@ -2899,7 +2910,7 @@ Todo se hizo y probó en demo. Diseño y decisiones R1–R16: doc de proyecto
 ### Gestos
 | Gesto | Orquestador | Resúmenes |
 |---|---|---|
-| Cierre | `OperacionService.cerrarOperacion`, ahora en `commitEnTransaccion`: lee la op fresca y aborta si no está 'abierta' o ya tiene `resumenProcesado` (guarda real contra doble cierre); `existeParaOperacion` y el duplicado de InformeVenta quedan como pre-chequeo (son queries). Escribe op + par de InformeOp + InformeVenta + log CERRAR + resúmenes | `escriturasSuma(op, +1)` |
+| Cierre | `OperacionService.cerrarOperacion`, ahora en `commitEnTransaccion`: lee la op fresca y aborta si no está 'abierta' o ya tiene `resumenProcesado` (guarda real contra doble cierre); `existeParaOperacion` queda como pre-chequeo (es una query). Escribe op + par de InformeOp + comisiones de venta (`comisionesVenta`, desde el Frente Vendedores) + log CERRAR + resúmenes | `escriturasSuma(op, +1)` |
 | Edición de InformeOp (activo o dentro de un InformeLiq) | `InformeOpService.armarEscriturasEdicion` (`editar` / `InformeLiqService.editarInformeOp`) | `escriturasEdicion(opVieja, opNueva)` |
 | Baja de op cerrada | `OperacionService.bajaOperacionCerrada` | `escriturasSuma(op, −1)` si `resumenProcesado` |
 | Restauración | — | no toca (la op vuelve 'abierta'; al cerrarla de nuevo suma) |
@@ -2973,6 +2984,127 @@ carpeta `reportes-op/` ya no existe). Se conservan: la colección
 `resumenOpMensual` en Vantruck y su mapeo en `firestore.rules` /
 `LimpiezaDemoService` (hasta la migración) y `buscarContraParteInformeOp` (lo
 usa `editar-inf-op`).
+
+## Frente Vendedores — comisiones de venta (Octubre 2026)
+
+Vendedores, asignación a clientes, comisiones por operación y su
+liquidación, reconstruidos sobre un modelo nuevo. Reemplaza a
+`informesVenta` (ids `Date.now()` + azar, huérfanos al dar de baja una
+cerrada, % no congelado) y `resumenVenta` (sin mapeo en `firestore.rules`,
+pago doble posible, ids numéricos de cliente que ya no existen). Todo se hizo
+y probó en demo. Diseño y decisiones V1–V23: doc de proyecto
+`claude/diseno-vendedores.md`; instrucciones `claude/instruccion-v1…v9-vendedores.md`
+(+ `v2a`, `v6a`, `v6b`, `v6-1`, `v7a`) e `instruccion-fix-restaurar-op.md`.
+
+### Modelo
+- `vendedores` (se corrigió en el lugar, mismo id de documento):
+  `VendedorNuevo { datosPersonales { nombre, apellido, cuit: number,
+  celular: string, email }, activo }` (`interfaces/vendedor-nuevo.ts`).
+  `VendedorService` también lee el formato viejo (`idVendedor`,
+  `asignaciones`, `mail`) y lo normaliza; el doc se reescribe al editarlo.
+- Asignación: `Cliente.comisionesVenta?: AsignacionVenta[]`
+  (`{ idVendedor, porcentaje }`), suma ≤ 100 por cliente. La escribe SOLO
+  `VendedorService` ('actualizar' sobre clientes vivos);
+  `ClienteService.editarCliente` la preserva.
+- Snapshot: `RefCliente.comisiones` (siempre array), congelado en el alta
+  de la op (`OperacionFactoryService`), como `tarifaAplicada`. Restaurar una
+  op NO lo regenera (decisión: es el snapshot del alta).
+- `comisionesVenta` (`interfaces/comision-venta.ts`): una por op y
+  vendedor, id determinista `{idOperacion}_{idVendedor}`. Modelo saldo:
+  `saldo = monto − montoLiquidado`; |saldo| < 0,005 se trata como cero.
+  `base` = `valoresNuevos.cliente.aCobrar`; `monto` = base × % (0 si la op
+  se dio de baja).
+- `liquidacionesVenta` (`interfaces/liquidacion-venta.ts`): número
+  `LVEN-0001` (`NumeradorService.leerProximoNumeroLiquidacionVenta`),
+  snapshot del vendedor, mes de corte (`anio`/`mes`/`periodo`), líneas con
+  `previo` / `importe` / `ajuste`, `total`, estado
+  `emitida | pagada | anulada`, `pago { fecha, observacion }`,
+  `anulacion { fecha, motivo }`.
+
+### Camino en vivo (sin lecturas: 'fusionar' + increment)
+`ComisionVentaFactoryService` (pura) arma las escrituras de cada gesto:
+
+| Gesto | Orquestador | Comisiones |
+|---|---|---|
+| Cierre | `OperacionService.cerrarOperacion` | `escriturasCierre(op)`: monto y saldo += X, `anulada` false |
+| Edición de InformeOp | `InformeOpService.armarEscriturasEdicion` | `escriturasEdicion(opVieja, opNueva)`: la diferencia |
+| Baja de op cerrada | `OperacionService.bajaOperacionCerrada` | `escriturasBaja(op)`: −X, `anulada` true |
+| Restauración | — | no toca (al cerrarla de nuevo suma) |
+
+El id determinista reemplaza al anti-duplicado por query de InformeVenta.
+
+### Liquidación (`LiquidacionVentaService`; cada gesto en `commitEnTransaccion` con un log)
+- `emitir(idVendedor, periodo, totalEsperado)`: toma TODO el saldo
+  pendiente del vendedor con período ≤ mes de corte (comisiones del mes +
+  cierres tardíos + ajustes). Las candidatas salen de la query de pendientes
+  y se releen por id en la transacción; si el total cambió respecto del
+  confirmado en pantalla, aborta. Deja `montoLiquidado = monto`, saldo 0 y
+  agrega el id a `idsLiquidacion`. Log EMITIR. Se permite total negativo
+  (ajustes a descontar).
+- `pagar` (fecha ≥ emisión + observación opcional) → PAGAR;
+  `revertirPago` (motivo) → REVERTIR; `anular` (solo emitida; una pagada
+  primero se revierte) devuelve el importe de cada línea al saldo de su
+  comisión → ANULAR.
+- `AccionLog` suma 'PAGAR' (el filtro del registro de actividad suma ANULAR
+  y PAGAR).
+- Límite: ~497 comisiones por liquidación (500 escrituras por transacción).
+
+### Consultas y pantallas (`raiz/vendedores/`, ruta dev/admin/demo)
+- `ComisionVentaConsultaService`: comisiones del mes (`periodo ==`),
+  pendientes (`saldo != 0` con `DbFirestoreService.observarDistintoDe`),
+  tablero en vivo (`armarTableroComisiones`, puro, en
+  `shared/utils/tablero-comisiones.util.ts`), `saldoPendienteDe`; `mesTablero`
+  recuerda el mes elegido durante la sesión.
+- Shell con 3 pestañas, sin `app-tablero-fechas` (`VendedorControlComponent`
+  abre el listener de `VendedorService`).
+- Tablero: por vendedor, comisiones del mes, liquidado, arrastre (saldos de
+  meses anteriores) y saldo a liquidar; detalle cliente → operación con
+  estado; los vendedores activos con clientes asignados aparecen aunque
+  estén en cero; Liquidar y Excel/PDF.
+- Listado: `TablaGenericaComponent` con filtro Activos / Inactivos / Todos;
+  modal de alta/edición/vista con la tabla de clientes asignados; desactivar
+  (motivo, quita las asignaciones, avisa si tiene saldo; log BAJA) y
+  reactivar (RESTAURAR).
+- Historial: `liquidacionesVenta` por mes de corte (`observarPorRango`, en
+  vivo) y filtros de vendedor y estado en memoria (recordados en
+  `filtrosHistorial`); Pagar / Revertir pago / Anular con
+  `puede('vendedores', 'editar')`; detalle en modal
+  (`LiquidacionVentaDetalleComponent`).
+- Helpers de presentación en `shared/utils/liquidacion-venta-vista.util.ts`.
+  Valores numéricos con `.col-numero` (tabular-nums), más una regla que
+  restituye la negrita de encabezados, subtotales y totales.
+
+### Excel/PDF
+`shared/utils/documento-comisiones.util.ts` (puro): la liquidación →
+`DocumentoTabular` (`generar`: total con fórmula, marca ANULADA, datos de
+pago, notas de a un concepto por renglón); el tablero → `LibroTabular`
+(`generarLibro`: hojas Resumen y Detalle). Fachada `ComisionesExportService`,
+sin log. Al liquidar desde el tablero se ofrece la descarga
+(`preguntarFormatoDescarga`). Regla para los PDF: solo caracteres de la
+codificación WinAnsi (la Helvetica estándar de jsPDF no tiene "−" U+2212,
+comillas tipográficas, "…" ni emojis).
+
+### Recálculo (`servicios/desarrollo/recalculo-comisiones.service.ts`, `componentes/recalculo-comisiones/`, en `/migracion`)
+Por rango de fechas: simular y ejecutar (rol dev + id del proyecto escrito;
+sirve en cualquier proyecto, también para la migración de Vantruck).
+Completa `cliente.comisiones` de las ops sin snapshot con la asignación
+vigente del cliente; conserva `montoLiquidado` / `idsLiquidacion`; nunca
+borra (las que sobran quedan con monto 0 y `anulada`); escribe solo lo
+distinto. `LimpiezaDemoService` vacía `comisionesVenta` y
+`liquidacionesVenta` (no `vendedores`).
+
+### Retiro del camino viejo
+Borrados: `ValoresOpService.asignacionComisionVenta` e `informesVenta` del
+cálculo de cierre, `OperacionService.existeInformeVenta`, `ResumenVentaDetalleComponent`
+(el listado en cards y el historial sobre `resumenVenta` se reescribieron),
+`ExcelService` / `PdfService.exportarResumenVenta*` y sus auxiliares, las
+interfaces `vendedor.ts` / `resumen-venta.ts` / `informe-venta.ts`, los
+cachés `vendedores$` / `informesVenta$` / `resumenVenta$` de
+`StorageService` y el listener de `vendedores` en Home. Se conservan: las
+colecciones `informesVenta` / `resumenVenta` en Vantruck y sus mapeos en
+`firestore.rules`, `'informesVenta'` en `LimpiezaDemoService`,
+`Cliente.vendedor` / `RefCliente.vendedor` y el caso `'vendedores'` de
+`papelera-legado` (ver "Deuda — Vendedores").
 
 ## Deuda conocida
 
@@ -3149,7 +3281,7 @@ redirect quedan alineados. Compara por segmentos completos y gana la ruta
 más larga ('ajustes/registro' ya no matchea 'ajustes/registro-log').
 `alias` cubre pantallas hijas sin pestaña propia
 (ej. 'finanzas/movimiento' → Historial, '<modulo>/alta' → Alta/Listado).
-Derivados de la pestaña (`ocultarCalendario` en LiqGral y Vendedores) también
+Derivados de la pestaña (`ocultarCalendario` en LiqGral; Vendedores lo perdió en su frente) también
 son getters. Aplicado a los 13 shells, incluido LiqGral; tarifas-control y
 finanzas-control abandonaron su suscripción propia (la de finanzas no se
 desuscribía). **Convención para shells nuevos:** `tabs: TabRuta[]` + getter
@@ -3497,8 +3629,8 @@ Vantruck. Registrado acá para que no se pierda de vista al planificar ese proce
 - Retirar el camino viejo (LiquidacionesOp, Proforma, LiquidacionService,
   LiquidacionBuilderService, rutas comentadas en liquidacion-routing y
   LiqGral) una vez migrado Vantruck.
-- InformeVenta (comisiones) quedan huérfanos al dar de baja una operación
-  cerrada.
+- ~~InformeVenta (comisiones) quedan huérfanos al dar de baja una operación
+  cerrada~~ — RESUELTO en el Frente Vendedores (`comisionesVenta`).
 - ~~Resúmenes: mes corrido por huso horario~~ — RESUELTO en el Frente
   Reportes (`periodoDeFecha`).
 - Pantallas viejas que leen por `InformeOpService.obtenerPorIdsOperacion`
@@ -3586,10 +3718,47 @@ eager uno por uno. Detectado en el frente Facturación (F0).
 - Editores viejos (`editar-tarifa-op`, `editar-inf-op`): no actualizan
   `resumenesOp` (tampoco actualizaban `resumenOpMensual`). Se retiran con el
   camino viejo de Liquidación.
-- Cierre: `existeParaOperacion` y el anti-duplicado de InformeVenta siguen
-  siendo queries fuera de la transacción (el SDK web no las permite
-  adentro); la guarda real es el estado de la op leído en la transacción. Un
-  id determinista para InformeVenta lo resolvería (frente Vendedores).
+- Cierre: `existeParaOperacion` sigue siendo una query fuera de la
+  transacción (el SDK web no las permite adentro); la guarda real es el
+  estado de la op leído en la transacción. ~~Anti-duplicado de InformeVenta~~
+  — RESUELTO en el Frente Vendedores: `comisionesVenta` tiene id
+  determinista y se escribe sin query.
+
+### Deuda — Vendedores (`comisionesVenta` / `liquidacionesVenta`)
+- Migración a Vantruck, checklist de Vendedores (después del backup
+  completo):
+  1. Deploy de las reglas de `comisionesVenta` (módulo 'comisiones') y
+     `liquidacionesVenta` en `pf-logistics` junto con el código nuevo (sin
+     ellas, `user` no puede cerrar operaciones de clientes con vendedor).
+  2. Vendedores en formato viejo: `asignaciones[].idCliente` es el id
+     numérico viejo del cliente → armar el mapa idCliente viejo → id de
+     documento ANTES de que `ClienteMigration` descarte `idCliente`, y pasar
+     las asignaciones a `Cliente.comisionesVenta`.
+  3. Recálculo de comisiones sobre el histórico (completa el snapshot de las
+     ops con la asignación vigente; revisar en la simulación las ops cuyo
+     cliente cambió de vendedor).
+  4. Lo ya pagado con `resumenVenta`: decidir si se marca como liquidado
+     (`montoLiquidado = monto`) o si se cargan liquidaciones de legado; y si
+     `resumenVenta` se pasa a `liquidacionesVenta` o queda como vista de solo
+     lectura.
+  5. Después: borrar `informesVenta` / `resumenVenta`, sus mapeos en
+     `firestore.rules`, `'informesVenta'` de `LimpiezaDemoService`,
+     `Cliente.vendedor` / `RefCliente.vendedor` y `vendedor: []` de
+     `ClienteFactoryService`.
+- Restaurar una op no regenera el snapshot `cliente.comisiones`
+  (decisión: es el del alta).
+- Un cliente restaurado desde la papelera puede traer en `comisionesVenta`
+  asignaciones a un vendedor desactivado después de la baja (no se valida al
+  restaurar).
+- Pagar una liquidación no genera movimiento financiero (falta el frente de
+  herramientas de pago de Finanzas).
+- `.col-numero` está repetida en el tablero, el historial, el detalle de
+  liquidación e `informes-tabla` → consolidar en un estilo global.
+- Sin uso, no tocados: `storageService` inyectado en `PdfService`; caso
+  `"vendedores"` de la lista de logueables de `StorageService`; modo
+  `"vendedores"` de `tablero-calendario`. El caso `'vendedores'` de
+  `papelera-legado` se conserva a propósito (vendedores viejos de Vantruck;
+  `VendedorService` normaliza el formato).
 
 ### Pendiente — auditar fechas 'YYYY-MM-DD' vs huso horario en toda la app
 Averiguar si la inconsistencia de `getPeriodo` se repite en otros lugares.
@@ -3624,11 +3793,10 @@ Reportes: la auditoría quedó fuera). Semilla: `shared/utils/periodo.util.ts`
   molesta, derivar el valor del chofer del cliente con un margen.
 - Vigencia de tarifas por `activo`, no por fecha (`vigenciaDesde` no se usa
   al resolver): generar meses pasados usa las tarifas de hoy.
-- `idInfVenta = Date.now() + random(0..999)`: puede colisionar en cierres
-  rápidos (el anti-duplicado de `cerrarOperacion` haría fallar ese cierre).
-  No se manifestó porque los clientes de demo no tienen vendedor
-  (`RefCliente.vendedor` undefined → sin InformeVenta). Revisar en el frente
-  Vendedores.
+- ~~`idInfVenta = Date.now() + random(0..999)`: puede colisionar en cierres
+  rápidos~~ — RESUELTO en el Frente Vendedores (`comisionesVenta` con id
+  determinista). Para tener comisiones en demo: asignar vendedores a
+  clientes desde Vendedores → Listado y correr el Recálculo de comisiones.
 - Ofidirect (demo): su Especial no cubre algunas categorías de vehículo →
   exclusiones en el plan. Completar la tarifa si se quieren 0 exclusiones.
 - La limpieza no toca Storage (ver "Herramientas de desarrollo").
@@ -3640,11 +3808,12 @@ Reportes: la auditoría quedó fuera). Semilla: `shared/utils/periodo.util.ts`
   el cierre de Tarifas); `LogService` viejo sigue escribiendo en `logs`
   (`AsignacionService.reactivarItem`,
   `TableroService.altaOperacionYActualizarTablero`, `StorageService`
-  add/update/deleteItem/logSimple); la papelera vieja todavía recibe bajas
-  (vendedores con rol no dev vía `deleteItemPapelera`); Finanzas y
-  Vendedores leen/escriben colecciones purgadas en demo (`resumenLiq`,
-  `infOpLiq*`, `resumenVenta`: sus pantallas quedan vacías en demo; se
-  resuelve en sus frentes); `firestore.rules` conserva el mapeo de las
+  add/update/deleteItem/logSimple); ~~la papelera vieja todavía recibe bajas
+  (vendedores con rol no dev vía `deleteItemPapelera`)~~ — resuelto en el
+  Frente Vendedores (los vendedores se desactivan); Finanzas lee/escribe
+  colecciones purgadas en demo (`resumenLiq`, `infOpLiq*`: sus pantallas
+  quedan vacías en demo; se resuelve en su frente; Vendedores ya no usa
+  `resumenVenta`); `firestore.rules` conserva el mapeo de las
   colecciones purgadas.
 
 ### Deuda — campos legacy de Operacion (`valores`, `tarifaTipo`, `datosTarifaPersonalizada`)
@@ -3656,7 +3825,8 @@ Siguen siendo necesarios hoy (verificado en el frente Generador, diseño
   Reportes, el editor de InformeOp vuelve a espejar `valoresNuevos` →
   `op.valores` (tarifaBase multiplicada, como el cierre) y Reportes ya NO
   lee `op.valores`, salvo el fallback legacy de ops históricas sin
-  `valoresNuevos`. InformeVenta, tablero-op y el Excel viejo leen el espejo.
+  `valoresNuevos`. Tablero-op y el Excel viejo leen el espejo (las comisiones
+  de venta toman la base de `valoresNuevos` desde el Frente Vendedores).
 - `op.tarifaTipo`: `tarifaTipo.eventual` gobierna el invariante eventual ⇔
   `datosTarifaEventual` (OperacionFactoryService) y el toggle/badge del
   editor; Reportes solo lo lee en el fallback legacy (nivel de las ops sin
@@ -3668,7 +3838,8 @@ Para retirarlos (cierre de Tarifas + migración de Vantruck): mover
 fuente); ~~Reportes a `valoresNuevos` + `tarifaAplicada*.nivel` /
 `datosTarifaEventual !== null`~~ (hecho en el frente Reportes; queda su
 fallback legacy hasta migrar Vantruck); editor y factory a `datosTarifaEventual`
-como única marca de eventual; tablero-op e InformeVenta a `valoresNuevos`;
+como única marca de eventual; tablero-op a `valoresNuevos` (~~InformeVenta~~:
+hecho en el Frente Vendedores);
 retirar `editar-inf-op` / `buscar-tarifa`.
 
 ### Deuda — Excel/PDF
@@ -3676,9 +3847,10 @@ retirar `editar-inf-op` / `buscar-tarifa`.
   camino viejo de liquidación y facturación (`exportToExcelInforme` /
   `exportToPdfInforme` en LiquidacionesOp, Proforma, FacturacionListado,
   FacturacionHistorico y objeto-papelera) y por los demás informes de la app
-  (operaciones, asignaciones, clientes, choferes, resumen de venta,
-  movimientos; el resumen de Reportes ya sale de `generarLibro`, ver
-  "Frente Reportes"). Se retiran los de liquidación con el camino viejo
+  (operaciones, asignaciones, clientes, choferes, movimientos; el resumen
+  de Reportes ya sale de `generarLibro`, ver "Frente Reportes", y las
+  comisiones de venta de `ComisionesExportService`, ver "Frente
+  Vendedores"). Se retiran los de liquidación con el camino viejo
   (migración de Vantruck); los demás, en sus frentes, idealmente sobre
   `DocumentoTabular` + los renderers de `exportacion/`.
 - Mientras los servicios viejos importen exceljs/jspdf en forma estática, el
