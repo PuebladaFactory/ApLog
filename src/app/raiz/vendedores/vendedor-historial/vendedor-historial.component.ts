@@ -1,397 +1,294 @@
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { BehaviorSubject, combineLatest, Subject, switchMap, takeUntil } from 'rxjs';
+import Swal from 'sweetalert2';
+import { ConId } from 'src/app/interfaces/conId';
+import { Resultado } from 'src/app/interfaces/resultado';
+import { VendedorNuevo } from 'src/app/interfaces/vendedor-nuevo';
+import { EstadoLiquidacionVenta, LiquidacionVenta } from 'src/app/interfaces/liquidacion-venta';
+import { LiquidacionVentaService } from 'src/app/servicios/vendedores/liquidacion-venta.service';
+import { VendedorService } from 'src/app/servicios/vendedores/vendedor.service';
+import { PermisosService } from 'src/app/servicios/permisos/permisos.service';
+import { toISODateString } from 'src/app/servicios/fechas/date-range.service';
+import { redondear2 } from 'src/app/shared/utils/tablero-comisiones.util';
 import {
-  Component,
-  inject,
-  OnDestroy,
-  OnInit,
-  TemplateRef,
-} from "@angular/core";
-import {
-  NgbCalendar,
-  NgbDate,
-  NgbDateStruct,
-  NgbModal,
-} from "@ng-bootstrap/ng-bootstrap";
-import { distinctUntilChanged, Subject, takeUntil } from "rxjs";
-import { Chofer } from "src/app/interfaces/chofer";
-import { Cliente } from "src/app/interfaces/cliente";
-import { ConId } from "src/app/interfaces/conId";
-import { Proveedor } from "src/app/interfaces/proveedor";
-import { OpVenta, ResumenVenta } from "src/app/interfaces/resumen-venta";
-import { Vendedor } from "src/app/interfaces/vendedor";
-import { StorageService } from "src/app/servicios/storage/storage.service";
-import Swal from "sweetalert2";
-import { ResumenVentaDetalleComponent } from "../resumen-venta-detalle/resumen-venta-detalle.component";
-import { ExcelService } from "src/app/servicios/informes/excel/excel.service";
-import { PdfService } from "src/app/servicios/informes/pdf/pdf.service";
-import { DbFirestoreService } from "src/app/servicios/database/db-firestore.service";
+  claseEstadoLiquidacion,
+  etiquetaEstadoLiquidacion,
+  fechaDMY,
+  mesCorteLiquidacion,
+  mesDesplazado,
+  nombreVendedorLiquidacion,
+  periodoDeMes,
+} from 'src/app/shared/utils/liquidacion-venta-vista.util';
+import { LiquidacionVentaDetalleComponent } from '../liquidacion-venta-detalle/liquidacion-venta-detalle.component';
 
+type FiltroEstado = EstadoLiquidacionVenta | 'todos';
+
+/** Historial de liquidaciones de comisiones (Frente Vendedores), colección
+ *  `liquidacionesVenta`. Consulta en vivo por mes de corte (Desde/Hasta) y
+ *  filtra en memoria por vendedor y estado. Acciones (dev/admin): Pagar,
+ *  Revertir pago y Anular, vía LiquidacionVentaService. Detalle en modal.
+ *  Los filtros se recuerdan durante la sesión (filtrosHistorial). */
 @Component({
-  selector: "app-vendedor-historial",
+  selector: 'app-vendedor-historial',
   standalone: false,
-  templateUrl: "./vendedor-historial.component.html",
-  styleUrl: "./vendedor-historial.component.scss",
+  templateUrl: './vendedor-historial.component.html',
+  styleUrl: './vendedor-historial.component.scss',
 })
 export class VendedorHistorialComponent implements OnInit, OnDestroy {
-  vendedores!: ConId<Vendedor>[];
-  clientes!: ConId<Cliente>[];
-  choferes!: ConId<Chofer>[];
-  proveedores!: ConId<Proveedor>[];
-  private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
-  vendSeleccionado: ConId<Vendedor> | null = null;
-  idVendedorSeleccionado: number | null = null;
-  resumenVentas: ConId<ResumenVenta>[] = [];
-  limite: number = 12;
-  isLoading: boolean = false;
-  resumenDetalle!: ConId<ResumenVenta>;
 
-  /* fechas consultas */
-  // Fecha seleccionada en modo manual
-  fechaDesdeManual!: NgbDateStruct;
-  fechaHastaManual!: NgbDateStruct;
-  // Para mostrar el rango de fechas en el template
-  fechaDesdeString!: string;
-  fechaHastaString!: string;
-  fechaManualDesdeString!: string;
-  fechaManualHastaString!: string;
-  calendar = inject(NgbCalendar);
-  hoveredDate: NgbDate | null = null;
-  fromDate: NgbDate = this.calendar.getToday();
-  toDate: NgbDate | null = this.calendar.getNext(this.fromDate, "d", 10);
-  sortColumn: string | null = null;
-  sortDirection: "asc" | "desc" = "asc";
-  fechasConsulta: any = {
-    fechaDesde: "",
-    fechaHasta: "",
-  };
+  desde: string;                  // 'YYYY-MM' (mes de corte)
+  hasta: string;
+  idVendedor = 'todos';
+  estado: FiltroEstado = 'todos';
+
+  liquidaciones: ConId<LiquidacionVenta>[] = [];   // las del rango
+  visibles: ConId<LiquidacionVenta>[] = [];        // tras vendedor/estado
+  opcionesVendedor: { id: string; nombre: string }[] = [];
+  totalSinAnuladas = 0;
+  totalEmitidas = 0;
+
+  cargando = true;
+  procesando = false;
+  error = '';
+  errorRango = '';
+
+  private vendedores: ConId<VendedorNuevo>[] = [];
+  private rango$: BehaviorSubject<{ desde: number; hasta: number }>;
+  private destroy$ = new Subject<void>();
 
   constructor(
-    private storageService: StorageService,
+    private liquidacionService: LiquidacionVentaService,
+    private vendedorService: VendedorService,
+    private permisos: PermisosService,
     private modalService: NgbModal,
-    private excelServica: ExcelService,
-    private pdfService: PdfService,
-    private dbFirebase: DbFirestoreService,
-  ) {}
+  ) {
+    const guardados = this.liquidacionService.filtrosHistorial;
+    if (guardados) {
+      this.desde = guardados.desde;
+      this.hasta = guardados.hasta;
+      this.idVendedor = guardados.idVendedor;
+      this.estado = guardados.estado;
+    } else {
+      // Por defecto: los últimos 6 meses de corte, incluido el actual.
+      const hoy = new Date();
+      this.hasta = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+      this.desde = mesDesplazado(this.hasta, -5);
+    }
+    this.rango$ = new BehaviorSubject({ desde: periodoDeMes(this.desde), hasta: periodoDeMes(this.hasta) });
+  }
 
   ngOnInit(): void {
-    /// CHOFERES/CLIENTES/PROVEEDORES
-    this.choferes = this.storageService.loadInfo("choferes");
-    this.choferes = this.choferes.sort((a, b) =>
-      a.datosPersonales?.apellido?.localeCompare(b.datosPersonales?.apellido),
-    ); // Ordena por el nombre del chofer
-    this.clientes = this.storageService.loadInfo("clientes");
-    this.clientes = this.clientes.sort((a, b) =>
-      a.razonSocial.localeCompare(b.razonSocial),
-    ); // Ordena por el nombre del chofer
-    this.proveedores = this.storageService.loadInfo("proveedores");
-    this.proveedores = this.proveedores.sort((a, b) =>
-      a.razonSocial.localeCompare(b.razonSocial),
-    ); // Ordena por el nombre del chofer
-    this.vendedores = this.storageService.loadInfo("vendedores");
-    this.vendedores = this.vendedores.sort((a, b) =>
-      a.datosPersonales.apellido.localeCompare(b.datosPersonales.apellido),
-    ); // Ordena por el nombre del chofer
-    this.storageService
-      .getObservable<ConId<ResumenVenta>>("resumenVenta")
+    const liquidaciones$ = this.rango$.pipe(
+      switchMap(r => this.liquidacionService.observarPorPeriodos(r.desde, r.hasta)),
+    );
+    combineLatest([liquidaciones$, this.vendedorService.vendedores$])
       .pipe(takeUntil(this.destroy$))
-      .subscribe((data) => {
-        this.resumenVentas = data;
-        if (this.resumenVentas) {
-          console.log("resumenVentas: ", this.resumenVentas);
-          // 👉 REARMAR LOS GRUPOS
-        } else {
-          this.mensajesError("error: resumenVentas", false);
-        }
+      .subscribe({
+        next: ([liquidaciones, vendedores]) => {
+          this.liquidaciones = liquidaciones;
+          this.vendedores = vendedores;
+          this.armarOpcionesVendedor();
+          this.aplicarFiltros();
+          this.cargando = false;
+          this.error = '';
+        },
+        error: (e: any) => {
+          this.cargando = false;
+          this.error = `No se pudieron leer las liquidaciones: ${e?.message ?? e}`;
+        },
       });
+  }
 
-    this.calcularDiaActual();
+  // ── Filtros ─────────────────────────────────────────────────────
+
+  cambiarRango(desde: string, hasta: string): void {
+    if (!/^\d{4}-\d{2}$/.test(desde ?? '') || !/^\d{4}-\d{2}$/.test(hasta ?? '')) {
+      this.errorRango = 'Elegí los meses Desde y Hasta.';
+      return;
+    }
+    if (desde > hasta) {
+      this.errorRango = 'El mes Desde no puede ser posterior a Hasta.';
+      return;
+    }
+    this.errorRango = '';
+    if (desde === this.desde && hasta === this.hasta) return;
+    this.desde = desde;
+    this.hasta = hasta;
+    this.guardarFiltros();
+    this.cargando = true;
+    this.rango$.next({ desde: periodoDeMes(desde), hasta: periodoDeMes(hasta) });
+  }
+
+  cambiarVendedor(id: string): void {
+    this.idVendedor = id || 'todos';
+    this.guardarFiltros();
+    this.aplicarFiltros();
+  }
+
+  cambiarEstado(estado: FiltroEstado): void {
+    this.estado = estado || 'todos';
+    this.guardarFiltros();
+    this.aplicarFiltros();
+  }
+
+  private guardarFiltros(): void {
+    this.liquidacionService.filtrosHistorial = {
+      desde: this.desde, hasta: this.hasta, idVendedor: this.idVendedor, estado: this.estado,
+    };
+  }
+
+  /** Todos los vendedores (activos e inactivos) + los que aparezcan en
+   *  liquidaciones y ya no estén en la colección (nombre del snapshot). */
+  private armarOpcionesVendedor(): void {
+    const opciones = new Map<string, string>();
+    for (const v of this.vendedores) opciones.set(v.id, this.vendedorService.nombre(v));
+    for (const l of this.liquidaciones) {
+      if (!opciones.has(l.idVendedor)) opciones.set(l.idVendedor, nombreVendedorLiquidacion(l));
+    }
+    this.opcionesVendedor = [...opciones.entries()]
+      .map(([id, nombre]) => ({ id, nombre }))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }
+
+  private aplicarFiltros(): void {
+    this.visibles = this.liquidaciones
+      .filter(l => this.idVendedor === 'todos' || l.idVendedor === this.idVendedor)
+      .filter(l => this.estado === 'todos' || l.estado === this.estado)
+      .sort((a, b) => b.periodo - a.periodo || b.numero.localeCompare(a.numero));
+    this.totalSinAnuladas = redondear2(
+      this.visibles.filter(l => l.estado !== 'anulada').reduce((acc, l) => acc + (l.total ?? 0), 0));
+    this.totalEmitidas = redondear2(
+      this.visibles.filter(l => l.estado === 'emitida').reduce((acc, l) => acc + (l.total ?? 0), 0));
+  }
+
+  // ── Presentación ────────────────────────────────────────────────
+
+  get puedeEditar(): boolean {
+    return this.permisos.puede('vendedores', 'editar');
+  }
+
+  nombreVendedor(l: LiquidacionVenta): string { return nombreVendedorLiquidacion(l); }
+  mesCorte(l: LiquidacionVenta): string { return mesCorteLiquidacion(l); }
+  fecha(f: string | null | undefined): string { return fechaDMY(f); }
+  claseEstado(e: EstadoLiquidacionVenta): string { return claseEstadoLiquidacion(e); }
+  etiquetaEstado(e: EstadoLiquidacionVenta): string { return etiquetaEstadoLiquidacion(e); }
+
+  private moneda(valor: number): string {
+    return (valor ?? 0).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
+  }
+
+  /** Escapa texto de usuario antes de meterlo en el html de un Swal. */
+  private esc(texto: string): string {
+    return String(texto ?? '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // ── Acciones ────────────────────────────────────────────────────
+
+  verDetalle(l: ConId<LiquidacionVenta>): void {
+    const modalRef = this.modalService.open(LiquidacionVentaDetalleComponent, {
+      windowClass: 'myCustomModalClass',
+      centered: true,
+      size: 'xl',
+      scrollable: true,
+    });
+    modalRef.componentInstance.liquidacion = l;
+  }
+
+  async pagar(l: ConId<LiquidacionVenta>): Promise<void> {
+    if (!this.puedeEditar || l.estado !== 'emitida') return;
+    const hoy = toISODateString(new Date());
+    const res = await Swal.fire({
+      title: `Registrar pago de ${l.numero}`,
+      html:
+        `<div class="text-start">` +
+        `<p class="mb-3">${this.esc(this.nombreVendedor(l))} — total <b>${this.moneda(l.total)}</b></p>` +
+        `<label for="swal-fecha-pago" class="form-label">Fecha de pago</label>` +
+        `<input id="swal-fecha-pago" type="date" class="form-control mb-3" value="${hoy}">` +
+        `<label for="swal-obs-pago" class="form-label">Observación (opcional)</label>` +
+        `<textarea id="swal-obs-pago" class="form-control" rows="2" maxlength="300"></textarea>` +
+        `</div>`,
+      icon: 'question',
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: 'Registrar pago',
+      cancelButtonText: 'Cancelar',
+      preConfirm: () => {
+        const fecha = (document.getElementById('swal-fecha-pago') as HTMLInputElement | null)?.value ?? '';
+        const observacion = (document.getElementById('swal-obs-pago') as HTMLTextAreaElement | null)?.value ?? '';
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+          Swal.showValidationMessage('Ingresá la fecha de pago.');
+          return false;
+        }
+        if (fecha < l.fechaEmision) {
+          Swal.showValidationMessage(`La fecha de pago no puede ser anterior a la emisión (${this.fecha(l.fechaEmision)}).`);
+          return false;
+        }
+        return { fecha, observacion: observacion.trim() || null };
+      },
+    });
+    if (!res.isConfirmed || !res.value) return;
+
+    this.procesando = true;
+    const r = await this.liquidacionService.pagar(l.id, res.value.fecha, res.value.observacion);
+    this.procesando = false;
+    this.informar(r, 'Pago registrado', 'No se pudo registrar el pago');
+  }
+
+  async revertirPago(l: ConId<LiquidacionVenta>): Promise<void> {
+    if (!this.puedeEditar || l.estado !== 'pagada') return;
+    const res = await Swal.fire({
+      title: `¿Revertir el pago de ${l.numero}?`,
+      text: 'La liquidación vuelve a quedar emitida (sin pago). Después se puede volver a pagar o anular.',
+      icon: 'warning',
+      input: 'text',
+      inputPlaceholder: 'Motivo',
+      inputValidator: (valor) => (!valor?.trim() ? 'Ingresá el motivo' : null),
+      showCancelButton: true,
+      confirmButtonText: 'Revertir pago',
+      cancelButtonText: 'Cancelar',
+    });
+    if (!res.isConfirmed) return;
+
+    this.procesando = true;
+    const r = await this.liquidacionService.revertirPago(l.id, String(res.value).trim());
+    this.procesando = false;
+    this.informar(r, 'Pago revertido', 'No se pudo revertir el pago');
+  }
+
+  async anular(l: ConId<LiquidacionVenta>): Promise<void> {
+    if (!this.puedeEditar || l.estado !== 'emitida') return;
+    const res = await Swal.fire({
+      title: `¿Anular ${l.numero}?`,
+      html:
+        `${this.esc(this.nombreVendedor(l))} — total <b>${this.moneda(l.total)}</b>.<br>` +
+        `Sus ${l.lineas.length} comisiones vuelven a quedar pendientes y aparecen en el Tablero ` +
+        `para liquidarse de nuevo. La anulación no se puede deshacer.`,
+      icon: 'warning',
+      input: 'text',
+      inputPlaceholder: 'Motivo',
+      inputValidator: (valor) => (!valor?.trim() ? 'Ingresá el motivo' : null),
+      showCancelButton: true,
+      confirmButtonText: 'Anular',
+      confirmButtonColor: '#dc3545',
+      cancelButtonText: 'Cancelar',
+    });
+    if (!res.isConfirmed) return;
+
+    this.procesando = true;
+    const r = await this.liquidacionService.anular(l.id, String(res.value).trim());
+    this.procesando = false;
+    this.informar(r, 'Liquidación anulada', 'No se pudo anular');
+  }
+
+  private informar(r: Resultado<any>, tituloOk: string, tituloError: string): void {
+    if (r.exito) Swal.fire(tituloOk, r.mensaje, 'success');
+    else Swal.fire(tituloError, r.mensaje, 'error');
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-  }
-
-  changeVendedor(e: any) {
-    //////////console.log()(e.target.value);
-    this.vendSeleccionado = null;
-    this.idVendedorSeleccionado = Number(e.target.value);
-    this.resumenVentas = [];
-    let vendedorFiltrado = this.vendedores.find((v) => {
-      return v.idVendedor === this.idVendedorSeleccionado;
-    });
-    //////////console.log()(chofer);
-    if (vendedorFiltrado) {
-      this.vendSeleccionado = vendedorFiltrado;
-      //console.log("vendSeleccionado: ", this.vendSeleccionado);
-      this.consultarResumenVenta();
-    } else {
-      this.idVendedorSeleccionado = null;
-      this.vendSeleccionado = null;
-      this.isLoading = false;
-      this.mensajesError(
-        "Error: no se encontro el vendendor seleccionado",
-        false,
-      );
-    }
-  }
-
-  consultarResumenVenta() {
-    this.isLoading = true;
-    if (this.vendSeleccionado) {
-      this.storageService.getAllSortedIdLimit<ResumenVenta>(
-        "resumenVenta",
-        "idVendedor",
-        this.vendSeleccionado.idVendedor,
-        "idResumen",
-        "desc",
-        this.limite,
-        "resumenVenta",
-      );
-      this.isLoading = false;
-    } else {
-      this.isLoading = false;
-      this.mensajesError("Error: Vendedor no seleccionado", false);
-    }
-  }
-
-  mensajesError(msj: string, resultado: boolean) {
-    Swal.fire({
-      icon: !resultado ? "error" : "success",
-      //title: "Oops...",
-      text: `${msj}`,
-      //footer: `${msj}`
-    });
-  }
-
-  getCliente(id: number) { // TODO: migrar a string cuando se refactorice este módulo
-    let cliente;
-    cliente = this.clientes.find((c) => String(c.idCliente) === String(id));
-    if (cliente) {
-      return cliente.razonSocial;
-    } else {
-      return "";
-    }
-  }
-
-  abrirDetalle(resumen: ConId<ResumenVenta>, modalRef: TemplateRef<any>) {
-    //console.log("chofer: ", chofer);
-    //if(this.tablero?.asignado) this.mensajesError("No se puede editar una asiganción que ya fue dada de alta")
-    this.resumenDetalle = resumen;
-
-    const modal = this.modalService.open(modalRef, { centered: true });
-
-    // Limpiar referencias al cerrar o cancelar el modal
-    /* modal.result.finally(() => {
-      this.choferEditable = null;
-      this.choferSeleccionadoOriginal = null;
-    }); */
-  }
-
-  getVendedor(id: number) {
-    let vendedor;
-    vendedor = this.vendedores.find((v) => v.idVendedor === id);
-    if (vendedor) {
-      return (
-        vendedor.datosPersonales.apellido +
-        " " +
-        vendedor.datosPersonales.nombre
-      );
-    } else {
-      return "";
-    }
-  }
-
-  abrirModalDetalle(resumen: ConId<ResumenVenta>) {
-    {
-      const modalRef = this.modalService.open(ResumenVentaDetalleComponent, {
-        windowClass: "modal-facturacion-xxl",
-        centered: true,
-        size: "lg",
-        //backdrop:"static"
-      });
-
-      modalRef.componentInstance.resumenVenta = resumen;
-    }
-  }
-
-  descargarResumen(resumen: ConId<ResumenVenta>) {}
-
-  getOpCliente(id: number, resumen: ConId<ResumenVenta>): OpVenta[] {
-    let opCliente: OpVenta[] = resumen.operaciones.filter(
-      (r) => r.idCliente === id,
-    );
-    opCliente.sort((a, b) => a.fecha.localeCompare(b.fecha));
-    return opCliente;
-  }
-
-  getTotalOpCliente(
-    id: number,
-    comision: number,
-    resumen: ConId<ResumenVenta>,
-  ): number {
-    let opCliente: OpVenta[] = resumen.operaciones.filter(
-      (r) => r.idCliente === id,
-    );
-    let total = opCliente.reduce(
-      (acc, obj) => acc + (obj.totalCliente * comision) / 100,
-      0,
-    );
-    return total;
-  }
-
-  async preguntarDescarga(resumen: ConId<ResumenVenta>) {
-    const result = await Swal.fire({
-      title: "¿Desea descargar el informe?",
-      text: "Seleccione el formato",
-      icon: "question",
-
-      showCancelButton: true,
-      showDenyButton: true,
-
-      confirmButtonText: "Excel",
-      denyButtonText: "PDF",
-      cancelButtonText: "No descargar",
-    });
-
-    if (result.isConfirmed) {
-      //console.log("Descargar Excel");
-      this.reimprimir(resumen, "excel");
-    }
-
-    if (result.isDenied) {
-      //console.log("Descargar PDF");
-      this.reimprimir(resumen, "pdf");
-    }
-
-    if (result.isDismissed) {
-      //console.log("No descargar");
-    }
-  }
-
-  reimprimir(resumen: ConId<ResumenVenta>, modo: string) {
-    if (modo === "excel") {
-      this.excelServica.exportarResumenVentaExcel(resumen);
-    } else {
-      this.pdfService.exportarResumenVentaPDF(resumen);
-    }
-  }
-
-  ///////////////////////////
-  /* CONSULTAR POR FECHAS */
-  ///////////////////////////
-
-  calcularDiaActual() {
-    const today = new Date();
-    this.fechasConsulta.fechaDesde = today.toISOString().split("T")[0];
-    const tomorrow = new Date(today);
-    // Incrementar un día al objeto "tomorrow"
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    this.fechasConsulta.fechaHasta = tomorrow.toISOString().split("T")[0];
-
-    this.actualizarFechasString();
-    //this.consultarRegistro()
-  }
-
-  onDateSelection(date: NgbDate) {
-    if (!this.fromDate && !this.toDate) {
-      ////console.log("1");
-      this.fromDate = date;
-    } else if (this.fromDate && !this.toDate && date.after(this.fromDate)) {
-      ////console.log("2");
-      this.toDate = date;
-    } else {
-      ////console.log("3");
-      this.toDate = null;
-      this.fromDate = date;
-    }
-    console.log("this.fromDate", this.fromDate);
-
-    this.fechasConsulta.fechaDesde = new Date(
-      this.fromDate.year,
-      this.fromDate.month - 1,
-      this.fromDate.day,
-    )
-      .toISOString()
-      .split("T")[0];
-    if (this.toDate !== null) {
-      this.fechasConsulta.fechaHasta = new Date(
-        this.toDate.year,
-        this.toDate.month - 1,
-        this.toDate.day,
-      )
-        .toISOString()
-        .split("T")[0];
-    }
-    console.log("this.fechasConsulta", this.fechasConsulta);
-
-    this.actualizarFechasString();
-
-    ////console.log("desde: ", this.fechaDesdeManual, " hasta: ", this.fechaHastaManual);
-  }
-
-  isHovered(date: NgbDate) {
-    return (
-      this.fromDate &&
-      !this.toDate &&
-      this.hoveredDate &&
-      date.after(this.fromDate) &&
-      date.before(this.hoveredDate)
-    );
-  }
-
-  isInside(date: NgbDate) {
-    return this.toDate && date.after(this.fromDate) && date.before(this.toDate);
-  }
-
-  isRange(date: NgbDate) {
-    return (
-      date.equals(this.fromDate) ||
-      (this.toDate && date.equals(this.toDate)) ||
-      this.isInside(date) ||
-      this.isHovered(date)
-    );
-  }
-
-  actualizarFechasString() {
-    //console.log("consulta: ", this.fechasConsulta);
-    this.fechaDesdeString = this.fechasConsulta.fechaDesde;
-    this.fechaHastaString = this.fechasConsulta.fechaHasta;
-  }
-
-  consultarRegistro() {
-    let desde = new Date(this.fechasConsulta.fechaDesde).getTime();
-    let hasta = new Date(this.fechasConsulta.fechaHasta).getTime();
-    this.dbFirebase
-      .getAllByDateValueField<ResumenVenta>(
-        "resumenVenta",
-        "fecha",
-        this.fechasConsulta.fechaDesde,
-        this.fechasConsulta.fechaHasta,
-        "idVendedor",
-        this.idVendedorSeleccionado,
-      )
-      .pipe(
-        takeUntil(this.destroy$),
-        distinctUntilChanged(
-          (prev, curr) => JSON.stringify(prev) === JSON.stringify(curr),
-        ), // Emitir solo si hay cambios reales
-      )
-      .subscribe((data) => {
-        //console.log("data registro", data);
-
-        if (data) {
-          this.resumenVentas = data;
-          /* this.resumenVentas = this.resumenVentas.sort(
-            (a, b) => a.timestamp - b.timestamp,
-          ); */
-          //console.log("this.resgistro: ", this.registros);
-        }
-      });
-  }
-
-  consultarRangoManual() {
-    this.actualizarFechasString();
-    this.consultarRegistro();
   }
 }

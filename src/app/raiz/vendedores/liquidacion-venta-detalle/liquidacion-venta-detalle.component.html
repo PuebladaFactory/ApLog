@@ -1,0 +1,100 @@
+<div class="modal-header">
+  <h4 class="modal-title">
+    Liquidación {{ liquidacion.numero }}
+    <span class="badge ms-2" [ngClass]="claseEstado(liquidacion.estado)">{{ etiquetaEstado(liquidacion.estado) }}</span>
+  </h4>
+  <button type="button" class="btn-close" aria-label="Cerrar" (click)="activeModal.dismiss()"></button>
+</div>
+
+<div class="modal-body">
+  <div class="row g-3 mb-3">
+    <div class="col-md-4">
+      <div class="text-muted">Vendedor</div>
+      <div class="fw-bold">{{ nombreVendedor }}</div>
+      <div>CUIT {{ cuit }}</div>
+    </div>
+    <div class="col-md-2">
+      <div class="text-muted">Mes de corte</div>
+      <div>{{ mesCorte }}</div>
+    </div>
+    <div class="col-md-2">
+      <div class="text-muted">Emisión</div>
+      <div>{{ fecha(liquidacion.fechaEmision) }}</div>
+    </div>
+    <div class="col-md-4">
+      @if (liquidacion.pago) {
+        <div class="text-muted">Pago</div>
+        <div>{{ fecha(liquidacion.pago.fecha) }}</div>
+        @if (liquidacion.pago.observacion) {
+          <div class="fst-italic">{{ liquidacion.pago.observacion }}</div>
+        }
+      } @else if (liquidacion.anulacion) {
+        <div class="text-muted">Anulación</div>
+        <div>{{ fecha(liquidacion.anulacion.fecha) }}</div>
+        <div class="fst-italic">{{ liquidacion.anulacion.motivo }}</div>
+      } @else {
+        <div class="text-muted">Pago</div>
+        <div>Pendiente</div>
+      }
+    </div>
+  </div>
+
+  @if (cantidadAjustes > 0) {
+    <div class="alert alert-info py-2">
+      Incluye {{ cantidadAjustes }} {{ cantidadAjustes === 1 ? 'ajuste' : 'ajustes' }}: comisiones ya liquidadas
+      antes cuyo monto cambió (edición o baja de la operación). Se liquida solo la diferencia.
+    </div>
+  }
+
+  <div class="table-responsive">
+    <table class="table table-sm table-bordered align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th class="col-numero">N.º op</th>
+          <th>Fecha</th>
+          <th class="col-numero">Base</th>
+          <th class="col-numero">%</th>
+          <th class="col-numero">Comisión</th>
+          <th class="col-numero" title="Liquidado en liquidaciones anteriores">Liquidado antes</th>
+          <th class="col-numero">Importe</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (g of grupos; track g.idCliente) {
+          <tr class="table-secondary">
+            <td colspan="4"><strong>{{ g.razonSocial }}</strong></td>
+            <td class="col-numero"><strong>{{ g.monto | formatearValor: '$' }}</strong></td>
+            <td></td>
+            <td class="col-numero"><strong>{{ g.importe | formatearValor: '$' }}</strong></td>
+          </tr>
+          @for (l of g.lineas; track l.idComision) {
+            <tr>
+              <td class="col-numero">
+                @if (l.ajuste) {
+                  <span class="badge bg-info text-dark me-1">ajuste</span>
+                }
+                {{ l.numeroOperacion }}
+              </td>
+              <td>{{ fecha(l.fecha) }}</td>
+              <td class="col-numero">{{ l.base | formatearValor: '$' }}</td>
+              <td class="col-numero">{{ l.porcentaje }}%</td>
+              <td class="col-numero">{{ l.monto | formatearValor: '$' }}</td>
+              <td class="col-numero">{{ l.previo | formatearValor: '$' }}</td>
+              <td class="col-numero">{{ l.importe | formatearValor: '$' }}</td>
+            </tr>
+          }
+        }
+      </tbody>
+      <tfoot>
+        <tr class="table-secondary fw-bold">
+          <td colspan="6">TOTAL ({{ liquidacion.lineas.length }} comisiones)</td>
+          <td class="col-numero">{{ liquidacion.total | formatearValor: '$' }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-secondary" (click)="activeModal.close()">Cerrar</button>
+</div>

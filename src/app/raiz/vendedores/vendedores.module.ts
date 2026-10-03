@@ -13,6 +13,7 @@ import { VendedoresListadoComponent } from './vendedores-listado/vendedores-list
 import { VendedorHistorialComponent } from './vendedor-historial/vendedor-historial.component';
 import { DateRangeService } from 'src/app/servicios/fechas/date-range.service';
 import { ResumenVentaDetalleComponent } from './resumen-venta-detalle/resumen-venta-detalle.component';
+import { LiquidacionVentaDetalleComponent } from './liquidacion-venta-detalle/liquidacion-venta-detalle.component';
 import { NgbDatepickerModule } from '@ng-bootstrap/ng-bootstrap';
 
 
@@ -24,6 +25,7 @@ import { NgbDatepickerModule } from '@ng-bootstrap/ng-bootstrap';
     VendedoresListadoComponent,
     VendedorHistorialComponent,
     ResumenVentaDetalleComponent,
+    LiquidacionVentaDetalleComponent,
   ],
   imports: [
     CommonModule,

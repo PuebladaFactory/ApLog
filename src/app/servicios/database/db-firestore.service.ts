@@ -892,6 +892,22 @@ export class DbFirestoreService {
     return collectionData(q, { idField: 'id' }) as Observable<ConId<T>[]>;
   }
 
+  /** Listener en vivo de los documentos de `coleccion` con
+   *  desde ≤ `campo` ≤ hasta (rango inclusivo sobre UN campo). Sin orderBy →
+   *  índice simple automático (sin índice compuesto); el orden se resuelve en
+   *  memoria en el caller. Agrega `id` (doc id). Primer uso: liquidaciones de
+   *  comisiones por mes de corte (periodo). */
+  observarPorRango<T>(
+    coleccion: string,
+    campo: string,
+    desde: string | number,
+    hasta: string | number,
+  ): Observable<ConId<T>[]> {
+    const colRef = collection(this.firestore, `/Vantruck/datos/${coleccion}`);
+    const q = query(colRef, where(campo, '>=', desde), where(campo, '<=', hasta));
+    return collectionData(q, { idField: 'id' }) as Observable<ConId<T>[]>;
+  }
+
   /** Consulta one-shot: `campoIn in valores` + rango inclusivo sobre
    *  `campoRango`, ordenada por `campoRango`. Requiere índice compuesto
    *  (campoIn, campoRango) en firestore.indexes.json. `valores`: 1 a 30

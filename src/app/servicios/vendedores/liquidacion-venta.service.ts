@@ -1,10 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { arrayRemove, arrayUnion } from '@angular/fire/firestore';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Observable } from 'rxjs';
 import { ConId } from 'src/app/interfaces/conId';
 import { Resultado } from 'src/app/interfaces/resultado';
 import { ComisionVenta } from 'src/app/interfaces/comision-venta';
-import { LineaLiquidacionVenta, LiquidacionVenta } from 'src/app/interfaces/liquidacion-venta';
+import { EstadoLiquidacionVenta, LineaLiquidacionVenta, LiquidacionVenta } from 'src/app/interfaces/liquidacion-venta';
 import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 import { NumeradorService } from 'src/app/servicios/numerador/numerador.service';
@@ -13,6 +13,15 @@ import { ComisionVentaFactoryService } from 'src/app/servicios/vendedores/comisi
 import { ComisionVentaConsultaService } from 'src/app/servicios/vendedores/comision-venta-consulta.service';
 import { VendedorService } from 'src/app/servicios/vendedores/vendedor.service';
 import { esCero, redondear2 } from 'src/app/shared/utils/tablero-comisiones.util';
+
+/** Filtros del Historial de liquidaciones, recordados durante la sesión.
+ *  desde/hasta: mes de corte 'YYYY-MM'; idVendedor: id o 'todos'. */
+export interface FiltrosHistorialLiquidacion {
+  desde: string;
+  hasta: string;
+  idVendedor: string;
+  estado: EstadoLiquidacionVenta | 'todos';
+}
 
 /** Dueño de las liquidaciones de comisiones de venta (Frente Vendedores) —
  *  colección `liquidacionesVenta`. Cuatro gestos, cada uno en
@@ -35,6 +44,17 @@ export class LiquidacionVentaService {
   private numerador = inject(NumeradorService);
   private consulta = inject(ComisionVentaConsultaService);
   private vendedorService = inject(VendedorService);
+
+  /** Filtros del Historial (al salir y volver a la pestaña). null = por defecto. */
+  filtrosHistorial: FiltrosHistorialLiquidacion | null = null;
+
+  // ── Consulta ────────────────────────────────────────────────────
+
+  /** Liquidaciones con mes de corte entre `desde` y `hasta` (anio*100+mes,
+   *  inclusive), en vivo. Rango sobre un solo campo → índice simple. */
+  observarPorPeriodos(desde: number, hasta: number): Observable<ConId<LiquidacionVenta>[]> {
+    return this.db.observarPorRango<LiquidacionVenta>(LiquidacionVentaService.COLECCION, 'periodo', desde, hasta);
+  }
 
   // ── Consulta previa ─────────────────────────────────────────────
 

@@ -1,252 +1,130 @@
-@if (isLoading) {
-    <app-spinner></app-spinner>
-} @else {
-    <div class="d-flex justify-content-between mt-5">
-        <div class="d-flex w-50">
-            <h2 class="d-flex align-items-center">
-                Consultar Resumen de Ventas por Vendedor:
-            </h2>
-            <div class="form-group mb-2 ms-2 d-flex align-items-center">
-                <select
-                    class="form-select"
-                    [ngModel]="idVendedorSeleccionado"
-                    (change)="changeVendedor($event)"
-                >
-                    <!-- <option [value]=null>{{vendSeleccionado ? vendSeleccionado.datosPersonales.apellido + " " + vendSeleccionado.datosPersonales.nombre : "Elegir Vendedor"}}</option> -->
-                    <option [value]="null" hidden>{{ "Seleccione" }}</option>
-                    @for (v of vendedores; track v) {
-                        <option [value]="v.idVendedor">
-                            <!--  {{v.datosPersonales.apellido}} {{v.datosPersonales.nombre}} -->
-                            {{ getVendedor(v.idVendedor) }}
-                        </option>
-                    }
-                </select>
-            </div>
-        </div>
-        @if (vendSeleccionado) {           
-            <div class="col d-flex justify-content-end">
-                <div class="">
-                    <label><span class="fs-5">Consultar por Fecha</span></label>
-                    <div
-                        class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded"
-                    >
-                        <table>
-                            <thead>
-                                <th></th>
-                                <th>Desde</th>
-                                <th>Hasta</th>
-                                <th>Cant</th>
-                                <th></th>
-                            </thead>
-                            <tbody>
-                                <td>
-                                    <div class="btn-group dropup">
-                                        <button
-                                            id="fechas"
-                                            type="button"
-                                            class="btn btn-primary dropdown-toggle"
-                                            data-bs-toggle="dropdown"
-                                            data-bs-auto-close="outside"
-                                        ></button>
-                                        <ul class="dropdown-menu">
-                                            <li>
-                                                <!-- <input class="form-control text-center" style="font-size: 1.15rem;" type="text" readonly [value]="'Desde: ' + fromDate.year + '/' + fromDate.month + '/' + fromDate.day + '   Hasta: ' + toDate?.year + '/' + toDate?.month + '/' +toDate?.day"> -->
-                                                <ngb-datepicker
-                                                    #dp
-                                                    (dateSelect)="
-                                                        onDateSelection($event)
-                                                    "
-                                                    [displayMonths]="2"
-                                                    [dayTemplate]="t"
-                                                    outsideDays="hidden"
-                                                >
-                                                    <ng-template
-                                                        #t
-                                                        let-date
-                                                        let-focused="focused"
-                                                    >
-                                                        <span
-                                                            class="custom-day"
-                                                            [class.focused]="
-                                                                focused
-                                                            "
-                                                            [class.range]="
-                                                                isRange(date)
-                                                            "
-                                                            [class.faded]="
-                                                                isHovered(
-                                                                    date
-                                                                ) ||
-                                                                isInside(date)
-                                                            "
-                                                            (mouseenter)="
-                                                                hoveredDate =
-                                                                    date
-                                                            "
-                                                            (mouseleave)="
-                                                                hoveredDate =
-                                                                    null
-                                                            "
-                                                        >
-                                                            {{ date.day }}
-                                                        </span>
-                                                    </ng-template>
-                                                </ngb-datepicker>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </td>
-                                <td>
-                                    <input
-                                        class="form-control text-center"
-                                        style="width: 100px; font-size: 1.2rem"
-                                        type="text"
-                                        readonly
-                                        [value]="fechaDesdeString"
-                                    />
-                                </td>
-                                <td>
-                                    <input
-                                        class="form-control text-center"
-                                        style="width: 100px; font-size: 1.2rem"
-                                        type="text"
-                                        readonly
-                                        [value]="fechaHastaString"
-                                    />
-                                </td>
-                                <td>
-                                    <input
-                                        type="text"
-                                        inputmode="numeric"
-                                        style="width: 50px; font-size: 1.2rem"
-                                        class="form-control"
-                                        aria-label="Recipient's username"
-                                        aria-describedby="button-addon2"
-                                        [(ngModel)]="limite"
-                                        (keyup.enter)="consultarRegistro()"
-                                        appSoloNumeros
-                                    />
-                                </td>
-                                <td>
-                                    <button
-                                        class="btn btn-primary boton"
-                                        type="button"
-                                        id="button-addon2"
-                                        (click)="consultarRangoManual()"
-                                    >
-                                        Consultar
-                                    </button>
-                                </td>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        }
+<div class="mt-3">
+  <div class="d-flex flex-wrap align-items-end gap-3 mb-3">
+    <div>
+      <label class="form-label mb-1" for="historialDesde">Desde (mes de corte)</label>
+      <input #desdeInput id="historialDesde" type="month" class="form-control" style="width: 190px;"
+        [value]="desde" (change)="cambiarRango(desdeInput.value, hastaInput.value)" />
     </div>
-
-    <hr class="mt-5" />
-    @if (vendSeleccionado) {
-        @if (resumenVentas.length > 0) {
-            <h2 class="mt-3 ms-2 mb-2">
-                <span class="badge bg-primary-subtle text-primary-emphasis"
-                    >{{ vendSeleccionado.datosPersonales.apellido }}
-                    {{ vendSeleccionado.datosPersonales.nombre }}
-                </span> : <span class="fs-4">Últimos 12 resumenes de venta</span>
-            </h2>
-            @for (r of resumenVentas; track r) {
-                <div class="card mb-3">
-                    <div class="card-header">
-                        <div class="d-flex">
-                            <div class="d-flex justify-content-between w-100">
-                                <div class="fs-4 align-self-center">
-                                    Pediodo:
-                                    <span class="fw-bold"
-                                        >{{ r.periodo.mes }}/{{
-                                            r.periodo.anio
-                                        }}</span
-                                    >
-                                </div>
-                                <div class="fs-4 align-self-center">
-                                    Total:
-                                    <span class="fw-bold">{{
-                                        r.total | formatearValor: "$"
-                                    }}</span>
-                                </div>
-                                <div class="fs-4 align-self-center">
-                                    Fecha:
-                                    <span class="fw-bold">{{ r.fecha }}</span>
-                                </div>
-                            </div>
-                            <div class="flex-shrink-0 ms-3">
-                                <app-btn-leer
-                                    name="Detalle"
-                                    class="me-2"
-                                    (click)="abrirModalDetalle(r)"
-                                ></app-btn-leer>
-                                <app-btn-leer
-                                    name="print"
-                                    class="me-2"
-                                    (click)="preguntarDescarga(r)"
-                                ></app-btn-leer>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <table
-                            class="table table-sm table-bordered table-hover table-sm align-middle mb-0"
-                        >
-                            <thead>
-                                <tr>
-                                    <th>Cliente</th>
-                                    <th class="text-center">Comision %</th>
-                                    <th class="text-center">Cant Op</th>
-                                    <th class="text-center">Total Op</th>
-                                    <th class="text-center">Total Comisión</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @for (asig of r.asignacionesExt; track asig) {
-                                    <tr>
-                                        <td>
-                                            {{ getCliente(asig.idCliente) }}
-                                        </td>
-                                        <td class="text-center">
-                                            {{
-                                                asig.porcentaje | formatearValor
-                                            }}
-                                        </td>
-                                        <td class="text-center">
-                                            {{
-                                                getOpCliente(asig.idCliente, r)
-                                                    .length | formatearValor
-                                            }}
-                                        </td>
-                                        <td class="col-numero">
-                                            {{
-                                                asig.totalCliente
-                                                    | formatearValor: "$"
-                                            }}
-                                        </td>
-                                        <td class="col-numero text-success">
-                                            {{
-                                                asig.totalComision
-                                                    | formatearValor: "$"
-                                            }}
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            }
-        } @else {
-            <div class="alert alert-info">
-                No se registran resumenes de ventas.
-            </div>
+    <div>
+      <label class="form-label mb-1" for="historialHasta">Hasta</label>
+      <input #hastaInput id="historialHasta" type="month" class="form-control" style="width: 190px;"
+        [value]="hasta" (change)="cambiarRango(desdeInput.value, hastaInput.value)" />
+    </div>
+    <div>
+      <label class="form-label mb-1" for="historialVendedor">Vendedor</label>
+      <select id="historialVendedor" class="form-select" style="min-width: 260px;"
+        [ngModel]="idVendedor" (ngModelChange)="cambiarVendedor($event)">
+        <option value="todos">Todos</option>
+        @for (o of opcionesVendedor; track o.id) {
+          <option [value]="o.id">{{ o.nombre }}</option>
         }
+      </select>
+    </div>
+    <div>
+      <label class="form-label mb-1" for="historialEstado">Estado</label>
+      <select id="historialEstado" class="form-select" style="min-width: 160px;"
+        [ngModel]="estado" (ngModelChange)="cambiarEstado($event)">
+        <option value="todos">Todos</option>
+        <option value="emitida">Emitidas</option>
+        <option value="pagada">Pagadas</option>
+        <option value="anulada">Anuladas</option>
+      </select>
+    </div>
+  </div>
+
+  @if (errorRango) {
+    <div class="alert alert-warning py-2">{{ errorRango }}</div>
+  }
+  @if (error) {
+    <div class="alert alert-danger">{{ error }}</div>
+  }
+
+  @if (!cargando && !error) {
+    @if (visibles.length === 0) {
+      <div class="alert alert-info">No hay liquidaciones con esos filtros.</div>
     } @else {
-        <div class="alert alert-info">Seleccione un Vendedor.</div>
+      <div class="mb-2">
+        {{ visibles.length }} {{ visibles.length === 1 ? 'liquidación' : 'liquidaciones' }} ·
+        Emitidas sin pagar: <strong>{{ totalEmitidas | formatearValor: '$' }}</strong>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>N.º</th>
+              <th>Vendedor</th>
+              <th>Mes de corte</th>
+              <th>Emisión</th>
+              <th class="col-numero">Comisiones</th>
+              <th class="col-numero">Total</th>
+              <th class="text-center">Estado</th>
+              <th>Pago / anulación</th>
+              <th style="width: 300px;"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (l of visibles; track l.id) {
+              <tr [class.text-muted]="l.estado === 'anulada'">
+                <td class="text-nowrap"><strong>{{ l.numero }}</strong></td>
+                <td>{{ nombreVendedor(l) }}</td>
+                <td>{{ mesCorte(l) }}</td>
+                <td>{{ fecha(l.fechaEmision) }}</td>
+                <td class="col-numero">{{ l.lineas.length }}</td>
+                <td class="col-numero" [class.text-decoration-line-through]="l.estado === 'anulada'">
+                  {{ l.total | formatearValor: '$' }}
+                </td>
+                <td class="text-center">
+                  <span class="badge" [ngClass]="claseEstado(l.estado)">{{ etiquetaEstado(l.estado) }}</span>
+                </td>
+                <td>
+                  @if (l.pago) {
+                    {{ fecha(l.pago.fecha) }}
+                    @if (l.pago.observacion) {
+                      <div class="fst-italic">{{ l.pago.observacion }}</div>
+                    }
+                  } @else if (l.anulacion) {
+                    {{ fecha(l.anulacion.fecha) }}
+                    <div class="fst-italic">{{ l.anulacion.motivo }}</div>
+                  } @else {
+                    —
+                  }
+                </td>
+                <td class="text-center text-nowrap">
+                  <button type="button" class="btn btn-sm btn-outline-primary me-1" (click)="verDetalle(l)">Detalle</button>
+                  @if (puedeEditar) {
+                    @if (l.estado === 'emitida') {
+                      <button type="button" class="btn btn-sm btn-success me-1" [disabled]="procesando"
+                        (click)="pagar(l)">Pagar</button>
+                    }
+                    @if (l.estado === 'pagada') {
+                      <button type="button" class="btn btn-sm btn-outline-warning me-1" [disabled]="procesando"
+                        (click)="revertirPago(l)">Revertir pago</button>
+                    }
+                    @if (l.estado !== 'anulada') {
+                      <span [title]="l.estado === 'pagada' ? 'Primero revertí el pago' : ''">
+                        <button type="button" class="btn btn-sm btn-outline-danger"
+                          [disabled]="procesando || l.estado === 'pagada'"
+                          (click)="anular(l)">Anular</button>
+                      </span>
+                    }
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr class="table-secondary fw-bold">
+              <td colspan="5">TOTAL (sin anuladas)</td>
+              <td class="col-numero">{{ totalSinAnuladas | formatearValor: '$' }}</td>
+              <td colspan="3"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
     }
+  }
+</div>
+
+@if (cargando || procesando) {
+  <app-spinner></app-spinner>
 }

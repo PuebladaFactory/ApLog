@@ -63,7 +63,7 @@
                         <thead>
                           <tr>
                             <th class="col-numero">N.º op</th>
-                            <th>Fecha</th>
+                            <th> <span class="ms-3">Fecha</span></th>
                             <th class="col-numero">Base</th>
                             <th class="col-numero">%</th>
                             <th class="col-numero">Comisión</th>
@@ -83,13 +83,13 @@
                             </tr>
                             @for (l of cl.lineas; track l.id) {
                               <tr>
-                                <td class="col-numero">
+                                <td class="d-flex justify-content-between">
                                   @if (l.arrastre) {
                                     <span class="badge bg-light text-dark border me-1">arrastre</span>
                                   }
-                                  {{ l.numeroOperacion }}
+                                  <span class="col-numero">{{ l.numeroOperacion }}</span>
                                 </td>
-                                <td>{{ l.fecha }}</td>
+                                <td class="align-middle"><span class="ms-3">{{ l.fecha }}</span></td>
                                 <td class="col-numero">{{ l.base | formatearValor: '$' }}</td>
                                 <td class="col-numero">{{ l.porcentaje }}%</td>
                                 <td class="col-numero">{{ l.monto | formatearValor: '$' }}</td>

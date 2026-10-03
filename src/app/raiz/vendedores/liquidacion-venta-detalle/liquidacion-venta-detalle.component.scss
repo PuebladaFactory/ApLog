@@ -1,4 +1,4 @@
-th, td, select, input, label {
+th, td, div, select, input {
   font-size: 1.3rem;
 }
 
@@ -13,7 +13,7 @@ th, td, select, input, label {
   font-weight: 500 !important;
 }
 
-/* Encabezados y TOTAL en negrita (ver V6.b). */
+/* Encabezados, subtotales y TOTAL en negrita (ver V6.b). */
 th.col-numero,
 .col-numero.fw-bold,
 tr.fw-bold > .col-numero,
