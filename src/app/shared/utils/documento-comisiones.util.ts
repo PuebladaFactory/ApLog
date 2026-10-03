@@ -61,14 +61,17 @@ export function armarDocumentoLiquidacionVenta(l: LiquidacionVenta): DocumentoTa
 
   const anulada = l.estado === 'anulada';
   const ajustes = lineas.filter(x => x.ajuste).length;
+  // Un concepto por nota (cada una va en su propio renglón en Excel y PDF).
+  // Sin "−" (U+2212): la Helvetica estándar de jsPDF no lo tiene.
   const notas = [
-    'Comisión = base × %. Importe = comisión − liquidado antes (lo ya liquidado por esa ' +
-    'operación en liquidaciones anteriores).',
+    'Comisión: base × %.',
+    'Importe: comisión menos liquidado antes.',
+    'Liquidado antes: lo ya liquidado por esa operación en liquidaciones anteriores.',
   ];
   if (ajustes > 0) {
     notas.push(
-      `Incluye ${ajustes} ${ajustes === 1 ? 'ajuste' : 'ajustes'}: comisiones ya liquidadas cuyo ` +
-      'monto cambió por edición o baja de la operación; se liquida solo la diferencia (puede ser negativa).',
+      `Ajuste (${ajustes} en esta liquidación): comisión ya liquidada cuyo monto cambió por ` +
+      'edición o baja de la operación. Se liquida solo la diferencia, que puede ser negativa.',
     );
   }
 
