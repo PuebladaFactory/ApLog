@@ -96,5 +96,9 @@
 </div>
 
 <div class="modal-footer">
+  <div class="btn-group me-auto" role="group" aria-label="Descargar">
+    <button type="button" class="btn btn-outline-success" [disabled]="descargando" (click)="descargar('excel')">Excel</button>
+    <button type="button" class="btn btn-outline-danger" [disabled]="descargando" (click)="descargar('pdf')">PDF</button>
+  </div>
   <button type="button" class="btn btn-secondary" (click)="activeModal.close()">Cerrar</button>
 </div>

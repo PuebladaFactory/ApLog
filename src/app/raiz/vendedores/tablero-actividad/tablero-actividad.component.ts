@@ -5,6 +5,8 @@ import { VendedorService } from 'src/app/servicios/vendedores/vendedor.service';
 import { LiquidacionVentaService } from 'src/app/servicios/vendedores/liquidacion-venta.service';
 import { PermisosService } from 'src/app/servicios/permisos/permisos.service';
 import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
+import { ComisionesExportService } from 'src/app/servicios/vendedores/comisiones-export.service';
+import { preguntarFormatoDescarga } from 'src/app/shared/utils/preguntar-descarga.util';
 import Swal from 'sweetalert2';
 import { periodoDeFecha } from 'src/app/shared/utils/periodo.util';
 import {
@@ -36,6 +38,7 @@ export class TableroActividadComponent implements OnInit, OnDestroy {
   expandidos = new Set<string>();
   cargando = true;
   error = '';
+  descargando = false;
 
   private periodo$: BehaviorSubject<number>;
   private destroy$ = new Subject<void>();
@@ -46,6 +49,7 @@ export class TableroActividadComponent implements OnInit, OnDestroy {
     private liquidacionService: LiquidacionVentaService,
     private permisos: PermisosService,
     private clienteService: ClienteService,
+    private exportServ: ComisionesExportService,
   ) {
     const hoy = new Date();
     this.mes = this.consulta.mesTablero
@@ -146,9 +150,44 @@ export class TableroActividadComponent implements OnInit, OnDestroy {
     const r = await this.liquidacionService.emitir(v.idVendedor, this.tablero.periodo, v.saldoALiquidar);
     this.cargando = false;
     if (r.exito) {
-      Swal.fire('Liquidación emitida', `${r.mensaje} Se puede ver, pagar o anular desde el Historial.`, 'success');
+      const formato = await preguntarFormatoDescarga(
+        'Liquidación emitida',
+        `${r.mensaje} Se puede ver, pagar o anular desde el Historial. ¿Querés descargarla?`,
+      );
+      if (formato && r.objeto) {
+        try {
+          await this.exportServ.descargarLiquidacionPorId(r.objeto.id, formato);
+        } catch (e: any) {
+          Swal.fire('No se pudo generar el archivo', e?.message ?? String(e), 'error');
+        }
+      }
     } else {
       Swal.fire('No se pudo liquidar', r.mensaje, 'error');
+    }
+  }
+
+  /** Excel/PDF del tablero tal como se ve (hoja Resumen + hoja Detalle). */
+  async descargar(formato: 'excel' | 'pdf'): Promise<void> {
+    if (!this.tablero) return;
+    this.descargando = true;
+    try {
+      await this.exportServ.descargarTablero(
+        {
+          mes: this.mes,
+          tituloMes: this.tituloMes,
+          vendedores: this.vendedores.map(v => ({
+            nombre: this.nombre(v.idVendedor),
+            inactivo: this.esInactivo(v.idVendedor),
+            datos: v,
+          })),
+          totales: this.tablero.totales,
+        },
+        formato,
+      );
+    } catch (e: any) {
+      Swal.fire('No se pudo generar el archivo', e?.message ?? String(e), 'error');
+    } finally {
+      this.descargando = false;
     }
   }
 

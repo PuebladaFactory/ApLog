@@ -59,7 +59,7 @@
               <th class="col-numero">Total</th>
               <th class="text-center">Estado</th>
               <th>Pago / anulación</th>
-              <th style="width: 300px;"></th>
+              <th style="width: 420px;"></th>
             </tr>
           </thead>
           <tbody>
@@ -91,6 +91,12 @@
                 </td>
                 <td class="text-center text-nowrap">
                   <button type="button" class="btn btn-sm btn-outline-primary me-1" (click)="verDetalle(l)">Detalle</button>
+                  <div class="btn-group btn-group-sm me-1" role="group" aria-label="Descargar">
+                    <button type="button" class="btn btn-outline-success" [disabled]="descargando"
+                      (click)="descargar(l, 'excel')">Excel</button>
+                    <button type="button" class="btn btn-outline-danger" [disabled]="descargando"
+                      (click)="descargar(l, 'pdf')">PDF</button>
+                  </div>
                   @if (puedeEditar) {
                     @if (l.estado === 'emitida') {
                       <button type="button" class="btn btn-sm btn-success me-1" [disabled]="procesando"

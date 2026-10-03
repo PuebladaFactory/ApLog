@@ -5,6 +5,12 @@
       [value]="mes" (change)="cambiarMes(mesInput.value)" />
     <button type="button" class="btn btn-outline-secondary" (click)="desplazarMes(1)" title="Mes siguiente">›</button>
     <h2 class="m-0 ms-3">Comisiones de {{ tituloMes }}</h2>
+    <div class="btn-group ms-auto" role="group" aria-label="Descargar">
+      <button type="button" class="btn btn-outline-success" [disabled]="descargando || cargando || !tablero"
+        (click)="descargar('excel')">Excel</button>
+      <button type="button" class="btn btn-outline-danger" [disabled]="descargando || cargando || !tablero"
+        (click)="descargar('pdf')">PDF</button>
+    </div>
   </div>
 
   @if (error) {

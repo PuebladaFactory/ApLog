@@ -21,6 +21,7 @@ import {
   periodoDeMes,
 } from 'src/app/shared/utils/liquidacion-venta-vista.util';
 import { LiquidacionVentaDetalleComponent } from '../liquidacion-venta-detalle/liquidacion-venta-detalle.component';
+import { ComisionesExportService } from 'src/app/servicios/vendedores/comisiones-export.service';
 
 type FiltroEstado = EstadoLiquidacionVenta | 'todos';
 
@@ -50,6 +51,7 @@ export class VendedorHistorialComponent implements OnInit, OnDestroy {
 
   cargando = true;
   procesando = false;
+  descargando = false;
   error = '';
   errorRango = '';
 
@@ -62,6 +64,7 @@ export class VendedorHistorialComponent implements OnInit, OnDestroy {
     private vendedorService: VendedorService,
     private permisos: PermisosService,
     private modalService: NgbModal,
+    private exportServ: ComisionesExportService,
   ) {
     const guardados = this.liquidacionService.filtrosHistorial;
     if (guardados) {
@@ -280,6 +283,17 @@ export class VendedorHistorialComponent implements OnInit, OnDestroy {
     const r = await this.liquidacionService.anular(l.id, String(res.value).trim());
     this.procesando = false;
     this.informar(r, 'Liquidación anulada', 'No se pudo anular');
+  }
+
+  async descargar(l: ConId<LiquidacionVenta>, formato: 'excel' | 'pdf'): Promise<void> {
+    this.descargando = true;
+    try {
+      await this.exportServ.descargarLiquidacion(l, formato);
+    } catch (e: any) {
+      Swal.fire('No se pudo generar el archivo', e?.message ?? String(e), 'error');
+    } finally {
+      this.descargando = false;
+    }
   }
 
   private informar(r: Resultado<any>, tituloOk: string, tituloError: string): void {

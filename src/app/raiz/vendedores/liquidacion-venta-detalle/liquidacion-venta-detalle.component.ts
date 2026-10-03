@@ -1,5 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import Swal from 'sweetalert2';
+import { ComisionesExportService } from 'src/app/servicios/vendedores/comisiones-export.service';
 import { ConId } from 'src/app/interfaces/conId';
 import { EstadoLiquidacionVenta, LineaLiquidacionVenta, LiquidacionVenta } from 'src/app/interfaces/liquidacion-venta';
 import { redondear2 } from 'src/app/shared/utils/tablero-comisiones.util';
@@ -36,7 +38,12 @@ export class LiquidacionVentaDetalleComponent implements OnInit {
   grupos: GrupoClienteDetalle[] = [];
   cantidadAjustes = 0;
 
-  constructor(public activeModal: NgbActiveModal) {}
+  descargando = false;
+
+  constructor(
+    public activeModal: NgbActiveModal,
+    private exportServ: ComisionesExportService,
+  ) {}
 
   ngOnInit(): void {
     const lineas = this.liquidacion?.lineas ?? [];
@@ -65,6 +72,17 @@ export class LiquidacionVentaDetalleComponent implements OnInit {
   get nombreVendedor(): string { return nombreVendedorLiquidacion(this.liquidacion); }
   get cuit(): string { return formatoCuit(this.liquidacion.vendedor?.cuit); }
   get mesCorte(): string { return mesCorteLiquidacion(this.liquidacion); }
+
+  async descargar(formato: 'excel' | 'pdf'): Promise<void> {
+    this.descargando = true;
+    try {
+      await this.exportServ.descargarLiquidacion(this.liquidacion, formato);
+    } catch (e: any) {
+      Swal.fire('No se pudo generar el archivo', e?.message ?? String(e), 'error');
+    } finally {
+      this.descargando = false;
+    }
+  }
 
   fecha(f: string | null | undefined): string { return fechaDMY(f); }
   claseEstado(e: EstadoLiquidacionVenta): string { return claseEstadoLiquidacion(e); }
