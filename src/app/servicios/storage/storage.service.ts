@@ -276,15 +276,6 @@ export class StorageService {
   private _resumenLiq$ = new BehaviorSubject<any>(this.loadInfo('resumenLiq') || []);
   public resumenLiq$ = this._resumenLiq$.asObservable();
   
-  private _vendedores$ = new BehaviorSubject<any>(this.loadInfo('vendedores') || []);
-  public vendedores$ = this._vendedores$.asObservable();
-
-  private _informesVenta$ = new BehaviorSubject<any>(this.loadInfo('informesVenta') || []);
-  public informesVenta$ = this._informesVenta$.asObservable();
-
-  private _resumenVenta$ = new BehaviorSubject<any>(this.loadInfo('resumenVenta') || []);
-  public resumenVenta$ = this._resumenVenta$.asObservable();
-
   private _noOperativo$ = new BehaviorSubject<any>(this.loadInfo('noOperativo') || []);
   public noOperativo$ = this._noOperativo$.asObservable();
 
@@ -680,18 +671,6 @@ export class StorageService {
         this._resumenLiq$.next(data);
         break
       }
-      case "vendedores":{
-        this._vendedores$.next(data);
-        break
-      }
-      case "informesVenta":{
-        this._informesVenta$.next(data);
-        break
-      }
-      case "resumenVenta":{
-        this._resumenVenta$.next(data);
-        break
-      }
       case "noOperativo":{
         this._noOperativo$.next(data);
         break
@@ -1009,12 +988,6 @@ export class StorageService {
         return this._resumenLiqProveedores$.asObservable();  
       case "resumenLiq":
         return this._resumenLiq$.asObservable();
-      case "vendedores":
-        return this._vendedores$.asObservable();
-      case "informesVenta":
-        return this._informesVenta$.asObservable();
-      case "resumenVenta":
-        return this._resumenVenta$.asObservable();
       case "fechasConsulta":
         return this._fechasConsulta$.asObservable();
       case "noOperativo":

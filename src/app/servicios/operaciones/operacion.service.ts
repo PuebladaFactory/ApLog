@@ -1,7 +1,7 @@
-import { Injectable, OnDestroy, inject } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, Subject, merge } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { Firestore, Transaction } from '@angular/fire/firestore';
+import { Transaction } from '@angular/fire/firestore';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { ConId } from 'src/app/interfaces/conId';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
@@ -50,7 +50,6 @@ export class OperacionService implements OnDestroy {
 
   private destroy$       = new Subject<void>();
   private cancelarRango$ = new Subject<void>();
-  private firestore = inject(Firestore);
 
   constructor(
     private db:               DbFirestoreService,

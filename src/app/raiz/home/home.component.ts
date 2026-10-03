@@ -6,7 +6,6 @@ import { Cliente } from 'src/app/interfaces/cliente';
 import { NoDisponibilidadChofer } from 'src/app/interfaces/no-disponibilidad-chofer';
 import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
-import { Vendedor } from 'src/app/interfaces/vendedor';
 import { CategoriaDocumentacionService } from 'src/app/servicios/categoria-documentacion/categoria-documentacion.service';
 import { LegajoService } from 'src/app/servicios/legajos/legajo.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
@@ -58,7 +57,6 @@ export class HomeComponent implements OnInit {
       this.storageService.listenForChanges<TarifaGralCliente>("tarifasEspChofer");
       this.storageService.listenForChanges<TarifaGralCliente>("tarifasGralProveedor");
       this.storageService.listenForChanges<TarifaGralCliente>("tarifasEspProveedor");
-      this.storageService.listenForChanges<Vendedor>("vendedores");
       this.storageService.listenForChangesField<NoDisponibilidadChofer>("noOperativo", "activa", true);
       
 
