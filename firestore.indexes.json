@@ -32,6 +32,14 @@
         { "fieldPath": "estado", "order": "ASCENDING" },
         { "fieldPath": "periodoClave", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "informesLiq",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "estado", "order": "ASCENDING" },
+        { "fieldPath": "estadoFinanciero", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

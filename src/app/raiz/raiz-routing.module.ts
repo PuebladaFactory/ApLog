@@ -76,6 +76,14 @@ const routes: Routes = [
       data: { roles: ['dev','admin'] }, // 
     },
     {
+      // Frente Finanzas: módulo nuevo en paralelo al viejo ('finanzas').
+      // Solo lazy: NO se importa en RaizModule. demo lee (reglas 'finanzas').
+      path: 'finanzasNueva',
+      loadChildren: () => import('./finanzas-nueva/finanzas-nueva.module').then(m => m.FinanzasNuevaModule),
+      canActivate: [RoleGuard],
+      data: { roles: ['dev', 'admin', 'demo'] },
+    },
+    {
       path: 'reportes',
       loadChildren: () => import('./reportes/reportes.module').then(m => m.ReportesModule),
       canActivate: [RoleGuard], // Protege acceso dentro del módulo

@@ -1,0 +1,88 @@
+<div class="d-flex flex-wrap gap-2 align-items-center mt-3 mb-3">
+  <div class="btn-group" role="group" aria-label="Lado de la cuenta">
+    <button
+      type="button"
+      class="btn"
+      [ngClass]="filtros.lado === 'cobrar' ? 'btn-primary' : 'btn-outline-primary'"
+      (click)="cambiarLado('cobrar')"
+    >A cobrar · Clientes</button>
+    <button
+      type="button"
+      class="btn"
+      [ngClass]="filtros.lado === 'pagar' ? 'btn-primary' : 'btn-outline-primary'"
+      (click)="cambiarLado('pagar')"
+    >A pagar · Choferes y proveedores</button>
+  </div>
+  <input
+    class="form-control buscador"
+    type="text"
+    [ngModel]="filtros.texto"
+    (ngModelChange)="onTexto($event)"
+    placeholder="Buscar por nombre o CUIT"
+  />
+  <span class="ms-auto text-muted">{{ filtradas.length }} cuenta(s)</span>
+</div>
+
+@if (error) {
+  <div class="alert alert-danger">{{ error }}</div>
+}
+
+<div class="row g-3 mb-3">
+  <div class="col-6 col-lg">
+    <div class="card tarjeta h-100">
+      <div class="card-body">
+        <div class="tarjeta-label">{{ filtros.lado === 'cobrar' ? 'Nos deben (facturado)' : 'Les debemos (facturado)' }}</div>
+        <div class="tarjeta-valor">{{ totales.saldoFacturado | formatearValor: '$' }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg">
+    <div class="card tarjeta h-100">
+      <div class="card-body">
+        <div class="tarjeta-label">Facturas de más de {{ diasAlerta }} días</div>
+        <div class="tarjeta-valor" [class.text-danger]="totales.saldoMas60 > 0">{{ totales.saldoMas60 | formatearValor: '$' }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg">
+    <div class="card tarjeta h-100">
+      <div class="card-body">
+        <div class="tarjeta-label">Emitido sin facturar</div>
+        <div class="tarjeta-valor text-muted">{{ totales.sinFacturar | formatearValor: '$' }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg">
+    <div class="card tarjeta h-100">
+      <div class="card-body">
+        <div class="tarjeta-label">{{ filtros.lado === 'cobrar' ? 'Saldo a favor de clientes' : 'Anticipos entregados' }}</div>
+        <div class="tarjeta-valor">{{ totales.saldoAFavor | formatearValor: '$' }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-lg">
+    <div class="card tarjeta tarjeta-neto h-100">
+      <div class="card-body">
+        <div class="tarjeta-label">Neto</div>
+        <div class="tarjeta-valor">{{ totales.neto | formatearValor: '$' }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-tabla-listado
+  [items]="filtradas"
+  [columnas]="columnas"
+  [ordenInicial]="ordenInicial"
+  [cargando]="cargando"
+  [trackKey]="trackCuenta"
+  [mensajeVacio]="filtros.lado === 'cobrar' ? 'No hay clientes con saldo abierto.' : 'No hay choferes ni proveedores con saldo abierto.'"
+></app-tabla-listado>
+
+<p class="text-muted small mt-2">
+  <b>Facturado abierto:</b> informes de liquidación facturados con saldo pendiente.
+  <b>+{{ diasAlerta }} días:</b> parte de ese saldo con factura de más de {{ diasAlerta }} días (desde la fecha de la factura).
+  <b>Sin facturar:</b> informes emitidos que todavía no tienen factura vinculada (no se pueden cobrar ni pagar hasta facturarse).
+  <b>{{ filtros.lado === 'cobrar' ? 'Saldo a favor' : 'Anticipos' }}:</b> cobros o pagos sin imputar.
+  <b>Neto:</b> facturado abierto menos {{ filtros.lado === 'cobrar' ? 'saldo a favor' : 'anticipos' }}.
+</p>

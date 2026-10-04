@@ -908,6 +908,37 @@ export class DbFirestoreService {
     return collectionData(q, { idField: 'id' }) as Observable<ConId<T>[]>;
   }
 
+  /** Listener en vivo: `campo == valor` y `campoIn in valores` (1 a 30
+   *  valores). Índice compuesto (campo, campoIn) en firestore.indexes.json.
+   *  Agrega `id` (doc id); el caller aplica su propio patrón ConId. Primer
+   *  uso: InformeLiq facturados con saldo (estado == 'facturado',
+   *  estadoFinanciero in ['pendiente','parcial']) — Finanzas. */
+  observarPorCampoEIn<T>(
+    coleccion: string,
+    campo: string,
+    valor: any,
+    campoIn: string,
+    valores: any[],
+  ): Observable<ConId<T>[]> {
+    if (valores.length === 0 || valores.length > 30) {
+      throw new Error(`observarPorCampoEIn: 'in' admite de 1 a 30 valores (recibidos: ${valores.length}).`);
+    }
+    const colRef = collection(this.firestore, `/Vantruck/datos/${coleccion}`);
+    const q = query(colRef, where(campo, '==', valor), where(campoIn, 'in', valores));
+    return collectionData(q, { idField: 'id' }) as Observable<ConId<T>[]>;
+  }
+
+  /** Listener en vivo de los documentos con `campo > valor`. Una sola
+   *  desigualdad → índice simple automático (sin índice compuesto); el resto
+   *  de los filtros y el orden se resuelven en memoria en el caller. Agrega
+   *  `id` (doc id). Primer uso: movimientosFin con saldo sin imputar
+   *  (sinImputar > 0) — Finanzas. */
+  observarMayorQue<T>(coleccion: string, campo: string, valor: number | string): Observable<ConId<T>[]> {
+    const colRef = collection(this.firestore, `/Vantruck/datos/${coleccion}`);
+    const q = query(colRef, where(campo, '>', valor));
+    return collectionData(q, { idField: 'id' }) as Observable<ConId<T>[]>;
+  }
+
   /** Consulta one-shot: `campoIn in valores` + rango inclusivo sobre
    *  `campoRango`, ordenada por `campoRango`. Requiere índice compuesto
    *  (campoIn, campoRango) en firestore.indexes.json. `valores`: 1 a 30
