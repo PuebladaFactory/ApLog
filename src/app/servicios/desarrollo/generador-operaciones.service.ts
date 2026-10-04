@@ -91,6 +91,13 @@ export interface ResumenPlan {
   conAcompaniante: number;
   aCerrar: number;
   conAdicional: number;
+  /** Ops a cerrar cuyo snapshot `cliente.comisiones` tiene vendedores: el
+   *  cierre les escribe comisionesVenta. */
+  aCerrarConComision: number;
+  /** Comisiones que van a escribir esos cierres (una por op × vendedor). */
+  comisionesACrear: number;
+  /** Clientes del plan con al menos un vendedor en el snapshot. */
+  clientesConVendedor: number;
   porCliente: { cliente: string; cantidad: number }[];     // de mayor a menor
   porNivelTarifaCliente: { nivel: string; cantidad: number }[];
   /** Días en los que no se llegó al objetivo (faltan vehículos/choferes). */
@@ -134,6 +141,12 @@ type Resultado = OperacionPlaneada | { motivo: string };
  *  mismos parámetros y lo escribe: alta atómica por día
  *  (altaDesdeAsignacion) + cierre una por una (cerrarOperacion), igual que la
  *  UI; registra el lote en `generacionesPrueba`.
+ *  El cierre real escribe InformeOp (par cliente/chofer), resumenesOp y
+ *  comisionesVenta (una por vendedor del snapshot `op.cliente.comisiones`,
+ *  que el factory copia al ALTA desde Cliente.comisionesVenta). Para que un
+ *  lote genere comisiones, los vendedores se asignan a los clientes ANTES de
+ *  generar; si no, solo se completan después con el Recálculo de comisiones.
+ *  El resumen del plan muestra cuántas ops a cerrar generan comisión.
  *  Diseño: claude/diseno-generador-operaciones.md. */
 @Injectable({ providedIn: 'root' })
 export class GeneradorOperacionesService {
@@ -241,7 +254,8 @@ export class GeneradorOperacionesService {
    *   1. alta atómica del día (operaciones + tablero confirmado + log ALTA)
    *      con siExisteBorrador 'bloquear' (no pisa un borrador del usuario);
    *   2. cierre, una por una, de las que el plan marcó para cerrar
-   *      (cerrarOperacion: InformeOp, resúmenes, log CERRAR).
+   *      (cerrarOperacion: InformeOp, resúmenes, comisiones de venta si el
+   *      snapshot del cliente tiene vendedores, log CERRAR).
    *  No es atómico en conjunto: si algo falla, se registra y sigue; si se
    *  corta, lo escrito queda en un estado válido (ops abiertas/cerradas).
    *  Para rehacer: Limpieza de demo + generar de nuevo.
@@ -272,6 +286,8 @@ export class GeneradorOperacionesService {
         resumenPlan: {
           totalOps: plan.resumen.totalOps,
           aCerrar: plan.resumen.aCerrar,
+          aCerrarConComision: plan.resumen.aCerrarConComision,
+          comisionesACrear: plan.resumen.comisionesACrear,
           exclusiones: plan.exclusiones.length,
         },
         altas: 0,
@@ -631,6 +647,17 @@ export class GeneradorOperacionesService {
       conAcompaniante: ops.filter(o => o.creada.operacion.acompaniante).length,
       aCerrar: ops.filter(o => o.cierre !== null).length,
       conAdicional: ops.filter(o => o.cierre?.adicional).length,
+      aCerrarConComision: ops
+        .filter(o => o.cierre !== null && (o.creada.operacion.cliente.comisiones ?? []).length > 0)
+        .length,
+      comisionesACrear: ops
+        .filter(o => o.cierre !== null)
+        .reduce((acc, o) => acc + (o.creada.operacion.cliente.comisiones ?? []).length, 0),
+      clientesConVendedor: new Set(
+        ops
+          .filter(o => (o.creada.operacion.cliente.comisiones ?? []).length > 0)
+          .map(o => o.creada.operacion.cliente.id),
+      ).size,
       porCliente: ordenar(porCliente).map(([cliente, cantidad]) => ({ cliente, cantidad })),
       porNivelTarifaCliente: ordenar(porNivel).map(([nivel, cantidad]) => ({ nivel, cantidad })),
       diasSinCapacidad,

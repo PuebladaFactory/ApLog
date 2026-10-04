@@ -7,7 +7,7 @@
     <p class="mb-3">
       Arma un período de operaciones con clientes, choferes, vehículos y tarifas reales de demo.
       <b>Simular</b> no escribe nada: muestra lo que se generaría. <b>Generar</b> ejecuta ese plan
-      (alta por día con su tablero + cierres) y queda registrado como lote en <code>generacionesPrueba</code>.
+      (alta por día con su tablero + cierres, que escriben InformeOp, resúmenes y comisiones de venta igual que el cierre real) y queda registrado como lote en <code>generacionesPrueba</code>.
     </p>
 
     <div class="row g-2 mb-3" style="max-width: 60rem;">
@@ -123,6 +123,16 @@
           </li>
           <li>Con acompañante {{ plan.resumen.conAcompaniante }}.</li>
           <li>A cerrar {{ plan.resumen.aCerrar }} (con adicional {{ plan.resumen.conAdicional }}); el resto queda abierta.</li>
+          <li>
+            Comisiones de venta: {{ plan.resumen.aCerrarConComision }} de las que se cierran generan comisión
+            ({{ plan.resumen.comisionesACrear }} comisiones; {{ plan.resumen.clientesConVendedor }} cliente(s) del plan con vendedor).
+          </li>
+          @if (plan.resumen.aCerrar > 0 && plan.resumen.clientesConVendedor === 0) {
+            <li class="text-warning">
+              Ningún cliente del plan tiene vendedores asignados: los cierres no van a generar comisiones.
+              Asignalos desde Vendedores → Listado antes de generar (o corré después el Recálculo de comisiones).
+            </li>
+          }
           @if (plan.resumen.diasSinCapacidad.length > 0) {
             <li class="text-warning">
               {{ plan.resumen.diasSinCapacidad.length }} día(s) no llegaron a su objetivo por falta de vehículos o

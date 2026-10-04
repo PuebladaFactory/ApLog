@@ -98,7 +98,8 @@ export class GeneradorOperacionesComponent {
     const r = await Swal.fire({
       title: `¿Generar ${this.plan.resumen.totalOps} operaciones?`,
       html:
-        `<p>Se dan de alta día por día (con su tablero) y se cierran ${this.plan.resumen.aCerrar}. ` +
+        `<p>Se dan de alta día por día (con su tablero) y se cierran ${this.plan.resumen.aCerrar} ` +
+        `(${this.plan.resumen.aCerrarConComision} con comisión de venta). ` +
         `Tarda varios minutos: <b>no cierres ni recargues esta pestaña</b>.</p>` +
         (existentes > 0
           ? `<p class="text-danger">Ya hay ${existentes} operaciones en la base: las nuevas se suman ` +
