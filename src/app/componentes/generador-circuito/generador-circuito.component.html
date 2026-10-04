@@ -1,0 +1,132 @@
+<div class="border border-success rounded-3 p-3 mb-4">
+  <h4 class="text-success">Generador de circuito (liquidar y facturar)</h4>
+
+  @if (!esDemo) {
+    <div class="alert alert-danger mb-0">Herramienta deshabilitada: solo funciona en demo.</div>
+  } @else {
+    <p class="mb-3">
+      Toma los informes de operación <b>activos</b> del rango de meses y sigue el circuito con las funciones reales:
+      liquida por entidad y mes (emite o deja en borrador) y a una parte de lo emitido le vincula una
+      <b>factura de prueba</b> (PDF y QR sintéticos, fecha posterior al período). <b>Simular</b> no escribe nada.
+      Correr después del Generador de operaciones; los clientes se liquidan primero.
+    </p>
+
+    <div class="row g-2 mb-3" style="max-width: 60rem;">
+      <div class="col-md-3">
+        <label class="form-label mb-0">Desde (mes)</label>
+        <input type="month" class="form-control" [(ngModel)]="parametros.desde" [disabled]="simulando || ejecutando" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-0">Hasta (mes)</label>
+        <input type="month" class="form-control" [(ngModel)]="parametros.hasta" [disabled]="simulando || ejecutando" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-0">Semilla</label>
+        <div class="input-group">
+          <input type="number" class="form-control" step="1" [(ngModel)]="parametros.semilla" [disabled]="simulando || ejecutando" />
+          <button type="button" class="btn btn-outline-secondary" [disabled]="simulando || ejecutando" (click)="nuevaSemilla()" title="Semilla nueva">↻</button>
+        </div>
+      </div>
+      <div class="col-md-3"></div>
+
+      <div class="col-md-3">
+        <label class="form-label mb-0">Liquidar, por entidad y mes (0–1)</label>
+        <input type="number" class="form-control" min="0" max="1" step="0.05" [(ngModel)]="parametros.pctLiquidar" [disabled]="simulando || ejecutando" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-0">Quedan en borrador (0–1)</label>
+        <input type="number" class="form-control" min="0" max="1" step="0.01" [(ngModel)]="parametros.pctBorrador" [disabled]="simulando || ejecutando" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-0">Facturar lo emitido (0–1)</label>
+        <input type="number" class="form-control" min="0" max="1" step="0.05" [(ngModel)]="parametros.pctFacturar" [disabled]="simulando || ejecutando" />
+      </div>
+    </div>
+
+    <button type="button" class="btn btn-primary me-2" [disabled]="simulando || ejecutando" (click)="simular()">Simular</button>
+    <button type="button" class="btn btn-success" [disabled]="!puedeEjecutar" (click)="ejecutar()">Generar</button>
+    @if (simulando) {
+      <span class="text-muted ms-2">Armando el plan…</span>
+    }
+    @if (parametrosCambiaron) {
+      <span class="text-warning ms-2">Cambiaron los parámetros: volvé a simular antes de generar.</span>
+    }
+    @if (ejecutando) {
+      <div class="alert alert-info mt-3 mb-0">
+        <b>Generando…</b> {{ progreso }}<br />
+        <small>No cierres ni recargues esta pestaña hasta que termine.</small>
+      </div>
+    }
+
+    @if (resultado) {
+      <div class="alert mt-3 mb-0" [class.alert-success]="resultado.errores.length === 0" [class.alert-warning]="resultado.errores.length > 0">
+        <b>Circuito terminado</b> (lote {{ resultado.idLote }}):
+        {{ resultado.emitidas }} emitidas, {{ resultado.borradores }} borradores,
+        {{ resultado.facturadas }} facturadas, {{ resultado.errores.length }} error(es).
+        @if (resultado.errores.length > 0) {
+          <ul class="mb-0 mt-2">
+            @for (x of resultado.errores.slice(0, MAX_ERRORES_VISIBLES); track $index) {
+              <li>{{ x.liquidacion }}: {{ x.mensaje }}</li>
+            }
+          </ul>
+          @if (resultado.errores.length > MAX_ERRORES_VISIBLES) {
+            <small>… y {{ resultado.errores.length - MAX_ERRORES_VISIBLES }} más (ver el lote en generacionesPrueba).</small>
+          }
+        }
+      </div>
+    }
+
+    @if (error) {
+      <div class="alert alert-danger mt-3 mb-0">{{ error }}</div>
+    }
+
+    @if (plan) {
+      <div class="mt-3">
+        <h5>Plan (semilla {{ plan.parametros.semilla }})</h5>
+        <ul class="mb-3">
+          <li>
+            {{ plan.resumen.informesActivos }} informes activos en el rango
+            ({{ plan.resumen.informesBloqueados }} bloqueados por la proforma de la contraparte: se saltean).
+          </li>
+          <li>
+            {{ plan.resumen.grupos }} grupos entidad × mes; {{ plan.resumen.gruposSinLiquidar }} quedan sin liquidar.
+          </li>
+          <li>
+            <b>{{ plan.resumen.liquidaciones }}</b> liquidaciones: {{ totalEmitidas }} emitidas
+            ({{ totalAFacturar }} con factura de prueba) y {{ totalBorradores }} en borrador.
+            @if (plan.resumen.partidas > 0) {
+              {{ plan.resumen.partidas }} salen de partir entidades que superan el tope de informes por liquidación.
+            }
+          </li>
+        </ul>
+
+        <table class="table table-sm" style="max-width: 60rem;">
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th class="text-end">Liquidaciones</th>
+              <th class="text-end">Emitidas</th>
+              <th class="text-end">Borradores</th>
+              <th class="text-end">A facturar</th>
+              <th class="text-end">Informes</th>
+              <th class="text-end">Total estimado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of plan.resumen.porTipo; track t.tipo) {
+              <tr>
+                <td class="text-capitalize">{{ t.tipo }}</td>
+                <td class="text-end">{{ t.liquidaciones }}</td>
+                <td class="text-end">{{ t.emitidas }}</td>
+                <td class="text-end">{{ t.borradores }}</td>
+                <td class="text-end">{{ t.aFacturar }}</td>
+                <td class="text-end">{{ t.informesOp }}</td>
+                <td class="text-end">{{ t.total | formatearValor: '$' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+</div>
