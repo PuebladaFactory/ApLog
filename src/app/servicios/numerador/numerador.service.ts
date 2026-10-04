@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 
 import { doc, DocumentReference, Firestore, runTransaction, Transaction } from '@angular/fire/firestore';
 import type { EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
+import { PREFIJO_MOVIMIENTO_FIN, TipoMovimientoFin } from 'src/app/interfaces/movimiento-fin';
 
 @Injectable({
   providedIn: 'root'
@@ -92,6 +93,33 @@ export class NumeradorService {
     const nuevo = ultimo + 1;
     return {
       numero: `${prefijo}-${nuevo.toString().padStart(4, '0')}`,
+      escritura: {
+        coleccion: 'numeradores',
+        id: prefijo,
+        data: { ultimoNumero: nuevo },
+        modo: snap.exists() ? 'actualizar' : 'crear',
+      },
+    };
+  }
+
+  /** Próximo número de movimiento de Finanzas (camino nuevo, `movimientosFin`)
+   *  DENTRO de una transacción: RC-000001 (cobro), OPG-000001 (pago),
+   *  AJ-000001 (ajuste). Devuelve el número y la escritura del contador para
+   *  que el caller la sume a su EscrituraBatch[] (commitEnTransaccion): el
+   *  número solo se consume si commitea la transacción completa. Mismo patrón
+   *  que leerProximoNumeroInterno / leerProximoNumeroLiquidacionVenta.
+   *  No confundir con leerProximoNumeroMovimiento (módulo viejo: 'RC'/'OP',
+   *  sin escritura); el contador 'RC' es el mismo documento para los dos. */
+  async leerProximoNumeroMovimientoFin(
+    tx: Transaction,
+    tipo: TipoMovimientoFin,
+  ): Promise<{ numero: string; escritura: EscrituraBatch }> {
+    const prefijo = PREFIJO_MOVIMIENTO_FIN[tipo];
+    const snap = await tx.get(doc(this.firestore, `Vantruck/datos/numeradores/${prefijo}`));
+    const ultimo = snap.exists() ? ((snap.data() as { ultimoNumero?: number }).ultimoNumero ?? 0) : 0;
+    const nuevo = ultimo + 1;
+    return {
+      numero: `${prefijo}-${nuevo.toString().padStart(6, '0')}`,
       escritura: {
         coleccion: 'numeradores',
         id: prefijo,

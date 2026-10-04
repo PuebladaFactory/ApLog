@@ -65,7 +65,8 @@ export class LogRegistroService {
   async agregarAlBatch(
     escrituras: EscrituraBatch[],
     accion: 'ALTA' | 'EDITAR' | 'BAJA' | 'RESTAURAR' | 'EMITIR'
-      | 'REVERTIR' | 'FACTURAR' | 'DESVINCULAR' | 'ANULAR' | 'CERRAR' | 'PAGAR',
+      | 'REVERTIR' | 'FACTURAR' | 'DESVINCULAR' | 'ANULAR' | 'CERRAR' | 'PAGAR'
+      | 'COBRAR' | 'AJUSTAR' | 'IMPUTAR',
     coleccion: string,
     idObjet: string | number,
     details: string,

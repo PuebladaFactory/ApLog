@@ -64,6 +64,7 @@ export class LimpiezaDemoService {
     'resumenOpMensual',
     'resumenesOp',
     'movimientos',
+    'movimientosFin',
     'resumenFinanzas',
     'registroLog',
     'generacionesPrueba',

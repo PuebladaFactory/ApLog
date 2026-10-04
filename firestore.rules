@@ -88,6 +88,10 @@ service cloud.firestore {
         // eliminar). Ver permitido().
         'comisionesVenta': 'comisiones',
         'movimientos': 'finanzas',
+        // Frente Finanzas: movimientos del camino nuevo (cobros RC, pagos
+        // OPG, ajustes AJ), sucesora de 'movimientos'. Solo dev/admin
+        // escriben; demo lee.
+        'movimientosFin': 'finanzas',
 
         // Legado activo — solo lectura a propósito (ver CLAUDE.md)
         'facturaCliente': 'legacySoloLectura', 'facturaChofer': 'legacySoloLectura',

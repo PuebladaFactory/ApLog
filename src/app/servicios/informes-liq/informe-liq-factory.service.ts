@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { ConId } from 'src/app/interfaces/conId';
 import { InformeOpNuevo } from 'src/app/interfaces/informe-op-nuevo';
 import { RefCliente, RefChofer, RefProveedor } from 'src/app/interfaces/operacion';
+import { normalizarValoresFinancieros } from 'src/app/shared/utils/finanzas.util';
 import {
   DescuentoLiq,
   InformeLiqNuevo,
@@ -97,10 +98,12 @@ export class InformeLiqFactoryService {
     return { ...valores, descuentoTotal, total };
   }
 
-  /** Recalcula total/saldo SIN pisar lo cobrado — para cuando cambia el total
-   *  de un informe existente (edición, B3). */
+  /** Recalcula total/saldo SIN pisar lo imputado (compensado, cobrado,
+   *  ajustado) — para cuando cambia el total de un informe existente
+   *  (edición, B3). Normaliza docs anteriores al Frente Finanzas. */
   recalcularValoresFinancieros(actual: ValoresFinancierosLiq, nuevoTotal: number): ValoresFinancierosLiq {
-    return { total: nuevoTotal, totalCobrado: actual.totalCobrado, saldo: nuevoTotal - actual.totalCobrado };
+    const base = normalizarValoresFinancieros(actual, nuevoTotal);
+    return normalizarValoresFinancieros({ ...base, total: nuevoTotal }, nuevoTotal);
   }
 
   /** Body a persistir: excluye idInfLiq (id del documento) y `id` (metadata
@@ -145,6 +148,6 @@ export class InformeLiqFactoryService {
   }
 
   private valoresFinancierosIniciales(total: number): ValoresFinancierosLiq {
-    return { total, totalCobrado: 0, saldo: total };
+    return { total, totalCompensado: 0, totalCobrado: 0, totalAjustado: 0, saldo: total };
   }
 }

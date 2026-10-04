@@ -51,11 +51,14 @@ export interface InformeLiqNuevo {
   columnas: string[];               // columnas elegidas para la exportación
   observaciones: string;
 
-  // TODO Finanzas: se inicializan al crear, pero ningún servicio de Finanzas
-  // los lee todavía (la cascada resumenFinanzas/cuenta corriente/aging es un
-  // frente propio).
+  // Frente Finanzas. Los escriben: Liquidación (total al crear/editar;
+  // compensaciones al emitir — FC1) y Finanzas (cobros/pagos/ajustes, en la
+  // transacción del movimiento). 'facturado' es la puerta de los cobros y
+  // pagos. Leer siempre con normalizarValoresFinancieros
+  // (shared/utils/finanzas.util.ts): los docs anteriores al frente no tienen
+  // totalCompensado / totalAjustado.
   valoresFinancieros: ValoresFinancierosLiq;
-  estadoFinanciero: 'pendiente' | 'parcial' | 'cobrado';
+  estadoFinanciero: EstadoFinancieroLiq;
 
   // Los escribe Facturación al vincular la factura (→ 'facturado') y los
   // limpia al desvincular (→ 'emitido'). `facturaUrl` es el PATH del PDF en
@@ -96,11 +99,29 @@ export interface DescuentoLiq {
   valor: number;                    // mismo criterio que el modelo viejo: se SUMA al total
 }
 
+/** Acumulados financieros de un InformeLiq (Frente Finanzas).
+ *  Invariante: saldo = total − totalCompensado − totalCobrado − totalAjustado
+ *  (saldoDe en shared/utils/finanzas.util.ts).
+ *  - totalCompensado: anticipos/préstamos compensados en la liquidación
+ *    (se aplican al emitir — FC1). No es plata nueva.
+ *  - totalCobrado: plata nueva — cobros a clientes, pagos a choferes y
+ *    proveedores. El nombre se conserva por el contrato con Facturación:
+ *    revertir y desvincular exigen totalCobrado === 0.
+ *  - totalAjustado: ajustes (incobrable, bonificación posterior, redondeo,
+ *    apertura). */
 export interface ValoresFinancierosLiq {
   total: number;
+  totalCompensado: number;
   totalCobrado: number;
+  totalAjustado: number;
   saldo: number;
 }
+
+/** Estado financiero de un InformeLiq. Para chofer/proveedor 'cobrado'
+ *  significa "pagado" (mismo campo, mismo criterio). Lo deriva
+ *  estadoFinancieroDe (finanzas.util); 'incobrable' solo lo pone un ajuste
+ *  con ese motivo. */
+export type EstadoFinancieroLiq = 'pendiente' | 'parcial' | 'cobrado' | 'incobrable';
 
 /** Factura electrónica vinculada a un InformeLiq — datos normalizados desde
  *  el QR AFIP del PDF (el QR trae cuit, nroDocRec, ptoVta, tipoCmp, nroCmp,
