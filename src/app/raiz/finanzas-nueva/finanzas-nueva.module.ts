@@ -5,6 +5,7 @@ import { SharedModule } from 'src/app/shared/shared.module';
 import { FinanzasNuevaRoutingModule } from './finanzas-nueva-routing.module';
 import { FinanzasNuevaControlComponent } from './control/finanzas-nueva-control.component';
 import { FinanzasCuentasComponent } from './cuentas/finanzas-cuentas.component';
+import { RegistrarMovimientoComponent } from './modales/registrar-movimiento/registrar-movimiento.component';
 
 /** Módulo Finanzas — camino nuevo (Frente Finanzas), en paralelo a
  *  raiz/finanzas (módulo viejo, se retira al cerrar el frente). Solo lazy
@@ -13,6 +14,7 @@ import { FinanzasCuentasComponent } from './cuentas/finanzas-cuentas.component';
   declarations: [
     FinanzasNuevaControlComponent,
     FinanzasCuentasComponent,
+    RegistrarMovimientoComponent,
   ],
   imports: [
     CommonModule,

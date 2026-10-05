@@ -1,0 +1,214 @@
+<div class="modal-header">
+  <div>
+    <h4 class="modal-title">{{ titulo }}</h4>
+    @if (entidad) {
+      <div class="text-muted">
+        <span class="text-capitalize">{{ entidad.tipo }}</span> {{ entidad.razonSocial }} — CUIT {{ entidad.cuit }}
+      </div>
+    }
+  </div>
+  <button type="button" class="btn-close" [disabled]="guardando" (click)="cancelar()"></button>
+</div>
+
+<div class="modal-body">
+  @if (!cuenta) {
+    <div class="mb-3" style="max-width: 32rem;">
+      <label class="form-label mb-0">{{ esCobro ? 'Cliente' : 'Chofer o proveedor' }}</label>
+      <select class="form-select" [ngModel]="claveElegida" (ngModelChange)="onEntidadElegida($event)" [disabled]="guardando">
+        <option value="">Elegí…</option>
+        @for (o of opciones; track o.clave) {
+          <option [value]="o.clave">{{ o.entidad.razonSocial }}{{ esCobro ? '' : ' (' + o.entidad.tipo + ')' }}</option>
+        }
+      </select>
+    </div>
+  }
+
+  @if (entidad) {
+    <div class="row g-2 mb-3">
+      <div class="col-md-3">
+        <label class="form-label mb-0">Fecha</label>
+        <input type="date" class="form-control" [(ngModel)]="fecha" [max]="hoy" [disabled]="guardando" />
+      </div>
+      <div class="col-md-5">
+        <label class="form-label mb-0">Concepto</label>
+        <div class="btn-group w-100" role="group">
+          <button type="button" class="btn" [ngClass]="concepto === 'normal' ? 'btn-primary' : 'btn-outline-primary'"
+            [disabled]="guardando" (click)="onConcepto('normal')">{{ esCobro ? 'Cobro' : 'Pago' }} de comprobantes</button>
+          <button type="button" class="btn" [ngClass]="concepto === 'anticipo' ? 'btn-primary' : 'btn-outline-primary'"
+            [disabled]="guardando" (click)="onConcepto('anticipo')">Anticipo</button>
+          @if (!esCobro) {
+            <button type="button" class="btn" [ngClass]="concepto === 'prestamo' ? 'btn-primary' : 'btn-outline-primary'"
+              [disabled]="guardando" (click)="onConcepto('prestamo')">Préstamo</button>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Medios -->
+    <h6 class="mt-2">Medios</h6>
+    <table class="table table-sm align-middle tabla-medios">
+      <thead>
+        <tr>
+          <th style="width: 11rem;">Tipo</th>
+          <th style="width: 10rem;" class="text-end">Importe</th>
+          <th>Datos</th>
+          <th style="width: 3rem;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (m of medios; track $index; let i = $index) {
+          <tr>
+            <td>
+              <select class="form-select form-select-sm" [(ngModel)]="m.tipo" [disabled]="guardando">
+                @for (t of tiposMedio; track t) {
+                  <option [value]="t">{{ etiquetaMedio[t] }}</option>
+                }
+              </select>
+            </td>
+            <td>
+              <input inputmode="number" class="form-control form-control-sm text-end" min="0" step="0.01"
+                [(ngModel)]="m.importe" [disabled]="guardando" appMonto />
+            </td>
+            <td>
+              <div class="d-flex flex-wrap gap-1">
+                @if (m.tipo === 'retencion') {
+                  <select class="form-select form-select-sm campo" [(ngModel)]="m.impuesto" [disabled]="guardando">
+                    @for (imp of impuestos; track imp.valor) {
+                      <option [value]="imp.valor">{{ imp.etiqueta }}</option>
+                    }
+                  </select>
+                  @if (m.impuesto === 'iibb') {
+                    <input class="form-control form-control-sm campo" placeholder="Jurisdicción" [(ngModel)]="m.jurisdiccion" [disabled]="guardando" />
+                  }
+                  <input class="form-control form-control-sm campo" placeholder="N° de certificado" [(ngModel)]="m.certificado" [disabled]="guardando" />
+                } @else {
+                  @if (m.tipo === 'transferencia' || m.tipo === 'cheque' || m.tipo === 'echeq') {
+                    <input class="form-control form-control-sm campo" placeholder="Banco" [(ngModel)]="m.banco" [disabled]="guardando" />
+                  }
+                  <input class="form-control form-control-sm campo"
+                    [placeholder]="m.tipo === 'cheque' || m.tipo === 'echeq' ? 'N° de cheque' : m.tipo === 'transferencia' ? 'N° de operación' : 'Referencia'"
+                    [(ngModel)]="m.referencia" [disabled]="guardando" />
+                  @if (m.tipo === 'cheque' || m.tipo === 'echeq') {
+                    <input type="date" class="form-control form-control-sm campo" title="Fecha de cobro del cheque"
+                      [(ngModel)]="m.fechaCobro" [disabled]="guardando" />
+                  }
+                }
+              </div>
+            </td>
+            <td class="text-end">
+              <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="guardando || medios.length === 1"
+                (click)="quitarMedio(i)" title="Quitar medio">✕</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+      <tfoot>
+        <tr>
+          <td>
+            <button type="button" class="btn btn-sm btn-outline-primary" [disabled]="guardando" (click)="agregarMedio()">+ Medio</button>
+          </td>
+          <td class="text-end fw-bold col-importe">{{ totalMedios | formatearValor: '$' }}</td>
+          <td colspan="2" class="text-muted small">Total del {{ esCobro ? 'cobro' : 'pago' }} = suma de los medios. Las retenciones cancelan deuda sin mover dinero.</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <!-- Comprobantes -->
+    @if (concepto === 'normal') {
+      <div class="d-flex align-items-center mt-3 mb-1">
+        <h6 class="mb-0">Comprobantes abiertos</h6>
+        <button type="button" class="btn btn-sm btn-outline-secondary ms-3" [disabled]="guardando || filas.length === 0 || totalMedios <= 0"
+          (click)="repartir()">Repartir el total (más antiguos primero)</button>
+      </div>
+      @if (cargando) {
+        <app-spinner></app-spinner>
+      } @else if (filas.length === 0) {
+        <div class="alert alert-info py-2">
+          No hay informes facturados con saldo. Para entregar o recibir dinero sin comprobante, registralo como anticipo.
+        </div>
+      } @else {
+        <table class="table table-sm table-striped align-middle">
+          <thead>
+            <tr>
+              <th style="width: 2rem;"></th>
+              <th>Informe</th>
+              <th>Período</th>
+              <th>Factura</th>
+              <th class="text-center">Días</th>
+              <th class="text-end">Total</th>
+              <th class="text-end">Saldo</th>
+              <th class="text-end" style="width: 10rem;">A imputar</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (f of filas; track f.liq.idInfLiq) {
+              <tr>
+                <td>
+                  <input type="checkbox" class="form-check-input" [checked]="f.importe > 0"
+                    (change)="alternarFila(f, $any($event.target).checked)" [disabled]="guardando" />
+                </td>
+                <td>{{ f.liq.numeroInterno }}</td>
+                <td>{{ f.periodo }}</td>
+                <td>{{ f.fechaFactura }}</td>
+                <td class="text-center col-importe">{{ f.dias ?? '—' }}</td>
+                <td class="text-end col-importe">{{ f.total | formatearValor: '$' }}</td>
+                <td class="text-end col-importe">{{ f.saldo | formatearValor: '$' }}</td>
+                <td>
+                  <input inputmode="number" class="form-control form-control-sm text-end" min="0" step="0.01"
+                    [class.is-invalid]="f.importe - f.saldo > 0.005"
+                    [(ngModel)]="f.importe" [disabled]="guardando" appMonto />
+                </td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="6" class="text-end">Saldo total {{ totalSaldos | formatearValor: '$' }}</td>
+              <td class="text-end fw-bold">Imputado</td>
+              <td class="text-end fw-bold col-importe">{{ totalImputado | formatearValor: '$' }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      }
+    } @else {
+      <div class="alert alert-secondary py-2 mt-3">
+        {{ concepto === 'prestamo' ? 'Préstamo' : 'Anticipo' }}: el importe queda pendiente a favor
+        {{ esCobro ? 'del cliente' : 'nuestro' }} y se compensa después
+        {{ esCobro ? 'con sus facturas' : 'en sus liquidaciones' }}.
+      </div>
+    }
+
+    <div class="row g-2 mt-2">
+      <div class="col-md-8">
+        <label class="form-label mb-0">Observaciones</label>
+        <textarea class="form-control" rows="2" [(ngModel)]="observaciones" [disabled]="guardando"></textarea>
+      </div>
+      <div class="col-md-4">
+        <div class="resumen p-2 rounded">
+          <div class="d-flex justify-content-between"><span>Total</span><span class="col-importe">{{ totalMedios | formatearValor: '$' }}</span></div>
+          <div class="d-flex justify-content-between"><span>Imputado</span><span class="col-importe">{{ totalImputado | formatearValor: '$' }}</span></div>
+          <div class="d-flex justify-content-between fw-bold" [class.text-warning]="sinImputar > 0 && concepto === 'normal'">
+            <span>{{ concepto === 'normal' ? 'Saldo a favor' : 'Queda pendiente' }}</span>
+            <span class="col-importe">{{ sinImputar | formatearValor: '$' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (errorValidacion && entidad && !cargando) {
+    <div class="text-danger small mt-2">{{ errorValidacion }}</div>
+  }
+  @if (error) {
+    <div class="alert alert-danger mt-2 mb-0">{{ error }}</div>
+  }
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-success" [disabled]="!puedeConfirmar" (click)="confirmar()">Registrar</button>
+  <button type="button" class="btn btn-outline-secondary" [disabled]="guardando" (click)="cancelar()">Cancelar</button>
+</div>
+
+@if (guardando) {
+  <app-spinner></app-spinner>
+}

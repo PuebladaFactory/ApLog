@@ -21,6 +21,12 @@
     placeholder="Buscar por nombre o CUIT"
   />
   <span class="ms-auto text-muted">{{ filtradas.length }} cuenta(s)</span>
+  <button
+    *appPermiso="'finanzas.agregar'"
+    type="button"
+    class="btn btn-success"
+    (click)="abrirRegistro(null)"
+  >{{ filtros.lado === 'cobrar' ? 'Nuevo cobro' : 'Nuevo pago' }}</button>
 </div>
 
 @if (error) {
@@ -76,6 +82,8 @@
   [ordenInicial]="ordenInicial"
   [cargando]="cargando"
   [trackKey]="trackCuenta"
+  [acciones]="acciones"
+  (accion)="onAccion($event)"
   [mensajeVacio]="filtros.lado === 'cobrar' ? 'No hay clientes con saldo abierto.' : 'No hay choferes ni proveedores con saldo abierto.'"
 ></app-tabla-listado>
 

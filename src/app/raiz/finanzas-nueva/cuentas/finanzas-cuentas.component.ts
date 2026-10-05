@@ -1,6 +1,8 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Subject, takeUntil } from 'rxjs';
-import { ColumnaListado, OrdenListado } from 'src/app/interfaces/tabla-listado';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { AccionListado, ColumnaListado, EventoAccionListado, OrdenListado } from 'src/app/interfaces/tabla-listado';
+import { RegistrarMovimientoComponent } from '../modales/registrar-movimiento/registrar-movimiento.component';
 import { toISODateString } from 'src/app/servicios/fechas/date-range.service';
 import { FinanzasConsultaService } from 'src/app/servicios/finanzas-nueva/finanzas-consulta.service';
 import {
@@ -12,8 +14,9 @@ type Fila = CuentaEntidadFin;
 /** Finanzas → Cuentas: una fila por entidad con saldo abierto, informes sin
  *  facturar o saldo a favor. A cobrar (clientes) / A pagar (choferes y
  *  proveedores). En vivo, calculado al consultar (FinanzasConsultaService →
- *  armarCuentas). Solo lectura en F2: registrar cobro/pago llega en F3 y la
- *  cuenta de la entidad en F5. */
+ *  armarCuentas). Acciones (F3): registrar cobro/pago desde la fila o
+ *  "Nuevo cobro/pago" (RegistrarMovimientoComponent). La cuenta de la
+ *  entidad llega en F5. */
 @Component({
   selector: 'app-finanzas-cuentas',
   standalone: false,
@@ -34,9 +37,17 @@ export class FinanzasCuentasComponent implements OnInit, OnDestroy {
   readonly ordenInicial: OrdenListado = { key: 'neto', asc: false };
   readonly trackCuenta = (c: Fila) => c.clave;
 
+  readonly acciones: AccionListado<Fila>[] = [
+    { id: 'cobrar', label: 'Registrar cobro', clase: 'btn-outline-success', permiso: 'finanzas.agregar', visible: c => c.lado === 'cobrar' },
+    { id: 'pagar', label: 'Registrar pago', clase: 'btn-outline-success', permiso: 'finanzas.agregar', visible: c => c.lado === 'pagar' },
+  ];
+
   private destroy$ = new Subject<void>();
 
-  constructor(private consulta: FinanzasConsultaService) {}
+  constructor(
+    private consulta: FinanzasConsultaService,
+    private modalService: NgbModal,
+  ) {}
 
   get filtros(): { lado: LadoCuenta; texto: string } {
     return this.consulta.filtrosCuentas;
@@ -83,6 +94,22 @@ export class FinanzasCuentasComponent implements OnInit, OnDestroy {
       c.lado === this.filtros.lado &&
       (!texto || c.nombre.toLowerCase().includes(texto) || String(c.cuit).includes(texto)));
     this.totales = totalizarCuentas(this.filtradas);
+  }
+
+  onAccion(ev: EventoAccionListado<Fila>): void {
+    if (ev.id === 'cobrar' || ev.id === 'pagar') this.abrirRegistro(ev.item);
+  }
+
+  /** Abre el modal de cobro/pago. Con `cuenta` la entidad queda fija; sin
+   *  ella (botón "Nuevo"), se elige del lado activo. La tabla se actualiza
+   *  sola por los listeners. */
+  abrirRegistro(cuenta: Fila | null): void {
+    const modalRef = this.modalService.open(RegistrarMovimientoComponent, {
+      size: 'xl', centered: true, scrollable: true, backdrop: 'static', keyboard: false,
+    });
+    modalRef.componentInstance.cuenta = cuenta;
+    modalRef.componentInstance.lado = this.filtros.lado;
+    modalRef.result.catch(() => {});
   }
 
   private armarColumnas(): ColumnaListado<Fila>[] {
