@@ -6,8 +6,9 @@ import { Resultado } from 'src/app/interfaces/resultado';
 import { InformeOpNuevo } from 'src/app/interfaces/informe-op-nuevo';
 import { EstadoOp, Operacion } from 'src/app/interfaces/operacion';
 import {
-  DescuentoLiq, FacturaVinculada, InformeLiqNuevo, InformeLiqSnapshot, PeriodoLiq, ReversionLiq,
+  CompensacionLiq, DescuentoLiq, FacturaVinculada, InformeLiqNuevo, InformeLiqSnapshot, PeriodoLiq, ReversionLiq,
 } from 'src/app/interfaces/informe-liq-nuevo';
+import { MovimientoFin } from 'src/app/interfaces/movimiento-fin';
 import { StorageArchivosService } from 'src/app/servicios/storage-archivos/storage-archivos.service';
 import {
   DatosQrAfip, claveComprobante, claveComprobanteQr, decodificarQrAfip, descripcionTipoComprobante,
@@ -21,6 +22,12 @@ import { InformeOpService } from 'src/app/servicios/informes-op/informe-op.servi
 import { OperacionFactoryService } from 'src/app/servicios/operaciones/operacion-factory.service';
 import { toISODateString } from 'src/app/servicios/fechas/date-range.service';
 import { nombreEntidadRef } from 'src/app/shared/utils/entidad-informe.util';
+import {
+  COLECCION_MOVIMIENTOS_FIN, CompensacionSolicitada, DocumentoCompensado, armarCompensaciones, compensacionesDe,
+  errorNeto, escrituraMovimientoParcial, fijarCompensacion, normalizarCompensaciones, quitarCompensacion,
+  solicitudesDe, totalCompensacionesDe,
+} from 'src/app/shared/utils/compensacion.util';
+import { estadoFinancieroDe, redondear2 } from 'src/app/shared/utils/finanzas.util';
 import { ResultadoEdicionInformeOp } from 'src/app/shared/modales/informe-op-editor/informe-op-editor.component';
 import { InformeLiqFactoryService } from './informe-liq-factory.service';
 
@@ -34,6 +41,9 @@ export interface DatosLiquidacion {
   descuentos: DescuentoLiq[];
   columnas: string[];
   observaciones: string;
+  // FC1: movimientos a compensar (se revalidan y snapshotean en la
+  // transacción). Opcional: sin compensaciones = [] (generadores, etc.).
+  compensaciones?: CompensacionSolicitada[];
 }
 
 export interface ResultadoLiquidacion {
@@ -45,6 +55,8 @@ export interface ResultadoLiquidacion {
  *  composición NO son editables. Solo se aplican los que vienen definidos. */
 export interface CambiosDatosLiq {
   descuentos?: DescuentoLiq[];
+  // FC1: la lista COMPLETA de compensaciones que debe quedar (no un delta).
+  compensaciones?: CompensacionSolicitada[];
   observaciones?: string;
   columnas?: string[];
 }
@@ -177,7 +189,11 @@ export class InformeLiqService {
    *  liquidado (idInfLiq no cambia); contraparte desbloqueada; Operación
    *  proforma.<lado> = false, liquidacion.<lado> = true (+ ciclo). Reserva
    *  número interno. valoresFinancieros se recalcula desde valores.total
-   *  (puede haber cambiado por edición del borrador). */
+   *  (puede haber cambiado por edición del borrador).
+   *  FC1: las compensaciones del borrador se revalidan contra los
+   *  movimientos frescos (otro informe pudo haber usado el saldo: gana el
+   *  primero que se emite) y se APLICAN: totalCompensado en el informe y una
+   *  imputación 'compensacion' en cada movimiento, en la misma transacción. */
   async emitirBorrador(idInfLiq: string): Promise<Resultado<ResultadoLiquidacion>> {
     const fecha = toISODateString(new Date());
     try {
@@ -188,17 +204,36 @@ export class InformeLiqService {
         const informes = await this.leerInformesOp(tx, liq.informesOp);
         this.validarInformesDelBorrador(informes, idInfLiq);
         const operaciones = await this.leerOperaciones(tx, informes);
+        const movimientos = await this.leerMovimientosFin(tx, compensacionesDe(liq).map(c => c.idMovimiento));
         const { numeroInterno, escritura } = await this.numerador.leerProximoNumeroInterno(tx, liq.tipo);
         // — fin de lecturas —
+
+        const compensaciones = armarCompensaciones(
+          solicitudesDe(compensacionesDe(liq)), movimientos, { tipo: liq.tipo, id: liq.entidad.id }, idInfLiq,
+        );
+        const valores = this.factory.aplicarCompensaciones(liq.valores, compensaciones);
+        const errNeto = errorNeto(valores.total, valores.totalCompensaciones ?? 0);
+        if (errNeto) throw new Error(errNeto);
+        const vf = this.factory.valoresFinancierosConCompensado(
+          liq.valoresFinancieros, valores.total, valores.totalCompensaciones ?? 0,
+        );
 
         escrituras.push(escritura);
         this.agregarEscrituraInformeLiqParcial(escrituras, idInfLiq, {
           estado: 'emitido',
           numeroInterno,
           fechaEmision: fecha,
-          valoresFinancieros: this.factory.recalcularValoresFinancieros(liq.valoresFinancieros, liq.valores.total),
-          estadoFinanciero: 'pendiente',
+          compensaciones,
+          'valores.totalCompensaciones': valores.totalCompensaciones,
+          'valores.neto': valores.neto,
+          valoresFinancieros: vf,
+          estadoFinanciero: estadoFinancieroDe(vf),
         });
+        this.agregarEscriturasCompensacion(
+          escrituras,
+          { idInfLiq, numeroInterno, periodoClave: liq.periodoClave, totalDocumento: valores.total },
+          compensaciones, movimientos, fecha,
+        );
 
         const lado = this.lado(liq.tipo);
         for (const inf of informes) {
@@ -214,7 +249,8 @@ export class InformeLiqService {
 
         await this.logRegistro.agregarAlBatch(
           escrituras, 'EMITIR', this.COLECCION, idInfLiq,
-          `Emisión de borrador — ${numeroInterno} — ${liq.tipo} ${nombreEntidadRef(liq.entidad)} — ${informes.length} InformeOp — ${this.factory.textoPeriodo(liq.periodo)}`,
+          `Emisión de borrador — ${numeroInterno} — ${liq.tipo} ${nombreEntidadRef(liq.entidad)} — ${informes.length} InformeOp — ${this.factory.textoPeriodo(liq.periodo)}` +
+          this.textoCompensaciones(compensaciones),
           liq,
         );
 
@@ -286,50 +322,111 @@ export class InformeLiqService {
     }
   }
 
-  /** Edita descuentos / observaciones / columnas de un InformeLiq en
-   *  'borrador' o 'emitido'. Si cambian los descuentos, recalcula
-   *  valores.descuentoTotal, valores.total y valoresFinancieros (sin pisar
-   *  totalCobrado). Un solo commitBatch con log EDITAR (diff por campo).
-   *  TODO Finanzas: sobre un 'emitido', un cambio de total impacta en
-   *  resumenFinanzas cuando se conecte la cascada. */
+  /** Edita descuentos / compensaciones / observaciones / columnas de un
+   *  InformeLiq en 'borrador' o 'emitido'. Una transacción (FC1): relee el
+   *  informe y, si vienen compensaciones, los movimientos de antes y de ahora.
+   *   - descuentos → valores (descuentoTotal, total, neto) y
+   *     valoresFinancieros (sin pisar lo imputado).
+   *   - compensaciones (lista completa) → se revalidan contra los movimientos
+   *     frescos (armarCompensaciones). En un borrador solo se guardan
+   *     (propuesta, F34); en un EMITIDO ya están aplicadas (F29): cada
+   *     movimiento afectado queda con la compensación nueva (o sin ella) y
+   *     totalCompensado se recalcula.
+   *   - F30: el neto no puede quedar negativo (también si solo cambian los
+   *     descuentos).
+   *  Log EDITAR con diff. */
   async editarDatos(idInfLiq: string, cambios: CambiosDatosLiq): Promise<Resultado<void>> {
-    const liq = await this.obtenerPorId(idInfLiq);
-    if (!liq) return { exito: false, mensaje: `No existe el informe de liquidación ${idInfLiq}.` };
-    if (liq.estado !== 'borrador' && liq.estado !== 'emitido') {
-      return { exito: false, mensaje: `El informe está en estado '${liq.estado}' y no se puede editar.` };
+    let solicitudes: CompensacionSolicitada[] | undefined;
+    try {
+      solicitudes = cambios.compensaciones === undefined ? undefined : normalizarCompensaciones(cambios.compensaciones);
+    } catch (e: any) {
+      return { exito: false, mensaje: e?.message ?? String(e) };
     }
-
-    const campos: Record<string, any> = {};
-    if (cambios.descuentos !== undefined) {
-      const valores = this.factory.recalcularTotal(liq.valores, cambios.descuentos);
-      const vf = this.factory.recalcularValoresFinancieros(liq.valoresFinancieros, valores.total);
-      campos['descuentos'] = cambios.descuentos.map(d => ({ concepto: d.concepto, valor: d.valor }));
-      campos['valores.descuentoTotal'] = valores.descuentoTotal;
-      campos['valores.total'] = valores.total;
-      campos['valoresFinancieros.total'] = vf.total;
-      campos['valoresFinancieros.saldo'] = vf.saldo;
-    }
-    if (cambios.observaciones !== undefined) campos['observaciones'] = cambios.observaciones;
-    if (cambios.columnas !== undefined) campos['columnas'] = [...cambios.columnas];
-
-    if (Object.keys(campos).length === 0) return { exito: true, mensaje: 'Sin cambios.' };
-
-    const escrituras: EscrituraBatch[] = [];
-    this.agregarEscrituraInformeLiqParcial(escrituras, idInfLiq, campos);
-    const { id, idInfLiq: _omit, ...anterior } = liq as any;
-    await this.logRegistro.agregarAlBatch(
-      escrituras, 'EDITAR', this.COLECCION, idInfLiq,
-      `Edición de datos del informe de liquidación — ${liq.tipo} ${nombreEntidadRef(liq.entidad)}`,
-      anterior,
-    );
+    // Afuera del callback (puede reintentarse y tiene que ser puro).
+    const hoy = toISODateString(new Date());
 
     try {
-      await this.db.commitBatch(escrituras);
+      const huboCambios = await this.db.commitEnTransaccion<boolean>(async (tx) => {
+        const escrituras: EscrituraBatch[] = [];
+
+        const data = await this.db.leerEnTransaccion<InformeLiqNuevo>(tx, this.COLECCION, idInfLiq);
+        if (!data) throw new Error(`No existe el informe de liquidación ${idInfLiq}.`);
+        if (data.estado !== 'borrador' && data.estado !== 'emitido') {
+          throw new Error(`El informe está en estado '${data.estado}' y no se puede editar.`);
+        }
+        const liq: ConId<InformeLiqNuevo> = { ...data, id: idInfLiq, idInfLiq };
+        const anteriores = compensacionesDe(liq);
+        const movimientos = solicitudes === undefined
+          ? new Map<string, MovimientoFin | null>()
+          : await this.leerMovimientosFin(tx, [
+            ...anteriores.map(c => c.idMovimiento),
+            ...solicitudes.map(s => s.idMovimiento),
+          ]);
+        // — fin de lecturas —
+
+        const campos: Record<string, any> = {};
+        const emitido = liq.estado === 'emitido';
+        let compensaciones = anteriores;
+
+        if (cambios.descuentos !== undefined || solicitudes !== undefined) {
+          const descuentos = cambios.descuentos ?? liq.descuentos;
+          if (solicitudes !== undefined) {
+            compensaciones = armarCompensaciones(solicitudes, movimientos, { tipo: liq.tipo, id: liq.entidad.id }, idInfLiq);
+          }
+          const valores = this.factory.aplicarCompensaciones(this.factory.recalcularTotal(liq.valores, descuentos), compensaciones);
+          const errNeto = errorNeto(valores.total, valores.totalCompensaciones ?? 0);
+          if (errNeto) throw new Error(errNeto);
+          const vf = emitido
+            ? this.factory.valoresFinancierosConCompensado(liq.valoresFinancieros, valores.total, valores.totalCompensaciones ?? 0)
+            : this.factory.recalcularValoresFinancieros(liq.valoresFinancieros, valores.total);
+
+          if (cambios.descuentos !== undefined) {
+            campos['descuentos'] = descuentos.map(d => ({ concepto: d.concepto, valor: d.valor }));
+            campos['valores.descuentoTotal'] = valores.descuentoTotal;
+            campos['valores.total'] = valores.total;
+          }
+          if (solicitudes !== undefined) campos['compensaciones'] = compensaciones;
+          campos['valores.totalCompensaciones'] = valores.totalCompensaciones;
+          campos['valores.neto'] = valores.neto;
+          campos['valoresFinancieros'] = vf;
+          if (emitido) campos['estadoFinanciero'] = estadoFinancieroDe(vf, liq.estadoFinanciero);
+
+          // Emitido: las compensaciones ya están aplicadas → cada movimiento
+          // afectado (antes o ahora) queda con la nueva o sin ninguna.
+          if (emitido && solicitudes !== undefined) {
+            const doc: DocumentoCompensado = {
+              idInfLiq, numeroInterno: liq.numeroInterno, periodoClave: liq.periodoClave, totalDocumento: valores.total,
+            };
+            this.agregarEscriturasCompensacion(escrituras, doc, compensaciones, movimientos, liq.fechaEmision ?? hoy);
+            const vigentes = new Set(compensaciones.map(c => c.idMovimiento));
+            for (const a of anteriores) {
+              if (vigentes.has(a.idMovimiento)) continue;
+              const mov = movimientos.get(a.idMovimiento);
+              if (!mov) throw new Error(`Inconsistencia: no existe el movimiento ${a.numero} compensado en esta liquidación.`);
+              escrituras.push(escrituraMovimientoParcial(a.idMovimiento, quitarCompensacion(mov, idInfLiq)));
+            }
+          }
+        }
+        if (cambios.observaciones !== undefined) campos['observaciones'] = cambios.observaciones;
+        if (cambios.columnas !== undefined) campos['columnas'] = [...cambios.columnas];
+
+        if (Object.keys(campos).length === 0) return { escrituras: [], resultado: false };
+
+        this.agregarEscrituraInformeLiqParcial(escrituras, idInfLiq, campos);
+        const { id, idInfLiq: _omit, ...anterior } = liq as any;
+        await this.logRegistro.agregarAlBatch(
+          escrituras, 'EDITAR', this.COLECCION, idInfLiq,
+          `Edición de datos del informe de liquidación — ${liq.tipo} ${nombreEntidadRef(liq.entidad)}` +
+          (solicitudes !== undefined ? this.textoCompensaciones(compensaciones) : ''),
+          anterior,
+        );
+        return { escrituras, resultado: true };
+      });
+      return { exito: true, mensaje: huboCambios ? 'Informe actualizado correctamente.' : 'Sin cambios.' };
     } catch (e: any) {
       await this.logRegistro.registrarError('EDITAR', this.COLECCION, idInfLiq, `Error al editar datos: ${e?.message ?? e}`);
       return { exito: false, mensaje: `Error al guardar: ${e?.message ?? e}` };
     }
-    return { exito: true, mensaje: 'Informe actualizado correctamente.' };
   }
 
   /** Edita un InformeOp que está DENTRO de un InformeLiq ('proforma' o
@@ -400,6 +497,9 @@ export class InformeLiqService {
         totalAdExtra: liq.valores.totalAdExtra + d.adExtra,
         totalContraParte: liq.valores.totalContraParte + d.contraParte,
       }, liq.descuentos);
+      // F30: el total no puede quedar por debajo de las compensaciones.
+      const errNeto = errorNeto(valores.total, valores.totalCompensaciones ?? 0);
+      if (errNeto) return { exito: false, mensaje: errNeto };
       const vf = this.factory.recalcularValoresFinancieros(liq.valoresFinancieros, valores.total);
 
       this.agregarEscrituraInformeLiqParcial(escrituras, liq.idInfLiq, {
@@ -409,6 +509,8 @@ export class InformeLiqService {
         'valores.totalAdExtra': valores.totalAdExtra,
         'valores.total': valores.total,
         'valores.totalContraParte': valores.totalContraParte,
+        'valores.totalCompensaciones': valores.totalCompensaciones,
+        'valores.neto': valores.neto,
         'valoresFinancieros.total': vf.total,
         'valoresFinancieros.saldo': vf.saldo,
       });
@@ -452,7 +554,11 @@ export class InformeLiqService {
    *   - InformeOp (este lado): liquidado → activo, idInfLiq = null.
    *   - Operación: liquidacion.<lado> = false; ciclo 'liquidada' → 'cerrada'.
    *  La contraparte no cambia. Un log REVERTIR con diff.
-   *  Presupuesto: 2 por InformeOp + informe + copia + log (≤ 303).
+   *  FC1: las compensaciones aplicadas se LIBERAN (cada movimiento pierde su
+   *  imputación 'compensacion' a este informe y recupera el saldo sin
+   *  imputar). Quedan en el informe revertido como historia.
+   *  Presupuesto: 2 por InformeOp + informe + copia + log (≤ 303) + 1 por
+   *  compensación (≤ MAX_COMPENSACIONES).
    *  TODO Finanzas: cuando exista la cascada, revertir tiene que descontar
    *  el informe de resumenFinanzas / cuenta corriente. */
   async revertirEmitido(idInfLiq: string, motivo: string): Promise<Resultado<void>> {
@@ -479,9 +585,15 @@ export class InformeLiqService {
         const informes = await this.leerInformesOp(tx, liq.informesOp);
         this.validarInformesDelEmitido(informes, idInfLiq);
         const operaciones = await this.leerOperaciones(tx, informes);
+        const compensaciones = compensacionesDe(liq);
+        const movimientos = await this.leerMovimientosFin(tx, compensaciones.map(c => c.idMovimiento));
         // — fin de lecturas —
 
         this.agregarEscrituraInformeLiqParcial(escrituras, idInfLiq, { estado: 'revertido', reversion });
+        for (const [idMov, mov] of movimientos) {
+          if (!mov) throw new Error(`Inconsistencia: no existe el movimiento ${idMov} compensado en esta liquidación.`);
+          escrituras.push(escrituraMovimientoParcial(idMov, quitarCompensacion(mov, idInfLiq)));
+        }
         this.agregarEscrituraSnapshot(escrituras, idInfLiq, {
           fecha: reversion.fecha,
           informesOp: informes.map(({ id, ...inf }) => inf as InformeOpNuevo),
@@ -503,7 +615,8 @@ export class InformeLiqService {
         await this.logRegistro.agregarAlBatch(
           escrituras, 'REVERTIR', this.COLECCION, idInfLiq,
           `Reversión de liquidación ${liq.numeroInterno} — ${liq.tipo} ${nombreEntidadRef(liq.entidad)} — ` +
-          `${informes.length} InformeOp vuelven a 'activo' — ${this.factory.textoPeriodo(liq.periodo)} — motivo: ${motivoLimpio}`,
+          `${informes.length} InformeOp vuelven a 'activo' — ${this.factory.textoPeriodo(liq.periodo)} — motivo: ${motivoLimpio}` +
+          (compensaciones.length > 0 ? ` — ${compensaciones.length} compensación(es) liberada(s)` : ''),
           anterior,
         );
 
@@ -695,6 +808,12 @@ export class InformeLiqService {
   ): Promise<Resultado<ResultadoLiquidacion>> {
     const error = this.validarDatos(d);
     if (error) return { exito: false, mensaje: error };
+    let solicitudes: CompensacionSolicitada[];
+    try {
+      solicitudes = normalizarCompensaciones(d.compensaciones);
+    } catch (e: any) {
+      return { exito: false, mensaje: e?.message ?? String(e) };
+    }
 
     // Afuera del callback: el callback puede reintentarse y tiene que ser puro.
     const idInfLiq = this.db.generarId(this.COLECCION);
@@ -714,8 +833,14 @@ export class InformeLiqService {
           numero = n.numeroInterno;
           escrituras.push(n.escritura);
         }
+        const movimientos = await this.leerMovimientosFin(tx, solicitudes.map(s => s.idMovimiento));
         // — fin de lecturas —
 
+        // FC1: snapshot + validación de las compensaciones (borrador: solo se
+        // guardan; emitido: se aplican en los movimientos).
+        const compensaciones = armarCompensaciones(
+          solicitudes, movimientos, { tipo: d.tipo, id: informes[0].entidad.id }, null,
+        );
         const informeLiq = this.factory.crear(idInfLiq, {
           tipo: d.tipo,
           entidad: informes[0].entidad,
@@ -724,11 +849,21 @@ export class InformeLiqService {
           descuentos: d.descuentos,
           columnas: d.columnas,
           observaciones: d.observaciones,
+          compensaciones,
           modo,
           numeroInterno: numero,
           fecha,
         });
+        const errNeto = errorNeto(informeLiq.valores.total, informeLiq.valores.totalCompensaciones ?? 0);
+        if (errNeto) throw new Error(errNeto);
         this.agregarEscrituraInformeLiqCompleto(escrituras, informeLiq, 'crear');
+        if (modo === 'emitido') {
+          this.agregarEscriturasCompensacion(
+            escrituras,
+            { idInfLiq, numeroInterno: numero, periodoClave: informeLiq.periodoClave, totalDocumento: informeLiq.valores.total },
+            compensaciones, movimientos, fecha,
+          );
+        }
 
         const lado = this.lado(d.tipo);
         for (const inf of informes) {
@@ -756,7 +891,8 @@ export class InformeLiqService {
         // (y así no se hace una lectura fuera de la transacción).
         await this.logRegistro.agregarAlBatch(
           escrituras, modo === 'borrador' ? 'ALTA' : 'EMITIR', this.COLECCION, idInfLiq,
-          `${accion} de liquidación${numero ? ` ${numero}` : ''} — ${d.tipo} ${nombreEntidadRef(informeLiq.entidad)} — ${informes.length} InformeOp — ${this.factory.textoPeriodo(d.periodo)}`,
+          `${accion} de liquidación${numero ? ` ${numero}` : ''} — ${d.tipo} ${nombreEntidadRef(informeLiq.entidad)} — ${informes.length} InformeOp — ${this.factory.textoPeriodo(d.periodo)}` +
+          this.textoCompensaciones(compensaciones),
           null,
         );
 
@@ -898,6 +1034,43 @@ export class InformeLiqService {
       mapa.set(id, { ...data, idOperacion: id });
     }));
     return mapa;
+  }
+
+  /** FC1: relee los movimientos de Finanzas (ids sin repetir) dentro de la
+   *  transacción. null si alguno no existe (lo resuelve quien lo usa). */
+  private async leerMovimientosFin(tx: Transaction, ids: string[]): Promise<Map<string, MovimientoFin | null>> {
+    const mapa = new Map<string, MovimientoFin | null>();
+    await Promise.all([...new Set(ids)].map(async (id) => {
+      mapa.set(id, await this.db.leerEnTransaccion<MovimientoFin>(tx, COLECCION_MOVIMIENTOS_FIN, id));
+    }));
+    return mapa;
+  }
+
+  /** FC1: aplica las compensaciones de un informe EMITIDO en sus
+   *  movimientos (una imputación 'compensacion' por movimiento, que
+   *  reemplaza la anterior a este informe si la había). `saldoAntes` baja en
+   *  el orden de la lista. Los movimientos ya están validados por
+   *  armarCompensaciones. */
+  private agregarEscriturasCompensacion(
+    escrituras: EscrituraBatch[],
+    doc: DocumentoCompensado,
+    compensaciones: CompensacionLiq[],
+    movimientos: Map<string, MovimientoFin | null>,
+    fecha: string,
+  ): void {
+    let saldo = doc.totalDocumento;
+    for (const c of compensaciones) {
+      const mov = movimientos.get(c.idMovimiento);
+      if (!mov) throw new Error(`No existe el movimiento ${c.numero} elegido para compensar.`);
+      escrituras.push(escrituraMovimientoParcial(c.idMovimiento, fijarCompensacion(mov, doc, c.importe, saldo, fecha)));
+      saldo = redondear2(saldo - c.importe);
+    }
+  }
+
+  /** ' — compensaciones $ X (N)' para los logs ('' si no hay). */
+  private textoCompensaciones(compensaciones: CompensacionLiq[]): string {
+    if (compensaciones.length === 0) return '';
+    return ` — compensaciones $ ${totalCompensacionesDe(compensaciones).toFixed(2)} (${compensaciones.length})`;
   }
 
   private lado(tipo: 'cliente' | 'chofer' | 'proveedor'): Lado {

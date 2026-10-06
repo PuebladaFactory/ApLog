@@ -48,6 +48,14 @@ export interface InformeLiqNuevo {
 
   valores: ValoresLiq;
   descuentos: DescuentoLiq[];
+  // Frente Finanzas (FC1): anticipos / saldos a favor que se descuentan en
+  // esta liquidación (total → compensaciones → neto). En borrador son una
+  // propuesta (no tocan los movimientos); al emitir se APLICAN (imputación
+  // con origen 'compensacion' en cada movimiento + valoresFinancieros.
+  // totalCompensado); al revertir se liberan (quedan acá como historia).
+  // Opcional: los docs anteriores a FC1 no lo tienen — leer con
+  // compensacionesDe (shared/utils/compensacion.util.ts).
+  compensaciones?: CompensacionLiq[];
   columnas: string[];               // columnas elegidas para la exportación
   observaciones: string;
 
@@ -90,8 +98,25 @@ export interface ValoresLiq {
   totalKmMonto: number;
   totalAdExtra: number;
   descuentoTotal: number;
-  total: number;                    // suma de los 4 totales + descuentoTotal
+  total: number;                    // suma de los 4 totales + descuentoTotal — valor del SERVICIO
   totalContraParte: number;         // informativo — suma de contraParte.monto
+  // FC1. Opcionales: los docs anteriores no los tienen — leer con netoDe /
+  // compensacionesDe (shared/utils/compensacion.util.ts). Los mantiene
+  // InformeLiqFactoryService (recalcularTotal / aplicarCompensaciones).
+  totalCompensaciones?: number;     // Σ compensaciones.importe
+  neto?: number;                    // total − totalCompensaciones (≥ 0): lo que se paga / cobra
+}
+
+/** Una compensación de la liquidación: apunta a un movimiento real de
+ *  Finanzas (anticipo, préstamo o saldo a favor) con saldo sin imputar de la
+ *  MISMA entidad. Snapshot de número/fecha/concepto al elegirla; `importe` es
+ *  lo que se descuenta en ESTE informe (≤ disponible del movimiento). */
+export interface CompensacionLiq {
+  idMovimiento: string;
+  numero: string;                   // 'OPG-000123'
+  fecha: string;                    // 'YYYY-MM-DD' del movimiento
+  concepto: 'normal' | 'anticipo' | 'prestamo';   // ConceptoMovimientoFin
+  importe: number;                  // > 0
 }
 
 export interface DescuentoLiq {

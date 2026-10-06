@@ -2,8 +2,9 @@ import { Injectable } from '@angular/core';
 import { ConId } from 'src/app/interfaces/conId';
 import { InformeOpNuevo } from 'src/app/interfaces/informe-op-nuevo';
 import { RefCliente, RefChofer, RefProveedor } from 'src/app/interfaces/operacion';
-import { normalizarValoresFinancieros } from 'src/app/shared/utils/finanzas.util';
+import { aplicarImporte, estadoFinancieroDe, normalizarValoresFinancieros, redondear2 } from 'src/app/shared/utils/finanzas.util';
 import {
+  CompensacionLiq,
   DescuentoLiq,
   InformeLiqNuevo,
   PeriodoLiq,
@@ -19,6 +20,9 @@ export interface DatosCrearInformeLiq {
   descuentos: DescuentoLiq[];
   columnas: string[];
   observaciones: string;
+  // FC1: ya armadas y validadas por el orquestador (armarCompensaciones).
+  // En 'emitido' quedan aplicadas (valoresFinancieros.totalCompensado).
+  compensaciones?: CompensacionLiq[];
   modo: 'borrador' | 'emitido';
   numeroInterno: string | null;     // obligatorio si modo === 'emitido', ignorado si 'borrador'
   fecha: string;                    // ISO YYYY-MM-DD — la resuelve el caller
@@ -36,8 +40,12 @@ export class InformeLiqFactoryService {
     if (d.modo === 'emitido' && !d.numeroInterno) {
       throw new Error('InformeLiqFactory.crear: un informe emitido requiere numeroInterno.');
     }
-    const valores = this.calcularValores(d.informesOp, d.descuentos);
+    const compensaciones = (d.compensaciones ?? []).map(c => ({ ...c }));
+    const valores = this.aplicarCompensaciones(this.calcularValores(d.informesOp, d.descuentos), compensaciones);
     const emitido = d.modo === 'emitido';
+    const valoresFinancieros = this.valoresFinancierosIniciales(
+      valores.total, emitido ? (valores.totalCompensaciones ?? 0) : 0,
+    );
 
     return {
       idInfLiq,
@@ -53,10 +61,11 @@ export class InformeLiqFactoryService {
       cantidadOperaciones: d.informesOp.length,
       valores,
       descuentos: d.descuentos.map(x => ({ ...x })),
+      compensaciones,
       columnas: [...d.columnas],
       observaciones: d.observaciones,
-      valoresFinancieros: this.valoresFinancierosIniciales(valores.total),
-      estadoFinanciero: 'pendiente',
+      valoresFinancieros,
+      estadoFinanciero: emitido ? estadoFinancieroDe(valoresFinancieros) : 'pendiente',
       facturaUrl: null,
       factura: null,
       reversion: null,
@@ -82,20 +91,45 @@ export class InformeLiqFactoryService {
     }
 
     return this.recalcularTotal(
-      { totalTarifaBase, totalAcompaniante, totalKmMonto, totalAdExtra, descuentoTotal: 0, total: 0, totalContraParte },
+      {
+        totalTarifaBase, totalAcompaniante, totalKmMonto, totalAdExtra, descuentoTotal: 0, total: 0, totalContraParte,
+        totalCompensaciones: 0, neto: 0,
+      },
       descuentos,
     );
   }
 
   /** Recalcula descuentoTotal y total a partir de los 4 totales base — lo
    *  usan crear() y la edición de descuentos (B3). No toca los totales base
-   *  ni totalContraParte. */
+   *  ni totalContraParte. Mantiene totalCompensaciones (0 en docs anteriores
+   *  a FC1) y recalcula neto = total − totalCompensaciones (puede quedar
+   *  negativo: la guarda de neto ≥ 0 es del orquestador). */
   recalcularTotal(valores: ValoresLiq, descuentos: DescuentoLiq[]): ValoresLiq {
     const descuentoTotal = descuentos.reduce((acc, x) => acc + (x.valor ?? 0), 0);
     const total =
       valores.totalTarifaBase + valores.totalAcompaniante + valores.totalKmMonto +
       valores.totalAdExtra + descuentoTotal;
-    return { ...valores, descuentoTotal, total };
+    const totalCompensaciones = valores.totalCompensaciones ?? 0;
+    return { ...valores, descuentoTotal, total, totalCompensaciones, neto: redondear2(total - totalCompensaciones) };
+  }
+
+  /** FC1: fija totalCompensaciones (Σ importes) y neto sobre unos valores ya
+   *  calculados. No valida neto ≥ 0 (es del orquestador). */
+  aplicarCompensaciones(valores: ValoresLiq, compensaciones: CompensacionLiq[]): ValoresLiq {
+    const totalCompensaciones = redondear2(compensaciones.reduce((acc, c) => acc + (c.importe ?? 0), 0));
+    return { ...valores, totalCompensaciones, neto: redondear2(valores.total - totalCompensaciones) };
+  }
+
+  /** FC1: valores financieros de un informe EMITIDO con `totalCompensado`
+   *  aplicado (desde cero), sin pisar cobrado/ajustado. Tira Error si el
+   *  saldo quedaría negativo (neto < 0 o compensado + cobrado > total). */
+  valoresFinancierosConCompensado(
+    actual: ValoresFinancierosLiq | null | undefined,
+    total: number,
+    totalCompensado: number,
+  ): ValoresFinancierosLiq {
+    const base = normalizarValoresFinancieros({ ...(actual ?? {}), total, totalCompensado: 0 }, total);
+    return aplicarImporte(base, 'totalCompensado', totalCompensado);
   }
 
   /** Recalcula total/saldo SIN pisar lo imputado (compensado, cobrado,
@@ -147,7 +181,8 @@ export class InformeLiqFactoryService {
     return `${String(periodo.mes).padStart(2, '0')}/${periodo.anio} · ${tramo}`;
   }
 
-  private valoresFinancierosIniciales(total: number): ValoresFinancierosLiq {
-    return { total, totalCompensado: 0, totalCobrado: 0, totalAjustado: 0, saldo: total };
+  /** `totalCompensado`: solo en un alta emitida con compensaciones (FC1). */
+  private valoresFinancierosIniciales(total: number, totalCompensado: number = 0): ValoresFinancierosLiq {
+    return normalizarValoresFinancieros({ total, totalCompensado, totalCobrado: 0, totalAjustado: 0 }, total);
   }
 }
