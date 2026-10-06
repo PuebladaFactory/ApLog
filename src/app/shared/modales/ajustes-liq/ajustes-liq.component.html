@@ -39,6 +39,13 @@
             </td>
 
           </div>
+          @if (pareceAdelanto) {
+            <div class="alert alert-warning py-2 mt-2 mb-0">
+              Los <b>adelantos y préstamos</b> se registran en Finanzas (pago con concepto anticipo o préstamo) y se
+              descuentan con <b>Compensaciones</b>, no como ajuste: así quedan atados a la plata entregada y no se
+              descuentan dos veces.
+            </div>
+          }
           @if (descuentos.length > 0) {
             <div>
               <table class="table table-striped w-100">

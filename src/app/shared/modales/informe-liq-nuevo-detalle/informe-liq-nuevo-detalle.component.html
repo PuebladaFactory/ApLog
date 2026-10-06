@@ -48,6 +48,18 @@
                         Editar
                     </button>
                 }
+                @if (editable || compensaciones.length > 0) {
+                    <h6 class="mb-0 me-2 ms-3">Compensaciones</h6>
+                }
+                @if (editable) {
+                    <button
+                        type="button"
+                        class="btn btn-outline-primary btn-sm"
+                        (click)="abrirCompensaciones()"
+                    >
+                        Elegir
+                    </button>
+                }
             </div>
         </div>
 
@@ -102,7 +114,9 @@
         @if (editable && liq.estado === 'emitido') {
             <div class="alert alert-warning py-2 mb-3">
                 Informe emitido: los cambios modifican el total de una
-                liquidación que ya tiene número interno.
+                liquidación que ya tiene número interno. Las compensaciones
+                ya están aplicadas: si las cambiás, al guardar se mueve el
+                saldo de los anticipos.
             </div>
         }
 
@@ -231,6 +245,51 @@
                         </tbody>
                     </table>
                 }
+                @if (compensaciones.length > 0) {
+                    <h6 class="mt-2 mb-1">Compensaciones</h6>
+                    <table
+                        class="table table-bordered table-striped table-hover table-responsive table-sm mb-0"
+                    >
+                        <tbody>
+                            @for (
+                                c of compensaciones;
+                                track c.idMovimiento;
+                                let i = $index
+                            ) {
+                                <tr>
+                                    <td>
+                                        {{ etiquetaConcepto[c.concepto] }}
+                                        {{ c.numero }}
+                                    </td>
+                                    <td class="col-moneda negativo">
+                                        − {{ c.importe | formatearValor: "$" }}
+                                    </td>
+                                    <td class="text-center">
+                                        @if (editable) {
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                width="16"
+                                                height="16"
+                                                fill="currentColor"
+                                                class="bi bi-x-circle text-danger"
+                                                type="button"
+                                                viewBox="0 0 16 16"
+                                                (click)="quitarCompensacion(i)"
+                                            >
+                                                <path
+                                                    d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"
+                                                />
+                                                <path
+                                                    d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"
+                                                />
+                                            </svg>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
             </div>
         </div>
 
@@ -255,6 +314,23 @@
                     <span class="badge bg-warning text-dark ms-1">sin guardar</span>
                 }</span
             >
+            @if (compensaciones.length > 0 || (liq.valores.totalCompensaciones ?? 0) > 0) {
+                <span
+                    >Compensaciones:
+                    <b class="negativo"
+                        >− {{ totalCompensacionesEditado | formatearValor: "$" }}</b
+                    ></span
+                >
+                <span
+                    >Neto:
+                    <b [class.negativo]="netoInvalido">{{
+                        netoEditado | formatearValor: "$"
+                    }}</b>
+                    @if (compensacionesSinGuardar) {
+                        <span class="badge bg-warning text-dark ms-1">sin guardar</span>
+                    }</span
+                >
+            }
             <span class="text-muted"
                 >Contraparte:
                 {{ liq.valores.totalContraParte | formatearValor: "$" }}</span
@@ -288,7 +364,7 @@
             <button
                 type="button"
                 class="btn btn-primary"
-                [disabled]="!hayCambios || guardando"
+                [disabled]="!hayCambios || guardando || netoInvalido"
                 (click)="guardarCambios()"
             >
                 Guardar cambios

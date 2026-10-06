@@ -49,6 +49,7 @@ import { InformeOpEditorComponent } from './modales/informe-op-editor/informe-op
 import { DescuentosComponent } from './modales/descuentos/descuentos.component';
 import { AjustesLiqComponent } from './modales/ajustes-liq/ajustes-liq.component';
 import { InformeLiqNuevoDetalleComponent } from './modales/informe-liq-nuevo-detalle/informe-liq-nuevo-detalle.component';
+import { CompensacionesLiqComponent } from './modales/compensaciones-liq/compensaciones-liq.component';
 import { BuscarPorChoferPipe } from './pipes/buscar-por-chofer.pipe';
 import { VisibilidadListadosComponent } from './modales/visibilidad-listados/visibilidad-listados.component';
 import { TableroFechasComponent } from './tablero-fechas/tablero-fechas.component';
@@ -107,6 +108,7 @@ import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
     DescuentosComponent,
     AjustesLiqComponent,              // modal (NgbModal.open), no se exporta
     InformeLiqNuevoDetalleComponent,  // modal (NgbModal.open), no se exporta
+    CompensacionesLiqComponent,       // modal (NgbModal.open), no se exporta
     BuscarPorChoferPipe,
     VisibilidadListadosComponent,
     TableroFechasComponent,

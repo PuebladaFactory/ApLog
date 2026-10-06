@@ -3,7 +3,7 @@ import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import Swal from 'sweetalert2';
 import { ConId } from 'src/app/interfaces/conId';
 import { InformeOpNuevo } from 'src/app/interfaces/informe-op-nuevo';
-import { DescuentoLiq, InformeLiqNuevo } from 'src/app/interfaces/informe-liq-nuevo';
+import { CompensacionLiq, DescuentoLiq, InformeLiqNuevo } from 'src/app/interfaces/informe-liq-nuevo';
 import { CambiosDatosLiq, InformeLiqService } from 'src/app/servicios/informes-liq/informe-liq.service';
 import { InformeLiqFactoryService } from 'src/app/servicios/informes-liq/informe-liq-factory.service';
 import { nombreEntidadRef } from 'src/app/shared/utils/entidad-informe.util';
@@ -16,6 +16,11 @@ import {
   ResultadoEdicionInformeOp,
 } from 'src/app/shared/modales/informe-op-editor/informe-op-editor.component';
 import { AjustesLiqComponent } from '../ajustes-liq/ajustes-liq.component';
+import { CompensacionesLiqComponent } from '../compensaciones-liq/compensaciones-liq.component';
+import {
+  ETIQUETA_CONCEPTO_COMPENSACION, compensacionesDe, totalCompensacionesDe,
+} from 'src/app/shared/utils/compensacion.util';
+import { redondear2, TOLERANCIA_IMPORTE } from 'src/app/shared/utils/finanzas.util';
 import { PermisosService } from 'src/app/servicios/permisos/permisos.service';
 import {
   descripcionTipoComprobante, fechaComprobanteLegible, listarDiscrepancias, numeroComprobante,
@@ -55,6 +60,10 @@ export class InformeLiqNuevoDetalleComponent implements OnInit {
   descuentos: DescuentoLiq[] = [];
   observaciones = '';
   columnas: ColumnaLiq[] = [];
+  // Frente Finanzas (FC1): editables en borrador (propuesta) y en emitido
+  // (aplicadas: al guardar, InformeLiqService.editarDatos mueve los saldos).
+  compensaciones: CompensacionLiq[] = [];
+  readonly etiquetaConcepto = ETIQUETA_CONCEPTO_COMPENSACION;
 
   constructor(
     public activeModal: NgbActiveModal,
@@ -148,6 +157,24 @@ export class InformeLiqNuevoDetalleComponent implements OnInit {
     return this.subtotalBase + this.descuentoTotalEditado;
   }
 
+  get totalCompensacionesEditado(): number {
+    return totalCompensacionesDe(this.compensaciones);
+  }
+
+  /** Neto en vivo (total editado − compensaciones en edición). */
+  get netoEditado(): number {
+    return redondear2(this.totalEditado - this.totalCompensacionesEditado);
+  }
+
+  /** F30: no se guarda un neto negativo. */
+  get netoInvalido(): boolean {
+    return this.netoEditado < -TOLERANCIA_IMPORTE;
+  }
+
+  get compensacionesSinGuardar(): boolean {
+    return this.compensacionesCambiaron;
+  }
+
   /** Los ajustes en pantalla difieren de los guardados. */
   get ajustesSinGuardar(): boolean {
     return this.descuentosCambiaron;
@@ -156,7 +183,8 @@ export class InformeLiqNuevoDetalleComponent implements OnInit {
   /** ¿Hay cambios de datos sin guardar? */
   get hayCambios(): boolean {
     if (!this.liq) return false;
-    return this.descuentosCambiaron || this.observacionesCambiaron || this.columnasCambiaron;
+    return this.descuentosCambiaron || this.observacionesCambiaron || this.columnasCambiaron ||
+      this.compensacionesCambiaron;
   }
 
   private get columnasSeleccionadas(): string[] {
@@ -165,6 +193,12 @@ export class InformeLiqNuevoDetalleComponent implements OnInit {
 
   private get descuentosCambiaron(): boolean {
     return !!this.liq && !igualesPorContenido(this.descuentos, this.liq.descuentos);
+  }
+
+  private get compensacionesCambiaron(): boolean {
+    if (!this.liq) return false;
+    const clave = (cs: CompensacionLiq[]) => cs.map(c => ({ id: c.idMovimiento, importe: c.importe }));
+    return !igualesPorContenido(clave(this.compensaciones), clave(compensacionesDe(this.liq)));
   }
 
   private get columnasCambiaron(): boolean {
@@ -198,6 +232,7 @@ export class InformeLiqNuevoDetalleComponent implements OnInit {
       this.descuentos = this.liq.descuentos.map(d => ({ concepto: d.concepto, valor: d.valor }));
       this.observaciones = this.liq.observaciones ?? '';
       this.columnas = columnasPorTipo(this.liq.tipo, this.liq.columnas);
+      this.compensaciones = compensacionesDe(this.liq).map(c => ({ ...c }));
     } catch (e: any) {
       Swal.fire({ icon: 'error', text: `No se pudo cargar el informe: ${e?.message ?? e}` });
     } finally {
@@ -263,20 +298,49 @@ export class InformeLiqNuevoDetalleComponent implements OnInit {
     this.descuentos = this.descuentos.filter((_, idx) => idx !== i);
   }
 
+  /** Modal de compensaciones (FC1). Devuelve la lista completa elegida; se
+   *  persiste con "Guardar cambios". */
+  async abrirCompensaciones(): Promise<void> {
+    if (!this.liq) return;
+    const modalRef = this.modalService.open(CompensacionesLiqComponent, {
+      size: 'xl', centered: true, scrollable: true,
+    });
+    modalRef.componentInstance.tipo = this.liq.tipo;
+    modalRef.componentInstance.idEntidad = this.liq.entidad.id;
+    modalRef.componentInstance.nombreEntidad = this.nombreEntidad;
+    modalRef.componentInstance.idInfLiq = this.idInfLiq;
+    modalRef.componentInstance.actuales = this.compensaciones.map(c => ({ ...c }));
+    modalRef.componentInstance.totalServicio = this.totalEditado;
+    try {
+      const r: CompensacionLiq[] = await modalRef.result;
+      if (Array.isArray(r)) this.compensaciones = r;
+    } catch {
+      // dismiss — sin cambios
+    }
+  }
+
+  quitarCompensacion(i: number): void {
+    this.compensaciones = this.compensaciones.filter((_, idx) => idx !== i);
+  }
+
   descartarCambios(): void {
     if (!this.liq) return;
     this.descuentos = this.liq.descuentos.map(d => ({ concepto: d.concepto, valor: d.valor }));
     this.observaciones = this.liq.observaciones ?? '';
     this.columnas = columnasPorTipo(this.liq.tipo, this.liq.columnas);
+    this.compensaciones = compensacionesDe(this.liq).map(c => ({ ...c }));
   }
 
   /** Guarda solo los campos que cambiaron (editarDatos). */
   async guardarCambios(): Promise<void> {
-    if (!this.liq || !this.hayCambios) return;
+    if (!this.liq || !this.hayCambios || this.netoInvalido) return;
     const cambios: CambiosDatosLiq = {};
     if (this.descuentosCambiaron) cambios.descuentos = this.descuentos;
     if (this.observacionesCambiaron) cambios.observaciones = this.observaciones.trim();
     if (this.columnasCambiaron) cambios.columnas = this.columnasSeleccionadas;
+    if (this.compensacionesCambiaron) {
+      cambios.compensaciones = this.compensaciones.map(c => ({ idMovimiento: c.idMovimiento, importe: c.importe }));
+    }
 
     this.guardando = true;
     try {
@@ -300,7 +364,10 @@ export class InformeLiqNuevoDetalleComponent implements OnInit {
       descuentos: this.descuentos.map(d => ({ concepto: d.concepto, valor: d.valor })),
       observaciones: this.observaciones.trim(),
       columnas: this.columnasSeleccionadas,
-      valores: this.factory.recalcularTotal(this.liq.valores, this.descuentos),
+      compensaciones: this.compensaciones.map(c => ({ ...c })),
+      valores: this.factory.aplicarCompensaciones(
+        this.factory.recalcularTotal(this.liq.valores, this.descuentos), this.compensaciones,
+      ),
     };
     this.exportServ
       .vistaPrevia(copia, this.informes)

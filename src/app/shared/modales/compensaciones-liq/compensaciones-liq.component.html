@@ -1,0 +1,93 @@
+<div class="modal-header">
+  <div>
+    <h4 class="modal-title">Compensaciones</h4>
+    <div class="text-muted">{{ nombreEntidad }}</div>
+  </div>
+  <button type="button" class="btn-close" (click)="cancelar()"></button>
+</div>
+
+<div class="modal-body">
+  <p class="text-muted mb-2">
+    Anticipos, préstamos y saldos a favor de la entidad que se descuentan en esta liquidación. Lo que se
+    compensa no se paga ni se cobra: el neto es lo que queda pendiente. En un borrador es una propuesta; se aplica
+    al emitir.
+  </p>
+
+  @if (cargando) {
+    <app-spinner></app-spinner>
+  } @else {
+    @if (noDisponibles.length > 0) {
+      <div class="alert alert-warning py-2">
+        Ya no están disponibles y se quitan al aplicar:
+        @for (n of noDisponibles; track n.idMovimiento; let ultimo = $last) {
+          <b>{{ n.numero }}</b> ({{ n.importe | formatearValor: '$' }}){{ ultimo ? '.' : ',' }}
+        }
+      </div>
+    }
+
+    @if (filas.length === 0) {
+      <div class="alert alert-info py-2">
+        {{ nombreEntidad }} no tiene anticipos, préstamos ni saldos a favor para compensar.
+      </div>
+    } @else {
+      <table class="table table-sm table-striped align-middle">
+        <thead>
+          <tr>
+            <th style="width: 2rem;"></th>
+            <th>Movimiento</th>
+            <th>Fecha</th>
+            <th>Concepto</th>
+            <th class="text-end">Total</th>
+            <th class="text-end">Disponible</th>
+            <th class="text-end" style="width: 11rem;">A compensar</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (f of filas; track f.c.idMovimiento) {
+            <tr>
+              <td>
+                <input type="checkbox" class="form-check-input" [checked]="(f.importe ?? 0) > 0"
+                  (change)="alternar(f, $any($event.target).checked)" />
+              </td>
+              <td>
+                {{ f.c.numero }}
+                @if (f.c.enOtrosBorradores.length > 0) {
+                  <div class="small text-warning">
+                    También elegido en el borrador de {{ f.c.enOtrosBorradores.join(', ') }}
+                  </div>
+                }
+              </td>
+              <td>{{ fechaLegible(f.c.fecha) }}</td>
+              <td>{{ etiquetaConcepto[f.c.concepto] }}</td>
+              <td class="text-end col-importe">{{ f.c.total | formatearValor: '$' }}</td>
+              <td class="text-end col-importe">{{ f.c.disponible | formatearValor: '$' }}</td>
+              <td>
+                <input inputmode="decimal" class="form-control form-control-sm text-end" appMonto
+                  [class.is-invalid]="(f.importe ?? 0) - f.c.disponible > 0.005"
+                  [(ngModel)]="f.importe" />
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+
+    <div class="d-flex justify-content-end gap-4 resumen p-2 rounded">
+      <span>Total del servicio: <b>{{ totalServicio | formatearValor: '$' }}</b></span>
+      <span>Compensaciones: <b>{{ totalCompensaciones | formatearValor: '$' }}</b></span>
+      <span>Neto: <b [class.text-danger]="neto < 0">{{ neto | formatearValor: '$' }}</b></span>
+    </div>
+
+    @if (errorValidacion && filas.length > 0) {
+      <div class="text-danger small mt-2">{{ errorValidacion }}</div>
+    }
+  }
+  @if (error) {
+    <div class="alert alert-danger mt-2 mb-0">{{ error }}</div>
+  }
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-outline-secondary" (click)="cancelar()">Cancelar</button>
+  <button type="button" class="btn btn-primary" [disabled]="!puedeAplicar" (click)="aplicar()">Aplicar</button>
+</div>

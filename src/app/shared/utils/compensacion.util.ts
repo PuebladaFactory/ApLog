@@ -187,3 +187,70 @@ export function quitarCompensacion(
 export function escrituraMovimientoParcial(idMovimiento: string, campos: Record<string, any>): EscrituraBatch {
   return { coleccion: COLECCION_MOVIMIENTOS_FIN, id: idMovimiento, modo: 'actualizar', data: campos };
 }
+
+// ---------------------------------------------------------------------------
+// UI (FC1b): qué se puede compensar
+// ---------------------------------------------------------------------------
+
+/** Etiqueta del concepto del movimiento compensado ('normal' = un cobro o
+ *  pago que quedó con saldo a favor). */
+export const ETIQUETA_CONCEPTO_COMPENSACION: Readonly<Record<CompensacionLiq['concepto'], string>> = {
+  normal: 'Saldo a favor',
+  anticipo: 'Anticipo',
+  prestamo: 'Préstamo',
+};
+
+/** Un movimiento que se puede compensar en un informe. */
+export interface CompensableFin {
+  idMovimiento: string;
+  numero: string;
+  fecha: string;                    // 'YYYY-MM-DD'
+  concepto: CompensacionLiq['concepto'];
+  total: number;                    // total del movimiento
+  disponible: number;               // disponibleParaInforme
+  enOtrosBorradores: string[];      // períodos 'MM/AAAA' de OTROS borradores que lo eligieron (F35)
+}
+
+/** Lista de compensables para el informe `idInfLiq` (null = informe nuevo)
+ *  de la entidad: movimientos vigentes, no ajustes, de la entidad, con
+ *  disponible > 0 (incluye los ya aplicados a este informe aunque su
+ *  sinImputar sea 0). Marca los elegidos en otros borradores. Orden: más
+ *  antiguos primero. Puro. */
+export function armarCompensables(
+  movimientos: (MovimientoFin & { idMovimiento: string })[],
+  entidad: Pick<EntidadMovimientoFin, 'tipo' | 'id'>,
+  idInfLiq: string | null,
+  borradores: (Pick<InformeLiqNuevo, 'compensaciones' | 'periodoClave'> & { idInfLiq: string })[],
+): CompensableFin[] {
+  const vistos = new Set<string>();
+  const lista: CompensableFin[] = [];
+  for (const m of movimientos) {
+    if (vistos.has(m.idMovimiento)) continue;
+    vistos.add(m.idMovimiento);
+    if (m.estado !== 'vigente' || m.tipo === 'ajuste') continue;
+    if (m.entidad.tipo !== entidad.tipo || m.entidad.id !== entidad.id) continue;
+    const disponible = disponibleParaInforme(m, idInfLiq);
+    if (!(disponible > 0)) continue;
+    const enOtrosBorradores = borradores
+      .filter(b => b.idInfLiq !== idInfLiq && compensacionesDe(b).some(c => c.idMovimiento === m.idMovimiento))
+      .map(b => {
+        const [a, mes] = (b.periodoClave ?? '').split('-');
+        return mes ? `${mes}/${a}` : (b.periodoClave ?? '');
+      });
+    lista.push({
+      idMovimiento: m.idMovimiento,
+      numero: m.numero,
+      fecha: m.fecha,
+      concepto: m.concepto,
+      total: m.total,
+      disponible,
+      enOtrosBorradores,
+    });
+  }
+  return lista.sort((a, b) => a.fecha.localeCompare(b.fecha) || a.numero.localeCompare(b.numero));
+}
+
+/** Σ disponible de una lista de compensables. */
+export function totalDisponible(compensables: Pick<CompensableFin, 'disponible'>[]): number {
+  return redondear2(compensables.reduce((acc, c) => acc + c.disponible, 0));
+}

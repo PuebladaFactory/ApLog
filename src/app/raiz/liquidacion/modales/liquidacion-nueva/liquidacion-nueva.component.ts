@@ -5,7 +5,7 @@ import Swal from 'sweetalert2';
 import { ConId } from 'src/app/interfaces/conId';
 import { InformeOpNuevo } from 'src/app/interfaces/informe-op-nuevo';
 import { Operacion, RefCliente, RefChofer, RefProveedor } from 'src/app/interfaces/operacion';
-import { DescuentoLiq, PeriodoLiq } from 'src/app/interfaces/informe-liq-nuevo';
+import { CompensacionLiq, DescuentoLiq, PeriodoLiq } from 'src/app/interfaces/informe-liq-nuevo';
 import { ColumnaLiq, columnasPorTipo, esColumnaMonto, etiquetaColumna, valorColumnaInformeOp } from 'src/app/shared/utils/columnas-liquidacion.util';
 import { InformeOpService } from 'src/app/servicios/informes-op/informe-op.service';
 import { OperacionService } from 'src/app/servicios/operaciones/operacion.service';
@@ -13,6 +13,12 @@ import { InformeLiqFactoryService } from 'src/app/servicios/informes-liq/informe
 import { DatosLiquidacion, InformeLiqService } from 'src/app/servicios/informes-liq/informe-liq.service';
 import { nombreEntidadRef } from 'src/app/shared/utils/entidad-informe.util';
 import { AjustesLiqComponent } from 'src/app/shared/modales/ajustes-liq/ajustes-liq.component';
+import { CompensacionesLiqComponent } from 'src/app/shared/modales/compensaciones-liq/compensaciones-liq.component';
+import { FinanzasConsultaService } from 'src/app/servicios/finanzas-nueva/finanzas-consulta.service';
+import {
+  ETIQUETA_CONCEPTO_COMPENSACION, totalCompensacionesDe, totalDisponible,
+} from 'src/app/shared/utils/compensacion.util';
+import { redondear2, TOLERANCIA_IMPORTE } from 'src/app/shared/utils/finanzas.util';
 import { LiquidacionExportService } from 'src/app/servicios/informes-liq/liquidacion-export.service';
 import { toISODateString } from 'src/app/servicios/fechas/date-range.service';
 
@@ -65,6 +71,12 @@ export class LiquidacionNuevaComponent implements OnInit {
   descuentos: DescuentoLiq[] = [];
   observaciones = '';
 
+  // Frente Finanzas (FC1): anticipos / saldos a favor que se descuentan.
+  compensaciones: CompensacionLiq[] = [];
+  /** Σ disponible de la entidad para compensar (aviso). */
+  saldoCompensable = 0;
+  readonly etiquetaConcepto = ETIQUETA_CONCEPTO_COMPENSACION;
+
   // Mismos nombres de columna que el camino viejo (se persisten como string[]
   // para la exportación futura).
   columnas: ColumnaLiq[] = [];
@@ -76,6 +88,7 @@ export class LiquidacionNuevaComponent implements OnInit {
     private operacionServ: OperacionService,
     private factory: InformeLiqFactoryService,
     private exportServ: LiquidacionExportService,
+    private finanzasConsulta: FinanzasConsultaService,
   ) {}
 
   ngOnInit(): void {
@@ -84,6 +97,19 @@ export class LiquidacionNuevaComponent implements OnInit {
     this.nombreEntidad = nombreEntidadRef(this.entidad);
     this.columnas = columnasPorTipo(this.tipo);
     this.cargar();
+    this.cargarSaldoCompensable();
+  }
+
+  /** Aviso "tiene $X sin compensar". Best-effort: si falla, no hay aviso. */
+  private async cargarSaldoCompensable(): Promise<void> {
+    try {
+      const compensables = await this.finanzasConsulta.obtenerCompensables(
+        { tipo: this.tipo, id: this.entidad.id }, null, [],
+      );
+      this.saldoCompensable = totalDisponible(compensables);
+    } catch (e) {
+      console.error('No se pudo leer el saldo compensable', e);
+    }
   }
 
   get periodo(): PeriodoLiq {
@@ -158,12 +184,26 @@ export class LiquidacionNuevaComponent implements OnInit {
     return this.factory.calcularValores(this.seleccionados, this.descuentos).total;
   }
 
+  get totalCompensaciones(): number {
+    return totalCompensacionesDe(this.compensaciones);
+  }
+
+  get neto(): number {
+    return redondear2(this.total - this.totalCompensaciones);
+  }
+
+  /** Lo que la entidad tiene para compensar y no se eligió (aviso). */
+  get saldoSinCompensar(): number {
+    return redondear2(this.saldoCompensable - this.totalCompensaciones);
+  }
+
   get hayAlertas(): boolean {
     return this.opAbiertas.length > 0 || this.bloqueados.length > 0 || this.enBorrador.length > 0;
   }
 
   get puedeConfirmar(): boolean {
-    return !this.cargando && this.seleccion.size > 0 && this.seleccion.size <= this.MAX;
+    return !this.cargando && this.seleccion.size > 0 && this.seleccion.size <= this.MAX &&
+      this.neto >= -TOLERANCIA_IMPORTE;
   }
 
   /** Valor de una celda según la columna — mismos criterios que
@@ -202,6 +242,29 @@ export class LiquidacionNuevaComponent implements OnInit {
     this.descuentos = this.descuentos.filter((_, idx) => idx !== i);
   }
 
+  /** Modal de compensaciones (FC1). Devuelve la lista completa elegida. */
+  async abrirCompensaciones(): Promise<void> {
+    const modalRef = this.modalService.open(CompensacionesLiqComponent, {
+      size: 'xl', centered: true, scrollable: true,
+    });
+    modalRef.componentInstance.tipo = this.tipo;
+    modalRef.componentInstance.idEntidad = this.entidad.id;
+    modalRef.componentInstance.nombreEntidad = this.nombreEntidad;
+    modalRef.componentInstance.idInfLiq = null;
+    modalRef.componentInstance.actuales = this.compensaciones.map(c => ({ ...c }));
+    modalRef.componentInstance.totalServicio = this.total;
+    try {
+      const r: CompensacionLiq[] = await modalRef.result;
+      if (Array.isArray(r)) this.compensaciones = r;
+    } catch {
+      // dismiss — sin cambios
+    }
+  }
+
+  quitarCompensacion(i: number): void {
+    this.compensaciones = this.compensaciones.filter((_, idx) => idx !== i);
+  }
+
   /** Vista previa (PDF en pestaña nueva) de lo que se va a liquidar, con lo
    *  que está en pantalla: selección, ajustes, observaciones y columnas.
    *  Informe armado en memoria con el factory (no se guarda): marca VISTA
@@ -218,6 +281,7 @@ export class LiquidacionNuevaComponent implements OnInit {
       descuentos: this.descuentos,
       columnas: this.columnasVisibles.map(c => c.nombre),
       observaciones: this.observaciones.trim(),
+      compensaciones: this.compensaciones,
       modo: 'borrador',
       numeroInterno: null,
       fecha: toISODateString(new Date()),
@@ -243,6 +307,11 @@ export class LiquidacionNuevaComponent implements OnInit {
     const html =
       `<p><b>${this.nombreEntidad}</b> — ${this.textoPeriodo}</p>` +
       `<p>${this.seleccion.size} informe(s) — Total: $ ${this.total.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>` +
+      (this.compensaciones.length > 0
+        ? `<p>Compensaciones: $ ${this.totalCompensaciones.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` +
+          ` — <b>Neto: $ ${this.neto.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b>` +
+          (accion === 'emitir' ? ' (se aplican al emitir)' : ' (propuesta: se aplican al emitir el borrador)') + '</p>'
+        : '') +
       (alertas.length ? `<div class="alert alert-warning text-start mb-0"><ul class="mb-0">${alertas.map(a => `<li>${a}</li>`).join('')}</ul></div>` : '') +
       (accion === 'emitir' ? '<p class="mt-2 mb-0"><small>Se asigna número interno. Esta acción no se puede deshacer desde Liquidación.</small></p>' : '');
 
@@ -265,6 +334,7 @@ export class LiquidacionNuevaComponent implements OnInit {
         descuentos: this.descuentos,
         columnas: this.columnas.filter(c => c.seleccionada).map(c => c.nombre),
         observaciones: this.observaciones.trim(),
+        compensaciones: this.compensaciones.map(c => ({ idMovimiento: c.idMovimiento, importe: c.importe })),
       },
     };
     this.activeModal.close(resultado);

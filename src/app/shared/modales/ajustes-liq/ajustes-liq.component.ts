@@ -32,6 +32,15 @@ export class AjustesLiqComponent implements OnInit{
       console.log("descuentos: ", this.descuentos);
   }
 
+  /** F23 (Frente Finanzas): el concepto parece un adelanto / préstamo. Esos
+   *  se registran en Finanzas (pago con concepto anticipo o préstamo) y se
+   *  descuentan como COMPENSACIÓN de la liquidación, no como ajuste. Solo
+   *  avisa; no bloquea. */
+  get pareceAdelanto(): boolean {
+    const patron = /adelanto|anticipo|pr[eé]stamo/i;
+    return patron.test(this.descuento?.concepto ?? '') || (this.descuentos ?? []).some(d => patron.test(d.concepto ?? ''));
+  }
+
   formatearValor(valor: number) : any{
     let nuevoValor =  new Intl.NumberFormat('es-ES', { 
         minimumFractionDigits: 2, 
