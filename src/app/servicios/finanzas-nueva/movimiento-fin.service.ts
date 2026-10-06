@@ -10,11 +10,12 @@ import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.
 import { NumeradorService } from 'src/app/servicios/numerador/numerador.service';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 import {
-  aplicarImporte, estadoFinancieroDe, normalizarValoresFinancieros, totalMedios,
+  aplicarImporte, estadoFinancieroDe, normalizarValoresFinancieros, redondear2, totalMedios,
 } from 'src/app/shared/utils/finanzas.util';
 import {
-  DatosMovimientoFin, ETIQUETA_TIPO_MOVIMIENTO, acumuladoDeMovimiento, armarImputacion, armarMovimiento,
-  normalizarDatosMovimiento, reversionesDe, validarAnulable, validarDatosMovimiento, validarDocumentoImputable,
+  DatosMovimientoFin, ETIQUETA_TIPO_MOVIMIENTO, ImputacionSolicitada, acumularImputaciones, acumuladoDeMovimiento,
+  armarImputacion, armarMovimiento, normalizarDatosMovimiento, normalizarSolicitudes, reversionesDe, validarAnulable,
+  validarDatosMovimiento, validarDocumentoImputable, validarImputacionSaldo,
 } from 'src/app/shared/utils/movimiento-fin.util';
 
 export interface ResultadoMovimientoFin {
@@ -188,6 +189,80 @@ export class MovimientoFinService {
         'ANULAR', this.COLECCION, idMovimiento, `Error al anular el movimiento: ${e?.message ?? e}`,
       );
       return { exito: false, mensaje: `No se pudo anular: ${e?.message ?? e}` };
+    }
+  }
+
+  /** Aplica el saldo sin imputar de un cobro o pago (saldo a favor del
+   *  cliente, anticipo o préstamo) a comprobantes facturados de la MISMA
+   *  entidad. Transacción: relee el movimiento (vigente, con saldo) y cada
+   *  InformeLiq (facturado, de la entidad, con saldo); a cada informe le
+   *  suma el importe a totalCobrado y recalcula saldo y estadoFinanciero;
+   *  agrega al movimiento las imputaciones (origen 'saldo', fecha = hoy) y
+   *  recalcula totalImputado / sinImputar; log IMPUTAR. Si después se anula
+   *  el movimiento, anular() revierte también estas imputaciones. */
+  async imputarSaldo(idMovimiento: string, solicitudes: ImputacionSolicitada[]): Promise<Resultado<void>> {
+    const pedidas = normalizarSolicitudes(solicitudes);
+    if (pedidas.length === 0) return { exito: false, mensaje: 'Elegí al menos un comprobante.' };
+
+    // Afuera del callback: puede reintentarse y tiene que ser puro.
+    const fecha = toISODateString(new Date());
+
+    try {
+      const r = await this.db.commitEnTransaccion<{ numero: string; importe: number; comprobantes: number; sinImputar: number }>(
+        async (tx) => {
+          const mov = await this.db.leerEnTransaccion<MovimientoFin>(tx, this.COLECCION, idMovimiento);
+          if (!mov) throw new Error(`No existe el movimiento ${idMovimiento}.`);
+          const error = validarImputacionSaldo(mov, pedidas);
+          if (error) throw new Error(error);
+
+          const leidos = await Promise.all(pedidas.map(async imp => ({
+            imp,
+            liq: await this.db.leerEnTransaccion<InformeLiqNuevo>(tx, this.COL_LIQ, imp.idInfLiq),
+          })));
+          // — fin de lecturas —
+
+          const escrituras: EscrituraBatch[] = [];
+          const nuevas: ImputacionFin[] = [];
+          for (const { imp, liq } of leidos) {
+            if (!liq) throw new Error(`No existe el informe de liquidación ${imp.idInfLiq}.`);
+            validarDocumentoImputable(liq, imp.idInfLiq, mov.entidad);
+            const vfAntes = normalizarValoresFinancieros(liq.valoresFinancieros, liq.valores.total);
+            const vf = aplicarImporte(vfAntes, 'totalCobrado', imp.importe);   // tira Error si supera el saldo
+            nuevas.push(armarImputacion(liq, imp.idInfLiq, vfAntes, imp.importe, fecha, 'saldo'));
+            this.informeLiqServ.agregarEscrituraInformeLiqParcial(escrituras, imp.idInfLiq, {
+              valoresFinancieros: vf,
+              estadoFinanciero: estadoFinancieroDe(vf, liq.estadoFinanciero),
+            });
+          }
+
+          const campos = acumularImputaciones(mov, nuevas);
+          escrituras.push({ coleccion: this.COLECCION, id: idMovimiento, modo: 'actualizar', data: campos });
+
+          const importe = redondear2(nuevas.reduce((acc, i) => acc + i.importe, 0));
+          await this.logRegistro.agregarAlBatch(
+            escrituras, 'IMPUTAR', this.COLECCION, idMovimiento,
+            `Imputación de saldo del ${ETIQUETA_TIPO_MOVIMIENTO[mov.tipo].toLowerCase()} ${mov.numero} — ` +
+            `${mov.entidad.tipo} ${mov.entidad.razonSocial} — $ ${importe.toFixed(2)} a ${nuevas.length} comprobante(s) — ` +
+            `queda sin imputar $ ${campos.sinImputar.toFixed(2)}`,
+          );
+
+          return {
+            escrituras,
+            resultado: { numero: mov.numero, importe, comprobantes: nuevas.length, sinImputar: campos.sinImputar },
+          };
+        },
+      );
+
+      return {
+        exito: true,
+        mensaje: `Se imputaron $ ${r.importe.toFixed(2)} de ${r.numero} a ${r.comprobantes} comprobante(s).` +
+          (r.sinImputar > 0 ? ` Quedan $ ${r.sinImputar.toFixed(2)} sin imputar.` : ''),
+      };
+    } catch (e: any) {
+      await this.logRegistro.registrarError(
+        'IMPUTAR', this.COLECCION, idMovimiento, `Error al imputar saldo: ${e?.message ?? e}`,
+      );
+      return { exito: false, mensaje: `No se pudo imputar: ${e?.message ?? e}` };
     }
   }
 }

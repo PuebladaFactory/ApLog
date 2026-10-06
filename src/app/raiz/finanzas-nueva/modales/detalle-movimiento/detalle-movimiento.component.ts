@@ -10,9 +10,9 @@ import {
 
 /** Finanzas — detalle de un movimiento (solo lectura): datos generales,
  *  medios, imputaciones y anulación. Muestra el movimiento tal como llegó
- *  (snapshot de la fila, no escucha cambios). El botón Anular cierra el
- *  modal con 'anular' y el que lo abrió sigue el flujo (motivo + servicio).
- *  Imprimir (recibo / orden de pago) llega en F8. */
+ *  (snapshot de la fila, no escucha cambios). Los botones Imputar saldo y
+ *  Anular cierran el modal con 'imputar' / 'anular' y el que lo abrió sigue
+ *  el flujo. Imprimir (recibo / orden de pago) llega en F8. */
 @Component({
   selector: 'app-detalle-movimiento',
   standalone: false,
@@ -42,6 +42,10 @@ export class DetalleMovimientoComponent {
 
   get puedeAnular(): boolean {
     return this.movimiento.estado === 'vigente' && !this.compensado;
+  }
+
+  get puedeImputar(): boolean {
+    return this.movimiento.estado === 'vigente' && this.movimiento.tipo !== 'ajuste' && this.movimiento.sinImputar > 0;
   }
 
   /** Etiqueta de lo no imputado según el lado: saldo a favor del cliente o
@@ -78,6 +82,10 @@ export class DetalleMovimientoComponent {
 
   anular(): void {
     this.activeModal.close('anular');
+  }
+
+  imputar(): void {
+    this.activeModal.close('imputar');
   }
 
   cerrar(): void {

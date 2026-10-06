@@ -372,3 +372,61 @@ export function reversionesDe(imputaciones: ImputacionFin[]): ReversionDocumento
   }
   return [...porDocumento.values()].filter(r => !esCero(r.importe));
 }
+
+// ---------------------------------------------------------------------------
+// Imputar saldo (F4b)
+// ---------------------------------------------------------------------------
+
+/** Solicitudes listas para validar: importes redondeados a centavos y las
+ *  de importe 0 descartadas. */
+export function normalizarSolicitudes(solicitudes: ImputacionSolicitada[]): ImputacionSolicitada[] {
+  return solicitudes
+    .map(i => ({ idInfLiq: i.idInfLiq, importe: redondear2(Number(i.importe) || 0) }))
+    .filter(i => !esCero(i.importe));
+}
+
+/** Reglas para imputar el saldo sin imputar de un movimiento (saldo a favor,
+ *  anticipo o préstamo) a comprobantes. Sobre el movimiento RELEÍDO en la
+ *  transacción (o el de la fila, en la UI) y solicitudes YA normalizadas.
+ *  Que cada comprobante sea de la entidad, esté facturado y tenga saldo lo
+ *  validan validarDocumentoImputable / aplicarImporte. Devuelve el mensaje
+ *  de error o null. */
+export function validarImputacionSaldo(
+  mov: Pick<MovimientoFin, 'estado' | 'numero' | 'tipo' | 'sinImputar'>,
+  solicitudes: ImputacionSolicitada[],
+): string | null {
+  if (mov.estado !== 'vigente') return `El movimiento ${mov.numero} está anulado.`;
+  if (mov.tipo === 'ajuste') return 'Un ajuste no tiene saldo para imputar.';
+  if (!(mov.sinImputar > 0)) return `El movimiento ${mov.numero} no tiene saldo sin imputar.`;
+  if (solicitudes.length === 0) return 'Elegí al menos un comprobante.';
+  const ids = solicitudes.map(i => i.idInfLiq);
+  if (new Set(ids).size !== ids.length) return 'Un comprobante aparece más de una vez.';
+  if (solicitudes.some(i => !(i.importe > 0))) return 'Hay un importe a imputar inválido.';
+  const total = redondear2(solicitudes.reduce((acc, i) => acc + i.importe, 0));
+  if (total - mov.sinImputar > TOLERANCIA_IMPORTE) {
+    return `Lo imputado (${total.toFixed(2)}) supera el saldo sin imputar del movimiento (${mov.sinImputar.toFixed(2)}).`;
+  }
+  return null;
+}
+
+/** Campos del movimiento después de sumarle `nuevas` imputaciones (para una
+ *  escritura parcial): imputaciones, idsDocumentos, totalImputado y
+ *  sinImputar recalculados desde el total. Tira Error si lo imputado
+ *  superaría el total (inconsistencia). */
+export function acumularImputaciones(
+  mov: Pick<MovimientoFin, 'numero' | 'total' | 'imputaciones'>,
+  nuevas: ImputacionFin[],
+): Pick<MovimientoFin, 'imputaciones' | 'idsDocumentos' | 'totalImputado' | 'sinImputar'> {
+  const imputaciones = [...(mov.imputaciones ?? []), ...nuevas];
+  const totalImputado = redondear2(imputaciones.reduce((acc, i) => acc + i.importe, 0));
+  const sinImputar = redondear2(mov.total - totalImputado);
+  if (sinImputar < -TOLERANCIA_IMPORTE) {
+    throw new Error(`Lo imputado (${totalImputado.toFixed(2)}) supera el total del movimiento ${mov.numero} (${mov.total.toFixed(2)}).`);
+  }
+  return {
+    imputaciones,
+    idsDocumentos: [...new Set(imputaciones.map(i => i.documento.id))],
+    totalImputado,
+    sinImputar: esCero(sinImputar) ? 0 : sinImputar,
+  };
+}

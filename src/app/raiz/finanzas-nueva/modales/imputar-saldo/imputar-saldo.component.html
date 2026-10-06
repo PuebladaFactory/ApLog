@@ -1,0 +1,120 @@
+<div class="modal-header">
+  <div>
+    <h4 class="modal-title">Imputar saldo — {{ etiquetaTipo[movimiento.tipo] }} {{ movimiento.numero }}</h4>
+    <div class="text-muted">
+      <span class="text-capitalize">{{ movimiento.entidad.tipo }}</span> {{ movimiento.entidad.razonSocial }} — CUIT {{ movimiento.entidad.cuit }}
+    </div>
+  </div>
+  <button type="button" class="btn-close" [disabled]="guardando" (click)="cancelar()"></button>
+</div>
+
+<div class="modal-body">
+  <div class="row g-2 mb-3">
+    <div class="col-md-3">
+      <div class="dato-label">Fecha del movimiento</div>
+      <div>{{ fechaLegible(movimiento.fecha) }}</div>
+    </div>
+    <div class="col-md-3">
+      <div class="dato-label">Concepto</div>
+      <div>{{ etiquetaConcepto[movimiento.concepto] }}</div>
+    </div>
+    <div class="col-md-3">
+      <div class="dato-label">Total</div>
+      <div class="col-importe">{{ movimiento.total | formatearValor: '$' }}</div>
+    </div>
+    <div class="col-md-3">
+      <div class="dato-label">Sin imputar (disponible)</div>
+      <div class="col-importe fw-bold">{{ disponible | formatearValor: '$' }}</div>
+    </div>
+  </div>
+
+  <div class="d-flex align-items-center mb-1">
+    <h6 class="mb-0">Comprobantes abiertos</h6>
+    <button type="button" class="btn btn-sm btn-outline-secondary ms-3" [disabled]="guardando || filas.length === 0"
+      (click)="repartir()">Repartir el disponible (más antiguos primero)</button>
+  </div>
+
+  @if (cargando) {
+    <app-spinner></app-spinner>
+  } @else if (filas.length === 0) {
+    <div class="alert alert-info py-2">
+      {{ movimiento.entidad.razonSocial }} no tiene informes facturados con saldo. El importe queda sin imputar hasta que haya uno.
+    </div>
+  } @else {
+    <table class="table table-sm table-striped align-middle">
+      <thead>
+        <tr>
+          <th style="width: 2rem;"></th>
+          <th>Informe</th>
+          <th>Período</th>
+          <th>Factura</th>
+          <th class="text-center">Días</th>
+          <th class="text-end">Total</th>
+          <th class="text-end">Saldo</th>
+          <th class="text-end" style="width: 11rem;">A imputar</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (f of filas; track f.liq.idInfLiq) {
+          <tr>
+            <td>
+              <input type="checkbox" class="form-check-input" [checked]="(f.importe ?? 0) > 0"
+                (change)="alternarFila(f, $any($event.target).checked)" [disabled]="guardando" />
+            </td>
+            <td>{{ f.liq.numeroInterno }}</td>
+            <td>{{ f.periodo }}</td>
+            <td>{{ f.fechaFactura }}</td>
+            <td class="text-center col-importe">{{ f.dias ?? '—' }}</td>
+            <td class="text-end col-importe">{{ f.total | formatearValor: '$' }}</td>
+            <td class="text-end col-importe">{{ f.saldo | formatearValor: '$' }}</td>
+            <td>
+              <input inputmode="decimal" class="form-control form-control-sm text-end" appMonto
+                [class.is-invalid]="(f.importe ?? 0) - f.saldo > 0.005"
+                [(ngModel)]="f.importe" [disabled]="guardando" />
+            </td>
+          </tr>
+        }
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="6" class="text-end">Saldo total {{ totalSaldos | formatearValor: '$' }}</td>
+          <td class="text-end fw-bold">Imputado</td>
+          <td class="text-end fw-bold col-importe">{{ totalImputado | formatearValor: '$' }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  }
+
+  <div class="row g-2 mt-2">
+    <div class="col-md-8 text-muted small">
+      Las imputaciones quedan con fecha de hoy y origen "Imputación de saldo". Si después se anula el movimiento,
+      se revierten junto con las demás.
+    </div>
+    <div class="col-md-4">
+      <div class="resumen p-2 rounded">
+        <div class="d-flex justify-content-between"><span>Disponible</span><span class="col-importe">{{ disponible | formatearValor: '$' }}</span></div>
+        <div class="d-flex justify-content-between"><span>A imputar</span><span class="col-importe">{{ totalImputado | formatearValor: '$' }}</span></div>
+        <div class="d-flex justify-content-between fw-bold">
+          <span>Queda sin imputar</span>
+          <span class="col-importe">{{ restante | formatearValor: '$' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  @if (errorValidacion && !cargando && filas.length > 0) {
+    <div class="text-danger small mt-2">{{ errorValidacion }}</div>
+  }
+  @if (error) {
+    <div class="alert alert-danger mt-2 mb-0">{{ error }}</div>
+  }
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-success" [disabled]="!puedeConfirmar" (click)="confirmar()">Imputar</button>
+  <button type="button" class="btn btn-outline-secondary" [disabled]="guardando" (click)="cancelar()">Cancelar</button>
+</div>
+
+@if (guardando) {
+  <app-spinner></app-spinner>
+}

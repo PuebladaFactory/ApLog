@@ -14,6 +14,7 @@ import {
   TotalesMovimientos, filtrarMovimientos, resumenMedios, totalizarMovimientos, validarRangoMovimientos,
 } from 'src/app/shared/utils/movimiento-fin.util';
 import { DetalleMovimientoComponent } from '../modales/detalle-movimiento/detalle-movimiento.component';
+import { ImputarSaldoComponent } from '../modales/imputar-saldo/imputar-saldo.component';
 
 type Fila = ConId<MovimientoFin>;
 
@@ -21,10 +22,11 @@ type Fila = ConId<MovimientoFin>;
  *  (`movimientosFin`), en vivo. La consulta es por rango de `fecha` (índice
  *  simple); tipo, estado y texto se filtran en memoria. Filtros recordados
  *  en la sesión (FinanzasConsultaService.filtrosMovimientos).
- *  Acciones: ver (DetalleMovimientoComponent) y anular
- *  (MovimientoFinService.anular, motivo obligatorio, finanzas.anular).
- *  Orden inicial: fecha descendente (es un historial, no un listado de
- *  entidades). Imputar saldo llega en F4b. */
+ *  Acciones: ver (DetalleMovimientoComponent), imputar el saldo sin imputar
+ *  a comprobantes (ImputarSaldoComponent → MovimientoFinService.imputarSaldo,
+ *  finanzas.editar) y anular (MovimientoFinService.anular, motivo
+ *  obligatorio, finanzas.anular). Orden inicial: fecha descendente (es un
+ *  historial, no un listado de entidades). */
 @Component({
   selector: 'app-finanzas-movimientos',
   standalone: false,
@@ -51,6 +53,10 @@ export class FinanzasMovimientosComponent implements OnInit, OnDestroy {
 
   readonly acciones: AccionListado<Fila>[] = [
     { id: 'ver', label: 'Ver', clase: 'btn-outline-primary' },
+    {
+      id: 'imputar', label: 'Imputar', clase: 'btn-outline-success', permiso: 'finanzas.editar',
+      visible: m => m.estado === 'vigente' && m.tipo !== 'ajuste' && m.sinImputar > 0,
+    },
     {
       id: 'anular', label: 'Anular', clase: 'btn-outline-danger', permiso: 'finanzas.anular',
       visible: m => m.estado === 'vigente',
@@ -137,11 +143,12 @@ export class FinanzasMovimientosComponent implements OnInit, OnDestroy {
 
   onAccion(ev: EventoAccionListado<Fila>): void {
     if (ev.id === 'ver') this.verDetalle(ev.item);
+    else if (ev.id === 'imputar') this.abrirImputar(ev.item);
     else if (ev.id === 'anular') this.anular(ev.item);
   }
 
-  /** Detalle en modal. Si se cierra con 'anular', sigue el mismo flujo que
-   *  la acción de la fila. */
+  /** Detalle en modal. Si se cierra con 'anular' o 'imputar', sigue el
+   *  mismo flujo que la acción de la fila. */
   verDetalle(m: Fila): void {
     const modalRef = this.modalService.open(DetalleMovimientoComponent, {
       size: 'xl', centered: true, scrollable: true,
@@ -150,8 +157,19 @@ export class FinanzasMovimientosComponent implements OnInit, OnDestroy {
     modalRef.result
       .then(resultado => {
         if (resultado === 'anular') this.anular(m);
+        else if (resultado === 'imputar') this.abrirImputar(m);
       })
       .catch(() => {});
+  }
+
+  /** Imputar el saldo sin imputar a comprobantes de la entidad. La tabla se
+   *  actualiza sola por el listener. */
+  abrirImputar(m: Fila): void {
+    const modalRef = this.modalService.open(ImputarSaldoComponent, {
+      size: 'xl', centered: true, scrollable: true, backdrop: 'static', keyboard: false,
+    });
+    modalRef.componentInstance.movimiento = m;
+    modalRef.result.catch(() => {});
   }
 
   /** Pide el motivo (obligatorio) y delega en MovimientoFinService.anular,

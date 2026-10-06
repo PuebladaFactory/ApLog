@@ -122,5 +122,8 @@
   @if (puedeAnular) {
     <button *appPermiso="'finanzas.anular'" type="button" class="btn btn-outline-danger me-auto" (click)="anular()">Anular</button>
   }
+  @if (puedeImputar) {
+    <button *appPermiso="'finanzas.editar'" type="button" class="btn btn-success" (click)="imputar()">Imputar saldo</button>
+  }
   <button type="button" class="btn btn-outline-secondary" (click)="cerrar()">Cerrar</button>
 </div>
