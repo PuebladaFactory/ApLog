@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
+import { Anulacion } from 'src/app/interfaces/anulacion';
 import { InformeLiqNuevo } from 'src/app/interfaces/informe-liq-nuevo';
-import { ImputacionFin } from 'src/app/interfaces/movimiento-fin';
+import { ImputacionFin, MovimientoFin } from 'src/app/interfaces/movimiento-fin';
 import { Resultado } from 'src/app/interfaces/resultado';
 import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
 import { toISODateString } from 'src/app/servicios/fechas/date-range.service';
@@ -12,8 +13,8 @@ import {
   aplicarImporte, estadoFinancieroDe, normalizarValoresFinancieros, totalMedios,
 } from 'src/app/shared/utils/finanzas.util';
 import {
-  DatosMovimientoFin, armarImputacion, armarMovimiento, normalizarDatosMovimiento,
-  validarDatosMovimiento, validarDocumentoImputable,
+  DatosMovimientoFin, ETIQUETA_TIPO_MOVIMIENTO, acumuladoDeMovimiento, armarImputacion, armarMovimiento,
+  normalizarDatosMovimiento, reversionesDe, validarAnulable, validarDatosMovimiento, validarDocumentoImputable,
 } from 'src/app/shared/utils/movimiento-fin.util';
 
 export interface ResultadoMovimientoFin {
@@ -109,6 +110,84 @@ export class MovimientoFinService {
         accion, this.COLECCION, idMovimiento, `Error al registrar ${etiqueta.toLowerCase()}: ${e?.message ?? e}`,
       );
       return { exito: false, mensaje: `No se pudo registrar el ${etiqueta.toLowerCase()}: ${e?.message ?? e}` };
+    }
+  }
+
+  /** Anula un movimiento ENTERO (F10: no se edita; motivo obligatorio).
+   *  Transacción: relee el movimiento (vigente, sin compensaciones) y cada
+   *  InformeLiq imputado; a cada informe le devuelve lo que este movimiento
+   *  le imputó (lo resta del acumulado — totalCobrado; totalAjustado en un
+   *  ajuste — y recalcula saldo y estadoFinanciero); marca el movimiento
+   *  'anulado' con quién, cuándo y por qué (conserva número, medios e
+   *  imputaciones como registro) y agrega un log ANULAR con diff.
+   *  El saldo sin imputar de un movimiento anulado deja de contar: las
+   *  consultas filtran por estado 'vigente'. */
+  async anular(idMovimiento: string, motivo: string): Promise<Resultado<void>> {
+    const motivoLimpio = (motivo ?? '').trim();
+    if (!motivoLimpio) return { exito: false, mensaje: 'Falta el motivo de la anulación.' };
+
+    // Afuera del callback: puede reintentarse y tiene que ser puro.
+    const usuario = this.usuarioSesion.getUsuarioActual()?.email ?? 'Desconocido';
+    const fecha = new Date().toISOString();
+
+    try {
+      const r = await this.db.commitEnTransaccion<{ numero: string; comprobantes: number }>(async (tx) => {
+        const mov = await this.db.leerEnTransaccion<MovimientoFin>(tx, this.COLECCION, idMovimiento);
+        if (!mov) throw new Error(`No existe el movimiento ${idMovimiento}.`);
+        const error = validarAnulable(mov);
+        if (error) throw new Error(error);
+
+        const reversiones = reversionesDe(mov.imputaciones ?? []);
+        const leidos = await Promise.all(reversiones.map(async rev => ({
+          rev,
+          liq: await this.db.leerEnTransaccion<InformeLiqNuevo>(tx, this.COL_LIQ, rev.idDocumento),
+        })));
+        // — fin de lecturas —
+
+        const escrituras: EscrituraBatch[] = [];
+        const acumulado = acumuladoDeMovimiento(mov.tipo);
+        for (const { rev, liq } of leidos) {
+          if (!liq) throw new Error(`No existe el informe de liquidación ${rev.numeroDocumento}. Anulación abortada.`);
+          if (liq.estado !== 'facturado') {
+            throw new Error(
+              `El informe ${rev.numeroDocumento} está en estado '${liq.estado}' (se esperaba 'facturado'). Anulación abortada.`,
+            );
+          }
+          const vfAntes = normalizarValoresFinancieros(liq.valoresFinancieros, liq.valores.total);
+          const vf = aplicarImporte(vfAntes, acumulado, -rev.importe);   // tira Error si el acumulado quedaría negativo
+          this.informeLiqServ.agregarEscrituraInformeLiqParcial(escrituras, rev.idDocumento, {
+            valoresFinancieros: vf,
+            estadoFinanciero: estadoFinancieroDe(vf, liq.estadoFinanciero),
+          });
+        }
+
+        const anulacion: Anulacion = { motivo: motivoLimpio, usuario, fecha };
+        escrituras.push({
+          coleccion: this.COLECCION, id: idMovimiento, modo: 'actualizar',
+          data: { estado: 'anulado', anulacion },
+        });
+
+        await this.logRegistro.agregarAlBatch(
+          escrituras, 'ANULAR', this.COLECCION, idMovimiento,
+          `Anulación del ${ETIQUETA_TIPO_MOVIMIENTO[mov.tipo].toLowerCase()} ${mov.numero} — ` +
+          `${mov.entidad.tipo} ${mov.entidad.razonSocial} — $ ${mov.total.toFixed(2)} — motivo: ${motivoLimpio} — ` +
+          `${reversiones.length} comprobante(s) recuperan saldo`,
+          mov,
+        );
+
+        return { escrituras, resultado: { numero: mov.numero, comprobantes: reversiones.length } };
+      });
+
+      return {
+        exito: true,
+        mensaje: `Movimiento ${r.numero} anulado.` +
+          (r.comprobantes > 0 ? ` ${r.comprobantes} comprobante(s) recuperaron su saldo.` : ''),
+      };
+    } catch (e: any) {
+      await this.logRegistro.registrarError(
+        'ANULAR', this.COLECCION, idMovimiento, `Error al anular el movimiento: ${e?.message ?? e}`,
+      );
+      return { exito: false, mensaje: `No se pudo anular: ${e?.message ?? e}` };
     }
   }
 }

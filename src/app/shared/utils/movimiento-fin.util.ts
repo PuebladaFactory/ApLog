@@ -1,9 +1,12 @@
 import { InformeLiqNuevo, ValoresFinancierosLiq } from 'src/app/interfaces/informe-liq-nuevo';
 import {
-  ConceptoMovimientoFin, EntidadMovimientoFin, ImputacionFin, MedioMovimientoFin, MovimientoFin,
-  OrigenImputacionFin, TipoEntidadFin, TipoMedioFin,
+  ConceptoMovimientoFin, EntidadMovimientoFin, EstadoMovimientoFin, ImpuestoRetencionFin, ImputacionFin,
+  MedioMovimientoFin, MotivoAjusteFin, MovimientoFin, OrigenImputacionFin, TipoEntidadFin, TipoMedioFin,
+  TipoMovimientoFin,
 } from 'src/app/interfaces/movimiento-fin';
-import { esCero, redondear2, totalMedios, TOLERANCIA_IMPORTE } from 'src/app/shared/utils/finanzas.util';
+import {
+  AcumuladoFinanciero, diasEntre, esCero, redondear2, totalMedios, TOLERANCIA_IMPORTE,
+} from 'src/app/shared/utils/finanzas.util';
 
 /** Armado y validación PUROS de movimientos de Finanzas (sin Firestore ni
  *  Angular). Los usa MovimientoFinService dentro de su transacción y la UI
@@ -189,4 +192,183 @@ export function armarMovimiento(p: {
     anulacion: null,
     usuario: p.usuario,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Etiquetas (F4)
+// ---------------------------------------------------------------------------
+
+export const ETIQUETA_TIPO_MOVIMIENTO: Readonly<Record<TipoMovimientoFin, string>> = {
+  cobro: 'Cobro',
+  pago: 'Pago',
+  ajuste: 'Ajuste',
+};
+
+export const ETIQUETA_CONCEPTO: Readonly<Record<ConceptoMovimientoFin, string>> = {
+  normal: 'Comprobantes',
+  anticipo: 'Anticipo',
+  prestamo: 'Préstamo',
+};
+
+export const ETIQUETA_IMPUESTO: Readonly<Record<ImpuestoRetencionFin, string>> = {
+  ganancias: 'Ganancias',
+  iibb: 'Ingresos Brutos',
+  iva: 'IVA',
+  suss: 'SUSS',
+};
+
+export const ETIQUETA_MOTIVO_AJUSTE: Readonly<Record<MotivoAjusteFin, string>> = {
+  incobrable: 'Incobrable',
+  bonificacion: 'Bonificación',
+  redondeo: 'Redondeo',
+  apertura: 'Saldo de apertura',
+  otro: 'Otro',
+};
+
+export const ETIQUETA_ORIGEN_IMPUTACION: Readonly<Record<OrigenImputacionFin, string>> = {
+  directa: 'Al registrar',
+  saldo: 'Imputación de saldo',
+  compensacion: 'Compensación en liquidación',
+};
+
+/** "Transferencia + Retención": tipos distintos, en el orden en que aparecen. */
+export function resumenMedios(medios: MedioMovimientoFin[]): string {
+  const tipos = [...new Set(medios.map(m => m.tipo))];
+  return tipos.length === 0 ? '—' : tipos.map(t => ETIQUETA_MEDIO[t] ?? t).join(' + ');
+}
+
+// ---------------------------------------------------------------------------
+// Historial (F4): rango, filtros y totales
+// ---------------------------------------------------------------------------
+
+/** Filtros de la pestaña Movimientos. `desde`/`hasta` definen la consulta
+ *  (rango sobre `fecha`); tipo, estado y texto se aplican en memoria. */
+export interface FiltrosMovimientosFin {
+  desde: string;                          // 'YYYY-MM-DD'
+  hasta: string;                          // 'YYYY-MM-DD'
+  tipo: TipoMovimientoFin | 'todos';
+  estado: EstadoMovimientoFin | 'todos';
+  texto: string;                          // número, razón social o CUIT
+}
+
+/** Tope del rango de la consulta (un listener sobre un año de movimientos). */
+export const MAX_DIAS_RANGO_MOVIMIENTOS = 366;
+
+/** Rango por defecto: desde el día 1 de dos meses atrás hasta hoy
+ *  (hoy = '2026-10-05' → '2026-08-01' … '2026-10-05'). */
+export function rangoInicialMovimientos(hoy: string): { desde: string; hasta: string } {
+  const [a, m] = hoy.split('-').map(Number);
+  const meses = a * 12 + (m - 1) - 2;
+  const anio = Math.floor(meses / 12);
+  const mes = (meses % 12) + 1;
+  return { desde: `${anio}-${String(mes).padStart(2, '0')}-01`, hasta: hoy };
+}
+
+/** Mensaje de error del rango, o null si es válido. */
+export function validarRangoMovimientos(desde: string, hasta: string): string | null {
+  if (!FORMATO_FECHA.test(desde ?? '') || !FORMATO_FECHA.test(hasta ?? '')) return 'Elegí las dos fechas del rango.';
+  if (desde > hasta) return 'La fecha "desde" es posterior a la fecha "hasta".';
+  if (diasEntre(desde, hasta) > MAX_DIAS_RANGO_MOVIMIENTOS) {
+    return `El rango no puede superar ${MAX_DIAS_RANGO_MOVIMIENTOS} días.`;
+  }
+  return null;
+}
+
+type MovimientoFiltrable = Pick<MovimientoFin, 'tipo' | 'estado' | 'numero' | 'entidad'>;
+
+/** Filtros en memoria (tipo, estado, texto). No toca el rango. */
+export function filtrarMovimientos<M extends MovimientoFiltrable>(
+  movimientos: M[],
+  f: Pick<FiltrosMovimientosFin, 'tipo' | 'estado' | 'texto'>,
+): M[] {
+  const texto = (f.texto ?? '').trim().toLowerCase();
+  return movimientos.filter(m =>
+    (f.tipo === 'todos' || m.tipo === f.tipo) &&
+    (f.estado === 'todos' || m.estado === f.estado) &&
+    (!texto ||
+      m.numero.toLowerCase().includes(texto) ||
+      m.entidad.razonSocial.toLowerCase().includes(texto) ||
+      String(m.entidad.cuit).includes(texto)));
+}
+
+export interface TotalesMovimientos {
+  cobros: number;
+  cantidadCobros: number;
+  pagos: number;
+  cantidadPagos: number;
+  sinImputar: number;                     // Σ sinImputar de cobros/pagos vigentes
+  anulados: number;                       // cantidad
+}
+
+/** Totales de las tarjetas. Solo suman los VIGENTES; los anulados se
+ *  cuentan aparte. Los ajustes no suman (llegan en F7). */
+export function totalizarMovimientos(
+  movimientos: Pick<MovimientoFin, 'tipo' | 'estado' | 'total' | 'sinImputar'>[],
+): TotalesMovimientos {
+  const t: TotalesMovimientos = { cobros: 0, cantidadCobros: 0, pagos: 0, cantidadPagos: 0, sinImputar: 0, anulados: 0 };
+  for (const m of movimientos) {
+    if (m.estado === 'anulado') {
+      t.anulados++;
+      continue;
+    }
+    if (m.tipo === 'cobro') {
+      t.cobros += m.total;
+      t.cantidadCobros++;
+    } else if (m.tipo === 'pago') {
+      t.pagos += m.total;
+      t.cantidadPagos++;
+    }
+    if (m.tipo !== 'ajuste') t.sinImputar += m.sinImputar;
+  }
+  return { ...t, cobros: redondear2(t.cobros), pagos: redondear2(t.pagos), sinImputar: redondear2(t.sinImputar) };
+}
+
+// ---------------------------------------------------------------------------
+// Anulación (F4)
+// ---------------------------------------------------------------------------
+
+/** Acumulado de ValoresFinancierosLiq que mueve cada tipo de movimiento:
+ *  cobro/pago → totalCobrado (para chofer/proveedor significa "pagado");
+ *  ajuste → totalAjustado. */
+export function acumuladoDeMovimiento(tipo: TipoMovimientoFin): AcumuladoFinanciero {
+  return tipo === 'ajuste' ? 'totalAjustado' : 'totalCobrado';
+}
+
+/** Reglas para anular, sobre el movimiento RELEÍDO en la transacción.
+ *  Devuelve el mensaje de error o null. Un movimiento compensado en una
+ *  liquidación (FC1) no se anula: primero se quita la compensación. */
+export function validarAnulable(mov: Pick<MovimientoFin, 'estado' | 'numero' | 'imputaciones'>): string | null {
+  if (mov.estado !== 'vigente') return `El movimiento ${mov.numero} ya está anulado.`;
+  if (mov.imputaciones.some(i => i.origen === 'compensacion')) {
+    return `El movimiento ${mov.numero} está compensado en una liquidación: primero quitá la compensación o revertí la liquidación.`;
+  }
+  return null;
+}
+
+/** Lo que vuelve a cada documento al anular. */
+export interface ReversionDocumento {
+  idDocumento: string;
+  numeroDocumento: string;
+  importe: number;                        // > 0: se RESTA del acumulado del documento
+}
+
+/** Importes a devolver, sumados por documento (un mismo informe puede tener
+ *  varias imputaciones del movimiento: la directa y las de saldo
+ *  posteriores). Orden de aparición. Hoy todo documento es un InformeLiq
+ *  (TipoDocumentoImputable); al sumar tipos, el servicio decide por tipo. */
+export function reversionesDe(imputaciones: ImputacionFin[]): ReversionDocumento[] {
+  const porDocumento = new Map<string, ReversionDocumento>();
+  for (const i of imputaciones) {
+    const r = porDocumento.get(i.documento.id);
+    if (r) {
+      r.importe = redondear2(r.importe + i.importe);
+    } else {
+      porDocumento.set(i.documento.id, {
+        idDocumento: i.documento.id,
+        numeroDocumento: i.numeroDocumento,
+        importe: redondear2(i.importe),
+      });
+    }
+  }
+  return [...porDocumento.values()].filter(r => !esCero(r.importe));
 }

@@ -4,8 +4,10 @@ import { ConId } from 'src/app/interfaces/conId';
 import { InformeLiqNuevo } from 'src/app/interfaces/informe-liq-nuevo';
 import { MovimientoFin } from 'src/app/interfaces/movimiento-fin';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { toISODateString } from 'src/app/servicios/fechas/date-range.service';
 import { InformeLiqConsultaService } from 'src/app/servicios/informes-liq/informe-liq-consulta.service';
 import { CuentaEntidadFin, LadoCuenta, armarCuentas } from 'src/app/shared/utils/cuentas-finanzas.util';
+import { FiltrosMovimientosFin, rangoInicialMovimientos } from 'src/app/shared/utils/movimiento-fin.util';
 
 /** Lecturas del Frente Finanzas (camino nuevo). SOLO lectura: los dueños de
  *  las escrituras son InformeLiqService (informesLiq) y, desde F3, el
@@ -23,6 +25,15 @@ export class FinanzasConsultaService {
 
   /** Filtros de la pestaña Cuentas, recordados durante la sesión. */
   filtrosCuentas: { lado: LadoCuenta; texto: string } = { lado: 'cobrar', texto: '' };
+
+  /** Filtros de la pestaña Movimientos, recordados durante la sesión. Rango
+   *  inicial: desde el día 1 de dos meses atrás hasta hoy. */
+  filtrosMovimientos: FiltrosMovimientosFin = {
+    ...rangoInicialMovimientos(toISODateString(new Date())),
+    tipo: 'todos',
+    estado: 'todos',
+    texto: '',
+  };
 
   /** En vivo: InformeLiq abiertos = emitidos (todos; todavía sin factura) +
    *  facturados con saldo (estadoFinanciero pendiente o parcial; índice
@@ -45,6 +56,15 @@ export class FinanzasConsultaService {
       map(items => items
         .filter(m => m.estado === 'vigente')
         .map(m => ({ ...m, idMovimiento: m.id }))),
+    );
+  }
+
+  /** En vivo: movimientos con `fecha` en [desde, hasta] ('YYYY-MM-DD'),
+   *  vigentes y anulados. Rango sobre un solo campo → índice simple
+   *  automático; orden y demás filtros en memoria (pestaña Movimientos). */
+  observarMovimientosPorFecha(desde: string, hasta: string): Observable<ConId<MovimientoFin>[]> {
+    return this.db.observarPorRango<MovimientoFin>(this.COL_MOV, 'fecha', desde, hasta).pipe(
+      map(items => items.map(m => ({ ...m, idMovimiento: m.id }))),
     );
   }
 

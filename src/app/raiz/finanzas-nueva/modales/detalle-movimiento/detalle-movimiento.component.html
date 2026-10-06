@@ -1,0 +1,126 @@
+<div class="modal-header">
+  <div>
+    <h4 class="modal-title">
+      {{ etiquetaTipo[m.tipo] }} {{ m.numero }}
+      @if (m.estado === 'anulado') {
+        <span class="badge bg-danger ms-2">Anulado</span>
+      }
+    </h4>
+    <div class="text-muted">
+      <span class="text-capitalize">{{ m.entidad.tipo }}</span> {{ m.entidad.razonSocial }} — CUIT {{ m.entidad.cuit }}
+    </div>
+  </div>
+  <button type="button" class="btn-close" (click)="cerrar()"></button>
+</div>
+
+<div class="modal-body">
+  @if (m.anulacion) {
+    <div class="alert alert-danger py-2">
+      <b>Anulado</b> el {{ fechaHora(m.anulacion.fecha) }} por {{ m.anulacion.usuario }}.
+      Motivo: {{ m.anulacion.motivo }}
+    </div>
+  }
+
+  <div class="row g-2 mb-3">
+    <div class="col-md-3">
+      <div class="dato-label">Fecha</div>
+      <div>{{ fechaLegible(m.fecha) }}</div>
+    </div>
+    <div class="col-md-3">
+      <div class="dato-label">{{ m.tipo === 'ajuste' ? 'Motivo del ajuste' : 'Concepto' }}</div>
+      <div>{{ m.tipo === 'ajuste' ? (m.motivoAjuste ? etiquetaMotivoAjuste[m.motivoAjuste] : '—') : etiquetaConcepto[m.concepto] }}</div>
+    </div>
+    <div class="col-md-6">
+      <div class="dato-label">Registrado</div>
+      <div>{{ fechaHora(m.fechaRegistro) }} — {{ m.usuario }}</div>
+    </div>
+  </div>
+
+  @if (m.medios.length > 0) {
+    <h6>Medios</h6>
+    <table class="table table-sm align-middle">
+      <thead>
+        <tr>
+          <th style="width: 11rem;">Tipo</th>
+          <th style="width: 10rem;" class="text-end">Importe</th>
+          <th>Datos</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (md of m.medios; track $index) {
+          <tr>
+            <td>{{ etiquetaMedio[md.tipo] }}</td>
+            <td class="text-end col-importe">{{ md.importe | formatearValor: '$' }}</td>
+            <td>{{ detalleMedio(md) }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  <h6 class="mt-3">Imputaciones</h6>
+  @if (m.imputaciones.length === 0) {
+    <div class="text-muted mb-3">Sin imputaciones.</div>
+  } @else {
+    <table class="table table-sm table-striped align-middle">
+      <thead>
+        <tr>
+          <th>Comprobante</th>
+          <th>Período</th>
+          <th>Factura</th>
+          <th class="text-end">Total</th>
+          <th class="text-end">Saldo antes</th>
+          <th class="text-end">Imputado</th>
+          <th class="text-center">Fecha</th>
+          <th>Origen</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (i of m.imputaciones; track $index) {
+          <tr>
+            <td>{{ i.numeroDocumento }}</td>
+            <td>{{ i.periodoClave ?? '—' }}</td>
+            <td>{{ i.fechaFactura ? fechaLegible(i.fechaFactura) : '—' }}</td>
+            <td class="text-end col-importe">{{ i.totalDocumento | formatearValor: '$' }}</td>
+            <td class="text-end col-importe">{{ i.saldoAntes | formatearValor: '$' }}</td>
+            <td class="text-end col-importe fw-bold">{{ i.importe | formatearValor: '$' }}</td>
+            <td class="text-center">{{ fechaLegible(i.fecha) }}</td>
+            <td>{{ etiquetaOrigen[i.origen] }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  <div class="row g-2 mt-2">
+    <div class="col-md-8">
+      <div class="dato-label">Observaciones</div>
+      <div class="observaciones">{{ m.observaciones || '—' }}</div>
+    </div>
+    <div class="col-md-4">
+      <div class="resumen p-2 rounded">
+        <div class="d-flex justify-content-between"><span>Total</span><span class="col-importe">{{ m.total | formatearValor: '$' }}</span></div>
+        <div class="d-flex justify-content-between"><span>Imputado</span><span class="col-importe">{{ m.totalImputado | formatearValor: '$' }}</span></div>
+        @if (m.tipo !== 'ajuste') {
+          <div class="d-flex justify-content-between fw-bold">
+            <span>{{ etiquetaSinImputar }}</span>
+            <span class="col-importe">{{ m.sinImputar | formatearValor: '$' }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  @if (compensado && m.estado === 'vigente') {
+    <div class="alert alert-info py-2 mt-3 mb-0">
+      Este movimiento está compensado en una liquidación: para anularlo, primero quitá la compensación o revertí la liquidación.
+    </div>
+  }
+</div>
+
+<div class="modal-footer">
+  @if (puedeAnular) {
+    <button *appPermiso="'finanzas.anular'" type="button" class="btn btn-outline-danger me-auto" (click)="anular()">Anular</button>
+  }
+  <button type="button" class="btn btn-outline-secondary" (click)="cerrar()">Cerrar</button>
+</div>

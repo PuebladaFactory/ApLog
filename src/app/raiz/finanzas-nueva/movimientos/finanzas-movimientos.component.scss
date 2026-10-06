@@ -1,0 +1,24 @@
+.buscador {
+  min-width: 16rem;
+  max-width: 22rem;
+  flex: 1 1 16rem;
+}
+
+.tarjeta {
+  border-left: 4px solid #0d6efd;
+}
+
+.tarjeta-anulados {
+  border-left-color: #dc3545;
+}
+
+.tarjeta-label {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.tarjeta-valor {
+  font-size: 1.35rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

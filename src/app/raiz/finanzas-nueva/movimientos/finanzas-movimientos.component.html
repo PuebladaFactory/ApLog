@@ -1,0 +1,104 @@
+<div class="d-flex flex-wrap gap-2 align-items-end mt-3 mb-3">
+  <div>
+    <label class="form-label mb-0">Desde</label>
+    <input type="date" class="form-control" [ngModel]="desde" (ngModelChange)="desde = $event; onRango()" />
+  </div>
+  <div>
+    <label class="form-label mb-0">Hasta</label>
+    <input type="date" class="form-control" [ngModel]="hasta" (ngModelChange)="hasta = $event; onRango()" />
+  </div>
+  <div>
+    <label class="form-label mb-0">Tipo</label>
+    <select class="form-select" [ngModel]="filtros.tipo" (ngModelChange)="onTipo($event)">
+      <option value="todos">Todos</option>
+      <option value="cobro">Cobros</option>
+      <option value="pago">Pagos</option>
+      <option value="ajuste">Ajustes</option>
+    </select>
+  </div>
+  <div>
+    <label class="form-label mb-0">Estado</label>
+    <select class="form-select" [ngModel]="filtros.estado" (ngModelChange)="onEstado($event)">
+      <option value="todos">Todos</option>
+      <option value="vigente">Vigentes</option>
+      <option value="anulado">Anulados</option>
+    </select>
+  </div>
+  <div class="buscador">
+    <label class="form-label mb-0">Buscar</label>
+    <input
+      class="form-control"
+      type="text"
+      [ngModel]="filtros.texto"
+      (ngModelChange)="onTexto($event)"
+      placeholder="Número, nombre o CUIT"
+    />
+  </div>
+  <span class="ms-auto text-muted">{{ filtrados.length }} movimiento(s)</span>
+</div>
+
+@if (errorRango) {
+  <div class="alert alert-warning py-2">{{ errorRango }} Se sigue mostrando el rango anterior.</div>
+}
+@if (error) {
+  <div class="alert alert-danger">{{ error }}</div>
+}
+
+<div class="row g-3 mb-3">
+  <div class="col-6 col-lg">
+    <div class="card tarjeta h-100">
+      <div class="card-body">
+        <div class="tarjeta-label">Cobros ({{ totales.cantidadCobros }})</div>
+        <div class="tarjeta-valor">{{ totales.cobros | formatearValor: '$' }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg">
+    <div class="card tarjeta h-100">
+      <div class="card-body">
+        <div class="tarjeta-label">Pagos ({{ totales.cantidadPagos }})</div>
+        <div class="tarjeta-valor">{{ totales.pagos | formatearValor: '$' }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg">
+    <div class="card tarjeta h-100">
+      <div class="card-body">
+        <div class="tarjeta-label">Sin imputar (saldo a favor / anticipos)</div>
+        <div class="tarjeta-valor" [class.text-warning]="totales.sinImputar > 0">{{ totales.sinImputar | formatearValor: '$' }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg">
+    <div class="card tarjeta tarjeta-anulados h-100">
+      <div class="card-body">
+        <div class="tarjeta-label">Anulados</div>
+        <div class="tarjeta-valor">{{ totales.anulados }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-tabla-listado
+  [items]="filtrados"
+  [columnas]="columnas"
+  [ordenInicial]="ordenInicial"
+  [cargando]="cargando"
+  [bloqueada]="procesando"
+  [trackKey]="trackMovimiento"
+  [acciones]="acciones"
+  (accion)="onAccion($event)"
+  mensajeVacio="No hay movimientos con estos filtros."
+></app-tabla-listado>
+
+<p class="text-muted small mt-2">
+  <b>Fecha:</b> día en que se recibió o entregó el dinero.
+  <b>Imputado:</b> parte aplicada a comprobantes.
+  <b>Sin imputar:</b> saldo a favor del cliente o anticipo/préstamo entregado, pendiente de aplicar.
+  Las tarjetas suman solo los movimientos vigentes de la tabla filtrada.
+  Un movimiento compensado en una liquidación no se puede anular.
+</p>
+
+@if (procesando) {
+  <app-spinner></app-spinner>
+}

@@ -34,7 +34,7 @@ export class FinanzasCuentasComponent implements OnInit, OnDestroy {
 
   readonly hoy = toISODateString(new Date());
   readonly diasAlerta = DIAS_ALERTA_ANTIGUEDAD;
-  readonly ordenInicial: OrdenListado = { key: 'neto', asc: false };
+  readonly ordenInicial: OrdenListado = { key: 'nombre', asc: true };
   readonly trackCuenta = (c: Fila) => c.clave;
 
   readonly acciones: AccionListado<Fila>[] = [
