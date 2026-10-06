@@ -1,0 +1,114 @@
+<div class="border border-success rounded-3 p-3 mb-4">
+  <h4 class="text-success">Generador de cobros y pagos</h4>
+
+  @if (!esDemo) {
+    <div class="alert alert-danger mb-0">Herramienta deshabilitada: solo funciona en demo.</div>
+  } @else {
+    <p class="mb-3">
+      Sobre los informes de liquidación <b>facturados con saldo</b> registra cobros, pagos y anticipos con la función
+      real de Finanzas, con fechas realistas desde la factura y nunca futuras: clientes a 30–60 días (algunos
+      atrasados o morosos, algunos en dos partes, con retención o pagando de más); choferes y proveedores a 2–10
+      días; anticipos del mes en curso pendientes de compensar. <b>Simular</b> no escribe nada. Correr después del
+      Generador de circuito, una sola vez.
+    </p>
+
+    <div class="row g-2 mb-3" style="max-width: 60rem;">
+      @for (c of campos; track c.clave) {
+        <div class="col-md-3">
+          <label class="form-label mb-0 small">{{ c.etiqueta }} (0–1)</label>
+          <input type="number" class="form-control" min="0" max="1" [step]="c.paso"
+            [(ngModel)]="parametros[c.clave]" [disabled]="simulando || ejecutando" />
+        </div>
+      }
+      <div class="col-md-3">
+        <label class="form-label mb-0 small">Semilla</label>
+        <div class="input-group">
+          <input type="number" class="form-control" step="1" [(ngModel)]="parametros.semilla" [disabled]="simulando || ejecutando" />
+          <button type="button" class="btn btn-outline-secondary" [disabled]="simulando || ejecutando" (click)="nuevaSemilla()" title="Semilla nueva">↻</button>
+        </div>
+      </div>
+    </div>
+
+    <button type="button" class="btn btn-primary me-2" [disabled]="simulando || ejecutando" (click)="simular()">Simular</button>
+    <button type="button" class="btn btn-success" [disabled]="!puedeEjecutar" (click)="ejecutar()">Generar</button>
+    @if (simulando) {
+      <span class="text-muted ms-2">Armando el plan…</span>
+    }
+    @if (parametrosCambiaron) {
+      <span class="text-warning ms-2">Cambiaron los parámetros: volvé a simular antes de generar.</span>
+    }
+    @if (ejecutando) {
+      <div class="alert alert-info mt-3 mb-0">
+        <b>Generando…</b> {{ progreso }}<br />
+        <small>No cierres ni recargues esta pestaña hasta que termine.</small>
+      </div>
+    }
+
+    @if (resultado) {
+      <div class="alert mt-3 mb-0" [class.alert-success]="resultado.errores.length === 0" [class.alert-warning]="resultado.errores.length > 0">
+        <b>Generación terminada</b> (lote {{ resultado.idLote }}):
+        {{ resultado.registrados }} movimientos registrados, {{ resultado.errores.length }} error(es).
+        @if (resultado.errores.length > 0) {
+          <ul class="mb-0 mt-2">
+            @for (x of resultado.errores.slice(0, MAX_ERRORES_VISIBLES); track $index) {
+              <li>{{ x.movimiento }}: {{ x.mensaje }}</li>
+            }
+          </ul>
+          @if (resultado.errores.length > MAX_ERRORES_VISIBLES) {
+            <small>… y {{ resultado.errores.length - MAX_ERRORES_VISIBLES }} más (ver el lote en generacionesPrueba).</small>
+          }
+        }
+      </div>
+    }
+
+    @if (error) {
+      <div class="alert alert-danger mt-3 mb-0">{{ error }}</div>
+    }
+
+    @if (plan) {
+      <div class="mt-3">
+        <h5>Plan (semilla {{ plan.parametros.semilla }}, hoy {{ plan.hoy }})</h5>
+        <ul class="mb-3">
+          <li>
+            Entrada: {{ plan.resumen.facturadosCliente }} facturas de clientes y
+            {{ plan.resumen.facturadosPago }} de choferes/proveedores con saldo.
+          </li>
+          <li>
+            <b>{{ plan.resumen.cobros }}</b> cobros por {{ plan.resumen.totalCobrado | formatearValor: '$' }}
+            ({{ plan.resumen.conRetencion }} con retención, {{ plan.resumen.parciales }} facturas en dos partes,
+            {{ plan.resumen.conSaldoAFavor }} con saldo a favor). Quedan abiertas {{ plan.resumen.quedanAbiertosCliente }} facturas de clientes.
+          </li>
+          <li>
+            <b>{{ plan.resumen.pagos }}</b> pagos por {{ plan.resumen.totalPagado | formatearValor: '$' }}.
+            Quedan abiertas {{ plan.resumen.quedanAbiertosPago }} facturas de choferes/proveedores.
+          </li>
+          <li>
+            <b>{{ plan.resumen.anticipos }}</b> anticipos por {{ plan.resumen.totalAnticipos | formatearValor: '$' }} (sin imputar).
+          </li>
+        </ul>
+
+        <table class="table table-sm" style="max-width: 60rem;">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Movimiento</th>
+              <th class="text-end">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (m of plan.movimientos.slice(0, MAX_MOVIMIENTOS_VISIBLES); track $index) {
+              <tr>
+                <td>{{ m.datos.fecha }}</td>
+                <td>{{ m.etiqueta }}</td>
+                <td class="text-end">{{ m.total | formatearValor: '$' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (plan.movimientos.length > MAX_MOVIMIENTOS_VISIBLES) {
+          <small class="text-muted">Primeros {{ MAX_MOVIMIENTOS_VISIBLES }} de {{ plan.movimientos.length }}, en orden de registro.</small>
+        }
+      </div>
+    }
+  }
+</div>
