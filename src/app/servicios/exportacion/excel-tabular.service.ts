@@ -93,10 +93,13 @@ export class ExcelTabularService {
     const rango = `${letra}${primeraFila}:${letra}${ultimaFila}`;
     let celdaSubtotal: string | null = null;
     const celdasAjuste: string[] = [];
+    // Compensaciones (Frente Finanzas): Neto = Total + compensaciones (negativas).
+    let celdaTotal: string | null = null;
+    const celdasCompensacion: string[] = [];
 
     for (const linea of doc.pie) {
       if (colValor > 2) ws.mergeCells(fila, 1, fila, colValor - 1);
-      const esTotal = linea.tipo === 'total';
+      const esTotal = linea.tipo === 'total' || linea.tipo === 'neto';
       const destacada = esTotal || linea.tipo === 'subtotal';
 
       const etiqueta = ws.getCell(fila, 1);
@@ -109,12 +112,17 @@ export class ExcelTabularService {
       if (conFormulas && linea.tipo === 'subtotal') {
         valor.value = { formula: `SUM(${rango})`, result: linea.valor };
         celdaSubtotal = ref;
-      } else if (conFormulas && esTotal) {
+      } else if (linea.tipo === 'neto' && celdaTotal) {
+        valor.value = { formula: [celdaTotal, ...celdasCompensacion].join('+'), result: linea.valor };
+      } else if (conFormulas && linea.tipo === 'total') {
         const formula = celdaSubtotal ? [celdaSubtotal, ...celdasAjuste].join('+') : `SUM(${rango})`;
         valor.value = { formula, result: linea.valor };
+        celdaTotal = ref;
       } else {
         valor.value = linea.valor;
         if (linea.tipo === 'ajuste') celdasAjuste.push(ref);
+        if (linea.tipo === 'compensacion') celdasCompensacion.push(ref);
+        if (linea.tipo === 'total') celdaTotal = ref;
       }
       valor.numFmt = FORMATO_MONEDA;
       valor.font = { bold: destacada };

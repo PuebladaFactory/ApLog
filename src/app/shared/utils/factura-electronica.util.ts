@@ -1,5 +1,6 @@
 import { FacturaElectronicaLiq, InformeLiqNuevo } from 'src/app/interfaces/informe-liq-nuevo';
 import { TIPOS_COMPROBANTE } from 'src/app/constantes/tipos-comprobante';
+import { netoDe } from './compensacion.util';
 
 /** Contenido del QR de AFIP (RG 4291): JSON en base64 dentro del parámetro
  *  `p` de https://www.afip.gob.ar/fe/qr/?p=… — `cuit` es el EMISOR y
@@ -23,6 +24,10 @@ export interface DatosQrAfip {
 export interface ValidacionFactura {
   importeOk: boolean;
   cuitOk: boolean;
+  /** Contra qué coincidió el importe (F28): el total del servicio o el neto
+   *  (total − compensaciones); null si no coincidió. Opcional: facturas
+   *  vinculadas antes de FC2. */
+  base?: 'total' | 'neto' | null;
 }
 
 /** Decodifica el texto leído del QR (la URL de AFIP). Tira Error con un
@@ -64,7 +69,8 @@ export function decodificarQrAfip(textoQr: string): DatosQrAfip {
 
 /** Valida la factura contra el informe (D8: se permite vincular con
  *  discrepancias, con confirmación; el resultado queda registrado).
- *  - Importe: igual a valores.total (tolerancia 1 centavo).
+ *  - Importe: igual a valores.total o, si hay compensaciones, al neto
+ *    (F28; tolerancia 1 centavo). `base` registra contra cuál coincidió.
  *  - CUIT: cliente → la factura la emite Vantruck, se compara el RECEPTOR
  *    (nroDocRec) con la entidad; chofer/proveedor → la emiten ellos, se
  *    compara el EMISOR (cuit). Pura. */
@@ -72,10 +78,14 @@ export function validarFacturaContraInforme(
   qr: DatosQrAfip,
   liq: Pick<InformeLiqNuevo, 'tipo' | 'entidad' | 'valores'>,
 ): ValidacionFactura {
-  const importeOk = Math.abs(qr.importe - liq.valores.total) < 0.01;
+  const total = liq.valores.total;
+  const neto = netoDe(liq.valores);
+  const coincide = (x: number) => Math.abs(qr.importe - x) < 0.01;
+  const base: ValidacionFactura['base'] = coincide(total) ? 'total' : coincide(neto) ? 'neto' : null;
+  const importeOk = base !== null;
   const cuitEntidad = liq.entidad?.cuit !== undefined && liq.entidad?.cuit !== null ? String(liq.entidad.cuit) : '';
   const cuitFactura = liq.tipo === 'cliente' ? String(qr.nroDocRec ?? '') : String(qr.cuit);
-  return { importeOk, cuitOk: cuitEntidad !== '' && cuitEntidad === cuitFactura };
+  return { importeOk, cuitOk: cuitEntidad !== '' && cuitEntidad === cuitFactura, base };
 }
 
 /** Arma la factura normalizada que se persiste en InformeLiqNuevo.factura.
@@ -98,7 +108,7 @@ export function facturaDesdeQr(
     importe: qr.importe,
     qrData: textoQr,
     origen: 'qr',
-    validacion: { importeOk: validacion.importeOk, cuitOk: validacion.cuitOk },
+    validacion: { importeOk: validacion.importeOk, cuitOk: validacion.cuitOk, base: validacion.base ?? null },
     vinculadaPor,
     fechaVinculacion,
   };

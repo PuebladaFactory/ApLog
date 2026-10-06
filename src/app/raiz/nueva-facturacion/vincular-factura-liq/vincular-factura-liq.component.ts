@@ -8,6 +8,7 @@ import { InformeLiqConsultaService } from 'src/app/servicios/informes-liq/inform
 import { InformeLiqService } from 'src/app/servicios/informes-liq/informe-liq.service';
 import { InformeLiqFactoryService } from 'src/app/servicios/informes-liq/informe-liq-factory.service';
 import { nombreEntidadRef } from 'src/app/shared/utils/entidad-informe.util';
+import { netoDe } from 'src/app/shared/utils/compensacion.util';
 import { FormatearValorPipe } from 'src/app/shared/pipes/formatear-valor.pipe';
 import {
   DatosQrAfip, ValidacionFactura, claveComprobanteQr, decodificarQrAfip, descripcionTipoComprobante,
@@ -75,6 +76,16 @@ export class VincularFacturaLiqComponent {
     return this.qr ? fechaComprobanteLegible(this.qr.fecha) : '';
   }
 
+  /** FC2: la liquidación tiene compensaciones → la factura puede ser por el
+   *  total del servicio o por el neto (F28). */
+  get neto(): number {
+    return netoDe(this.liq.valores);
+  }
+
+  get tieneCompensaciones(): boolean {
+    return Math.abs(this.neto - this.liq.valores.total) >= 0.01;
+  }
+
   get discrepancias(): string[] {
     return this.validacion ? listarDiscrepancias(this.validacion) : [];
   }
@@ -132,7 +143,8 @@ export class VincularFacturaLiqComponent {
       if (!this.validacion.importeOk) {
         detalle.push(
           `Importe: factura ${this.formato.transform(this.qr.importe, '$')} — ` +
-          `liquidación ${this.formato.transform(this.liq.valores.total, '$')}`,
+          `liquidación ${this.formato.transform(this.liq.valores.total, '$')}` +
+          (this.tieneCompensaciones ? ` (neto ${this.formato.transform(this.neto, '$')})` : ''),
         );
       }
       if (!this.validacion.cuitOk) {

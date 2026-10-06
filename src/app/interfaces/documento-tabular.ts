@@ -22,10 +22,14 @@ export interface ColumnaDoc {
   ancho: number;
 }
 
+/** Pie de la tabla. 'compensacion' y 'neto' (Frente Finanzas): anticipos /
+ *  saldos a favor descontados DESPUÉS del total (valor negativo) y el neto
+ *  resultante (se dibuja como un total; en Excel, Neto = Total +
+ *  compensaciones). */
 export interface LineaPieDoc {
   concepto: string;
   valor: number;
-  tipo: 'subtotal' | 'ajuste' | 'total';
+  tipo: 'subtotal' | 'ajuste' | 'total' | 'compensacion' | 'neto';
 }
 
 export interface DocumentoTabular {

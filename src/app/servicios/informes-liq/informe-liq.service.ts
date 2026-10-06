@@ -719,6 +719,7 @@ export class InformeLiqService {
         await this.logRegistro.agregarAlBatch(
           escrituras, 'FACTURAR', this.COLECCION, idInfLiq,
           `Factura ${comprobante} vinculada a la liquidación ${liq.numeroInterno} — ${liq.tipo} ${nombreEntidadRef(liq.entidad)}` +
+          (validacion.base === 'neto' ? ' — importe = neto (con compensaciones)' : '') +
           (discrepancias.length > 0 ? ` — vinculada con discrepancias (${discrepancias.join(', ')})` : ''),
           anterior,
         );

@@ -94,10 +94,15 @@
         <tr>
           <th>Importe</th>
           <td class="text-end">{{ qr.importe | formatearValor: "$" }}</td>
-          <td class="text-end">{{ liq.valores.total | formatearValor: "$" }}</td>
+          <td class="text-end">
+            {{ liq.valores.total | formatearValor: "$" }}
+            @if (tieneCompensaciones) {
+              <div class="small text-muted">neto {{ neto | formatearValor: "$" }}</div>
+            }
+          </td>
           <td class="text-center">
             <span class="badge" [ngClass]="validacion.importeOk ? 'bg-success' : 'bg-danger'">
-              {{ validacion.importeOk ? 'Sí' : 'No' }}
+              {{ validacion.importeOk ? (validacion.base === 'neto' ? 'Sí (neto)' : 'Sí') : 'No' }}
             </span>
           </td>
         </tr>

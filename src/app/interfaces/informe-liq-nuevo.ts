@@ -166,7 +166,10 @@ export interface FacturaElectronicaLiq {
   origen: 'qr' | 'manual';     // hoy solo 'qr'; 'manual' = carga manual futura (D9)
   // Resultado de la validación contra el informe al vincular. Se permite
   // vincular con discrepancias (con confirmación): queda registrado acá.
-  validacion: { importeOk: boolean; cuitOk: boolean };
+  // base (FC2, F28): contra qué coincidió el importe — el total del servicio
+  // o el neto (total − compensaciones); null si no coincidió. Opcional: las
+  // facturas vinculadas antes de FC2 no lo tienen.
+  validacion: { importeOk: boolean; cuitOk: boolean; base?: 'total' | 'neto' | null };
   vinculadaPor: string;        // email
   fechaVinculacion: string;    // ISO 8601 completo, con hora
 }

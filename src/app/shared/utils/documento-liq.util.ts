@@ -4,6 +4,7 @@ import { ColumnaDoc, DocumentoTabular, LineaPieDoc } from 'src/app/interfaces/do
 import { etiquetaColumna, tipoColumna, valorCrudoColumna } from './columnas-liquidacion.util';
 import { nombreEntidadRef } from './entidad-informe.util';
 import { descripcionTipoComprobante, fechaComprobanteLegible, numeroComprobante } from './factura-electronica.util';
+import { ETIQUETA_CONCEPTO_COMPENSACION, compensacionesDe, netoDe } from './compensacion.util';
 
 /** Cómo se presenta un InformeLiqNuevo en Excel/PDF. Se deriva del estado,
  *  salvo la vista previa, que se indica explícitamente. */
@@ -141,7 +142,9 @@ function leyenda(liq: InformeLiqNuevo, variante: VarianteDocumentoLiq): string |
 }
 
 /** Mismo pie que el camino viejo: Subtotal y ajustes solo si hay ajustes;
- *  siempre Total. Sale de liq.valores (no se recalcula acá). */
+ *  siempre Total. Sale de liq.valores (no se recalcula acá).
+ *  Frente Finanzas (FC2): si hay compensaciones, después del Total va una
+ *  línea por cada una (negativa) y el Neto a pagar / a cobrar (netoDe). */
 function pie(liq: InformeLiqNuevo): LineaPieDoc[] {
   const v = liq.valores;
   const lineas: LineaPieDoc[] = [];
@@ -153,6 +156,22 @@ function pie(liq: InformeLiqNuevo): LineaPieDoc[] {
     }
   }
   lineas.push({ concepto: 'Total', valor: v.total, tipo: 'total' });
+
+  const compensaciones = compensacionesDe(liq);
+  if (compensaciones.length > 0) {
+    for (const c of compensaciones) {
+      lineas.push({
+        concepto: `${ETIQUETA_CONCEPTO_COMPENSACION[c.concepto] ?? 'Compensación'} ${c.numero} del ${fechaComprobanteLegible(c.fecha)}`,
+        valor: -c.importe,
+        tipo: 'compensacion',
+      });
+    }
+    lineas.push({
+      concepto: liq.tipo === 'cliente' ? 'Neto a cobrar' : 'Neto a pagar',
+      valor: netoDe(v),
+      tipo: 'neto',
+    });
+  }
   return lineas;
 }
 

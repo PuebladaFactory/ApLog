@@ -98,7 +98,7 @@ export class PdfTabularService {
       columnStyles: { 1: { halign: 'right' } },
       didParseCell: (data: any) => {
         const linea = doc.pie[data.row.index];
-        if (linea?.tipo === 'total') {
+        if (linea?.tipo === 'total' || linea?.tipo === 'neto') {
           data.cell.styles.fontStyle = 'bold';
           data.cell.styles.fillColor = COLOR_ENCABEZADO;
         } else if (linea?.tipo === 'subtotal') {
