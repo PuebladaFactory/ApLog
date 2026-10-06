@@ -41,6 +41,16 @@
         <label class="form-label mb-0">Facturar lo emitido (0–1)</label>
         <input type="number" class="form-control" min="0" max="1" step="0.05" [(ngModel)]="parametros.pctFacturar" [disabled]="simulando || ejecutando" />
       </div>
+      <div class="col-md-3"></div>
+
+      <div class="col-md-3">
+        <label class="form-label mb-0">Compensar saldos de choferes/proveedores (0–1)</label>
+        <input type="number" class="form-control" min="0" max="1" step="0.05" [(ngModel)]="parametros.pctCompensar" [disabled]="simulando || ejecutando" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-0">De esas facturadas: factura por el neto (0–1)</label>
+        <input type="number" class="form-control" min="0" max="1" step="0.05" [(ngModel)]="parametros.pctFacturaNeto" [disabled]="simulando || ejecutando" />
+      </div>
     </div>
 
     <button type="button" class="btn btn-primary me-2" [disabled]="simulando || ejecutando" (click)="simular()">Simular</button>
@@ -98,6 +108,10 @@
               {{ plan.resumen.partidas }} salen de partir entidades que superan el tope de informes por liquidación.
             }
           </li>
+          <li>
+            {{ totalCompensadas }} liquidaciones con compensaciones (anticipos / saldos a favor);
+            {{ totalFacturasPorNeto }} se facturan por el neto.
+          </li>
         </ul>
 
         <table class="table table-sm" style="max-width: 60rem;">
@@ -110,6 +124,8 @@
               <th class="text-end">A facturar</th>
               <th class="text-end">Informes</th>
               <th class="text-end">Total estimado</th>
+              <th class="text-end">Compensadas</th>
+              <th class="text-end">Compensado</th>
             </tr>
           </thead>
           <tbody>
@@ -122,6 +138,8 @@
                 <td class="text-end">{{ t.aFacturar }}</td>
                 <td class="text-end">{{ t.informesOp }}</td>
                 <td class="text-end">{{ t.total | formatearValor: '$' }}</td>
+                <td class="text-end">{{ t.compensadas }}</td>
+                <td class="text-end">{{ t.totalCompensado | formatearValor: '$' }}</td>
               </tr>
             }
           </tbody>

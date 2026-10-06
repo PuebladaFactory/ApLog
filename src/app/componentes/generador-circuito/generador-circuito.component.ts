@@ -64,6 +64,14 @@ export class GeneradorCircuitoComponent {
     return this.plan?.resumen.porTipo.reduce((acc, t) => acc + t.aFacturar, 0) ?? 0;
   }
 
+  get totalCompensadas(): number {
+    return this.plan?.resumen.porTipo.reduce((acc, t) => acc + t.compensadas, 0) ?? 0;
+  }
+
+  get totalFacturasPorNeto(): number {
+    return this.plan?.resumen.porTipo.reduce((acc, t) => acc + t.facturasPorNeto, 0) ?? 0;
+  }
+
   @HostListener('window:beforeunload', ['$event'])
   avisarSiEjecutando(evento: BeforeUnloadEvent): void {
     if (this.ejecutando) {
@@ -99,6 +107,9 @@ export class GeneradorCircuitoComponent {
       html:
         `<p>${this.totalEmitidas} emitidas (${this.totalAFacturar} con factura de prueba) y ` +
         `${this.totalBorradores} en borrador, con las funciones reales de Liquidación y Facturación. ` +
+        (this.totalCompensadas > 0
+          ? `${this.totalCompensadas} con compensaciones (${this.totalFacturasPorNeto} facturadas por el neto). `
+          : '') +
         `Tarda varios minutos: <b>no cierres ni recargues esta pestaña</b>.</p>` +
         `<p>Para deshacer: Limpieza de demo (los PDF de prueba quedan en Storage).</p>`,
       icon: 'warning',

@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { ConId } from 'src/app/interfaces/conId';
 import { InformeLiqNuevo, PeriodoLiq } from 'src/app/interfaces/informe-liq-nuevo';
@@ -8,6 +9,11 @@ import { LimpiezaDemoService } from 'src/app/servicios/desarrollo/limpieza-demo.
 import { toISODateString } from 'src/app/servicios/fechas/date-range.service';
 import { InformeLiqFactoryService } from 'src/app/servicios/informes-liq/informe-liq-factory.service';
 import { DatosLiquidacion, InformeLiqService } from 'src/app/servicios/informes-liq/informe-liq.service';
+import { FinanzasConsultaService } from 'src/app/servicios/finanzas-nueva/finanzas-consulta.service';
+import {
+  CompensacionSolicitada, MAX_COMPENSACIONES, armarCompensables, netoDe,
+} from 'src/app/shared/utils/compensacion.util';
+import { redondear2 } from 'src/app/shared/utils/finanzas.util';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 import { Azar } from 'src/app/shared/utils/azar.util';
 import { columnasPorTipo } from 'src/app/shared/utils/columnas-liquidacion.util';
@@ -22,6 +28,11 @@ export interface ParametrosCircuito {
   pctLiquidar: number;    // por entidad y mes: se liquida (0..1)
   pctBorrador: number;    // de lo que se liquida: queda en borrador en vez de emitirse (0..1)
   pctFacturar: number;    // de lo emitido: se le vincula una factura de prueba (0..1)
+  // G3 (Frente Finanzas): chofer/proveedor con saldo para compensar
+  // (anticipos, préstamos, saldos a favor): se compensa en la liquidación.
+  pctCompensar: number;   // (0..1)
+  // De las facturadas con compensaciones: la factura es por el NETO (F28).
+  pctFacturaNeto: number; // (0..1)
   semilla: number;
 }
 
@@ -29,6 +40,8 @@ export const PARAMETROS_CIRCUITO_POR_DEFECTO: Omit<ParametrosCircuito, 'desde' |
   pctLiquidar: 0.9,
   pctBorrador: 0.05,
   pctFacturar: 0.85,
+  pctCompensar: 0.8,
+  pctFacturaNeto: 0.7,
 };
 
 /** Una liquidación que el plan va a crear. */
@@ -43,6 +56,9 @@ export interface LiquidacionPlaneada {
   facturar: boolean;
   fechaFactura: string | null;    // 'YYYY-MM-DD' (≤ hoy) — fecha del comprobante de prueba
   partida: boolean;               // la entidad/mes superó el tope de InformeOp y se partió
+  compensaciones: CompensacionSolicitada[];   // G3: saldos de la entidad que se descuentan
+  totalCompensado: number;
+  facturarPorNeto: boolean;       // G3: la factura de prueba va por el neto (F28)
 }
 
 export interface ResumenTipoCircuito {
@@ -53,6 +69,9 @@ export interface ResumenTipoCircuito {
   aFacturar: number;
   informesOp: number;
   total: number;
+  compensadas: number;            // G3: liquidaciones con compensaciones
+  totalCompensado: number;
+  facturasPorNeto: number;
 }
 
 export interface ResumenCircuito {
@@ -104,6 +123,10 @@ export interface ResultadoCircuito {
  *  conjunto: cada liquidación/factura es un gesto real (atómico); si algo
  *  falla se registra y sigue. Orden: clientes primero (una proforma de
  *  chofer/proveedor bloquea los InformeOp del cliente de la contraparte).
+ *  G3 (Frente Finanzas): a las liquidaciones de choferes/proveedores con
+ *  saldo para compensar (anticipos, préstamos, saldos a favor — por ejemplo
+ *  los del Generador de cobros) les aplica compensaciones (pctCompensar) y
+ *  una parte de esas facturas va por el NETO (pctFacturaNeto, F28).
  *  Registra el lote en `generacionesPrueba` (tipo 'circuito').
  *  Diseño: claude/diseno-finanzas.md §4.9 (F17, F18). */
 @Injectable({ providedIn: 'root' })
@@ -112,6 +135,7 @@ export class GeneradorCircuitoService {
   private db = inject(DbFirestoreService);
   private informeLiqServ = inject(InformeLiqService);
   private factory = inject(InformeLiqFactoryService);
+  private finanzasConsulta = inject(FinanzasConsultaService);
   private usuarioSesion = inject(UsuarioSesionService);
 
   private readonly COL_LOTES = 'generacionesPrueba';
@@ -157,6 +181,11 @@ export class GeneradorCircuitoService {
         a[0].entidad.id.localeCompare(b[0].entidad.id) ||
         a[0].fecha.localeCompare(b[0].fecha));
 
+    // G3: saldos para compensar (movimientos vigentes con sinImputar > 0),
+    // con el disponible que va quedando a medida que el plan los usa.
+    const conSaldo = await firstValueFrom(this.finanzasConsulta.observarMovimientosConSaldo());
+    const disponibleRestante = new Map<string, number>();
+
     const liquidaciones: LiquidacionPlaneada[] = [];
     let gruposSinLiquidar = 0;
     for (const lista of ordenados) {
@@ -175,17 +204,27 @@ export class GeneradorCircuitoService {
           const candidata = this.sumarDias(fin, azar.entero(1, 10));
           fechaFactura = candidata > hoy ? hoy : candidata;
         }
+        const totalEstimado = Math.round(parte.informes.reduce((acc, i) => acc + (i.valores?.total ?? 0), 0) * 100) / 100;
+        const compensaciones = lista[0].tipo === 'cliente'
+          ? []
+          : this.elegirCompensaciones(conSaldo, disponibleRestante, lista[0].tipo, lista[0].entidad.id, totalEstimado, azar, p);
+        const totalCompensado = redondear2(compensaciones.reduce((acc, c) => acc + c.importe, 0));
+        const facturarPorNeto = facturar && compensaciones.length > 0 && totalEstimado - totalCompensado > 0.005 &&
+          azar.chance(p.pctFacturaNeto);
         liquidaciones.push({
           tipo: lista[0].tipo,
           idEntidad: lista[0].entidad.id,
           nombre: nombreEntidadRef(lista[0].entidad),
           periodo: parte.periodo,
           idsInformesOp: parte.informes.map(i => i.idInfOp),
-          totalEstimado: Math.round(parte.informes.reduce((acc, i) => acc + (i.valores?.total ?? 0), 0) * 100) / 100,
+          totalEstimado,
           modo,
           facturar,
           fechaFactura,
           partida: partes.length > 1,
+          compensaciones,
+          totalCompensado,
+          facturarPorNeto,
         });
       }
     }
@@ -227,6 +266,7 @@ export class GeneradorCircuitoService {
           liquidaciones: plan.resumen.liquidaciones,
           partidas: plan.resumen.partidas,
           gruposSinLiquidar: plan.resumen.gruposSinLiquidar,
+          compensadas: plan.resumen.porTipo.reduce((acc, t) => acc + t.compensadas, 0),
         },
         emitidas: 0,
         borradores: 0,
@@ -251,6 +291,7 @@ export class GeneradorCircuitoService {
           descuentos: [],
           columnas: columnasPorTipo(l.tipo).filter(c => c.seleccionada).map(c => c.nombre),
           observaciones: this.OBSERVACION,
+          compensaciones: l.compensaciones,
         };
         const res = l.modo === 'borrador'
           ? await this.informeLiqServ.crearBorrador(datos)
@@ -268,7 +309,7 @@ export class GeneradorCircuitoService {
 
         if (l.facturar && l.fechaFactura) {
           alAvanzar(`${k + 1}/${n}: factura — ${etiqueta}`);
-          const r = await this.facturar(res.objeto.idInfLiq, l.fechaFactura);
+          const r = await this.facturar(res.objeto.idInfLiq, l.fechaFactura, l.facturarPorNeto);
           if (r) errores.push({ liquidacion: `${etiqueta} (factura)`, mensaje: r });
           else facturadas++;
         }
@@ -309,10 +350,10 @@ export class GeneradorCircuitoService {
   /** Vincula una factura de prueba al emitido con la función real
    *  (vincularFactura: sube el PDF, transacción, índice de unicidad, log).
    *  Devuelve el mensaje de error o null. */
-  private async facturar(idInfLiq: string, fecha: string): Promise<string | null> {
+  private async facturar(idInfLiq: string, fecha: string, porNeto: boolean): Promise<string | null> {
     const liq = await this.informeLiqServ.obtenerPorId(idInfLiq);
     if (!liq) return `No se encontró el informe ${idInfLiq} recién emitido.`;
-    const datosQr = this.datosQr(liq, fecha);
+    const datosQr = this.datosQr(liq, fecha, porNeto);
     const textoQr = `https://www.afip.gob.ar/fe/qr/?p=${btoa(JSON.stringify(datosQr))}`;
     const archivo = await this.pdfFactura(liq, datosQr);
     const res = await this.informeLiqServ.vincularFactura(idInfLiq, archivo, textoQr);
@@ -322,7 +363,7 @@ export class GeneradorCircuitoService {
   /** Datos del QR AFIP sintético (RG 4291: `cuit` = emisor, `nroDocRec` =
    *  receptor). Número de comprobante = número del informe (LQCL/LQCH/LQPR
    *  son series propias) → la clave de unicidad no se repite. */
-  private datosQr(liq: InformeLiqNuevo, fecha: string): DatosQrAfip {
+  private datosQr(liq: InformeLiqNuevo, fecha: string, porNeto: boolean = false): DatosQrAfip {
     const nro = Number((liq.numeroInterno ?? '').split('-')[1]) || 1;
     const esCliente = liq.tipo === 'cliente';
     const cuitEntidad = Number(liq.entidad.cuit) || 0;
@@ -333,7 +374,7 @@ export class GeneradorCircuitoService {
       ptoVta: esCliente ? 1 : 2,
       tipoCmp: liq.tipo === 'chofer' ? 11 : 1,     // chofer: Factura C (monotributo); resto: Factura A
       nroCmp: nro,
-      importe: liq.valores.total,
+      importe: porNeto ? netoDe(liq.valores) : liq.valores.total,
       moneda: 'PES',
       ctz: 1,
       tipoDocRec: 80,
@@ -370,6 +411,37 @@ export class GeneradorCircuitoService {
   // ---------------------------------------------------------------------------
   // Auxiliares
   // ---------------------------------------------------------------------------
+
+  /** G3: compensaciones para una liquidación de chofer/proveedor. Con
+   *  probabilidad pctCompensar, toma los saldos de la entidad (más antiguos
+   *  primero) hasta cubrir como mucho el total (neto ≥ 0) y descuenta lo
+   *  usado de `disponibleRestante` (el plan no usa dos veces el mismo saldo).
+   *  Sin saldo → [] sin consumir azar (el plan de quien no tiene anticipos no
+   *  cambia). */
+  private elegirCompensaciones(
+    conSaldo: Parameters<typeof armarCompensables>[0],
+    disponibleRestante: Map<string, number>,
+    tipo: TipoLiqCircuito,
+    idEntidad: string,
+    total: number,
+    azar: Azar,
+    p: ParametrosCircuito,
+  ): CompensacionSolicitada[] {
+    const candidatos = armarCompensables(conSaldo, { tipo, id: idEntidad }, null, [])
+      .map(c => ({ c, disponible: disponibleRestante.get(c.idMovimiento) ?? c.disponible }))
+      .filter(x => x.disponible > 0.005);
+    if (candidatos.length === 0 || !(total > 0) || !azar.chance(p.pctCompensar)) return [];
+    const elegidas: CompensacionSolicitada[] = [];
+    let lugar = total;
+    for (const { c, disponible } of candidatos) {
+      if (lugar <= 0.005 || elegidas.length >= MAX_COMPENSACIONES) break;
+      const importe = redondear2(Math.min(disponible, lugar));
+      elegidas.push({ idMovimiento: c.idMovimiento, importe });
+      disponibleRestante.set(c.idMovimiento, redondear2(disponible - importe));
+      lugar = redondear2(lugar - importe);
+    }
+    return elegidas;
+  }
 
   /** Parte un grupo entidad × mes que supera el tope: por quincena y, si una
    *  quincena también lo supera, en bloques del tope (mismo período). */
@@ -410,6 +482,9 @@ export class GeneradorCircuitoService {
         aFacturar: ls.filter(l => l.facturar).length,
         informesOp: ls.reduce((acc, l) => acc + l.idsInformesOp.length, 0),
         total: Math.round(ls.reduce((acc, l) => acc + l.totalEstimado, 0) * 100) / 100,
+        compensadas: ls.filter(l => l.compensaciones.length > 0).length,
+        totalCompensado: redondear2(ls.reduce((acc, l) => acc + l.totalCompensado, 0)),
+        facturasPorNeto: ls.filter(l => l.facturarPorNeto).length,
       };
     });
     return {
@@ -443,7 +518,7 @@ export class GeneradorCircuitoService {
     const [a2, m2] = p.hasta.split('-').map(Number);
     const meses = (a2 - a1) * 12 + (m2 - m1) + 1;
     if (meses > this.MAX_MESES) throw new Error(`El rango no puede superar ${this.MAX_MESES} meses.`);
-    const pcts = [p.pctLiquidar, p.pctBorrador, p.pctFacturar];
+    const pcts = [p.pctLiquidar, p.pctBorrador, p.pctFacturar, p.pctCompensar, p.pctFacturaNeto];
     if (pcts.some(x => !(x >= 0 && x <= 1))) throw new Error('Los porcentajes tienen que estar entre 0 y 1.');
     if (!Number.isInteger(p.semilla)) throw new Error('La semilla tiene que ser un número entero.');
   }
