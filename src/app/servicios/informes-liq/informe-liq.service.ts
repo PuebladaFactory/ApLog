@@ -762,6 +762,13 @@ export class InformeLiqService {
             `La liquidación ${liq.numeroInterno} tiene importes cobrados/pagados imputados: no se puede desvincular la factura.`,
           );
         }
+        // F7a: un ajuste (incobrable, bonificación…) también ata el informe a
+        // Finanzas: primero se anula el ajuste.
+        if ((liq.valoresFinancieros?.totalAjustado ?? 0) !== 0) {
+          throw new Error(
+            `La liquidación ${liq.numeroInterno} tiene ajustes de Finanzas imputados: anulalos antes de desvincular la factura.`,
+          );
+        }
         if (!liq.factura) {
           throw new Error(`Inconsistencia: la liquidación ${liq.numeroInterno} está facturada pero no tiene factura.`);
         }

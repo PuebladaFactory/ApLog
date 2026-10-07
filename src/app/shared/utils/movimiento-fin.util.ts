@@ -5,7 +5,7 @@ import {
   TipoMovimientoFin,
 } from 'src/app/interfaces/movimiento-fin';
 import {
-  AcumuladoFinanciero, diasEntre, esCero, redondear2, totalMedios, TOLERANCIA_IMPORTE,
+  AcumuladoFinanciero, diasEntre, esCero, importesIguales, redondear2, totalMedios, TOLERANCIA_IMPORTE,
 } from 'src/app/shared/utils/finanzas.util';
 
 /** Armado y validación PUROS de movimientos de Finanzas (sin Firestore ni
@@ -428,5 +428,119 @@ export function acumularImputaciones(
     idsDocumentos: [...new Set(imputaciones.map(i => i.documento.id))],
     totalImputado,
     sinImputar: esCero(sinImputar) ? 0 : sinImputar,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Ajustes sobre comprobantes (F7a)
+// ---------------------------------------------------------------------------
+
+/** Motivos que se eligen en la UI ('apertura' queda para la migración). */
+export type MotivoAjusteElegible = Exclude<MotivoAjusteFin, 'apertura'>;
+
+/** Saldo máximo para "Cerrar diferencia" y tope por comprobante de un
+ *  ajuste por redondeo (F50). */
+export const UMBRAL_CERRAR_DIFERENCIA = 1000;
+
+/** Datos de un ajuste a registrar: baja el saldo de comprobantes facturados
+ *  de la entidad sin mover dinero. */
+export interface DatosAjusteFin {
+  entidad: EntidadMovimientoFin;
+  fecha: string;                         // 'YYYY-MM-DD', ≤ hoy
+  motivo: MotivoAjusteElegible;
+  imputaciones: ImputacionSolicitada[];  // ≥ 1
+  observaciones: string;
+}
+
+/** Motivos permitidos por tipo de entidad: incobrable solo para clientes
+ *  (lo que nos deben); bonificación, redondeo y otro para todos. */
+export function motivosAjustePara(tipoEntidad: TipoEntidadFin): MotivoAjusteElegible[] {
+  return tipoEntidad === 'cliente'
+    ? ['incobrable', 'bonificacion', 'redondeo', 'otro']
+    : ['bonificacion', 'redondeo', 'otro'];
+}
+
+/** Ayuda de cada motivo para la UI. */
+export const AYUDA_MOTIVO_AJUSTE: Readonly<Record<MotivoAjusteElegible, string>> = {
+  incobrable: 'La deuda no se va a cobrar. Cancela el saldo COMPLETO del comprobante y lo marca incobrable.',
+  bonificacion: 'Descuento acordado después de facturar (normalmente lleva nota de crédito: la app registra la gestión).',
+  redondeo: `Diferencias chicas: hasta $ ${UMBRAL_CERRAR_DIFERENCIA} por comprobante.`,
+  otro: 'Cualquier otra baja de saldo. La observación es obligatoria.',
+};
+
+export function normalizarDatosAjuste(d: DatosAjusteFin): DatosAjusteFin {
+  return {
+    ...d,
+    imputaciones: normalizarSolicitudes(d.imputaciones),
+    observaciones: (d.observaciones ?? '').trim(),
+  };
+}
+
+/** Validación previa, sin lecturas (el saldo de cada comprobante y la regla
+ *  de incobrable por el saldo completo se validan en la transacción). Recibe
+ *  datos YA normalizados. Devuelve el mensaje de error o null. */
+export function validarDatosAjuste(d: DatosAjusteFin, hoy: string): string | null {
+  if (!d.entidad?.id) return 'Falta la entidad.';
+  if (!motivosAjustePara(d.entidad.tipo).includes(d.motivo)) {
+    return d.motivo === 'incobrable'
+      ? 'Incobrable es solo para clientes (lo que nos deben).'
+      : 'Motivo de ajuste inválido.';
+  }
+  if (!FORMATO_FECHA.test(d.fecha)) return 'Fecha inválida.';
+  if (d.fecha > hoy) return 'La fecha no puede ser futura.';
+  if (d.imputaciones.length === 0) return 'Elegí al menos un comprobante a ajustar.';
+  const ids = d.imputaciones.map(i => i.idInfLiq);
+  if (new Set(ids).size !== ids.length) return 'Un comprobante aparece más de una vez.';
+  if (d.imputaciones.some(i => !(i.importe > 0))) return 'Hay un importe a ajustar inválido.';
+  if (d.motivo === 'redondeo' && d.imputaciones.some(i => i.importe - UMBRAL_CERRAR_DIFERENCIA > TOLERANCIA_IMPORTE)) {
+    return `Un ajuste por redondeo no puede superar $ ${UMBRAL_CERRAR_DIFERENCIA} por comprobante.`;
+  }
+  if (d.motivo === 'otro' && !d.observaciones) return 'Con motivo "Otro" la observación es obligatoria.';
+  return null;
+}
+
+/** Regla de incobrable sobre el saldo RELEÍDO en la transacción (F49): el
+ *  importe tiene que ser el saldo completo. Devuelve el mensaje o null. */
+export function validarImporteAjuste(
+  motivo: MotivoAjusteElegible,
+  saldo: number,
+  importe: number,
+  numeroDocumento: string,
+): string | null {
+  if (motivo === 'incobrable' && !importesIguales(importe, saldo)) {
+    return `Incobrable va por el saldo completo: el comprobante ${numeroDocumento} tiene saldo ` +
+      `$ ${saldo.toFixed(2)} y se pidió $ ${importe.toFixed(2)}.`;
+  }
+  return null;
+}
+
+/** Cuerpo del ajuste a persistir (sin idMovimiento: patrón ConId). Sin
+ *  medios; total = Σ imputaciones; nada queda sin imputar. */
+export function armarAjuste(p: {
+  datos: DatosAjusteFin;
+  numero: string;
+  fechaRegistro: string;
+  usuario: string;
+  imputaciones: ImputacionFin[];
+}): Omit<MovimientoFin, 'idMovimiento'> {
+  const total = redondear2(p.imputaciones.reduce((acc, i) => acc + i.importe, 0));
+  return {
+    tipo: 'ajuste',
+    numero: p.numero,
+    fecha: p.datos.fecha,
+    fechaRegistro: p.fechaRegistro,
+    entidad: { ...p.datos.entidad },
+    concepto: 'normal',
+    motivoAjuste: p.datos.motivo,
+    medios: [],
+    total,
+    imputaciones: p.imputaciones,
+    idsDocumentos: [...new Set(p.imputaciones.map(i => i.documento.id))],
+    totalImputado: total,
+    sinImputar: 0,
+    observaciones: p.datos.observaciones,
+    estado: 'vigente',
+    anulacion: null,
+    usuario: p.usuario,
   };
 }

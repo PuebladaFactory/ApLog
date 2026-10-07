@@ -12,6 +12,7 @@ import { ImputarSaldoComponent } from './modales/imputar-saldo/imputar-saldo.com
 import { CuentaEntidadComponent } from './cuenta-entidad/cuenta-entidad.component';
 import { FinanzasAntiguedadComponent } from './antiguedad/finanzas-antiguedad.component';
 import { FinanzasResumenComponent } from './resumen/finanzas-resumen.component';
+import { RegistrarAjusteComponent } from './modales/registrar-ajuste/registrar-ajuste.component';
 import { HistoriaComprobanteComponent } from './modales/historia-comprobante/historia-comprobante.component';
 
 /** Módulo Finanzas — camino nuevo (Frente Finanzas), en paralelo a
@@ -29,6 +30,7 @@ import { HistoriaComprobanteComponent } from './modales/historia-comprobante/his
     HistoriaComprobanteComponent,
     FinanzasAntiguedadComponent,
     FinanzasResumenComponent,
+    RegistrarAjusteComponent,
   ],
   imports: [
     CommonModule,

@@ -2,12 +2,14 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, switchMap, takeUntil } from 'rxjs';
+import Swal from 'sweetalert2';
 import { ConId } from 'src/app/interfaces/conId';
 import { InformeLiqNuevo } from 'src/app/interfaces/informe-liq-nuevo';
-import { TipoEntidadFin } from 'src/app/interfaces/movimiento-fin';
+import { EntidadMovimientoFin, TipoEntidadFin } from 'src/app/interfaces/movimiento-fin';
 import { AccionListado, ColumnaListado, EventoAccionListado, OrdenListado } from 'src/app/interfaces/tabla-listado';
 import { toISODateString } from 'src/app/servicios/fechas/date-range.service';
 import { FinanzasConsultaService } from 'src/app/servicios/finanzas-nueva/finanzas-consulta.service';
+import { MovimientoFinService } from 'src/app/servicios/finanzas-nueva/movimiento-fin.service';
 import { InformeLiqFactoryService } from 'src/app/servicios/informes-liq/informe-liq-factory.service';
 import { InformeLiqNuevoDetalleComponent } from 'src/app/shared/modales/informe-liq-nuevo-detalle/informe-liq-nuevo-detalle.component';
 import {
@@ -18,10 +20,12 @@ import { CuentaEntidadFin, ladoDe } from 'src/app/shared/utils/cuentas-finanzas.
 import { nombreEntidadRef } from 'src/app/shared/utils/entidad-informe.util';
 import { fechaComprobanteLegible } from 'src/app/shared/utils/factura-electronica.util';
 import { TRAMOS_ANTIGUEDAD } from 'src/app/shared/utils/finanzas.util';
+import { MotivoAjusteElegible, UMBRAL_CERRAR_DIFERENCIA } from 'src/app/shared/utils/movimiento-fin.util';
 import { AccionesMovimientoService } from '../acciones-movimiento.service';
 import { FilaMovimiento, accionesMovimientos, columnasMovimientos } from '../listado-movimientos';
 import { RegistrarMovimientoComponent } from '../modales/registrar-movimiento/registrar-movimiento.component';
 import { HistoriaComprobanteComponent } from '../modales/historia-comprobante/historia-comprobante.component';
+import { RegistrarAjusteComponent } from '../modales/registrar-ajuste/registrar-ajuste.component';
 
 type FilaComprobante = FilaComprobanteCuenta<ConId<InformeLiqNuevo>>;
 
@@ -90,6 +94,15 @@ export class CuentaEntidadComponent implements OnInit, OnDestroy {
   readonly accionesComprobante: AccionListado<FilaComprobante>[] = [
     { id: 'ver', label: 'Ver', clase: 'btn-outline-primary' },
     { id: 'historia', label: 'Historia', clase: 'btn-outline-secondary' },
+    // F7a: ajustes sobre facturados con saldo.
+    {
+      id: 'ajustar', label: 'Ajustar', clase: 'btn-outline-info', permiso: 'finanzas.agregar',
+      visible: f => f.estado === 'facturado' && f.saldo > 0,
+    },
+    {
+      id: 'cerrar', label: 'Cerrar diferencia', clase: 'btn-outline-secondary', permiso: 'finanzas.agregar',
+      visible: f => f.estado === 'facturado' && f.saldo > 0 && f.saldo <= UMBRAL_CERRAR_DIFERENCIA,
+    },
   ];
   readonly fechaLegible = fechaComprobanteLegible;
   readonly accionesMovimiento = accionesMovimientos();
@@ -105,6 +118,7 @@ export class CuentaEntidadComponent implements OnInit, OnDestroy {
     private consulta: FinanzasConsultaService,
     private factory: InformeLiqFactoryService,
     private accionesMov: AccionesMovimientoService,
+    private movimientoFin: MovimientoFinService,
   ) {}
 
   get filtros(): {
@@ -307,9 +321,63 @@ export class CuentaEntidadComponent implements OnInit, OnDestroy {
     modalRef.result.catch(() => {});
   }
 
+  /** Registrar ajuste (F7a): modal con los comprobantes facturados con
+   *  saldo de la cuenta. Desde una fila ("Ajustar") llega preseleccionado. */
+  registrarAjuste(idInicial: string | null = null, motivoInicial: MotivoAjusteElegible | null = null): void {
+    const entidad = this.entidadMovimiento();
+    if (!entidad) return;
+    const modalRef = this.modalService.open(RegistrarAjusteComponent, {
+      size: 'xl', centered: true, scrollable: true, backdrop: 'static', keyboard: false,
+    });
+    modalRef.componentInstance.entidad = entidad;
+    modalRef.componentInstance.informes = this.informes;
+    modalRef.componentInstance.idInicial = idInicial;
+    modalRef.componentInstance.motivoInicial = motivoInicial;
+    modalRef.result.catch(() => {});
+  }
+
+  /** "Cerrar diferencia" (F50): ajuste por redondeo del saldo completo de un
+   *  comprobante con saldo ≤ UMBRAL_CERRAR_DIFERENCIA, sin abrir el modal. */
+  async cerrarDiferencia(fila: FilaComprobante): Promise<void> {
+    const entidad = this.entidadMovimiento();
+    if (!entidad) return;
+    const nro = fila.liq.numeroInterno ?? fila.liq.idInfLiq;
+    const r = await Swal.fire({
+      title: `¿Cerrar la diferencia de ${nro}?`,
+      html: `<p>Se registra un ajuste por <b>redondeo</b> de <b>$ ${fila.saldo.toFixed(2)}</b> y el comprobante queda saldado.</p>` +
+        '<p class="small">Se revierte anulando el ajuste.</p>',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Cerrar diferencia',
+      cancelButtonText: 'Volver',
+    });
+    if (!r.isConfirmed) return;
+    this.procesando = true;
+    try {
+      const res = await this.movimientoFin.registrarAjuste({
+        entidad,
+        fecha: this.hoy,
+        motivo: 'redondeo',
+        imputaciones: [{ idInfLiq: fila.liq.idInfLiq, importe: fila.saldo }],
+        observaciones: `Cierre de diferencia de ${nro}`,
+      });
+      await Swal.fire({ icon: res.exito ? 'success' : 'error', text: res.mensaje, timer: res.exito ? 2500 : undefined });
+    } finally {
+      this.procesando = false;
+    }
+  }
+
   onAccionComprobante(ev: EventoAccionListado<FilaComprobante>): void {
     if (ev.id === 'historia') {
       this.abrirHistoria(ev.item.liq);
+      return;
+    }
+    if (ev.id === 'ajustar') {
+      this.registrarAjuste(ev.item.liq.idInfLiq);
+      return;
+    }
+    if (ev.id === 'cerrar') {
+      void this.cerrarDiferencia(ev.item);
       return;
     }
     if (ev.id !== 'ver') return;
@@ -328,6 +396,13 @@ export class CuentaEntidadComponent implements OnInit, OnDestroy {
     else if (ev.id === 'anular') this.accionesMov.anular(ev.item, alProcesar);
   }
 
+  /** La entidad como la guarda un movimiento (snapshot). null si la cuenta
+   *  no está lista o la entidad no existe. */
+  private entidadMovimiento(): EntidadMovimientoFin | null {
+    if (!this.nombre || this.noExiste || this.cargando) return null;
+    return { tipo: this.tipo, id: this.idEntidad, razonSocial: this.nombre, cuit: this.cuit ?? 0 };
+  }
+
   private aplicarFiltroComprobantes(): void {
     this.comprobantesVisibles = this.filtros.soloAbiertos
       ? this.comprobantes.filter(f => f.abierto)
@@ -342,7 +417,12 @@ export class CuentaEntidadComponent implements OnInit, OnDestroy {
         key: 'periodo', label: 'Período', valor: f => this.factory.textoPeriodo(f.liq.periodo),
         orden: f => this.factory.ordenPeriodo(f.liq.periodo),
       },
-      { key: 'estado', label: 'Estado', valor: f => ETIQUETA_ESTADO[f.estado], orden: f => f.estado, clase: apagado },
+      {
+        key: 'estado', label: 'Estado',
+        valor: f => (f.estadoFinanciero === 'incobrable' ? `${ETIQUETA_ESTADO[f.estado]} · incobrable` : ETIQUETA_ESTADO[f.estado]),
+        orden: f => f.estado,
+        clase: f => (f.estadoFinanciero === 'incobrable' ? 'text-danger fw-semibold' : apagado(f)),
+      },
       {
         key: 'emision', label: 'Emisión', valor: f => (f.fechaEmision ? fechaComprobanteLegible(f.fechaEmision) : '—'),
         orden: f => f.fechaEmision ?? '', align: 'center',

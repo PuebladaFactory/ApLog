@@ -12,6 +12,13 @@
     [disabled]="!nombre || cargando || noExiste"
     (click)="registrar()"
   >{{ esCliente ? 'Registrar cobro' : 'Registrar pago' }}</button>
+  <button
+    *appPermiso="'finanzas.agregar'"
+    type="button"
+    class="btn btn-outline-info"
+    [disabled]="!nombre || cargando || noExiste || !resumen?.cantidadFacturados"
+    (click)="registrarAjuste()"
+  >Registrar ajuste</button>
 </div>
 
 @if (error) {

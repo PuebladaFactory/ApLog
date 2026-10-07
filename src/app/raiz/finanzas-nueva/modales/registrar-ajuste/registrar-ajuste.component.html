@@ -1,0 +1,103 @@
+<div class="modal-header">
+  <div>
+    <h4 class="modal-title">Registrar ajuste</h4>
+    <div class="text-muted">
+      <span class="text-capitalize">{{ entidad.tipo }}</span> {{ entidad.razonSocial }} — CUIT {{ entidad.cuit }}
+    </div>
+  </div>
+  <button type="button" class="btn-close" [disabled]="guardando" (click)="cancelar()"></button>
+</div>
+
+<div class="modal-body">
+  <div class="row g-3 mb-3">
+    <div class="col-md-4">
+      <label class="dato-label" for="motivoAjuste">Motivo</label>
+      <select id="motivoAjuste" class="form-select" [ngModel]="motivo" (ngModelChange)="onMotivo($event)" [disabled]="guardando">
+        @for (m of motivos; track m) {
+          <option [ngValue]="m">{{ etiquetaMotivo[m] }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="dato-label" for="fechaAjuste">Fecha</label>
+      <input id="fechaAjuste" type="date" class="form-control" [(ngModel)]="fecha" [max]="hoy" [disabled]="guardando" />
+    </div>
+    <div class="col-md-5 d-flex align-items-end">
+      <div class="alert py-2 mb-0 w-100" [ngClass]="esIncobrable ? 'alert-warning' : 'alert-light border'">
+        {{ ayudaMotivo[motivo] }}
+      </div>
+    </div>
+  </div>
+
+  <h6 class="mb-1">Comprobantes facturados con saldo</h6>
+  @if (filas.length === 0) {
+    <div class="alert alert-info py-2">
+      {{ entidad.razonSocial }} no tiene informes facturados con saldo: no hay nada para ajustar.
+    </div>
+  } @else {
+    <table class="table table-sm table-striped align-middle">
+      <thead>
+        <tr>
+          <th style="width: 2rem;"></th>
+          <th>Informe</th>
+          <th>Período</th>
+          <th>Factura</th>
+          <th class="text-center">Días</th>
+          <th class="text-end">Total</th>
+          <th class="text-end">Saldo</th>
+          <th class="text-end" style="width: 11rem;">A ajustar</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (f of filas; track f.liq.idInfLiq) {
+          <tr>
+            <td>
+              <input type="checkbox" class="form-check-input" [checked]="(f.importe ?? 0) > 0"
+                (change)="alternarFila(f, $any($event.target).checked)" [disabled]="guardando" />
+            </td>
+            <td>{{ f.liq.numeroInterno }}</td>
+            <td>{{ f.periodo }}</td>
+            <td>{{ f.fechaFactura }}</td>
+            <td class="text-center col-importe">{{ f.dias ?? '—' }}</td>
+            <td class="text-end col-importe">{{ f.total | formatearValor: '$' }}</td>
+            <td class="text-end col-importe">{{ f.saldo | formatearValor: '$' }}</td>
+            <td>
+              <input inputmode="decimal" class="form-control form-control-sm text-end" appMonto
+                [class.is-invalid]="(f.importe ?? 0) - f.saldo > 0.005"
+                [(ngModel)]="f.importe" [disabled]="guardando || esIncobrable" />
+            </td>
+          </tr>
+        }
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="7" class="text-end fw-bold">Total del ajuste ({{ cantidadElegidos }})</td>
+          <td class="text-end fw-bold col-importe">{{ totalAjuste | formatearValor: '$' }}</td>
+        </tr>
+      </tfoot>
+    </table>
+    @if (esIncobrable) {
+      <div class="text-muted small mb-2">Incobrable: el importe es el saldo completo de cada comprobante (marcá o desmarcá la fila).</div>
+    }
+  }
+
+  <label class="dato-label" for="obsAjuste">Observaciones {{ motivo === 'otro' ? '(obligatoria)' : '' }}</label>
+  <textarea id="obsAjuste" class="form-control" rows="2" [(ngModel)]="observaciones" [disabled]="guardando"
+    placeholder="Por qué se ajusta (acuerdo, gestión de cobro, nota de crédito, etc.)"></textarea>
+
+  @if (errorValidacion && filas.length > 0) {
+    <div class="text-danger small mt-2">{{ errorValidacion }}</div>
+  }
+  @if (error) {
+    <div class="alert alert-danger mt-2 mb-0">{{ error }}</div>
+  }
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-primary" [disabled]="!puedeConfirmar" (click)="confirmar()">Registrar ajuste</button>
+  <button type="button" class="btn btn-outline-secondary" [disabled]="guardando" (click)="cancelar()">Cancelar</button>
+</div>
+
+@if (guardando) {
+  <app-spinner></app-spinner>
+}

@@ -13,9 +13,10 @@ import {
   aplicarImporte, estadoFinancieroDe, normalizarValoresFinancieros, redondear2, totalMedios,
 } from 'src/app/shared/utils/finanzas.util';
 import {
-  DatosMovimientoFin, ETIQUETA_TIPO_MOVIMIENTO, ImputacionSolicitada, acumularImputaciones, acumuladoDeMovimiento,
-  armarImputacion, armarMovimiento, normalizarDatosMovimiento, normalizarSolicitudes, reversionesDe, validarAnulable,
-  validarDatosMovimiento, validarDocumentoImputable, validarImputacionSaldo,
+  DatosAjusteFin, DatosMovimientoFin, ETIQUETA_MOTIVO_AJUSTE, ETIQUETA_TIPO_MOVIMIENTO, ImputacionSolicitada,
+  acumularImputaciones, acumuladoDeMovimiento, armarAjuste, armarImputacion, armarMovimiento, normalizarDatosAjuste,
+  normalizarDatosMovimiento, normalizarSolicitudes, reversionesDe, validarAnulable, validarDatosAjuste,
+  validarDatosMovimiento, validarDocumentoImputable, validarImporteAjuste, validarImputacionSaldo,
 } from 'src/app/shared/utils/movimiento-fin.util';
 
 export interface ResultadoMovimientoFin {
@@ -24,8 +25,8 @@ export interface ResultadoMovimientoFin {
 }
 
 /** Dueño de los movimientos de Finanzas (colección `movimientosFin`):
- *  cobros (RC), pagos (OPG) y, en bloques siguientes, ajustes (AJ),
- *  anulación e imputación de saldos. Cada gesto es UNA transacción
+ *  cobros (RC), pagos (OPG), ajustes (AJ, F7a), anulación e imputación de
+ *  saldos. Cada gesto es UNA transacción
  *  (commitEnTransaccion) con su log: movimiento + InformeLiq imputados
  *  (valoresFinancieros / estadoFinanciero, escritos con la pieza de
  *  InformeLiqService) + numerador + registroLog.
@@ -111,6 +112,79 @@ export class MovimientoFinService {
         accion, this.COLECCION, idMovimiento, `Error al registrar ${etiqueta.toLowerCase()}: ${e?.message ?? e}`,
       );
       return { exito: false, mensaje: `No se pudo registrar el ${etiqueta.toLowerCase()}: ${e?.message ?? e}` };
+    }
+  }
+
+  /** Registra un AJUSTE (F7a): baja el saldo de comprobantes facturados de
+   *  la entidad sin mover dinero (incobrable, bonificación, redondeo, otro).
+   *  Transacción: lee el numerador AJ y cada InformeLiq (facturado, de la
+   *  entidad, con saldo suficiente; incobrable = saldo completo); a cada
+   *  informe le suma el importe a totalAjustado y recalcula saldo y
+   *  estadoFinanciero ('incobrable' si el motivo lo es); escribe el ajuste
+   *  (sin medios, nada sin imputar), el numerador y un log AJUSTAR. Se
+   *  revierte con anular(), como cualquier movimiento. */
+  async registrarAjuste(d: DatosAjusteFin): Promise<Resultado<ResultadoMovimientoFin>> {
+    const datos = normalizarDatosAjuste(d);
+    const error = validarDatosAjuste(datos, toISODateString(new Date()));
+    if (error) return { exito: false, mensaje: error };
+
+    // Afuera del callback: puede reintentarse y tiene que ser puro.
+    const idMovimiento = this.db.generarId(this.COLECCION);
+    const fechaRegistro = new Date().toISOString();
+    const usuario = this.usuarioSesion.getUsuarioActual()?.email ?? 'Desconocido';
+    const motivo = ETIQUETA_MOTIVO_AJUSTE[datos.motivo];
+
+    try {
+      const r = await this.db.commitEnTransaccion<{ numero: string; total: number }>(async (tx) => {
+        const escrituras: EscrituraBatch[] = [];
+
+        const n = await this.numerador.leerProximoNumeroMovimientoFin(tx, 'ajuste');
+        const leidos = await Promise.all(datos.imputaciones.map(async imp => ({
+          imp,
+          liq: await this.db.leerEnTransaccion<InformeLiqNuevo>(tx, this.COL_LIQ, imp.idInfLiq),
+        })));
+        // — fin de lecturas —
+
+        escrituras.push(n.escritura);
+        const imputaciones: ImputacionFin[] = [];
+        for (const { imp, liq } of leidos) {
+          if (!liq) throw new Error(`No existe el informe de liquidación ${imp.idInfLiq}.`);
+          validarDocumentoImputable(liq, imp.idInfLiq, datos.entidad);
+          const vfAntes = normalizarValoresFinancieros(liq.valoresFinancieros, liq.valores.total);
+          const errorImporte = validarImporteAjuste(datos.motivo, vfAntes.saldo, imp.importe, liq.numeroInterno ?? imp.idInfLiq);
+          if (errorImporte) throw new Error(errorImporte);
+          const vf = aplicarImporte(vfAntes, 'totalAjustado', imp.importe);   // tira Error si supera el saldo
+          imputaciones.push(armarImputacion(liq, imp.idInfLiq, vfAntes, imp.importe, datos.fecha, 'directa'));
+          this.informeLiqServ.agregarEscrituraInformeLiqParcial(escrituras, imp.idInfLiq, {
+            valoresFinancieros: vf,
+            estadoFinanciero: datos.motivo === 'incobrable' ? 'incobrable' : estadoFinancieroDe(vf, liq.estadoFinanciero),
+          });
+        }
+
+        const ajuste = armarAjuste({ datos, numero: n.numero, fechaRegistro, usuario, imputaciones });
+        escrituras.push({ coleccion: this.COLECCION, id: idMovimiento, modo: 'crear', data: ajuste });
+
+        await this.logRegistro.agregarAlBatch(
+          escrituras, 'AJUSTAR', this.COLECCION, idMovimiento,
+          `Ajuste (${motivo.toLowerCase()}) ${n.numero} — ${datos.entidad.tipo} ${datos.entidad.razonSocial} — ` +
+          `$ ${ajuste.total.toFixed(2)} — ${imputaciones.map(i => i.numeroDocumento).join(', ')}` +
+          (datos.observaciones ? ` — ${datos.observaciones}` : ''),
+          null,
+        );
+
+        return { escrituras, resultado: { numero: n.numero, total: ajuste.total } };
+      });
+
+      return {
+        exito: true,
+        mensaje: `Ajuste ${r.numero} (${motivo.toLowerCase()}) registrado por $ ${r.total.toFixed(2)}.`,
+        objeto: { idMovimiento, numero: r.numero },
+      };
+    } catch (e: any) {
+      await this.logRegistro.registrarError(
+        'AJUSTAR', this.COLECCION, idMovimiento, `Error al registrar el ajuste: ${e?.message ?? e}`,
+      );
+      return { exito: false, mensaje: `No se pudo registrar el ajuste: ${e?.message ?? e}` };
     }
   }
 
