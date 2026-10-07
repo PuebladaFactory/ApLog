@@ -39,13 +39,17 @@ export function columnasMovimientos(opciones: { conEntidad: boolean }): ColumnaL
         orden: m => `${m.fecha}|${m.fechaRegistro}`, align: 'center',
       },
       { key: 'numero', label: 'Número', valor: m => m.numero, orden: m => m.numero, clase: tachado },
-      { key: 'tipo', label: 'Tipo', valor: m => ETIQUETA_TIPO_MOVIMIENTO[m.tipo], orden: m => m.tipo },
+      {
+        key: 'tipo', label: 'Tipo', valor: m => ETIQUETA_TIPO_MOVIMIENTO[m.tipo], orden: m => m.tipo,
+        clase: m => (m.tipo === 'ajuste' ? 'text-info-emphasis fw-semibold' : 'text-success fw-semibold'),
+      },
       {
         key: 'concepto', label: 'Concepto',
         valor: m => (m.tipo === 'ajuste'
           ? (m.motivoAjuste ? ETIQUETA_MOTIVO_AJUSTE[m.motivoAjuste] : '—')
           : ETIQUETA_CONCEPTO[m.concepto]),
         orden: m => m.concepto,
+        clase: m => (m.concepto === 'anticipo' || m.concepto === 'prestamo' ? 'text-warning-emphasis fw-semibold' : ''),
       },
       { key: 'entidad', label: 'Entidad', valor: m => m.entidad.razonSocial, orden: m => m.entidad.razonSocial },
       {

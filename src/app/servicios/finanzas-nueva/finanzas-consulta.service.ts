@@ -33,11 +33,18 @@ export class FinanzasConsultaService {
 
   /** Cuenta de la entidad (F5): sección visible y filtro de comprobantes,
    *  recordados durante la sesión. */
-  filtrosCuentaEntidad: { seccion: SeccionCuentaEntidad; soloAbiertos: boolean; mayorDesde: string; mayorHasta: string } = {
+  filtrosCuentaEntidad: {
+    seccion: SeccionCuentaEntidad;
+    soloAbiertos: boolean;
+    mayorDesde: string;
+    mayorHasta: string;
+    mayorOrden: 'desc' | 'asc';
+  } = {
     seccion: 'comprobantes',
     soloAbiertos: true,
     mayorDesde: '',               // '' = sin límite (Mayor, F5b)
     mayorHasta: '',
+    mayorOrden: 'desc',           // más reciente arriba (F5c)
   };
 
   /** Filtros de la pestaña Movimientos, recordados durante la sesión. Rango

@@ -37,3 +37,30 @@
 .col-importe {
   font-variant-numeric: tabular-nums;
 }
+
+// F5c — saldo legible por lado
+.saldo-deuda-cobrar {
+  color: #0d6efd;
+}
+
+.saldo-deuda-pagar {
+  color: #dc3545;
+}
+
+.saldo-favor {
+  color: #c2410c;
+}
+
+.saldo-cero {
+  color: #6c757d;
+}
+
+.saldo-texto {
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.fila-saldo-anterior td {
+  background-color: #f1f3f5;
+}

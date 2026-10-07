@@ -11,8 +11,8 @@ import { FinanzasConsultaService } from 'src/app/servicios/finanzas-nueva/finanz
 import { InformeLiqFactoryService } from 'src/app/servicios/informes-liq/informe-liq-factory.service';
 import { InformeLiqNuevoDetalleComponent } from 'src/app/shared/modales/informe-liq-nuevo-detalle/informe-liq-nuevo-detalle.component';
 import {
-  FilaComprobanteCuenta, MayorCuenta, ResumenCuentaEntidad, SeccionCuentaEntidad, armarComprobantesCuenta, armarMayor,
-  resumirCuentaEntidad,
+  FilaComprobanteCuenta, LineaMayor, MayorCuenta, ResumenCuentaEntidad, SaldoPresentado, SeccionCuentaEntidad,
+  armarComprobantesCuenta, armarMayor, presentarSaldo, resumirCuentaEntidad,
 } from 'src/app/shared/utils/cuenta-entidad.util';
 import { CuentaEntidadFin, ladoDe } from 'src/app/shared/utils/cuentas-finanzas.util';
 import { nombreEntidadRef } from 'src/app/shared/utils/entidad-informe.util';
@@ -45,7 +45,9 @@ const ETIQUETA_ESTADO: Readonly<Record<InformeLiqNuevo['estado'], string>> = {
  *  - Movimientos: los de la entidad, con los mismos gestos que la pestaña
  *    Movimientos (AccionesMovimientoService).
  *  - Mayor (F5b, F36/F37): cronológico con saldo acumulado, rango de fechas
- *    con saldo anterior (armarMayor).
+ *    con saldo anterior (armarMayor). F5c: más reciente arriba por defecto
+ *    (invertible), columnas Liquidado / Cobrado|Pagado, saldo legible con
+ *    color (presentarSaldo) y etiqueta de color por tipo de línea.
  *  - Historia de un comprobante (F5b): HistoriaComprobanteComponent.
  *  - Registrar cobro / pago desde el encabezado.
  *  Sin documentos: nombre y CUIT desde el documento de la entidad
@@ -105,7 +107,9 @@ export class CuentaEntidadComponent implements OnInit, OnDestroy {
     private accionesMov: AccionesMovimientoService,
   ) {}
 
-  get filtros(): { seccion: SeccionCuentaEntidad; soloAbiertos: boolean; mayorDesde: string; mayorHasta: string } {
+  get filtros(): {
+    seccion: SeccionCuentaEntidad; soloAbiertos: boolean; mayorDesde: string; mayorHasta: string; mayorOrden: 'desc' | 'asc';
+  } {
     return this.consulta.filtrosCuentaEntidad;
   }
 
@@ -184,6 +188,35 @@ export class CuentaEntidadComponent implements OnInit, OnDestroy {
     this.filtros.mayorDesde = this.mayorDesde;
     this.filtros.mayorHasta = this.mayorHasta;
     this.recalcularMayor();
+  }
+
+  /** F5c: líneas del Mayor en el orden elegido (el cálculo es siempre
+   *  cronológico; solo cambia la presentación). */
+  get lineasMayor(): LineaMayor[] {
+    if (!this.mayor) return [];
+    return this.filtros.mayorOrden === 'desc' ? [...this.mayor.lineas].reverse() : this.mayor.lineas;
+  }
+
+  invertirOrdenMayor(): void {
+    this.filtros.mayorOrden = this.filtros.mayorOrden === 'desc' ? 'asc' : 'desc';
+  }
+
+  /** Saldo en palabras y con color según el lado (F5c). */
+  presentar(saldo: number): SaldoPresentado {
+    return presentarSaldo(saldo, this.tipo);
+  }
+
+  /** Etiqueta de color por tipo de línea del Mayor (F5c). */
+  etiquetaLinea(l: LineaMayor): { texto: string; clase: string } {
+    switch (l.tipo) {
+      case 'liquidacion': return { texto: 'Liquidación', clase: 'bg-secondary' };
+      case 'compensacion': return { texto: 'Compensación', clase: 'bg-light text-dark border' };
+      case 'ajuste': return { texto: 'Ajuste', clase: 'bg-info text-dark' };
+      default:
+        if (l.concepto === 'anticipo') return { texto: 'Anticipo', clase: 'bg-warning text-dark' };
+        if (l.concepto === 'prestamo') return { texto: 'Préstamo', clase: 'bg-warning text-dark' };
+        return { texto: l.tipo === 'cobro' ? 'Cobro' : 'Pago', clase: 'bg-success' };
+    }
   }
 
   limpiarRangoMayor(): void {

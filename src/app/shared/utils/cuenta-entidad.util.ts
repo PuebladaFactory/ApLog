@@ -1,5 +1,5 @@
 import { EstadoFinancieroLiq, InformeLiqNuevo } from 'src/app/interfaces/informe-liq-nuevo';
-import { MovimientoFin } from 'src/app/interfaces/movimiento-fin';
+import { MovimientoFin, TipoEntidadFin } from 'src/app/interfaces/movimiento-fin';
 import { fechaBaseAntiguedad } from 'src/app/shared/utils/cuentas-finanzas.util';
 import {
   TRAMOS_ANTIGUEDAD, TramoAntiguedad, diasEntre, esCero, normalizarValoresFinancieros, redondear2, tramoAntiguedad,
@@ -128,6 +128,7 @@ export function resumirCuentaEntidad(
 export interface LineaMayor {
   fecha: string;                    // 'YYYY-MM-DD'
   tipo: 'liquidacion' | 'cobro' | 'pago' | 'ajuste' | 'compensacion';
+  concepto: 'normal' | 'anticipo' | 'prestamo' | null;  // solo movimientos (F5c)
   referencia: string;               // número del informe o del movimiento
   detalle: string;
   debe: number;
@@ -137,6 +138,32 @@ export interface LineaMayor {
   sinFacturar: boolean;             // liquidación emitida todavía sin factura
   idInfLiq: string | null;
   idMovimiento: string | null;
+}
+
+/** Saldo presentado al usuario (F5c): importe siempre positivo + qué
+ *  significa según el lado. Saldo > 0: la entidad nos debe (cliente) o le
+ *  debemos (chofer / proveedor); < 0: saldo a favor del otro lado. */
+export interface SaldoPresentado {
+  importe: number;
+  texto: string;
+  clase: 'saldo-deuda-cobrar' | 'saldo-deuda-pagar' | 'saldo-favor' | 'saldo-cero';
+}
+
+export function presentarSaldo(saldo: number, tipo: TipoEntidadFin): SaldoPresentado {
+  if (esCero(saldo)) return { importe: 0, texto: 'saldado', clase: 'saldo-cero' };
+  const cliente = tipo === 'cliente';
+  if (saldo > 0) {
+    return {
+      importe: redondear2(saldo),
+      texto: cliente ? 'nos debe' : 'le debemos',
+      clase: cliente ? 'saldo-deuda-cobrar' : 'saldo-deuda-pagar',
+    };
+  }
+  return {
+    importe: redondear2(-saldo),
+    texto: cliente ? 'a favor del cliente' : 'a favor nuestro',
+    clase: 'saldo-favor',
+  };
 }
 
 export interface MayorCuenta {
@@ -191,7 +218,7 @@ export function armarMayor(
     const total = normalizarValoresFinancieros(liq.valoresFinancieros, liq.valores.total).total;
     const sinFacturar = liq.estado === 'emitido';
     base.push({
-      fecha, orden: 0, tipo: 'liquidacion',
+      fecha, orden: 0, tipo: 'liquidacion', concepto: null,
       referencia: liq.numeroInterno ?? liq.idInfLiq,
       detalle: `Liquidación ${textoPeriodoCorto(liq.periodo)}${sinFacturar ? ' (sin facturar)' : ''}`,
       debe: total, haber: 0, informativa: false, sinFacturar,
@@ -199,7 +226,7 @@ export function armarMayor(
     });
     for (const c of compensacionesDeLiq(liq)) {
       base.push({
-        fecha, orden: 1, tipo: 'compensacion',
+        fecha, orden: 1, tipo: 'compensacion', concepto: null,
         referencia: liq.numeroInterno ?? liq.idInfLiq,
         detalle: `Compensa ${c.numero} — $ ${redondear2(c.importe).toFixed(2)} (ya descontado al entregarse)`,
         debe: 0, haber: 0, informativa: true, sinFacturar: false,
@@ -215,7 +242,7 @@ export function armarMayor(
       : `${ETIQUETA_MOV[m.tipo] ?? m.tipo}${ETIQUETA_CONCEPTO_MAYOR[m.concepto] ?? ''}` +
         (m.sinImputar > 0 ? ` — sin imputar $ ${m.sinImputar.toFixed(2)}` : '');
     base.push({
-      fecha: m.fecha, orden: 2, tipo: m.tipo,
+      fecha: m.fecha, orden: 2, tipo: m.tipo, concepto: m.concepto,
       referencia: m.numero, detalle,
       debe: 0, haber: redondear2(m.total), informativa: false, sinFacturar: false,
       idInfLiq: null, idMovimiento: m.idMovimiento,
