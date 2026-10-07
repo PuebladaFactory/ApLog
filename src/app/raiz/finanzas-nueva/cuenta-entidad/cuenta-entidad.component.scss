@@ -28,3 +28,12 @@
   border-color: #dc3545;
   color: #dc3545;
 }
+
+.mayor td,
+.mayor th {
+  font-variant-numeric: tabular-nums;
+}
+
+.col-importe {
+  font-variant-numeric: tabular-nums;
+}

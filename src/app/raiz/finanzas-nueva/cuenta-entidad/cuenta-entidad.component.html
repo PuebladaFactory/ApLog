@@ -9,7 +9,7 @@
     *appPermiso="'finanzas.agregar'"
     type="button"
     class="btn btn-success ms-auto"
-    [disabled]="!nombre || cargando"
+    [disabled]="!nombre || cargando || noExiste"
     (click)="registrar()"
   >{{ esCliente ? 'Registrar cobro' : 'Registrar pago' }}</button>
 </div>
@@ -20,6 +20,10 @@
 
 @if (cargando) {
   <app-spinner></app-spinner>
+} @else if (noExiste) {
+  <div class="alert alert-warning">
+    La entidad no existe o fue dada de baja ({{ tipo }} {{ idEntidad }}).
+  </div>
 } @else if (resumen) {
   <div class="row g-3 mb-3">
     <div class="col-6 col-lg">
@@ -70,6 +74,8 @@
       (click)="cambiarSeccion('comprobantes')">Comprobantes ({{ cantidadAbiertos }} abiertos)</button>
     <button type="button" class="btn" [ngClass]="filtros.seccion === 'movimientos' ? 'btn-primary' : 'btn-outline-primary'"
       (click)="cambiarSeccion('movimientos')">Movimientos ({{ movimientos.length }})</button>
+    <button type="button" class="btn" [ngClass]="filtros.seccion === 'mayor' ? 'btn-primary' : 'btn-outline-primary'"
+      (click)="cambiarSeccion('mayor')">Mayor</button>
   </div>
 
   @if (filtros.seccion === 'comprobantes') {
@@ -87,6 +93,81 @@
       (accion)="onAccionComprobante($event)"
       mensajeVacio="No hay comprobantes."
     ></app-tabla-listado>
+  } @else if (filtros.seccion === 'mayor' && mayor) {
+    <div class="d-flex flex-wrap gap-2 align-items-end mb-2">
+      <div>
+        <label class="form-label mb-0">Desde</label>
+        <input type="date" class="form-control" [ngModel]="mayorDesde" (ngModelChange)="mayorDesde = $event; onRangoMayor()" />
+      </div>
+      <div>
+        <label class="form-label mb-0">Hasta</label>
+        <input type="date" class="form-control" [ngModel]="mayorHasta" (ngModelChange)="mayorHasta = $event; onRangoMayor()" />
+      </div>
+      <button type="button" class="btn btn-outline-secondary" (click)="limpiarRangoMayor()">Todo</button>
+      @if (errorRangoMayor) {
+        <span class="text-danger small ms-2">{{ errorRangoMayor }}</span>
+      }
+    </div>
+    <div class="table-responsive">
+      <table class="table table-sm table-striped align-middle mayor">
+        <thead>
+          <tr>
+            <th class="text-center" style="width: 8rem;">Fecha</th>
+            <th>Comprobante</th>
+            <th>Detalle</th>
+            <th class="text-end">Debe</th>
+            <th class="text-end">Haber</th>
+            <th class="text-end">Saldo</th>
+            <th style="width: 4rem;"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (mayorDesde) {
+            <tr class="fw-bold">
+              <td class="text-center">{{ fechaLegible(mayorDesde) }}</td>
+              <td colspan="4">Saldo anterior</td>
+              <td class="text-end col-importe">{{ mayor.saldoAnterior | formatearValor: '$' }}</td>
+              <td></td>
+            </tr>
+          }
+          @for (l of mayor.lineas; track $index) {
+            <tr [class.text-muted]="l.informativa">
+              <td class="text-center">{{ fechaLegible(l.fecha) }}</td>
+              <td>{{ l.referencia }}</td>
+              <td [class.fst-italic]="l.informativa">
+                {{ l.detalle }}
+                @if (l.sinFacturar) {
+                  <span class="badge bg-light text-dark border ms-1">sin facturar</span>
+                }
+              </td>
+              <td class="text-end col-importe">{{ l.debe ? (l.debe | formatearValor: '$') : '' }}</td>
+              <td class="text-end col-importe">{{ l.haber ? (l.haber | formatearValor: '$') : '' }}</td>
+              <td class="text-end col-importe">{{ l.informativa ? '' : (l.saldo | formatearValor: '$') }}</td>
+              <td class="text-center">
+                <button type="button" class="btn btn-sm btn-outline-primary" (click)="verLineaMayor(l)">Ver</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="7" class="text-muted">Sin movimientos en el rango.</td></tr>
+          }
+        </tbody>
+        <tfoot>
+          <tr class="fw-bold">
+            <td colspan="3" class="text-end">Totales del rango / saldo final</td>
+            <td class="text-end col-importe">{{ mayor.totalDebe | formatearValor: '$' }}</td>
+            <td class="text-end col-importe">{{ mayor.totalHaber | formatearValor: '$' }}</td>
+            <td class="text-end col-importe">{{ mayor.saldoFinal | formatearValor: '$' }}</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <p class="text-muted small">
+      <b>Debe:</b> liquidaciones emitidas, a la fecha de emisión (las sin factura, marcadas).
+      <b>Haber:</b> {{ esCliente ? 'cobros' : 'pagos y anticipos' }} y ajustes, por su total.
+      Las compensaciones (en gris) no mueven el saldo: el anticipo ya se descontó al entregarse.
+      Sin rango, el saldo final es el saldo total de la cuenta.
+    </p>
   } @else {
     <app-tabla-listado
       [items]="movimientos"

@@ -10,6 +10,7 @@ import { FinanzasMovimientosComponent } from './movimientos/finanzas-movimientos
 import { DetalleMovimientoComponent } from './modales/detalle-movimiento/detalle-movimiento.component';
 import { ImputarSaldoComponent } from './modales/imputar-saldo/imputar-saldo.component';
 import { CuentaEntidadComponent } from './cuenta-entidad/cuenta-entidad.component';
+import { HistoriaComprobanteComponent } from './modales/historia-comprobante/historia-comprobante.component';
 
 /** Módulo Finanzas — camino nuevo (Frente Finanzas), en paralelo a
  *  raiz/finanzas (módulo viejo, se retira al cerrar el frente). Solo lazy
@@ -23,6 +24,7 @@ import { CuentaEntidadComponent } from './cuenta-entidad/cuenta-entidad.componen
     DetalleMovimientoComponent,
     ImputarSaldoComponent,
     CuentaEntidadComponent,
+    HistoriaComprobanteComponent,
   ],
   imports: [
     CommonModule,

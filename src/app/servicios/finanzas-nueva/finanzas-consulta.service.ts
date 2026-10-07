@@ -2,6 +2,9 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, combineLatest, firstValueFrom, map } from 'rxjs';
 import { ConId } from 'src/app/interfaces/conId';
 import { InformeLiqNuevo } from 'src/app/interfaces/informe-liq-nuevo';
+import { Chofer } from 'src/app/interfaces/chofer';
+import { Cliente } from 'src/app/interfaces/cliente';
+import { Proveedor } from 'src/app/interfaces/proveedor';
 import { MovimientoFin, TipoEntidadFin } from 'src/app/interfaces/movimiento-fin';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { toISODateString } from 'src/app/servicios/fechas/date-range.service';
@@ -30,9 +33,11 @@ export class FinanzasConsultaService {
 
   /** Cuenta de la entidad (F5): sección visible y filtro de comprobantes,
    *  recordados durante la sesión. */
-  filtrosCuentaEntidad: { seccion: SeccionCuentaEntidad; soloAbiertos: boolean } = {
+  filtrosCuentaEntidad: { seccion: SeccionCuentaEntidad; soloAbiertos: boolean; mayorDesde: string; mayorHasta: string } = {
     seccion: 'comprobantes',
     soloAbiertos: true,
+    mayorDesde: '',               // '' = sin límite (Mayor, F5b)
+    mayorHasta: '',
   };
 
   /** Filtros de la pestaña Movimientos, recordados durante la sesión. Rango
@@ -114,6 +119,29 @@ export class FinanzasConsultaService {
     return combineLatest([informes$, movimientos$]).pipe(
       map(([informes, movimientos]) => ({ informes, movimientos })),
     );
+  }
+
+  /** One-shot (F5b): nombre y CUIT desde el documento de la entidad
+   *  (clientes / choferes / proveedores) — para una cuenta que todavía no
+   *  tiene informes ni movimientos. null si el documento no existe. */
+  async obtenerEntidad(
+    tipo: TipoEntidadFin,
+    id: string,
+  ): Promise<{ nombre: string; cuit: number | null; activo: boolean } | null> {
+    if (tipo === 'chofer') {
+      const c = await this.db.getById<Chofer>('choferes', id);
+      if (!c) return null;
+      return {
+        nombre: `${c.datosPersonales?.apellido ?? ''} ${c.datosPersonales?.nombre ?? ''}`.trim(),
+        cuit: c.datosPersonales?.cuit ?? null,
+        activo: c.activo !== false,
+      };
+    }
+    const e = tipo === 'cliente'
+      ? await this.db.getById<Cliente>('clientes', id)
+      : await this.db.getById<Proveedor>('proveedores', id);
+    if (!e) return null;
+    return { nombre: e.razonSocial ?? '', cuit: e.cuit ?? null, activo: e.activo !== false };
   }
 
   /** En vivo: una cuenta por entidad (ver armarCuentas). `hoy` en

@@ -1,0 +1,53 @@
+<div class="modal-header">
+  <div>
+    <h4 class="modal-title">Historia — {{ liq.numeroInterno ?? 'sin número' }}</h4>
+    <div class="text-muted">Período {{ periodo }} · estado {{ liq.estado }}</div>
+  </div>
+  <button type="button" class="btn-close" (click)="cerrar()"></button>
+</div>
+
+<div class="modal-body">
+  <div class="d-flex flex-wrap gap-4 mb-3">
+    <span>Total del servicio: <b>{{ liq.valores.total | formatearValor: '$' }}</b></span>
+    @if (tieneCompensaciones) {
+      <span>Neto: <b>{{ neto | formatearValor: '$' }}</b></span>
+    }
+    <span>Saldo actual: <b>{{ saldoActual | formatearValor: '$' }}</b></span>
+  </div>
+
+  @if (eventos.length === 0) {
+    <div class="alert alert-info py-2">El comprobante no tiene movimientos registrados.</div>
+  } @else {
+    <table class="table table-sm table-striped align-middle">
+      <thead>
+        <tr>
+          <th class="text-center" style="width: 8rem;">Fecha</th>
+          <th>Evento</th>
+          <th class="text-end" style="width: 11rem;">Importe</th>
+          <th class="text-end" style="width: 11rem;">Saldo</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (e of eventos; track $index) {
+          <tr [class.text-muted]="e.informativa">
+            <td class="text-center">{{ fechaLegible(e.fecha) }}</td>
+            <td [class.text-decoration-line-through]="e.anulada">{{ e.descripcion }}</td>
+            <td class="text-end col-importe" [class.text-decoration-line-through]="e.anulada">
+              @if (e.importe !== 0) {
+                {{ e.importe | formatearValor: '$' }}
+              }
+            </td>
+            <td class="text-end col-importe">{{ e.informativa ? '' : (e.saldo | formatearValor: '$') }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+  <p class="text-muted small mb-0">
+    Las líneas grises no mueven el saldo (factura, reversión, movimientos anulados).
+  </p>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-outline-secondary" (click)="cerrar()">Cerrar</button>
+</div>
