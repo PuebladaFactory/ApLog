@@ -1,5 +1,5 @@
 <div class="d-flex flex-wrap align-items-center gap-2 mt-3 mb-3">
-  <button type="button" class="btn btn-outline-secondary btn-sm" (click)="volver()">← Cuentas</button>
+  <button type="button" class="btn btn-outline-secondary btn-sm" (click)="volver()">← {{ origen.etiqueta }}</button>
   <h3 class="mb-0 ms-2">{{ nombre || 'Cuenta' }}</h3>
   <span class="badge bg-secondary text-capitalize">{{ tipo }}</span>
   @if (cuit) {

@@ -1,0 +1,99 @@
+<div class="d-flex flex-wrap gap-2 align-items-center mt-3 mb-3">
+  <div class="btn-group" role="group" aria-label="Lado de la cuenta">
+    <button
+      type="button"
+      class="btn"
+      [ngClass]="filtros.lado === 'cobrar' ? 'btn-primary' : 'btn-outline-primary'"
+      (click)="cambiarLado('cobrar')"
+    >A cobrar · Clientes</button>
+    <button
+      type="button"
+      class="btn"
+      [ngClass]="filtros.lado === 'pagar' ? 'btn-primary' : 'btn-outline-primary'"
+      (click)="cambiarLado('pagar')"
+    >A pagar · Choferes y proveedores</button>
+  </div>
+  <input
+    class="form-control buscador"
+    type="text"
+    [ngModel]="filtros.texto"
+    (ngModelChange)="onTexto($event)"
+    placeholder="Buscar por nombre o CUIT"
+  />
+  <span class="ms-auto text-muted">{{ filtradas.length }} de {{ delLado.length }} cuenta(s) · al {{ hoyLegible }}</span>
+</div>
+
+@if (error) {
+  <div class="alert alert-danger">{{ error }}</div>
+}
+
+<div class="row g-3 mb-2">
+  @for (t of tramos; track t) {
+    <div class="col-6 col-lg">
+      <div class="card tarjeta h-100" [ngClass]="'tramo-' + $index">
+        <div class="card-body">
+          <div class="tarjeta-label">{{ etiquetaTramo(t) }}</div>
+          <div class="tarjeta-valor" [class.text-danger]="t === '90+' && totales.tramos[t] > 0">
+            {{ totales.tramos[t] | formatearValor: '$' }}
+          </div>
+          <div class="tarjeta-pct">{{ porcentajes[t] }} %</div>
+        </div>
+      </div>
+    </div>
+  }
+  <div class="col-12 col-lg">
+    <div class="card tarjeta tarjeta-total h-100">
+      <div class="card-body">
+        <div class="tarjeta-label">{{ filtros.lado === 'cobrar' ? 'Nos deben (facturado)' : 'Les debemos (facturado)' }}</div>
+        <div class="tarjeta-valor">{{ totales.saldoFacturado | formatearValor: '$' }}</div>
+        <div class="tarjeta-pct">{{ delLado.length }} cuenta(s)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="barra-tramos mb-3" role="img" [attr.aria-label]="'Reparto por antigüedad'">
+  @for (t of tramos; track t) {
+    @if (porcentajes[t] > 0) {
+      <div class="segmento" [ngClass]="'tramo-' + $index" [style.width.%]="porcentajes[t]" [title]="etiquetaTramo(t) + ': ' + porcentajes[t] + ' %'">
+        @if (porcentajes[t] >= 6) {
+          {{ porcentajes[t] }} %
+        }
+      </div>
+    }
+  }
+</div>
+
+<div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+  <span class="text-muted me-1">Estado (factura más antigua):</span>
+  @for (e of estados; track e) {
+    <button
+      type="button"
+      class="btn btn-sm chip-estado"
+      [ngClass]="['estado-' + e, filtros.estado === e ? 'activo' : '']"
+      (click)="cambiarEstado(e)"
+    >
+      {{ etiquetaEstado(e) }} <span class="text-muted small">({{ rangoEstado(e) }})</span>: <b>{{ conteo[e] }}</b>
+    </button>
+  }
+  @if (filtros.estado !== 'todos') {
+    <button type="button" class="btn btn-sm btn-link" (click)="cambiarEstado(filtros.estado)">Ver todos</button>
+  }
+</div>
+
+<app-tabla-listado
+  [items]="filtradas"
+  [columnas]="columnas"
+  [ordenInicial]="ordenInicial"
+  [cargando]="cargando"
+  [trackKey]="trackCuenta"
+  [acciones]="acciones"
+  (accion)="onAccion($event)"
+  [mensajeVacio]="filtros.lado === 'cobrar' ? 'No hay clientes con facturas abiertas.' : 'No hay choferes ni proveedores con facturas abiertas.'"
+></app-tabla-listado>
+
+<p class="text-muted small mt-2">
+  Antigüedad al día de hoy, contada desde la <b>fecha de la factura</b>. Solo entran las cuentas con facturas abiertas
+  (las demás se ven en Cuentas). <b>Sin facturar</b> y <b>{{ filtros.lado === 'cobrar' ? 'saldo a favor' : 'anticipos' }}</b>
+  son referencia: no entran en los tramos. Tarjetas, barra y estados son del lado completo (no cambian con el buscador).
+</p>

@@ -262,8 +262,16 @@ export class CuentaEntidadComponent implements OnInit, OnDestroy {
     return this.comprobantes.filter(f => f.abierto).length;
   }
 
+  /** Pestaña desde la que se abrió la cuenta (?origen=…, F6a); por defecto
+   *  Cuentas. Solo valores conocidos: un origen inventado vuelve a Cuentas. */
+  get origen(): { ruta: string; etiqueta: string } {
+    const o = this.route.snapshot.queryParamMap.get('origen');
+    if (o === 'antiguedad') return { ruta: '/finanzasNueva/antiguedad', etiqueta: 'Antigüedad' };
+    return { ruta: '/finanzasNueva/cuentas', etiqueta: 'Cuentas' };
+  }
+
   volver(): void {
-    this.router.navigate(['/finanzasNueva/cuentas']);
+    this.router.navigate([this.origen.ruta]);
   }
 
   /** Registrar cobro (cliente) / pago (chofer, proveedor) con la entidad fija. */
@@ -279,6 +287,7 @@ export class CuentaEntidadComponent implements OnInit, OnDestroy {
       saldoFacturado: this.resumen.saldoFacturado,
       cantidadFacturados: this.resumen.cantidadFacturados,
       saldoMas60: 0,
+      tramos: { ...this.resumen.tramos },
       diasMasAntiguo: this.resumen.diasMasAntiguo,
       sinFacturar: this.resumen.sinFacturar,
       cantidadSinFacturar: this.resumen.cantidadSinFacturar,

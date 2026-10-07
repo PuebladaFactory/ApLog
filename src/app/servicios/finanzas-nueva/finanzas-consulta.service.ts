@@ -11,7 +11,7 @@ import { toISODateString } from 'src/app/servicios/fechas/date-range.service';
 import { InformeLiqConsultaService } from 'src/app/servicios/informes-liq/informe-liq-consulta.service';
 import { CompensableFin, armarCompensables } from 'src/app/shared/utils/compensacion.util';
 import { SeccionCuentaEntidad } from 'src/app/shared/utils/cuenta-entidad.util';
-import { CuentaEntidadFin, LadoCuenta, armarCuentas } from 'src/app/shared/utils/cuentas-finanzas.util';
+import { CuentaEntidadFin, EstadoAntiguedad, LadoCuenta, armarCuentas } from 'src/app/shared/utils/cuentas-finanzas.util';
 import { FiltrosMovimientosFin, rangoInicialMovimientos } from 'src/app/shared/utils/movimiento-fin.util';
 
 /** Lecturas del Frente Finanzas (camino nuevo). SOLO lectura: los dueños de
@@ -30,6 +30,13 @@ export class FinanzasConsultaService {
 
   /** Filtros de la pestaña Cuentas, recordados durante la sesión. */
   filtrosCuentas: { lado: LadoCuenta; texto: string } = { lado: 'cobrar', texto: '' };
+
+  /** Filtros de la pestaña Antigüedad (F6a), recordados durante la sesión. */
+  filtrosAntiguedad: { lado: LadoCuenta; texto: string; estado: EstadoAntiguedad | 'todos' } = {
+    lado: 'cobrar',
+    texto: '',
+    estado: 'todos',
+  };
 
   /** Cuenta de la entidad (F5): sección visible y filtro de comprobantes,
    *  recordados durante la sesión. */
