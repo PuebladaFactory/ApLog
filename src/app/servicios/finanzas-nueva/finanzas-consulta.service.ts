@@ -13,6 +13,7 @@ import { CompensableFin, armarCompensables } from 'src/app/shared/utils/compensa
 import { SeccionCuentaEntidad } from 'src/app/shared/utils/cuenta-entidad.util';
 import { CuentaEntidadFin, EstadoAntiguedad, LadoCuenta, armarCuentas } from 'src/app/shared/utils/cuentas-finanzas.util';
 import { FiltrosMovimientosFin, rangoInicialMovimientos } from 'src/app/shared/utils/movimiento-fin.util';
+import { mesDe } from 'src/app/shared/utils/resumen-finanzas.util';
 
 /** Lecturas del Frente Finanzas (camino nuevo). SOLO lectura: los dueños de
  *  las escrituras son InformeLiqService (informesLiq) y, desde F3, el
@@ -30,6 +31,10 @@ export class FinanzasConsultaService {
 
   /** Filtros de la pestaña Cuentas, recordados durante la sesión. */
   filtrosCuentas: { lado: LadoCuenta; texto: string } = { lado: 'cobrar', texto: '' };
+
+  /** Resumen (F6b): mes del flujo y de la evolución ('YYYY-MM'), recordado
+   *  durante la sesión. Arranca en el mes actual. */
+  filtrosResumen: { mes: string } = { mes: mesDe(toISODateString(new Date())) };
 
   /** Filtros de la pestaña Antigüedad (F6a), recordados durante la sesión. */
   filtrosAntiguedad: { lado: LadoCuenta; texto: string; estado: EstadoAntiguedad | 'todos' } = {
@@ -156,6 +161,25 @@ export class FinanzasConsultaService {
       : await this.db.getById<Proveedor>('proveedores', id);
     if (!e) return null;
     return { nombre: e.razonSocial ?? '', cuit: e.cuit ?? null, activo: e.activo !== false };
+  }
+
+  /** En vivo (F6b): la base de las cuentas sin armar — informes abiertos +
+   *  movimientos vigentes con saldo. El Resumen la usa para las cuentas y
+   *  las alertas con los mismos dos listeners. */
+  observarBaseCuentas(): Observable<{ informes: ConId<InformeLiqNuevo>[]; movimientos: ConId<MovimientoFin>[] }> {
+    return combineLatest([this.observarInformesAbiertos(), this.observarMovimientosConSaldo()]).pipe(
+      map(([informes, movimientos]) => ({ informes, movimientos })),
+    );
+  }
+
+  /** En vivo (F6b): InformeLiq con `factura.fecha` en [desde, hasta]
+   *  ('YYYY-MM-DD'). Rango sobre un solo campo (anidado) → índice simple
+   *  automático. Trae todos los estados que tengan factura; el que llama
+   *  filtra 'facturado'. Para la evolución del Resumen (6 meses). */
+  observarFacturadosPorFechaFactura(desde: string, hasta: string): Observable<ConId<InformeLiqNuevo>[]> {
+    return this.db.observarPorRango<InformeLiqNuevo>(this.COL_LIQ, 'factura.fecha', desde, hasta).pipe(
+      map(items => items.map(i => ({ ...i, idInfLiq: i.id }))),
+    );
   }
 
   /** En vivo: una cuenta por entidad (ver armarCuentas). `hoy` en

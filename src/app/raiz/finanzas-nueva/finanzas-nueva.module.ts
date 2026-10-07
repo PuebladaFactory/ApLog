@@ -11,6 +11,7 @@ import { DetalleMovimientoComponent } from './modales/detalle-movimiento/detalle
 import { ImputarSaldoComponent } from './modales/imputar-saldo/imputar-saldo.component';
 import { CuentaEntidadComponent } from './cuenta-entidad/cuenta-entidad.component';
 import { FinanzasAntiguedadComponent } from './antiguedad/finanzas-antiguedad.component';
+import { FinanzasResumenComponent } from './resumen/finanzas-resumen.component';
 import { HistoriaComprobanteComponent } from './modales/historia-comprobante/historia-comprobante.component';
 
 /** Módulo Finanzas — camino nuevo (Frente Finanzas), en paralelo a
@@ -27,6 +28,7 @@ import { HistoriaComprobanteComponent } from './modales/historia-comprobante/his
     CuentaEntidadComponent,
     HistoriaComprobanteComponent,
     FinanzasAntiguedadComponent,
+    FinanzasResumenComponent,
   ],
   imports: [
     CommonModule,

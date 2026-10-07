@@ -36,6 +36,16 @@ export interface CuentaEntidadFin {
   tramos: Record<TramoAntiguedad, number>;
   /** Días desde la factura abierta más antigua (null si no hay facturados abiertos). */
   diasMasAntiguo: number | null;
+  /** Días promedio de las facturas abiertas, ponderados por saldo (F47):
+   *  Σ saldo × días / Σ saldo, redondeado. null si no hay facturados
+   *  abiertos con fecha válida. */
+  diasPromedio: number | null;
+  /** Saldo con factura de más de UMBRALES_ANTIGUEDAD[lado].atencion días
+   *  (cobrar: +60, pagar: +15) — lo "vencido" según el lado (F6b). */
+  saldoVencido: number;
+  /** Facturas abiertas con más de UMBRALES_ANTIGUEDAD[lado].critico días
+   *  (cobrar: +90, pagar: +30) — se marcan aunque el promedio sea bajo (F47). */
+  cantidadCriticas: number;
   /** Σ saldo de los InformeLiq emitidos sin factura (todavía no se cobran/pagan). */
   sinFacturar: number;
   cantidadSinFacturar: number;
@@ -50,6 +60,7 @@ export interface TotalesCuentas {
   cantidad: number;
   saldoFacturado: number;
   saldoMas60: number;
+  saldoVencido: number;
   tramos: Record<TramoAntiguedad, number>;
   sinFacturar: number;
   saldoAFavor: number;
@@ -96,6 +107,8 @@ export function armarCuentas(
   hoy: string,
 ): CuentaEntidadFin[] {
   const mapa = new Map<string, CuentaEntidadFin>();
+  /** Acumuladores del promedio ponderado por cuenta: Σ saldo × días y Σ saldo. */
+  const ponderado = new Map<string, { suma: number; base: number }>();
 
   const cuentaDe = (tipo: TipoEntidadFin, id: string, nombre: string, cuit: number): CuentaEntidadFin => {
     const clave = `${tipo}_${id}`;
@@ -104,6 +117,7 @@ export function armarCuentas(
       cuenta = {
         clave, tipo, idEntidad: id, nombre, cuit, lado: ladoDe(tipo),
         saldoFacturado: 0, cantidadFacturados: 0, saldoMas60: 0, tramos: tramosEnCero(), diasMasAntiguo: null,
+        diasPromedio: null, saldoVencido: 0, cantidadCriticas: 0,
         sinFacturar: 0, cantidadSinFacturar: 0, saldoAFavor: 0, neto: 0,
       };
       mapa.set(clave, cuenta);
@@ -126,6 +140,13 @@ export function armarCuentas(
       if (dias !== null) {
         if (dias > DIAS_ALERTA_ANTIGUEDAD) c.saldoMas60 = redondear2(c.saldoMas60 + saldo);
         c.diasMasAntiguo = c.diasMasAntiguo === null ? dias : Math.max(c.diasMasAntiguo, dias);
+        const u = UMBRALES_ANTIGUEDAD[c.lado];
+        if (dias > u.atencion) c.saldoVencido = redondear2(c.saldoVencido + saldo);
+        if (dias > u.critico) c.cantidadCriticas++;
+        const p = ponderado.get(c.clave) ?? { suma: 0, base: 0 };
+        p.suma += saldo * Math.max(dias, 0);
+        p.base += saldo;
+        ponderado.set(c.clave, p);
       }
     } else {
       c.sinFacturar = redondear2(c.sinFacturar + saldo);
@@ -140,17 +161,23 @@ export function armarCuentas(
   }
 
   const cuentas = [...mapa.values()];
-  for (const c of cuentas) c.neto = redondear2(c.saldoFacturado - c.saldoAFavor);
+  for (const c of cuentas) {
+    c.neto = redondear2(c.saldoFacturado - c.saldoAFavor);
+    const p = ponderado.get(c.clave);
+    c.diasPromedio = p && p.base > 0 ? Math.round(p.suma / p.base) : null;
+  }
   return cuentas.sort((a, b) => a.nombre.localeCompare(b.nombre));
 }
 
 export function totalizarCuentas(cuentas: CuentaEntidadFin[]): TotalesCuentas {
   const t: TotalesCuentas = {
-    cantidad: cuentas.length, saldoFacturado: 0, saldoMas60: 0, tramos: tramosEnCero(), sinFacturar: 0, saldoAFavor: 0, neto: 0,
+    cantidad: cuentas.length, saldoFacturado: 0, saldoMas60: 0, saldoVencido: 0, tramos: tramosEnCero(),
+    sinFacturar: 0, saldoAFavor: 0, neto: 0,
   };
   for (const c of cuentas) {
     t.saldoFacturado += c.saldoFacturado;
     t.saldoMas60 += c.saldoMas60;
+    t.saldoVencido += c.saldoVencido;
     for (const tr of TRAMOS_ANTIGUEDAD) t.tramos[tr] += c.tramos[tr];
     t.sinFacturar += c.sinFacturar;
     t.saldoAFavor += c.saldoAFavor;
@@ -160,6 +187,7 @@ export function totalizarCuentas(cuentas: CuentaEntidadFin[]): TotalesCuentas {
     cantidad: t.cantidad,
     saldoFacturado: redondear2(t.saldoFacturado),
     saldoMas60: redondear2(t.saldoMas60),
+    saldoVencido: redondear2(t.saldoVencido),
     tramos: {
       '0-30': redondear2(t.tramos['0-30']),
       '31-60': redondear2(t.tramos['31-60']),
@@ -176,8 +204,8 @@ export function totalizarCuentas(cuentas: CuentaEntidadFin[]): TotalesCuentas {
 // Antigüedad (F6a)
 // ---------------------------------------------------------------------------
 
-/** Estado de una cuenta según los días de su factura abierta más antigua
- *  (F43). Reemplaza el "score de riesgo" del módulo viejo. */
+/** Estado de una cuenta (F43, F47). Reemplaza el "score de riesgo" del
+ *  módulo viejo. Ver estadoCuenta. */
 export type EstadoAntiguedad = 'al-dia' | 'atencion' | 'critico';
 
 /** Umbrales en días por lado (F43): hasta `atencion` está al día; hasta
@@ -189,7 +217,8 @@ export const UMBRALES_ANTIGUEDAD: Readonly<Record<LadoCuenta, { atencion: number
   pagar: { atencion: 15, critico: 30 },
 };
 
-/** null si la cuenta no tiene facturas abiertas (sin días). */
+/** Estado para una cantidad de días según los umbrales del lado. null si
+ *  no hay días (cuenta sin facturas abiertas). */
 export function estadoAntiguedad(dias: number | null, lado: LadoCuenta): EstadoAntiguedad | null {
   if (dias === null) return null;
   const u = UMBRALES_ANTIGUEDAD[lado];
@@ -234,12 +263,42 @@ export function porcentajesTramos(tramos: Record<TramoAntiguedad, number>): Reco
   return r;
 }
 
+/** Estado de la cuenta (F47): por los días PROMEDIO ponderados por saldo
+ *  (cuánto de la deuda está atrasada, no solo la factura más vieja). Si
+ *  alguna factura supera el umbral crítico, sube como mínimo a 'atencion'
+ *  (una factura trabada no queda oculta en el promedio). null si no hay
+ *  facturas abiertas con fecha válida. */
+export function estadoCuenta(c: CuentaEntidadFin): EstadoAntiguedad | null {
+  const e = estadoAntiguedad(c.diasPromedio, c.lado);
+  if (e === 'al-dia' && c.cantidadCriticas > 0) return 'atencion';
+  return e;
+}
+
+/** Peso del estado para ordenar (crítico primero en orden descendente). */
+export const PESO_ESTADO_ANTIGUEDAD: Readonly<Record<EstadoAntiguedad, number>> = {
+  'al-dia': 1, atencion: 2, critico: 3,
+};
+
+/** "2 fact. +90" / "1 fact. +30" — marca de facturas críticas ('' si no hay). */
+export function marcaCriticas(c: CuentaEntidadFin): string {
+  return c.cantidadCriticas > 0 ? `${c.cantidadCriticas} fact. +${UMBRALES_ANTIGUEDAD[c.lado].critico}` : '';
+}
+
 /** Cantidad de cuentas por estado (las sin facturas abiertas no cuentan). */
 export function contarPorEstado(cuentas: CuentaEntidadFin[]): Record<EstadoAntiguedad, number> {
   const r: Record<EstadoAntiguedad, number> = { 'al-dia': 0, atencion: 0, critico: 0 };
   for (const c of cuentas) {
-    const e = estadoAntiguedad(c.diasMasAntiguo, c.lado);
+    const e = estadoCuenta(c);
     if (e) r[e]++;
   }
   return r;
+}
+
+/** Top N por saldo vencido (> 0) del lado, de mayor a menor; a igual
+ *  vencido, más días promedio primero (Resumen, F6b). */
+export function topVencidos(cuentas: CuentaEntidadFin[], lado: LadoCuenta, n = 5): CuentaEntidadFin[] {
+  return cuentas
+    .filter(c => c.lado === lado && c.saldoVencido > 0)
+    .sort((a, b) => b.saldoVencido - a.saldoVencido || (b.diasPromedio ?? 0) - (a.diasPromedio ?? 0))
+    .slice(0, n);
 }

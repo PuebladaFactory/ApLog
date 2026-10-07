@@ -5,13 +5,15 @@ import { FinanzasCuentasComponent } from './cuentas/finanzas-cuentas.component';
 import { FinanzasMovimientosComponent } from './movimientos/finanzas-movimientos.component';
 import { CuentaEntidadComponent } from './cuenta-entidad/cuenta-entidad.component';
 import { FinanzasAntiguedadComponent } from './antiguedad/finanzas-antiguedad.component';
+import { FinanzasResumenComponent } from './resumen/finanzas-resumen.component';
 
 const routes: Routes = [
   {
     path: '',
     component: FinanzasNuevaControlComponent,
     children: [
-      { path: '', redirectTo: 'cuentas', pathMatch: 'full' },
+      { path: '', redirectTo: 'resumen', pathMatch: 'full' },
+      { path: 'resumen', component: FinanzasResumenComponent },
       { path: 'cuentas', component: FinanzasCuentasComponent },
       { path: 'antiguedad', component: FinanzasAntiguedadComponent },
       { path: 'movimientos', component: FinanzasMovimientosComponent },

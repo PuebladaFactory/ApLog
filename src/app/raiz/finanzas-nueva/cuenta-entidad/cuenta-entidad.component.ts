@@ -267,6 +267,7 @@ export class CuentaEntidadComponent implements OnInit, OnDestroy {
   get origen(): { ruta: string; etiqueta: string } {
     const o = this.route.snapshot.queryParamMap.get('origen');
     if (o === 'antiguedad') return { ruta: '/finanzasNueva/antiguedad', etiqueta: 'Antigüedad' };
+    if (o === 'resumen') return { ruta: '/finanzasNueva/resumen', etiqueta: 'Resumen' };
     return { ruta: '/finanzasNueva/cuentas', etiqueta: 'Cuentas' };
   }
 
@@ -289,6 +290,10 @@ export class CuentaEntidadComponent implements OnInit, OnDestroy {
       saldoMas60: 0,
       tramos: { ...this.resumen.tramos },
       diasMasAntiguo: this.resumen.diasMasAntiguo,
+      // Solo para el modal de registrar (no los usa): sin cálculo de antigüedad.
+      diasPromedio: null,
+      saldoVencido: 0,
+      cantidadCriticas: 0,
       sinFacturar: this.resumen.sinFacturar,
       cantidadSinFacturar: this.resumen.cantidadSinFacturar,
       saldoAFavor: this.resumen.saldoAFavor,

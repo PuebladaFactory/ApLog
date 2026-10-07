@@ -65,7 +65,7 @@
 </div>
 
 <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
-  <span class="text-muted me-1">Estado (factura más antigua):</span>
+  <span class="text-muted me-1">Estado (días promedio):</span>
   @for (e of estados; track e) {
     <button
       type="button"
@@ -96,4 +96,7 @@
   Antigüedad al día de hoy, contada desde la <b>fecha de la factura</b>. Solo entran las cuentas con facturas abiertas
   (las demás se ven en Cuentas). <b>Sin facturar</b> y <b>{{ filtros.lado === 'cobrar' ? 'saldo a favor' : 'anticipos' }}</b>
   son referencia: no entran en los tramos. Tarjetas, barra y estados son del lado completo (no cambian con el buscador).
+  <b>Días prom.:</b> antigüedad promedio de las facturas abiertas, ponderada por saldo (una factura grande pesa más).
+  El <b>estado</b> sale de ese promedio; si alguna factura pasa el último umbral, el estado es como mínimo "Atención" y
+  se indica cuántas son ("N fact. +{{ filtros.lado === 'cobrar' ? 90 : 30 }}").
 </p>

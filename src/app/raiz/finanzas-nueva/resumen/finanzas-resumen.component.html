@@ -1,0 +1,281 @@
+@if (error) {
+  <div class="alert alert-danger mt-3">{{ error }}</div>
+}
+
+<!-- Posición -->
+<h5 class="mt-3 mb-2">Posición al {{ hoyLegible }}</h5>
+<div class="row g-3 mb-4">
+  @for (lado of ['cobrar', 'pagar']; track lado) {
+    @let t = lado === 'cobrar' ? totalesCobrar : totalesPagar;
+    <div class="col-12 col-lg-5">
+      <div class="card h-100 tarjeta" [ngClass]="lado === 'cobrar' ? 'lado-cobrar' : 'lado-pagar'">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-baseline">
+            <h6 class="mb-2">{{ lado === 'cobrar' ? 'A cobrar · Clientes' : 'A pagar · Choferes y proveedores' }}</h6>
+            <span class="text-muted small">{{ t.cantidad }} cuenta(s)</span>
+          </div>
+          <table class="table table-sm mb-0 posicion">
+            <tbody>
+              <tr>
+                <td>{{ lado === 'cobrar' ? 'Nos deben (facturado)' : 'Les debemos (facturado)' }}</td>
+                <td class="text-end fw-semibold">{{ t.saldoFacturado | formatearValor: '$' }}</td>
+              </tr>
+              <tr>
+                <td>Vencido (+{{ lado === 'cobrar' ? umbrales.cobrar.atencion : umbrales.pagar.atencion }} días)</td>
+                <td class="text-end" [class.text-danger]="t.saldoVencido > 0">{{ t.saldoVencido | formatearValor: '$' }}</td>
+              </tr>
+              <tr>
+                <td class="text-muted">Emitido sin facturar</td>
+                <td class="text-end text-muted">{{ t.sinFacturar | formatearValor: '$' }}</td>
+              </tr>
+              <tr>
+                <td>{{ lado === 'cobrar' ? 'Saldo a favor de clientes' : 'Anticipos entregados' }}</td>
+                <td class="text-end">− {{ t.saldoAFavor | formatearValor: '$' }}</td>
+              </tr>
+              <tr class="fw-bold">
+                <td>Neto (facturado − {{ lado === 'cobrar' ? 'a favor' : 'anticipos' }})</td>
+                <td class="text-end">{{ t.neto | formatearValor: '$' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+  <div class="col-12 col-lg-2">
+    <div class="card h-100 tarjeta tarjeta-neta">
+      <div class="card-body d-flex flex-column justify-content-center">
+        <div class="tarjeta-label">Posición neta</div>
+        <div class="tarjeta-valor" [ngClass]="posicionNeta >= 0 ? 'text-success' : 'text-danger'">
+          {{ posicionNeta | formatearValor: '$' }}
+        </div>
+        <div class="tarjeta-label">neto a cobrar − neto a pagar</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Selector de mes -->
+<div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+  <h5 class="mb-0 me-2">Flujo del mes</h5>
+  <div class="btn-group" role="group" aria-label="Mes">
+    <button type="button" class="btn btn-outline-secondary" (click)="moverMes(-1)" title="Mes anterior">‹</button>
+    <span class="btn btn-outline-secondary disabled mes-elegido">{{ nombreMesElegido }}</span>
+    <button type="button" class="btn btn-outline-secondary" (click)="moverMes(1)" [disabled]="esMesActual" title="Mes siguiente">›</button>
+  </div>
+  @if (!esMesActual) {
+    <button type="button" class="btn btn-sm btn-link" (click)="irAlMesActual()">Mes actual</button>
+  } @else {
+    <span class="badge bg-light text-dark border">en curso</span>
+  }
+</div>
+
+<!-- Flujo del mes -->
+@if (flujo; as f) {
+  <div class="row g-3 mb-4" [class.opacity-50]="cargandoMes">
+    <div class="col-6 col-lg">
+      <div class="card h-100 tarjeta lado-cobrar">
+        <div class="card-body">
+          <div class="tarjeta-label">Cobrado ({{ f.cantidadCobros }})</div>
+          <div class="tarjeta-valor">{{ f.cobrado | formatearValor: '$' }}</div>
+          <div class="tarjeta-detalle">retenciones sufridas {{ f.retencionesSufridas | formatearValor: '$' }}</div>
+          @if (f.anticiposRecibidos > 0) {
+            <div class="tarjeta-detalle">anticipos recibidos {{ f.anticiposRecibidos | formatearValor: '$' }}</div>
+          }
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg">
+      <div class="card h-100 tarjeta lado-pagar">
+        <div class="card-body">
+          <div class="tarjeta-label">Pagado ({{ f.cantidadPagos }})</div>
+          <div class="tarjeta-valor">{{ f.pagado | formatearValor: '$' }}</div>
+          <div class="tarjeta-detalle">retenciones practicadas {{ f.retencionesPracticadas | formatearValor: '$' }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg">
+      <div class="card h-100 tarjeta lado-anticipo">
+        <div class="card-body">
+          <div class="tarjeta-label">Anticipos / préstamos entregados ({{ f.cantidadAnticipos }})</div>
+          <div class="tarjeta-valor">{{ f.anticiposEntregados | formatearValor: '$' }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg">
+      <div class="card h-100 tarjeta lado-ajuste">
+        <div class="card-body">
+          <div class="tarjeta-label">Ajustes</div>
+          <div class="tarjeta-detalle">a clientes {{ f.ajustesCobrar | formatearValor: '$' }}</div>
+          <div class="tarjeta-detalle">a choferes / proveedores {{ f.ajustesPagar | formatearValor: '$' }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg">
+      <div class="card h-100 tarjeta tarjeta-neta">
+        <div class="card-body">
+          <div class="tarjeta-label">Neto de caja</div>
+          <div class="tarjeta-valor" [ngClass]="f.netoCaja >= 0 ? 'text-success' : 'text-danger'">{{ f.netoCaja | formatearValor: '$' }}</div>
+          <div class="tarjeta-detalle">dinero que entró − dinero que salió (sin retenciones)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+} @else if (cargandoMes) {
+  <app-spinner></app-spinner>
+}
+
+<!-- Evolución -->
+<h5 class="mb-2">Evolución · {{ evolucion.length }} meses hasta {{ nombreMesElegido }}</h5>
+<div class="row g-3 mb-4" [class.opacity-50]="cargandoMes">
+  @for (lado of ['cobrar', 'pagar']; track lado) {
+    @let barras = lado === 'cobrar' ? barrasCobrar : barrasPagar;
+    @let movido = lado === 'cobrar' ? 'Cobrado' : 'Pagado';
+    <div class="col-12 col-xl-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-baseline mb-2">
+            <h6 class="mb-0">{{ lado === 'cobrar' ? 'Clientes: facturado vs cobrado' : 'Choferes y proveedores: facturado vs pagado' }}</h6>
+            <div class="leyenda small">
+              <span class="muestra muestra-facturado"></span> Facturado
+              <span class="muestra muestra-movido ms-2"></span> {{ movido }}
+            </div>
+          </div>
+          <div class="grafico" role="img" [attr.aria-label]="'Facturado y ' + movido.toLowerCase() + ' por mes'">
+            @for (b of barras; track b.mes) {
+              <div class="grupo" [class.grupo-elegido]="b.mes === mes">
+                <div class="barras">
+                  <div class="barra barra-facturado" [style.height.%]="b.altoFacturado" [title]="b.tituloFacturado"></div>
+                  <div class="barra barra-movido" [style.height.%]="b.altoMovido" [title]="b.tituloMovido"></div>
+                </div>
+                <div class="eje">{{ b.etiqueta }}</div>
+              </div>
+            }
+          </div>
+          <table class="table table-sm mt-2 mb-0 tabla-evolucion">
+            <thead>
+              <tr>
+                <th>Mes</th>
+                <th class="text-end">Facturado</th>
+                <th class="text-end">{{ movido }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (b of barras; track b.mes) {
+                <tr [class.fw-bold]="b.mes === mes">
+                  <td>{{ b.etiqueta }}</td>
+                  <td class="text-end">{{ b.facturado | formatearValor: '$' }}</td>
+                  <td class="text-end">{{ b.movido | formatearValor: '$' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Top 5 -->
+<div class="row g-3 mb-4">
+  @for (lado of ['cobrar', 'pagar']; track lado) {
+    @let top = lado === 'cobrar' ? topCobrar : topPagar;
+    <div class="col-12 col-xl-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="mb-2">
+            {{ lado === 'cobrar' ? 'Clientes con más deuda vencida' : 'Choferes y proveedores con pagos más atrasados' }}
+            <span class="text-muted small">(+{{ lado === 'cobrar' ? umbrales.cobrar.atencion : umbrales.pagar.atencion }} días)</span>
+          </h6>
+          @if (top.length) {
+            <table class="table table-sm align-middle mb-0 tabla-top">
+              <thead>
+                <tr>
+                  <th>{{ lado === 'cobrar' ? 'Cliente' : 'Entidad' }}</th>
+                  <th class="text-end">Vencido</th>
+                  <th class="text-end">Facturado</th>
+                  <th class="text-center">Días prom.</th>
+                  <th class="text-center">Estado</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (c of top; track c.clave) {
+                  @let st = estadoDe(c);
+                  <tr>
+                    <td>{{ c.nombre }} @if (lado === 'pagar') { <span class="text-muted small text-capitalize">· {{ c.tipo }}</span> }</td>
+                    <td class="text-end text-danger">{{ c.saldoVencido | formatearValor: '$' }}</td>
+                    <td class="text-end">{{ c.saldoFacturado | formatearValor: '$' }}</td>
+                    <td class="text-center">{{ c.diasPromedio ?? '—' }}</td>
+                    <td class="text-center">
+                      <span [ngClass]="st.clase">{{ st.texto }}</span>
+                      @if (marca(c)) {
+                        <div class="text-muted small">{{ marca(c) }}</div>
+                      }
+                    </td>
+                    <td class="text-end">
+                      <button type="button" class="btn btn-sm btn-outline-primary" (click)="verCuenta(c.tipo, c.idEntidad)">Ver</button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          } @else if (!cargandoBase) {
+            <p class="text-muted mb-0">{{ lado === 'cobrar' ? 'Ningún cliente con deuda vencida.' : 'Ningún pago atrasado.' }}</p>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Alertas -->
+<h5 class="mb-2">Alertas</h5>
+@if (alertas.length) {
+  <div class="row g-3 mb-3">
+    @for (a of alertas; track a.id) {
+      <div class="col-12 col-xl-4">
+        <div class="card h-100 alerta">
+          <div class="card-body">
+            <h6 class="mb-1">{{ a.titulo }}</h6>
+            <div class="text-muted small mb-2">{{ a.descripcion }}</div>
+            <div class="mb-2"><b>{{ a.cantidad }}</b> entidad(es) · <b>{{ a.importe | formatearValor: '$' }}</b></div>
+            <table class="table table-sm align-middle mb-0">
+              <tbody>
+                @for (i of a.items; track i.tipo + i.idEntidad) {
+                  <tr>
+                    <td>
+                      {{ i.nombre }}
+                      <div class="text-muted small">{{ i.detalle }}</div>
+                    </td>
+                    <td class="text-end text-nowrap">{{ i.importe | formatearValor: '$' }}</td>
+                    <td class="text-end">
+                      <button type="button" class="btn btn-sm btn-outline-primary" (click)="verCuenta(i.tipo, i.idEntidad)">Ver</button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+            @if (a.cantidad > a.items.length) {
+              <div class="text-muted small mt-1">y {{ a.cantidad - a.items.length }} más.</div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+} @else if (!cargandoBase) {
+  <p class="text-muted">Sin alertas.</p>
+}
+
+@if (cargandoBase) {
+  <app-spinner></app-spinner>
+}
+
+<p class="text-muted small mt-2">
+  <b>Posición:</b> lo abierto hoy (igual que Cuentas). <b>Vencido:</b> facturas de más de {{ umbrales.cobrar.atencion }} días (clientes)
+  o {{ umbrales.pagar.atencion }} días (choferes y proveedores), desde la fecha de la factura.
+  <b>Flujo del mes:</b> movimientos vigentes con fecha en el mes; los pagos con concepto anticipo o préstamo van aparte.
+  <b>Evolución:</b> facturado por la fecha de la factura (total del servicio); cobrado y pagado por la fecha del movimiento
+  (el pagado incluye anticipos). <b>Días prom.:</b> antigüedad promedio de las facturas abiertas, ponderada por saldo.
+</p>

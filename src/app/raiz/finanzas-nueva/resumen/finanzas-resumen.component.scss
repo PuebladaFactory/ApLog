@@ -1,0 +1,128 @@
+// Colores de las dos series de la evolución (validados para daltonismo;
+// la tabla debajo de cada gráfico da los valores exactos).
+$color-facturado: #0d6efd;
+$color-movido: #20c997;
+
+.tarjeta {
+  border-left: 4px solid #6c757d;
+}
+
+.lado-cobrar {
+  border-left-color: #0d6efd;
+}
+
+.lado-pagar {
+  border-left-color: #dc3545;
+}
+
+.lado-anticipo {
+  border-left-color: #ffc107;
+}
+
+.lado-ajuste {
+  border-left-color: #0dcaf0;
+}
+
+.tarjeta-neta {
+  border-left-color: #198754;
+}
+
+.tarjeta-label {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.tarjeta-valor {
+  font-size: 1.35rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.tarjeta-detalle {
+  font-size: 0.8rem;
+  color: #6c757d;
+  font-variant-numeric: tabular-nums;
+}
+
+.posicion td,
+.tabla-evolucion td,
+.tabla-top td {
+  font-variant-numeric: tabular-nums;
+}
+
+.mes-elegido {
+  min-width: 11rem;
+  opacity: 1 !important;     // .disabled lo atenúa: acá es solo una etiqueta
+  color: #212529 !important;
+}
+
+// --- Gráfico de evolución (barras CSS) ---
+.leyenda {
+  color: #6c757d;
+}
+
+.muestra {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+
+.muestra-facturado {
+  background-color: $color-facturado;
+}
+
+.muestra-movido {
+  background-color: $color-movido;
+}
+
+.grafico {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  height: 11rem;
+  border-bottom: 1px solid #ced4da;
+}
+
+.grupo {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: 4px;
+}
+
+.grupo-elegido {
+  background-color: #f1f3f5;
+}
+
+.barras {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  padding: 0 4px;
+}
+
+.barra {
+  width: 40%;
+  max-width: 1.75rem;
+  min-height: 1px;
+  border-radius: 4px 4px 0 0;
+}
+
+.barra-facturado {
+  background-color: $color-facturado;
+}
+
+.barra-movido {
+  background-color: $color-movido;
+}
+
+.eje {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #6c757d;
+  padding-top: 0.25rem;
+}

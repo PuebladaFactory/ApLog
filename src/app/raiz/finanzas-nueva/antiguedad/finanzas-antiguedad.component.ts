@@ -6,7 +6,8 @@ import { toISODateString } from 'src/app/servicios/fechas/date-range.service';
 import { FinanzasConsultaService } from 'src/app/servicios/finanzas-nueva/finanzas-consulta.service';
 import {
   CLASE_ESTADO_ANTIGUEDAD, CuentaEntidadFin, ESTADOS_ANTIGUEDAD, EstadoAntiguedad, LadoCuenta, TotalesCuentas,
-  contarPorEstado, estadoAntiguedad, etiquetaEstadoAntiguedad, porcentajesTramos, rangoEstadoAntiguedad,
+  PESO_ESTADO_ANTIGUEDAD, contarPorEstado, estadoCuenta, etiquetaEstadoAntiguedad, marcaCriticas, porcentajesTramos,
+  rangoEstadoAntiguedad,
   totalizarCuentas, tramosEnCero,
 } from 'src/app/shared/utils/cuentas-finanzas.util';
 import { fechaComprobanteLegible } from 'src/app/shared/utils/factura-electronica.util';
@@ -24,7 +25,8 @@ const KEY_TRAMO: Readonly<Record<TramoAntiguedad, string>> = {
  *  día de hoy (F44). A cobrar (clientes) / A pagar (choferes y
  *  proveedores). Solo entidades con facturas abiertas: lo emitido sin
  *  facturar y el saldo a favor se muestran como referencia (no entran en los
- *  tramos). Estado por días de la factura más antigua, con umbrales por lado
+ *  tramos). Estado por días PROMEDIO ponderados por saldo (F47; una factura
+ *  crítica lo sube como mínimo a atención), con umbrales por lado
  *  (F43). Mismo cálculo y listener que Cuentas (armarCuentas). */
 @Component({
   selector: 'app-finanzas-antiguedad',
@@ -120,7 +122,7 @@ export class FinanzasAntiguedadComponent implements OnInit, OnDestroy {
     const texto = this.filtros.texto.trim().toLowerCase();
     const estado = this.filtros.estado;
     this.filtradas = this.delLado.filter(c =>
-      (estado === 'todos' || estadoAntiguedad(c.diasMasAntiguo, c.lado) === estado) &&
+      (estado === 'todos' || estadoCuenta(c) === estado) &&
       (!texto || c.nombre.toLowerCase().includes(texto) || String(c.cuit).includes(texto)));
   }
 
@@ -171,14 +173,24 @@ export class FinanzasAntiguedadComponent implements OnInit, OnDestroy {
         tipo: 'numero', align: 'center',
       },
       {
+        key: 'diasPromedio', label: 'Días prom.', valor: c => c.diasPromedio ?? '—', orden: c => c.diasPromedio ?? -1,
+        tipo: 'numero', align: 'center', clase: 'fw-semibold',
+      },
+      {
         key: 'estado', label: 'Estado', align: 'center',
         valor: c => {
-          const e = estadoAntiguedad(c.diasMasAntiguo, c.lado);
-          return e ? etiquetaEstadoAntiguedad(e, c.lado) : '—';
+          const e = estadoCuenta(c);
+          if (!e) return '—';
+          const marca = marcaCriticas(c);
+          return marca ? `${etiquetaEstadoAntiguedad(e, c.lado)} · ${marca}` : etiquetaEstadoAntiguedad(e, c.lado);
         },
-        orden: c => c.diasMasAntiguo ?? -1,
+        // Peso del estado y, dentro del mismo estado, días promedio.
+        orden: c => {
+          const e = estadoCuenta(c);
+          return e ? PESO_ESTADO_ANTIGUEDAD[e] * 100000 + (c.diasPromedio ?? 0) : -1;
+        },
         clase: c => {
-          const e = estadoAntiguedad(c.diasMasAntiguo, c.lado);
+          const e = estadoCuenta(c);
           return e ? CLASE_ESTADO_ANTIGUEDAD[e] : '';
         },
       },
