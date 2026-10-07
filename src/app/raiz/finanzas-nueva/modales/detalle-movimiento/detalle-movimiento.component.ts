@@ -5,7 +5,7 @@ import { MedioMovimientoFin, MovimientoFin } from 'src/app/interfaces/movimiento
 import { fechaComprobanteLegible } from 'src/app/shared/utils/factura-electronica.util';
 import {
   ETIQUETA_CONCEPTO, ETIQUETA_IMPUESTO, ETIQUETA_MEDIO, ETIQUETA_MOTIVO_AJUSTE, ETIQUETA_ORIGEN_IMPUTACION,
-  ETIQUETA_TIPO_MOVIMIENTO,
+  ETIQUETA_TIPO_MOVIMIENTO, etiquetaConceptoMovimiento, validarAnulable,
 } from 'src/app/shared/utils/movimiento-fin.util';
 
 /** Finanzas — detalle de un movimiento (solo lectura): datos generales,
@@ -40,8 +40,20 @@ export class DetalleMovimientoComponent {
     return this.movimiento.imputaciones.some(i => i.origen === 'compensacion');
   }
 
+  /** Concepto legible: motivo del ajuste (con "cierre de saldo"),
+   *  "Devolución" o el concepto (F7b). */
+  get conceptoTexto(): string {
+    return etiquetaConceptoMovimiento(this.movimiento);
+  }
+
+  /** Por qué no se puede anular (compensado, saldo cerrado o devuelto), o
+   *  null. Solo para vigentes. */
+  get motivoNoAnulable(): string | null {
+    return this.movimiento.estado === 'vigente' ? validarAnulable(this.movimiento) : null;
+  }
+
   get puedeAnular(): boolean {
-    return this.movimiento.estado === 'vigente' && !this.compensado;
+    return this.movimiento.estado === 'vigente' && this.motivoNoAnulable === null;
   }
 
   get puedeImputar(): boolean {
@@ -86,6 +98,11 @@ export class DetalleMovimientoComponent {
 
   imputar(): void {
     this.activeModal.close('imputar');
+  }
+
+  /** Cerrar por ajuste o devolver el saldo sin imputar (F7b). */
+  saldo(): void {
+    this.activeModal.close('saldo');
   }
 
   cerrar(): void {

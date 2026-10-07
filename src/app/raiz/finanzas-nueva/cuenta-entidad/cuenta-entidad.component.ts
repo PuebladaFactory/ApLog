@@ -229,6 +229,7 @@ export class CuentaEntidadComponent implements OnInit, OnDestroy {
       default:
         if (l.concepto === 'anticipo') return { texto: 'Anticipo', clase: 'bg-warning text-dark' };
         if (l.concepto === 'prestamo') return { texto: 'Préstamo', clase: 'bg-warning text-dark' };
+        if (l.concepto === 'devolucion') return { texto: 'Devolución', clase: 'bg-primary' };
         return { texto: l.tipo === 'cobro' ? 'Cobro' : 'Pago', clase: 'bg-success' };
     }
   }
@@ -393,6 +394,7 @@ export class CuentaEntidadComponent implements OnInit, OnDestroy {
     const alProcesar = (p: boolean) => (this.procesando = p);
     if (ev.id === 'ver') this.accionesMov.verDetalle(ev.item, alProcesar);
     else if (ev.id === 'imputar') this.accionesMov.imputar(ev.item);
+    else if (ev.id === 'saldo') this.accionesMov.saldo(ev.item);
     else if (ev.id === 'anular') this.accionesMov.anular(ev.item, alProcesar);
   }
 

@@ -1,0 +1,131 @@
+<div class="modal-header">
+  <div>
+    <h4 class="modal-title">Saldo sin imputar — {{ etiquetaTipo[m.tipo] }} {{ m.numero }}</h4>
+    <div class="text-muted">
+      <span class="text-capitalize">{{ m.entidad.tipo }}</span> {{ m.entidad.razonSocial }} — CUIT {{ m.entidad.cuit }}
+    </div>
+  </div>
+  <button type="button" class="btn-close" [disabled]="guardando" (click)="cancelar()"></button>
+</div>
+
+<div class="modal-body">
+  <div class="row g-2 mb-3">
+    <div class="col-md-3">
+      <div class="dato-label">Fecha</div>
+      <div>{{ fechaLegible(m.fecha) }}</div>
+    </div>
+    <div class="col-md-3">
+      <div class="dato-label">Concepto</div>
+      <div>{{ concepto }}</div>
+    </div>
+    <div class="col-md-3">
+      <div class="dato-label">Total</div>
+      <div class="col-importe">{{ m.total | formatearValor: '$' }}</div>
+    </div>
+    <div class="col-md-3">
+      <div class="dato-label">Sin imputar</div>
+      <div class="col-importe fw-bold">{{ m.sinImputar | formatearValor: '$' }}</div>
+    </div>
+  </div>
+
+  <div class="btn-group mb-3" role="group" aria-label="Qué hacer con el saldo">
+    <button type="button" class="btn" [ngClass]="modo === 'cerrar' ? 'btn-info' : 'btn-outline-info'"
+      [disabled]="guardando" (click)="cambiarModo('cerrar')">Cerrar por ajuste</button>
+    <button type="button" class="btn" [ngClass]="modo === 'devolver' ? 'btn-primary' : 'btn-outline-primary'"
+      [disabled]="guardando" (click)="cambiarModo('devolver')">Devolver</button>
+  </div>
+
+  @if (modo === 'cerrar') {
+    <p class="text-muted small">
+      Un ajuste (AJ) da por terminado el saldo sin que se mueva plata:
+      {{ esCliente ? 'el cliente no va a usar su saldo a favor.' : 'el anticipo o préstamo no se va a recuperar.' }}
+    </p>
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="dato-label" for="motivoCierre">Motivo</label>
+        <select id="motivoCierre" class="form-select" [ngModel]="motivo" (ngModelChange)="onMotivo($event)" [disabled]="guardando">
+          @for (mo of motivos; track mo) {
+            <option [ngValue]="mo">{{ etiquetaMotivo[mo] }}</option>
+          }
+        </select>
+        @if (motivo === 'redondeo') {
+          <div class="text-muted small mt-1">Hasta $ {{ umbralRedondeo }}.</div>
+        }
+      </div>
+      <div class="col-md-4">
+        <label class="dato-label" for="importeCierre">Importe</label>
+        <input id="importeCierre" inputmode="decimal" class="form-control text-end" appMonto
+          [(ngModel)]="importe" [disabled]="guardando || motivo === 'incobrable'" />
+      </div>
+      <div class="col-md-4">
+        <label class="dato-label" for="fechaCierre">Fecha</label>
+        <input id="fechaCierre" type="date" class="form-control" [(ngModel)]="fecha" [min]="m.fecha" [max]="hoy" [disabled]="guardando" />
+      </div>
+    </div>
+  } @else {
+    <p class="text-muted small">Se registra {{ textoDevolucion }}.</p>
+    <div class="row g-3">
+      <div class="col-md-3">
+        <label class="dato-label" for="medioDev">Medio</label>
+        <select id="medioDev" class="form-select" [(ngModel)]="tipoMedio" [disabled]="guardando">
+          @for (t of tiposMedio; track t) {
+            <option [ngValue]="t">{{ etiquetaMedio[t] }}</option>
+          }
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="dato-label" for="importeDev">Importe</label>
+        <input id="importeDev" inputmode="decimal" class="form-control text-end" appMonto [(ngModel)]="importe" [disabled]="guardando" />
+      </div>
+      <div class="col-md-3">
+        <label class="dato-label" for="fechaDev">Fecha</label>
+        <input id="fechaDev" type="date" class="form-control" [(ngModel)]="fecha" [min]="m.fecha" [max]="hoy" [disabled]="guardando" />
+      </div>
+      <div class="col-md-3">
+        <label class="dato-label" for="refDev">Referencia</label>
+        <input id="refDev" type="text" class="form-control" [(ngModel)]="referencia" [disabled]="guardando"
+          placeholder="N° de operación / cheque" />
+      </div>
+      @if (conBanco) {
+        <div class="col-md-4">
+          <label class="dato-label" for="bancoDev">Banco</label>
+          <input id="bancoDev" type="text" class="form-control" [(ngModel)]="banco" [disabled]="guardando" />
+        </div>
+      }
+      @if (esCheque) {
+        <div class="col-md-4">
+          <label class="dato-label" for="fechaCobroDev">Fecha de cobro del cheque</label>
+          <input id="fechaCobroDev" type="date" class="form-control" [(ngModel)]="fechaCobro" [disabled]="guardando" />
+        </div>
+      }
+    </div>
+  }
+
+  <div class="mt-3">
+    <label class="dato-label" for="obsSaldo">Observaciones {{ modo === 'cerrar' && motivo === 'otro' ? '(obligatoria)' : '' }}</label>
+    <textarea id="obsSaldo" class="form-control" rows="2" [(ngModel)]="observaciones" [disabled]="guardando"></textarea>
+  </div>
+
+  <div class="d-flex justify-content-end mt-2">
+    <div class="resumen p-2 rounded">
+      Queda sin imputar: <b class="col-importe">{{ queda | formatearValor: '$' }}</b>
+    </div>
+  </div>
+
+  @if (errorValidacion) {
+    <div class="text-danger small mt-2">{{ errorValidacion }}</div>
+  }
+  @if (error) {
+    <div class="alert alert-danger mt-2 mb-0">{{ error }}</div>
+  }
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn" [ngClass]="modo === 'cerrar' ? 'btn-info' : 'btn-primary'"
+    [disabled]="!puedeConfirmar" (click)="confirmar()">{{ modo === 'cerrar' ? 'Cerrar saldo' : 'Registrar devolución' }}</button>
+  <button type="button" class="btn btn-outline-secondary" [disabled]="guardando" (click)="cancelar()">Cancelar</button>
+</div>
+
+@if (guardando) {
+  <app-spinner></app-spinner>
+}

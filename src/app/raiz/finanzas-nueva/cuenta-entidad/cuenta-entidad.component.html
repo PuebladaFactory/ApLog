@@ -201,6 +201,8 @@
       <b>Liquidado:</b> liquidaciones emitidas, a la fecha de emisión (las sin factura, marcadas).
       <b>{{ esCliente ? 'Cobrado' : 'Pagado' }}:</b> {{ esCliente ? 'cobros' : 'pagos y anticipos' }} y ajustes, por su total.
       Las compensaciones (en gris) no mueven el saldo: el anticipo ya se descontó al entregarse.
+      Una devolución o un cierre de saldo (ajuste) van en Liquidado: suben el saldo porque la entidad deja de tener
+      saldo a favor o anticipo.
       El <b>saldo</b> de cada línea es el de la cuenta después de esa línea:
       @if (esCliente) {
         <span class="saldo-deuda-cobrar">nos debe</span> /

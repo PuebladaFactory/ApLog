@@ -1,8 +1,8 @@
 import { InformeLiqNuevo, ValoresFinancierosLiq } from 'src/app/interfaces/informe-liq-nuevo';
 import {
   ConceptoMovimientoFin, EntidadMovimientoFin, EstadoMovimientoFin, ImpuestoRetencionFin, ImputacionFin,
-  MedioMovimientoFin, MotivoAjusteFin, MovimientoFin, OrigenImputacionFin, TipoEntidadFin, TipoMedioFin,
-  TipoMovimientoFin,
+  MedioMovimientoFin, MotivoAjusteFin, MovimientoFin, OrigenImputacionFin, TipoDocumentoImputable, TipoEntidadFin,
+  TipoMedioFin, TipoMovimientoFin,
 } from 'src/app/interfaces/movimiento-fin';
 import {
   AcumuladoFinanciero, diasEntre, esCero, importesIguales, redondear2, totalMedios, TOLERANCIA_IMPORTE,
@@ -229,6 +229,8 @@ export const ETIQUETA_ORIGEN_IMPUTACION: Readonly<Record<OrigenImputacionFin, st
   directa: 'Al registrar',
   saldo: 'Imputación de saldo',
   compensacion: 'Compensación en liquidación',
+  cierre: 'Cierre de saldo (ajuste)',
+  devolucion: 'Devolución',
 };
 
 /** "Transferencia + Retención": tipos distintos, en el orden en que aparecen. */
@@ -342,11 +344,18 @@ export function validarAnulable(mov: Pick<MovimientoFin, 'estado' | 'numero' | '
   if (mov.imputaciones.some(i => i.origen === 'compensacion')) {
     return `El movimiento ${mov.numero} está compensado en una liquidación: primero quitá la compensación o revertí la liquidación.`;
   }
+  // F7b: su saldo se cerró o se devolvió con otro movimiento.
+  const espejo = mov.imputaciones.find(i => i.origen === 'cierre' || i.origen === 'devolucion');
+  if (espejo) {
+    return `El saldo de ${mov.numero} se ${espejo.origen === 'cierre' ? 'cerró' : 'devolvió'} con ${espejo.numeroDocumento}: ` +
+      'primero anulá ese movimiento.';
+  }
   return null;
 }
 
 /** Lo que vuelve a cada documento al anular. */
 export interface ReversionDocumento {
+  tipo: TipoDocumentoImputable;           // informeLiq: devuelve saldo al informe; movimientoFin: quita el espejo (F7b)
   idDocumento: string;
   numeroDocumento: string;
   importe: number;                        // > 0: se RESTA del acumulado del documento
@@ -354,8 +363,9 @@ export interface ReversionDocumento {
 
 /** Importes a devolver, sumados por documento (un mismo informe puede tener
  *  varias imputaciones del movimiento: la directa y las de saldo
- *  posteriores). Orden de aparición. Hoy todo documento es un InformeLiq
- *  (TipoDocumentoImputable); al sumar tipos, el servicio decide por tipo. */
+ *  posteriores). Orden de aparición. El servicio decide por `tipo`: a un
+ *  InformeLiq le devuelve el saldo; a un movimiento (F7b) le quita la
+ *  imputación espejo. */
 export function reversionesDe(imputaciones: ImputacionFin[]): ReversionDocumento[] {
   const porDocumento = new Map<string, ReversionDocumento>();
   for (const i of imputaciones) {
@@ -364,6 +374,7 @@ export function reversionesDe(imputaciones: ImputacionFin[]): ReversionDocumento
       r.importe = redondear2(r.importe + i.importe);
     } else {
       porDocumento.set(i.documento.id, {
+        tipo: i.documento.tipo,
         idDocumento: i.documento.id,
         numeroDocumento: i.numeroDocumento,
         importe: redondear2(i.importe),
@@ -543,4 +554,233 @@ export function armarAjuste(p: {
     anulacion: null,
     usuario: p.usuario,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Saldos sin imputar (F7b): cierre por ajuste y devolución
+// ---------------------------------------------------------------------------
+
+/** Motivos para cerrar un saldo sin imputar con un ajuste. */
+export type MotivoCierreSaldo = 'incobrable' | 'redondeo' | 'otro';
+
+/** Datos para cerrar (todo o parte) el saldo sin imputar de un movimiento
+ *  con un ajuste: un anticipo / préstamo que no se va a recuperar, un saldo
+ *  a favor de un cliente que no se va a usar. */
+export interface DatosCierreSaldo {
+  fecha: string;                 // 'YYYY-MM-DD', ≤ hoy y ≥ fecha del movimiento
+  motivo: MotivoCierreSaldo;
+  importe: number;
+  observaciones: string;
+}
+
+/** Datos de una devolución: plata en sentido contrario contra el saldo sin
+ *  imputar (pago a un cliente que pagó de más; cobro a un chofer o
+ *  proveedor que devuelve un adelanto). Un solo medio, sin retenciones. */
+export interface DatosDevolucion {
+  fecha: string;                 // 'YYYY-MM-DD', ≤ hoy y ≥ fecha del movimiento
+  medio: MedioMovimientoFin;     // importe = lo devuelto
+  observaciones: string;
+}
+
+type MovimientoConSaldo = Pick<MovimientoFin, 'estado' | 'numero' | 'tipo' | 'fecha' | 'sinImputar' | 'imputaciones'>;
+
+/** Imputación propia de un cierre / devolución hacia el movimiento
+ *  original (las espejo del original, origen 'cierre' | 'devolucion',
+ *  también apuntan a un movimiento pero NO cuentan). */
+function esImputacionSobreSaldo(i: ImputacionFin): boolean {
+  return i.documento.tipo === 'movimientoFin' && i.origen !== 'cierre' && i.origen !== 'devolucion';
+}
+
+/** Movimiento creado CONTRA el saldo de otro (cierre o devolución): su
+ *  imputación apunta a un movimiento, no a un comprobante. */
+export function esSobreSaldo(m: Pick<MovimientoFin, 'imputaciones'>): boolean {
+  return (m.imputaciones ?? []).some(esImputacionSobreSaldo);
+}
+
+/** Devolución = cobro o pago creado contra el saldo de otro movimiento. */
+export function esDevolucion(m: Pick<MovimientoFin, 'tipo' | 'imputaciones'>): boolean {
+  return m.tipo !== 'ajuste' && esSobreSaldo(m);
+}
+
+/** Número del movimiento cuyo saldo se cerró o devolvió (o null). */
+export function movimientoOrigenDe(m: Pick<MovimientoFin, 'imputaciones'>): string | null {
+  return (m.imputaciones ?? []).find(esImputacionSobreSaldo)?.numeroDocumento ?? null;
+}
+
+/** Concepto legible de un movimiento para listados y detalle: el motivo en
+ *  un ajuste (con "cierre de saldo" si cierra el de otro movimiento),
+ *  "Devolución" en una devolución, el concepto en el resto. */
+export function etiquetaConceptoMovimiento(m: Pick<MovimientoFin, 'tipo' | 'concepto' | 'motivoAjuste' | 'imputaciones'>): string {
+  if (m.tipo === 'ajuste') {
+    const motivo = m.motivoAjuste ? ETIQUETA_MOTIVO_AJUSTE[m.motivoAjuste] : '—';
+    return esSobreSaldo(m) ? `${motivo} · cierre de saldo` : motivo;
+  }
+  return esDevolucion(m) ? 'Devolución' : ETIQUETA_CONCEPTO[m.concepto];
+}
+
+/** Motivos de cierre según el movimiento: lo que entregamos (pago: anticipo,
+ *  préstamo, pago de más) puede ser incobrable; lo que nos dejó un cliente
+ *  (cobro) solo se cierra por redondeo u otro. */
+export function motivosCierrePara(tipo: TipoMovimientoFin): MotivoCierreSaldo[] {
+  return tipo === 'pago' ? ['incobrable', 'redondeo', 'otro'] : ['redondeo', 'otro'];
+}
+
+/** Reglas comunes a cierre y devolución sobre el movimiento original. */
+function validarSaldoDisponible(mov: MovimientoConSaldo, importe: number, fecha: string, hoy: string): string | null {
+  if (mov.estado !== 'vigente') return `El movimiento ${mov.numero} está anulado.`;
+  if (mov.tipo === 'ajuste') return 'Un ajuste no tiene saldo sin imputar.';
+  if (esDevolucion(mov)) return `${mov.numero} es una devolución: no tiene saldo propio.`;
+  if (!(mov.sinImputar > 0)) return `El movimiento ${mov.numero} no tiene saldo sin imputar.`;
+  if (!FORMATO_FECHA.test(fecha)) return 'Fecha inválida.';
+  if (fecha > hoy) return 'La fecha no puede ser futura.';
+  if (fecha < mov.fecha) return `La fecha no puede ser anterior a la del movimiento ${mov.numero}.`;
+  if (!(importe > 0)) return 'El importe tiene que ser mayor a cero.';
+  if (importe - mov.sinImputar > TOLERANCIA_IMPORTE) {
+    return `El importe (${importe.toFixed(2)}) supera el saldo sin imputar de ${mov.numero} (${mov.sinImputar.toFixed(2)}).`;
+  }
+  return null;
+}
+
+export function normalizarCierreSaldo(d: DatosCierreSaldo): DatosCierreSaldo {
+  return { ...d, importe: redondear2(Number(d.importe) || 0), observaciones: (d.observaciones ?? '').trim() };
+}
+
+/** Sobre el movimiento (de la fila en la UI, releído en la transacción) y
+ *  datos YA normalizados. Devuelve el mensaje de error o null. */
+export function validarCierreSaldo(mov: MovimientoConSaldo, d: DatosCierreSaldo, hoy: string): string | null {
+  const error = validarSaldoDisponible(mov, d.importe, d.fecha, hoy);
+  if (error) return error;
+  if (!motivosCierrePara(mov.tipo).includes(d.motivo)) return 'Motivo inválido para este movimiento.';
+  if (d.motivo === 'incobrable' && !importesIguales(d.importe, mov.sinImputar)) {
+    return `Incobrable va por el saldo completo: $ ${mov.sinImputar.toFixed(2)}.`;
+  }
+  if (d.motivo === 'redondeo' && d.importe - UMBRAL_CERRAR_DIFERENCIA > TOLERANCIA_IMPORTE) {
+    return `Un cierre por redondeo no puede superar $ ${UMBRAL_CERRAR_DIFERENCIA}.`;
+  }
+  if (d.motivo === 'otro' && !d.observaciones) return 'Con motivo "Otro" la observación es obligatoria.';
+  return null;
+}
+
+export function normalizarDevolucion(d: DatosDevolucion): DatosDevolucion {
+  return { ...d, medio: normalizarMedio(d.medio), observaciones: (d.observaciones ?? '').trim() };
+}
+
+export function validarDevolucion(mov: MovimientoConSaldo, d: DatosDevolucion, hoy: string): string | null {
+  const error = validarSaldoDisponible(mov, d.medio.importe, d.fecha, hoy);
+  if (error) return error;
+  if (d.medio.tipo === 'retencion') return 'Una devolución no lleva retenciones.';
+  if (d.medio.fechaCobro !== null && !FORMATO_FECHA.test(d.medio.fechaCobro)) return 'Fecha de cobro del cheque inválida.';
+  return null;
+}
+
+/** Imputación de un movimiento sobre OTRO movimiento (documento
+ *  'movimientoFin'). Se usa en los dos sentidos: en el ajuste / devolución
+ *  (apunta al original, origen 'directa') y, como espejo, en el original
+ *  (apunta al ajuste / devolución, origen 'cierre' | 'devolucion'), para que
+ *  su totalImputado / sinImputar lo reflejen. */
+export function imputacionSobreMovimiento(
+  doc: { id: string; numero: string; total: number },
+  saldoAntes: number,
+  importe: number,
+  fecha: string,
+  origen: OrigenImputacionFin,
+): ImputacionFin {
+  return {
+    documento: { tipo: 'movimientoFin', id: doc.id },
+    numeroDocumento: doc.numero,
+    periodoClave: null,
+    fechaFactura: null,
+    totalDocumento: doc.total,
+    saldoAntes: redondear2(saldoAntes),
+    importe: redondear2(importe),
+    fecha,
+    origen,
+  };
+}
+
+/** Cuerpo del ajuste que cierra el saldo de `mov` (sin idMovimiento). */
+export function armarCierreSaldo(p: {
+  mov: Pick<MovimientoFin, 'numero' | 'total' | 'sinImputar' | 'entidad'>;
+  idMovimientoOrigen: string;
+  datos: DatosCierreSaldo;
+  numero: string;
+  fechaRegistro: string;
+  usuario: string;
+}): Omit<MovimientoFin, 'idMovimiento'> {
+  const imputacion = imputacionSobreMovimiento(
+    { id: p.idMovimientoOrigen, numero: p.mov.numero, total: p.mov.total },
+    p.mov.sinImputar, p.datos.importe, p.datos.fecha, 'directa',
+  );
+  return {
+    tipo: 'ajuste',
+    numero: p.numero,
+    fecha: p.datos.fecha,
+    fechaRegistro: p.fechaRegistro,
+    entidad: { ...p.mov.entidad },
+    concepto: 'normal',
+    motivoAjuste: p.datos.motivo,
+    medios: [],
+    total: imputacion.importe,
+    imputaciones: [imputacion],
+    idsDocumentos: [p.idMovimientoOrigen],
+    totalImputado: imputacion.importe,
+    sinImputar: 0,
+    observaciones: p.datos.observaciones,
+    estado: 'vigente',
+    anulacion: null,
+    usuario: p.usuario,
+  };
+}
+
+/** Cuerpo de la devolución contra el saldo de `mov` (sin idMovimiento):
+ *  tipo inverso (cobro → pago, pago → cobro), un medio, todo imputado al
+ *  original. */
+export function armarDevolucion(p: {
+  mov: Pick<MovimientoFin, 'tipo' | 'numero' | 'total' | 'sinImputar' | 'entidad'>;
+  idMovimientoOrigen: string;
+  datos: DatosDevolucion;
+  numero: string;
+  fechaRegistro: string;
+  usuario: string;
+}): Omit<MovimientoFin, 'idMovimiento'> {
+  const imputacion = imputacionSobreMovimiento(
+    { id: p.idMovimientoOrigen, numero: p.mov.numero, total: p.mov.total },
+    p.mov.sinImputar, p.datos.medio.importe, p.datos.fecha, 'directa',
+  );
+  return {
+    tipo: tipoDevolucionDe(p.mov.tipo),
+    numero: p.numero,
+    fecha: p.datos.fecha,
+    fechaRegistro: p.fechaRegistro,
+    entidad: { ...p.mov.entidad },
+    concepto: 'normal',
+    motivoAjuste: null,
+    medios: [{ ...p.datos.medio }],
+    total: imputacion.importe,
+    imputaciones: [imputacion],
+    idsDocumentos: [p.idMovimientoOrigen],
+    totalImputado: imputacion.importe,
+    sinImputar: 0,
+    observaciones: p.datos.observaciones,
+    estado: 'vigente',
+    anulacion: null,
+    usuario: p.usuario,
+  };
+}
+
+/** Tipo de la devolución: al cliente se le PAGA lo que dejó de más; lo que
+ *  devuelve un chofer o proveedor entra como un COBRO. */
+export function tipoDevolucionDe(tipoOriginal: TipoMovimientoFin): 'cobro' | 'pago' {
+  return tipoOriginal === 'cobro' ? 'pago' : 'cobro';
+}
+
+/** Campos del movimiento original sin las imputaciones espejo de
+ *  `idDocumento` (al anular el ajuste o la devolución): devuelve el saldo
+ *  sin imputar. */
+export function quitarImputacionesDe(
+  mov: Pick<MovimientoFin, 'numero' | 'total' | 'imputaciones'>,
+  idDocumento: string,
+): Pick<MovimientoFin, 'imputaciones' | 'idsDocumentos' | 'totalImputado' | 'sinImputar'> {
+  const restantes = (mov.imputaciones ?? []).filter(i => i.documento.id !== idDocumento);
+  return acumularImputaciones({ numero: mov.numero, total: mov.total, imputaciones: restantes }, []);
 }

@@ -5,9 +5,10 @@ import { ConId } from 'src/app/interfaces/conId';
 import { MovimientoFin } from 'src/app/interfaces/movimiento-fin';
 import { MovimientoFinService } from 'src/app/servicios/finanzas-nueva/movimiento-fin.service';
 import { fechaComprobanteLegible } from 'src/app/shared/utils/factura-electronica.util';
-import { ETIQUETA_TIPO_MOVIMIENTO } from 'src/app/shared/utils/movimiento-fin.util';
+import { ETIQUETA_TIPO_MOVIMIENTO, movimientoOrigenDe } from 'src/app/shared/utils/movimiento-fin.util';
 import { DetalleMovimientoComponent } from './modales/detalle-movimiento/detalle-movimiento.component';
 import { ImputarSaldoComponent } from './modales/imputar-saldo/imputar-saldo.component';
+import { ModoSaldoSinImputar, SaldoSinImputarComponent } from './modales/saldo-sin-imputar/saldo-sin-imputar.component';
 
 /** Gestos de UI sobre un movimiento de Finanzas, compartidos por la pestaña
  *  Movimientos y la Cuenta de la entidad (F5): ver el detalle, imputar el
@@ -34,6 +35,7 @@ export class AccionesMovimientoService {
       .then(resultado => {
         if (resultado === 'anular') this.anular(m, alProcesar);
         else if (resultado === 'imputar') this.imputar(m);
+        else if (resultado === 'saldo') this.saldo(m);
       })
       .catch(() => {});
   }
@@ -47,10 +49,21 @@ export class AccionesMovimientoService {
     modalRef.result.catch(() => {});
   }
 
+  /** Cerrar por ajuste o devolver el saldo sin imputar (F7b). */
+  saldo(m: ConId<MovimientoFin>, modo: ModoSaldoSinImputar = 'cerrar'): void {
+    const modalRef = this.modalService.open(SaldoSinImputarComponent, {
+      size: 'lg', centered: true, scrollable: true, backdrop: 'static', keyboard: false,
+    });
+    modalRef.componentInstance.movimiento = m;
+    modalRef.componentInstance.modo = modo;
+    modalRef.result.catch(() => {});
+  }
+
   /** Pide el motivo (obligatorio) y delega en MovimientoFinService.anular. */
   async anular(m: ConId<MovimientoFin>, alProcesar?: (procesando: boolean) => void): Promise<void> {
     const tipo = ETIQUETA_TIPO_MOVIMIENTO[m.tipo].toLowerCase();
-    const comprobantes = new Set(m.imputaciones.map(i => i.documento.id)).size;
+    const comprobantes = new Set(m.imputaciones.filter(i => i.documento.tipo === 'informeLiq').map(i => i.documento.id)).size;
+    const origen = movimientoOrigenDe(m);
     const r = await Swal.fire({
       title: `¿Anular el ${tipo} ${m.numero}?`,
       html:
@@ -58,6 +71,7 @@ export class AccionesMovimientoService {
         (comprobantes > 0
           ? `<p>Los ${comprobantes} comprobante(s) imputados recuperan el saldo que canceló este ${tipo}.</p>`
           : '') +
+        (origen ? `<p>${origen} recupera los $ ${this.importe(m.total)} de saldo sin imputar.</p>` : '') +
         (m.sinImputar > 0
           ? `<p>Los $ ${this.importe(m.sinImputar)} sin imputar dejan de estar disponibles.</p>`
           : '') +

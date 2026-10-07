@@ -82,7 +82,7 @@ export class FacturacionFacturadosComponent implements OnInit {
     {
       id: 'desvincular', label: 'Desvincular', clase: 'btn-outline-danger', permiso: 'facturacion.desvincular',
       // D3: no se desvincula la factura de un informe con algo cobrado/pagado.
-      deshabilitada: b => (b.valoresFinancieros?.totalCobrado ?? 0) !== 0,
+      deshabilitada: b => (b.valoresFinancieros?.totalCobrado ?? 0) !== 0 || (b.valoresFinancieros?.totalAjustado ?? 0) !== 0,
     },
   ];
 

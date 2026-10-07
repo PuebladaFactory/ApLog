@@ -3,12 +3,12 @@ import { MovimientoFin } from 'src/app/interfaces/movimiento-fin';
 import { AccionListado, ColumnaListado } from 'src/app/interfaces/tabla-listado';
 import { fechaComprobanteLegible } from 'src/app/shared/utils/factura-electronica.util';
 import {
-  ETIQUETA_CONCEPTO, ETIQUETA_MOTIVO_AJUSTE, ETIQUETA_TIPO_MOVIMIENTO, resumenMedios,
+  ETIQUETA_TIPO_MOVIMIENTO, esDevolucion, etiquetaConceptoMovimiento, resumenMedios, validarAnulable,
 } from 'src/app/shared/utils/movimiento-fin.util';
 
 /** Columnas y acciones de fila de un listado de movimientos de Finanzas —
  *  compartidas por la pestaña Movimientos y la Cuenta de la entidad (F5).
- *  Los ids de acción ('ver', 'imputar', 'anular') los resuelve
+ *  Los ids de acción ('ver', 'imputar', 'saldo', 'anular') los resuelve
  *  AccionesMovimientoService. */
 
 export type FilaMovimiento = ConId<MovimientoFin>;
@@ -21,9 +21,14 @@ export function accionesMovimientos(): AccionListado<FilaMovimiento>[] {
       visible: m => m.estado === 'vigente' && m.tipo !== 'ajuste' && m.sinImputar > 0,
     },
     {
+      // F7b: cerrar por ajuste o devolver el saldo sin imputar.
+      id: 'saldo', label: 'Cerrar / devolver', clase: 'btn-outline-info', permiso: 'finanzas.agregar',
+      visible: m => m.estado === 'vigente' && m.tipo !== 'ajuste' && m.sinImputar > 0,
+    },
+    {
       id: 'anular', label: 'Anular', clase: 'btn-outline-danger', permiso: 'finanzas.anular',
       visible: m => m.estado === 'vigente',
-      deshabilitada: m => m.imputaciones.some(i => i.origen === 'compensacion'),
+      deshabilitada: m => validarAnulable(m) !== null,
     },
   ];
 }
@@ -45,11 +50,11 @@ export function columnasMovimientos(opciones: { conEntidad: boolean }): ColumnaL
       },
       {
         key: 'concepto', label: 'Concepto',
-        valor: m => (m.tipo === 'ajuste'
-          ? (m.motivoAjuste ? ETIQUETA_MOTIVO_AJUSTE[m.motivoAjuste] : '—')
-          : ETIQUETA_CONCEPTO[m.concepto]),
-        orden: m => m.concepto,
-        clase: m => (m.concepto === 'anticipo' || m.concepto === 'prestamo' ? 'text-warning-emphasis fw-semibold' : ''),
+        valor: m => etiquetaConceptoMovimiento(m),
+        orden: m => etiquetaConceptoMovimiento(m),
+        clase: m => (m.concepto === 'anticipo' || m.concepto === 'prestamo'
+          ? 'text-warning-emphasis fw-semibold'
+          : esDevolucion(m) ? 'text-primary fw-semibold' : ''),
       },
       { key: 'entidad', label: 'Entidad', valor: m => m.entidad.razonSocial, orden: m => m.entidad.razonSocial },
       {

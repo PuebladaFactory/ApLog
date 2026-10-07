@@ -94,7 +94,7 @@ export interface RetencionFin {
 /** Documento al que se imputa. Hoy solo InformeLiq; se suman tipos
  *  (liquidación de comisiones de venta, saldo inicial de la migración)
  *  sin cambiar los movimientos existentes (§9.3). */
-export type TipoDocumentoImputable = 'informeLiq';
+export type TipoDocumentoImputable = 'informeLiq' | 'movimientoFin';   // movimientoFin: cierre / devolución de un saldo sin imputar (F7b)
 
 export interface DocumentoImputable {
   tipo: TipoDocumentoImputable;
@@ -106,8 +106,12 @@ export interface DocumentoImputable {
  *  - 'saldo': aplicación posterior de un saldo a favor / anticipo
  *    (gesto Imputar saldo).
  *  - 'compensacion': anticipo/préstamo compensado en una liquidación al
- *    emitirla (FC1). Se libera si la liquidación se revierte. */
-export type OrigenImputacionFin = 'directa' | 'saldo' | 'compensacion';
+ *    emitirla (FC1). Se libera si la liquidación se revierte.
+ *  - 'cierre' / 'devolucion' (F7b): imputación ESPEJO en un movimiento
+ *    cuyo saldo sin imputar se cerró con un ajuste o se devolvió; apunta al
+ *    ajuste / devolución (documento 'movimientoFin'). Se quita al anular
+ *    ese movimiento. */
+export type OrigenImputacionFin = 'directa' | 'saldo' | 'compensacion' | 'cierre' | 'devolucion';
 
 export interface ImputacionFin {
   documento: DocumentoImputable;

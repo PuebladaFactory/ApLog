@@ -105,9 +105,11 @@
     <div class="col-6 col-lg">
       <div class="card h-100 tarjeta lado-ajuste">
         <div class="card-body">
-          <div class="tarjeta-label">Ajustes</div>
-          <div class="tarjeta-detalle">a clientes {{ f.ajustesCobrar | formatearValor: '$' }}</div>
-          <div class="tarjeta-detalle">a choferes / proveedores {{ f.ajustesPagar | formatearValor: '$' }}</div>
+          <div class="tarjeta-label">Ajustes y devoluciones</div>
+          <div class="tarjeta-detalle">ajustes a clientes {{ f.ajustesCobrar | formatearValor: '$' }}</div>
+          <div class="tarjeta-detalle">ajustes a choferes / proveedores {{ f.ajustesPagar | formatearValor: '$' }}</div>
+          <div class="tarjeta-detalle">devuelto a clientes {{ f.devolucionesEntregadas | formatearValor: '$' }}</div>
+          <div class="tarjeta-detalle">devuelto por choferes / proveedores {{ f.devolucionesRecibidas | formatearValor: '$' }}</div>
         </div>
       </div>
     </div>

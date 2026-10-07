@@ -1,6 +1,7 @@
 import { EstadoFinancieroLiq, InformeLiqNuevo } from 'src/app/interfaces/informe-liq-nuevo';
 import { MovimientoFin, TipoEntidadFin } from 'src/app/interfaces/movimiento-fin';
 import { fechaBaseAntiguedad } from 'src/app/shared/utils/cuentas-finanzas.util';
+import { esDevolucion, esSobreSaldo, movimientoOrigenDe } from 'src/app/shared/utils/movimiento-fin.util';
 import {
   TRAMOS_ANTIGUEDAD, TramoAntiguedad, diasEntre, esCero, normalizarValoresFinancieros, redondear2, tramoAntiguedad,
 } from 'src/app/shared/utils/finanzas.util';
@@ -128,7 +129,7 @@ export function resumirCuentaEntidad(
 export interface LineaMayor {
   fecha: string;                    // 'YYYY-MM-DD'
   tipo: 'liquidacion' | 'cobro' | 'pago' | 'ajuste' | 'compensacion';
-  concepto: 'normal' | 'anticipo' | 'prestamo' | null;  // solo movimientos (F5c)
+  concepto: 'normal' | 'anticipo' | 'prestamo' | 'devolucion' | null;  // solo movimientos (F5c; devolución F7b)
   referencia: string;               // número del informe o del movimiento
   detalle: string;
   debe: number;
@@ -237,14 +238,22 @@ export function armarMayor(
 
   for (const m of movimientos) {
     if (m.estado !== 'vigente') continue;
+    // F7b: un cierre de saldo (ajuste) o una devolución SUBEN el saldo — la
+    // entidad deja de tener saldo a favor / anticipo —: van al debe.
+    const sobreSaldo = esSobreSaldo(m);
+    const origen = movimientoOrigenDe(m);
     const detalle = m.tipo === 'ajuste'
-      ? `Ajuste${m.motivoAjuste ? ` (${ETIQUETA_MOTIVO_MAYOR[m.motivoAjuste] ?? m.motivoAjuste})` : ''}`
-      : `${ETIQUETA_MOV[m.tipo] ?? m.tipo}${ETIQUETA_CONCEPTO_MAYOR[m.concepto] ?? ''}` +
-        (m.sinImputar > 0 ? ` — sin imputar $ ${m.sinImputar.toFixed(2)}` : '');
+      ? `Ajuste${m.motivoAjuste ? ` (${ETIQUETA_MOTIVO_MAYOR[m.motivoAjuste] ?? m.motivoAjuste})` : ''}` +
+        (sobreSaldo ? ` — cierra el saldo de ${origen}` : '')
+      : sobreSaldo
+        ? `Devolución — contra el saldo de ${origen}`
+        : `${ETIQUETA_MOV[m.tipo] ?? m.tipo}${ETIQUETA_CONCEPTO_MAYOR[m.concepto] ?? ''}` +
+          (m.sinImputar > 0 ? ` — sin imputar $ ${m.sinImputar.toFixed(2)}` : '');
     base.push({
-      fecha: m.fecha, orden: 2, tipo: m.tipo, concepto: m.concepto,
+      fecha: m.fecha, orden: 2, tipo: m.tipo, concepto: esDevolucion(m) ? 'devolucion' : m.concepto,
       referencia: m.numero, detalle,
-      debe: 0, haber: redondear2(m.total), informativa: false, sinFacturar: false,
+      debe: sobreSaldo ? redondear2(m.total) : 0, haber: sobreSaldo ? 0 : redondear2(m.total),
+      informativa: false, sinFacturar: false,
       idInfLiq: null, idMovimiento: m.idMovimiento,
     });
   }

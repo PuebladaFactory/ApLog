@@ -1,6 +1,7 @@
 import { InformeLiqNuevo } from 'src/app/interfaces/informe-liq-nuevo';
 import { MovimientoFin } from 'src/app/interfaces/movimiento-fin';
 import { CuentaEntidadFin, ladoDe } from 'src/app/shared/utils/cuentas-finanzas.util';
+import { esDevolucion } from 'src/app/shared/utils/movimiento-fin.util';
 import { nombreEntidadRef } from 'src/app/shared/utils/entidad-informe.util';
 import { diasEntre, esCero, normalizarValoresFinancieros, redondear2 } from 'src/app/shared/utils/finanzas.util';
 
@@ -88,6 +89,8 @@ export interface FlujoMes {
   retencionesPracticadas: number;  // medios 'retencion' de pagos y anticipos
   ajustesCobrar: number;           // ajustes a clientes (bajan lo que nos deben)
   ajustesPagar: number;            // ajustes a choferes / proveedores
+  devolucionesEntregadas: number;  // pagos a clientes que pagaron de más (F7b)
+  devolucionesRecibidas: number;   // cobros a choferes / proveedores que devuelven un adelanto (F7b)
   /** Dinero que entró − dinero que salió (las retenciones no son dinero). */
   netoCaja: number;
 }
@@ -100,10 +103,15 @@ export function flujoDelMes(movimientos: MovimientoFin[], mes: string): FlujoMes
   const f: FlujoMes = {
     cobrado: 0, cantidadCobros: 0, retencionesSufridas: 0, anticiposRecibidos: 0,
     pagado: 0, cantidadPagos: 0, anticiposEntregados: 0, cantidadAnticipos: 0, retencionesPracticadas: 0,
-    ajustesCobrar: 0, ajustesPagar: 0, netoCaja: 0,
+    ajustesCobrar: 0, ajustesPagar: 0, devolucionesEntregadas: 0, devolucionesRecibidas: 0, netoCaja: 0,
   };
   for (const m of movimientos) {
     if (m.estado !== 'vigente' || mesDe(m.fecha) !== mes) continue;
+    if (esDevolucion(m)) {
+      if (m.tipo === 'pago') f.devolucionesEntregadas += m.total;
+      else f.devolucionesRecibidas += m.total;
+      continue;
+    }
     if (m.tipo === 'cobro') {
       f.cobrado += m.total;
       f.cantidadCobros++;
@@ -124,8 +132,8 @@ export function flujoDelMes(movimientos: MovimientoFin[], mes: string): FlujoMes
       f.ajustesPagar += m.total;
     }
   }
-  const entro = f.cobrado - f.retencionesSufridas;
-  const salio = f.pagado + f.anticiposEntregados - f.retencionesPracticadas;
+  const entro = f.cobrado - f.retencionesSufridas + f.devolucionesRecibidas;
+  const salio = f.pagado + f.anticiposEntregados - f.retencionesPracticadas + f.devolucionesEntregadas;
   return {
     cobrado: redondear2(f.cobrado),
     cantidadCobros: f.cantidadCobros,
@@ -138,6 +146,8 @@ export function flujoDelMes(movimientos: MovimientoFin[], mes: string): FlujoMes
     retencionesPracticadas: redondear2(f.retencionesPracticadas),
     ajustesCobrar: redondear2(f.ajustesCobrar),
     ajustesPagar: redondear2(f.ajustesPagar),
+    devolucionesEntregadas: redondear2(f.devolucionesEntregadas),
+    devolucionesRecibidas: redondear2(f.devolucionesRecibidas),
     netoCaja: redondear2(entro - salio),
   };
 }
@@ -177,6 +187,13 @@ export function armarEvolucion(
     if (m.estado !== 'vigente' || m.tipo === 'ajuste') continue;
     const fila = filas.get(mesDe(m.fecha));
     if (!fila) continue;
+    // F7b: una devolución resta de lo cobrado (al cliente) o de lo pagado
+    // (lo que devuelve el chofer / proveedor).
+    if (esDevolucion(m)) {
+      if (m.tipo === 'pago') fila.cobrado -= m.total;
+      else fila.pagado -= m.total;
+      continue;
+    }
     if (m.tipo === 'cobro') fila.cobrado += m.total;
     else fila.pagado += m.total;
   }

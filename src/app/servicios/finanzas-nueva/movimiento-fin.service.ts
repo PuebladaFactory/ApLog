@@ -13,10 +13,12 @@ import {
   aplicarImporte, estadoFinancieroDe, normalizarValoresFinancieros, redondear2, totalMedios,
 } from 'src/app/shared/utils/finanzas.util';
 import {
-  DatosAjusteFin, DatosMovimientoFin, ETIQUETA_MOTIVO_AJUSTE, ETIQUETA_TIPO_MOVIMIENTO, ImputacionSolicitada,
-  acumularImputaciones, acumuladoDeMovimiento, armarAjuste, armarImputacion, armarMovimiento, normalizarDatosAjuste,
-  normalizarDatosMovimiento, normalizarSolicitudes, reversionesDe, validarAnulable, validarDatosAjuste,
-  validarDatosMovimiento, validarDocumentoImputable, validarImporteAjuste, validarImputacionSaldo,
+  DatosAjusteFin, DatosCierreSaldo, DatosDevolucion, DatosMovimientoFin, ETIQUETA_MOTIVO_AJUSTE, ETIQUETA_TIPO_MOVIMIENTO,
+  ImputacionSolicitada, acumularImputaciones, acumuladoDeMovimiento, armarAjuste, armarCierreSaldo, armarDevolucion,
+  armarImputacion, armarMovimiento, imputacionSobreMovimiento, normalizarCierreSaldo, normalizarDatosAjuste,
+  normalizarDatosMovimiento, normalizarDevolucion, normalizarSolicitudes, quitarImputacionesDe, reversionesDe,
+  tipoDevolucionDe, validarAnulable, validarCierreSaldo, validarDatosAjuste, validarDatosMovimiento,
+  validarDevolucion, validarDocumentoImputable, validarImporteAjuste, validarImputacionSaldo,
 } from 'src/app/shared/utils/movimiento-fin.util';
 
 export interface ResultadoMovimientoFin {
@@ -188,6 +190,129 @@ export class MovimientoFinService {
     }
   }
 
+  /** Cierra (todo o parte de) el saldo sin imputar de un cobro o pago con
+   *  un AJUSTE (F7b): anticipo o préstamo que no se recupera (incobrable,
+   *  por el saldo completo), saldo a favor de un cliente que no se usa
+   *  (redondeo / otro). Transacción: numerador AJ + movimiento original
+   *  (vigente, con saldo); escribe el AJ (imputado al original), suma al
+   *  original la imputación espejo (origen 'cierre') que le baja el
+   *  sinImputar, y un log AJUSTAR. Se revierte anulando el AJ. */
+  async cerrarSaldo(idMovimiento: string, d: DatosCierreSaldo): Promise<Resultado<ResultadoMovimientoFin>> {
+    const datos = normalizarCierreSaldo(d);
+    const hoy = toISODateString(new Date());
+
+    // Afuera del callback: puede reintentarse y tiene que ser puro.
+    const idAjuste = this.db.generarId(this.COLECCION);
+    const fechaRegistro = new Date().toISOString();
+    const usuario = this.usuarioSesion.getUsuarioActual()?.email ?? 'Desconocido';
+
+    try {
+      const r = await this.db.commitEnTransaccion<{ numero: string; origen: string }>(async (tx) => {
+        const n = await this.numerador.leerProximoNumeroMovimientoFin(tx, 'ajuste');
+        const mov = await this.db.leerEnTransaccion<MovimientoFin>(tx, this.COLECCION, idMovimiento);
+        // — fin de lecturas —
+        if (!mov) throw new Error(`No existe el movimiento ${idMovimiento}.`);
+        const error = validarCierreSaldo(mov, datos, hoy);
+        if (error) throw new Error(error);
+
+        const ajuste = armarCierreSaldo({
+          mov, idMovimientoOrigen: idMovimiento, datos, numero: n.numero, fechaRegistro, usuario,
+        });
+        const espejo = imputacionSobreMovimiento(
+          { id: idAjuste, numero: n.numero, total: ajuste.total }, mov.sinImputar, ajuste.total, datos.fecha, 'cierre',
+        );
+        const escrituras: EscrituraBatch[] = [
+          n.escritura,
+          { coleccion: this.COLECCION, id: idAjuste, modo: 'crear', data: ajuste },
+          { coleccion: this.COLECCION, id: idMovimiento, modo: 'actualizar', data: acumularImputaciones(mov, [espejo]) },
+        ];
+
+        await this.logRegistro.agregarAlBatch(
+          escrituras, 'AJUSTAR', this.COLECCION, idAjuste,
+          `Cierre de saldo (${ETIQUETA_MOTIVO_AJUSTE[datos.motivo].toLowerCase()}) ${n.numero} — ` +
+          `${mov.entidad.tipo} ${mov.entidad.razonSocial} — $ ${ajuste.total.toFixed(2)} del saldo sin imputar de ${mov.numero}` +
+          (datos.observaciones ? ` — ${datos.observaciones}` : ''),
+          null,
+        );
+
+        return { escrituras, resultado: { numero: n.numero, origen: mov.numero } };
+      });
+
+      return {
+        exito: true,
+        mensaje: `Ajuste ${r.numero} registrado: se cerraron $ ${datos.importe.toFixed(2)} del saldo de ${r.origen}.`,
+        objeto: { idMovimiento: idAjuste, numero: r.numero },
+      };
+    } catch (e: any) {
+      await this.logRegistro.registrarError(
+        'AJUSTAR', this.COLECCION, idAjuste, `Error al cerrar el saldo de ${idMovimiento}: ${e?.message ?? e}`,
+      );
+      return { exito: false, mensaje: `No se pudo cerrar el saldo: ${e?.message ?? e}` };
+    }
+  }
+
+  /** Devolución (F7b) contra el saldo sin imputar de un cobro o pago: al
+   *  cliente que pagó de más se le PAGA (OPG); el chofer / proveedor que
+   *  devuelve un adelanto genera un COBRO (RC). Transacción: numerador del
+   *  tipo inverso + movimiento original (vigente, con saldo); escribe la
+   *  devolución (un medio, imputada al original), la imputación espejo en el
+   *  original (origen 'devolucion') y un log PAGAR / COBRAR. Se revierte
+   *  anulando la devolución. */
+  async registrarDevolucion(idMovimiento: string, d: DatosDevolucion): Promise<Resultado<ResultadoMovimientoFin>> {
+    const datos = normalizarDevolucion(d);
+    const hoy = toISODateString(new Date());
+
+    // Afuera del callback: puede reintentarse y tiene que ser puro.
+    const idDevolucion = this.db.generarId(this.COLECCION);
+    const fechaRegistro = new Date().toISOString();
+    const usuario = this.usuarioSesion.getUsuarioActual()?.email ?? 'Desconocido';
+
+    try {
+      const r = await this.db.commitEnTransaccion<{ numero: string; origen: string; accion: 'COBRAR' | 'PAGAR' }>(async (tx) => {
+        const mov = await this.db.leerEnTransaccion<MovimientoFin>(tx, this.COLECCION, idMovimiento);
+        if (!mov) throw new Error(`No existe el movimiento ${idMovimiento}.`);
+        const tipo = tipoDevolucionDe(mov.tipo);
+        const n = await this.numerador.leerProximoNumeroMovimientoFin(tx, tipo);
+        // — fin de lecturas —
+        const error = validarDevolucion(mov, datos, hoy);
+        if (error) throw new Error(error);
+
+        const devolucion = armarDevolucion({
+          mov, idMovimientoOrigen: idMovimiento, datos, numero: n.numero, fechaRegistro, usuario,
+        });
+        const espejo = imputacionSobreMovimiento(
+          { id: idDevolucion, numero: n.numero, total: devolucion.total }, mov.sinImputar, devolucion.total, datos.fecha, 'devolucion',
+        );
+        const escrituras: EscrituraBatch[] = [
+          n.escritura,
+          { coleccion: this.COLECCION, id: idDevolucion, modo: 'crear', data: devolucion },
+          { coleccion: this.COLECCION, id: idMovimiento, modo: 'actualizar', data: acumularImputaciones(mov, [espejo]) },
+        ];
+
+        const accion = tipo === 'cobro' ? 'COBRAR' : 'PAGAR';
+        await this.logRegistro.agregarAlBatch(
+          escrituras, accion, this.COLECCION, idDevolucion,
+          `Devolución ${n.numero} — ${mov.entidad.tipo} ${mov.entidad.razonSocial} — $ ${devolucion.total.toFixed(2)} ` +
+          `contra el saldo sin imputar de ${mov.numero}` + (datos.observaciones ? ` — ${datos.observaciones}` : ''),
+          null,
+        );
+
+        return { escrituras, resultado: { numero: n.numero, origen: mov.numero, accion } };
+      });
+
+      return {
+        exito: true,
+        mensaje: `Devolución ${r.numero} registrada por $ ${datos.medio.importe.toFixed(2)} contra el saldo de ${r.origen}.`,
+        objeto: { idMovimiento: idDevolucion, numero: r.numero },
+      };
+    } catch (e: any) {
+      await this.logRegistro.registrarError(
+        'PAGAR', this.COLECCION, idDevolucion, `Error al registrar la devolución contra ${idMovimiento}: ${e?.message ?? e}`,
+      );
+      return { exito: false, mensaje: `No se pudo registrar la devolución: ${e?.message ?? e}` };
+    }
+  }
+
   /** Anula un movimiento ENTERO (F10: no se edita; motivo obligatorio).
    *  Transacción: relee el movimiento (vigente, sin compensaciones) y cada
    *  InformeLiq imputado; a cada informe le devuelve lo que este movimiento
@@ -213,9 +338,14 @@ export class MovimientoFinService {
         if (error) throw new Error(error);
 
         const reversiones = reversionesDe(mov.imputaciones ?? []);
-        const leidos = await Promise.all(reversiones.map(async rev => ({
+        const leidos = await Promise.all(reversiones.filter(rev => rev.tipo === 'informeLiq').map(async rev => ({
           rev,
           liq: await this.db.leerEnTransaccion<InformeLiqNuevo>(tx, this.COL_LIQ, rev.idDocumento),
+        })));
+        // F7b: un cierre de saldo o una devolución apuntan a OTRO movimiento.
+        const originales = await Promise.all(reversiones.filter(rev => rev.tipo === 'movimientoFin').map(async rev => ({
+          rev,
+          orig: await this.db.leerEnTransaccion<MovimientoFin>(tx, this.COLECCION, rev.idDocumento),
         })));
         // — fin de lecturas —
 
@@ -233,6 +363,14 @@ export class MovimientoFinService {
           this.informeLiqServ.agregarEscrituraInformeLiqParcial(escrituras, rev.idDocumento, {
             valoresFinancieros: vf,
             estadoFinanciero: estadoFinancieroDe(vf, liq.estadoFinanciero),
+          });
+        }
+
+        // F7b: el movimiento original recupera su saldo sin imputar.
+        for (const { rev, orig } of originales) {
+          if (!orig) throw new Error(`No existe el movimiento ${rev.numeroDocumento}. Anulación abortada.`);
+          escrituras.push({
+            coleccion: this.COLECCION, id: rev.idDocumento, modo: 'actualizar', data: quitarImputacionesDe(orig, idMovimiento),
           });
         }
 

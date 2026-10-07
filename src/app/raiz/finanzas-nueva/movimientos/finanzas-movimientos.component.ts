@@ -124,6 +124,7 @@ export class FinanzasMovimientosComponent implements OnInit, OnDestroy {
     const alProcesar = (p: boolean) => (this.procesando = p);
     if (ev.id === 'ver') this.accionesMov.verDetalle(ev.item, alProcesar);
     else if (ev.id === 'imputar') this.accionesMov.imputar(ev.item);
+    else if (ev.id === 'saldo') this.accionesMov.saldo(ev.item);
     else if (ev.id === 'anular') this.accionesMov.anular(ev.item, alProcesar);
   }
 }

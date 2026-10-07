@@ -28,7 +28,7 @@
     </div>
     <div class="col-md-3">
       <div class="dato-label">{{ m.tipo === 'ajuste' ? 'Motivo del ajuste' : 'Concepto' }}</div>
-      <div>{{ m.tipo === 'ajuste' ? (m.motivoAjuste ? etiquetaMotivoAjuste[m.motivoAjuste] : '—') : etiquetaConcepto[m.concepto] }}</div>
+      <div>{{ conceptoTexto }}</div>
     </div>
     <div class="col-md-6">
       <div class="dato-label">Registrado</div>
@@ -65,7 +65,7 @@
     <table class="table table-sm table-striped align-middle">
       <thead>
         <tr>
-          <th>Comprobante</th>
+          <th>Documento</th>
           <th>Período</th>
           <th>Factura</th>
           <th class="text-end">Total</th>
@@ -111,10 +111,8 @@
     </div>
   </div>
 
-  @if (compensado && m.estado === 'vigente') {
-    <div class="alert alert-info py-2 mt-3 mb-0">
-      Este movimiento está compensado en una liquidación: para anularlo, primero quitá la compensación o revertí la liquidación.
-    </div>
+  @if (motivoNoAnulable) {
+    <div class="alert alert-info py-2 mt-3 mb-0">{{ motivoNoAnulable }}</div>
   }
 </div>
 
@@ -124,6 +122,7 @@
   }
   @if (puedeImputar) {
     <button *appPermiso="'finanzas.editar'" type="button" class="btn btn-success" (click)="imputar()">Imputar saldo</button>
+    <button *appPermiso="'finanzas.agregar'" type="button" class="btn btn-outline-info" (click)="saldo()">Cerrar / devolver</button>
   }
   <button type="button" class="btn btn-outline-secondary" (click)="cerrar()">Cerrar</button>
 </div>
