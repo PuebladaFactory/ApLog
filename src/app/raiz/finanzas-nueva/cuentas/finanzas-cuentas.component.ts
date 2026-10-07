@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { AccionListado, ColumnaListado, EventoAccionListado, OrdenListado } from 'src/app/interfaces/tabla-listado';
@@ -15,8 +16,8 @@ type Fila = CuentaEntidadFin;
  *  facturar o saldo a favor. A cobrar (clientes) / A pagar (choferes y
  *  proveedores). En vivo, calculado al consultar (FinanzasConsultaService →
  *  armarCuentas). Acciones (F3): registrar cobro/pago desde la fila o
- *  "Nuevo cobro/pago" (RegistrarMovimientoComponent). La cuenta de la
- *  entidad llega en F5. */
+ *  "Nuevo cobro/pago" (RegistrarMovimientoComponent). "Ver cuenta" abre la
+ *  Cuenta de la entidad (F5, ruta finanzasNueva/cuenta/:tipo/:id). */
 @Component({
   selector: 'app-finanzas-cuentas',
   standalone: false,
@@ -38,6 +39,7 @@ export class FinanzasCuentasComponent implements OnInit, OnDestroy {
   readonly trackCuenta = (c: Fila) => c.clave;
 
   readonly acciones: AccionListado<Fila>[] = [
+    { id: 'cuenta', label: 'Ver cuenta', clase: 'btn-outline-primary' },
     { id: 'cobrar', label: 'Registrar cobro', clase: 'btn-outline-success', permiso: 'finanzas.agregar', visible: c => c.lado === 'cobrar' },
     { id: 'pagar', label: 'Registrar pago', clase: 'btn-outline-success', permiso: 'finanzas.agregar', visible: c => c.lado === 'pagar' },
   ];
@@ -47,6 +49,7 @@ export class FinanzasCuentasComponent implements OnInit, OnDestroy {
   constructor(
     private consulta: FinanzasConsultaService,
     private modalService: NgbModal,
+    private router: Router,
   ) {}
 
   get filtros(): { lado: LadoCuenta; texto: string } {
@@ -97,7 +100,8 @@ export class FinanzasCuentasComponent implements OnInit, OnDestroy {
   }
 
   onAccion(ev: EventoAccionListado<Fila>): void {
-    if (ev.id === 'cobrar' || ev.id === 'pagar') this.abrirRegistro(ev.item);
+    if (ev.id === 'cuenta') this.router.navigate(['/finanzasNueva/cuenta', ev.item.tipo, ev.item.idEntidad]);
+    else if (ev.id === 'cobrar' || ev.id === 'pagar') this.abrirRegistro(ev.item);
   }
 
   /** Abre el modal de cobro/pago. Con `cuenta` la entidad queda fija; sin

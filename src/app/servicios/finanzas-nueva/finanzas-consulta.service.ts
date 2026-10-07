@@ -7,6 +7,7 @@ import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.serv
 import { toISODateString } from 'src/app/servicios/fechas/date-range.service';
 import { InformeLiqConsultaService } from 'src/app/servicios/informes-liq/informe-liq-consulta.service';
 import { CompensableFin, armarCompensables } from 'src/app/shared/utils/compensacion.util';
+import { SeccionCuentaEntidad } from 'src/app/shared/utils/cuenta-entidad.util';
 import { CuentaEntidadFin, LadoCuenta, armarCuentas } from 'src/app/shared/utils/cuentas-finanzas.util';
 import { FiltrosMovimientosFin, rangoInicialMovimientos } from 'src/app/shared/utils/movimiento-fin.util';
 
@@ -26,6 +27,13 @@ export class FinanzasConsultaService {
 
   /** Filtros de la pestaña Cuentas, recordados durante la sesión. */
   filtrosCuentas: { lado: LadoCuenta; texto: string } = { lado: 'cobrar', texto: '' };
+
+  /** Cuenta de la entidad (F5): sección visible y filtro de comprobantes,
+   *  recordados durante la sesión. */
+  filtrosCuentaEntidad: { seccion: SeccionCuentaEntidad; soloAbiertos: boolean } = {
+    seccion: 'comprobantes',
+    soloAbiertos: true,
+  };
 
   /** Filtros de la pestaña Movimientos, recordados durante la sesión. Rango
    *  inicial: desde el día 1 de dos meses atrás hasta hoy. */
@@ -87,6 +95,25 @@ export class FinanzasConsultaService {
     }))).filter((m): m is ConId<MovimientoFin> => m !== null);
     const borradores = await firstValueFrom(this.consultaLiq.observarPorEstado('borrador'));
     return armarCompensables([...conSaldo, ...extra], entidad, idInfLiq, borradores);
+  }
+
+  /** En vivo (F5): TODOS los InformeLiq y movimientos de una entidad
+   *  (`entidad.id == id`: una igualdad sobre un campo anidado → índice simple
+   *  automático; el tipo se filtra en memoria). Incluye borradores,
+   *  revertidos y anulados: la pantalla decide qué mostrar. */
+  observarCuentaEntidad(
+    tipo: TipoEntidadFin,
+    idEntidad: string,
+  ): Observable<{ informes: ConId<InformeLiqNuevo>[]; movimientos: ConId<MovimientoFin>[] }> {
+    const informes$ = this.db.observarPorCampo<InformeLiqNuevo>(this.COL_LIQ, 'entidad.id', idEntidad).pipe(
+      map(items => items.filter(i => i.tipo === tipo).map(i => ({ ...i, idInfLiq: i.id }))),
+    );
+    const movimientos$ = this.db.observarPorCampo<MovimientoFin>(this.COL_MOV, 'entidad.id', idEntidad).pipe(
+      map(items => items.filter(m => m.entidad.tipo === tipo).map(m => ({ ...m, idMovimiento: m.id }))),
+    );
+    return combineLatest([informes$, movimientos$]).pipe(
+      map(([informes, movimientos]) => ({ informes, movimientos })),
+    );
   }
 
   /** En vivo: una cuenta por entidad (ver armarCuentas). `hoy` en

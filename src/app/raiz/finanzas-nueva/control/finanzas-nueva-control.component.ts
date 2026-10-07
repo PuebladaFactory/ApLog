@@ -61,7 +61,7 @@ import { TabRuta, tabActivaDesdeUrl } from 'src/app/shared/utils/tabs-url.util';
 })
 export class FinanzasNuevaControlComponent {
   readonly tabs: TabRuta[] = [
-    { id: 'cuentas', name: 'Cuentas', route: 'finanzasNueva/cuentas' },
+    { id: 'cuentas', name: 'Cuentas', route: 'finanzasNueva/cuentas', alias: ['finanzasNueva/cuenta'] },
     { id: 'movimientos', name: 'Movimientos', route: 'finanzasNueva/movimientos' },
   ];
 

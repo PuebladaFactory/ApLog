@@ -1,0 +1,112 @@
+<div class="d-flex flex-wrap align-items-center gap-2 mt-3 mb-3">
+  <button type="button" class="btn btn-outline-secondary btn-sm" (click)="volver()">← Cuentas</button>
+  <h3 class="mb-0 ms-2">{{ nombre || 'Cuenta' }}</h3>
+  <span class="badge bg-secondary text-capitalize">{{ tipo }}</span>
+  @if (cuit) {
+    <span class="text-muted">CUIT {{ cuit }}</span>
+  }
+  <button
+    *appPermiso="'finanzas.agregar'"
+    type="button"
+    class="btn btn-success ms-auto"
+    [disabled]="!nombre || cargando"
+    (click)="registrar()"
+  >{{ esCliente ? 'Registrar cobro' : 'Registrar pago' }}</button>
+</div>
+
+@if (error) {
+  <div class="alert alert-danger">{{ error }}</div>
+}
+
+@if (cargando) {
+  <app-spinner></app-spinner>
+} @else if (resumen) {
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-lg">
+      <div class="card tarjeta h-100">
+        <div class="card-body">
+          <div class="tarjeta-label">Facturado abierto ({{ resumen.cantidadFacturados }})</div>
+          <div class="tarjeta-valor">{{ resumen.saldoFacturado | formatearValor: '$' }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg">
+      <div class="card tarjeta h-100">
+        <div class="card-body">
+          <div class="tarjeta-label">Emitido sin facturar ({{ resumen.cantidadSinFacturar }})</div>
+          <div class="tarjeta-valor text-muted">{{ resumen.sinFacturar | formatearValor: '$' }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg">
+      <div class="card tarjeta h-100">
+        <div class="card-body">
+          <div class="tarjeta-label">{{ esCliente ? 'Saldo a favor del cliente' : 'Anticipos / saldo a favor' }}</div>
+          <div class="tarjeta-valor">{{ resumen.saldoAFavor | formatearValor: '$' }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg">
+      <div class="card tarjeta tarjeta-total h-100">
+        <div class="card-body">
+          <div class="tarjeta-label">{{ esCliente ? 'Saldo total (nos debe)' : 'Saldo total (le debemos)' }}</div>
+          <div class="tarjeta-valor">{{ resumen.saldoTotal | formatearValor: '$' }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+    <span class="text-muted me-1">Antigüedad del facturado:</span>
+    @for (t of tramos; track t) {
+      <span class="tramo" [class.tramo-vencido]="(t === '61-90' || t === '90+') && resumen.tramos[t] > 0">
+        {{ t }} días: <b>{{ resumen.tramos[t] | formatearValor: '$' }}</b>
+      </span>
+    }
+  </div>
+
+  <div class="btn-group mb-2" role="group" aria-label="Sección">
+    <button type="button" class="btn" [ngClass]="filtros.seccion === 'comprobantes' ? 'btn-primary' : 'btn-outline-primary'"
+      (click)="cambiarSeccion('comprobantes')">Comprobantes ({{ cantidadAbiertos }} abiertos)</button>
+    <button type="button" class="btn" [ngClass]="filtros.seccion === 'movimientos' ? 'btn-primary' : 'btn-outline-primary'"
+      (click)="cambiarSeccion('movimientos')">Movimientos ({{ movimientos.length }})</button>
+  </div>
+
+  @if (filtros.seccion === 'comprobantes') {
+    <div class="form-check mb-2">
+      <input class="form-check-input" type="checkbox" id="soloAbiertos"
+        [ngModel]="filtros.soloAbiertos" (ngModelChange)="onSoloAbiertos($event)" />
+      <label class="form-check-label" for="soloAbiertos">Solo abiertos (emitidos y facturados con saldo)</label>
+    </div>
+    <app-tabla-listado
+      [items]="comprobantesVisibles"
+      [columnas]="columnasComprobante"
+      [ordenInicial]="ordenComprobantes"
+      [trackKey]="trackComprobante"
+      [acciones]="accionesComprobante"
+      (accion)="onAccionComprobante($event)"
+      mensajeVacio="No hay comprobantes."
+    ></app-tabla-listado>
+  } @else {
+    <app-tabla-listado
+      [items]="movimientos"
+      [columnas]="columnasMovimiento"
+      [ordenInicial]="ordenMovimientos"
+      [trackKey]="trackMovimiento"
+      [acciones]="accionesMovimiento"
+      [bloqueada]="procesando"
+      (accion)="onAccionMovimiento($event)"
+      mensajeVacio="No hay movimientos."
+    ></app-tabla-listado>
+  }
+
+  <p class="text-muted small mt-2">
+    <b>Saldo total</b> = facturado abierto + emitido sin facturar − {{ esCliente ? 'saldo a favor' : 'anticipos / saldo a favor' }}.
+    Lo emitido sin facturar todavía no se puede {{ esCliente ? 'cobrar' : 'pagar' }}.
+    La antigüedad se cuenta desde la fecha de la factura.
+  </p>
+}
+
+@if (procesando) {
+  <app-spinner></app-spinner>
+}
