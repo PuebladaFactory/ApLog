@@ -1,4 +1,7 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import { FinanzasExportService, FormatoExportacionFin } from 'src/app/servicios/finanzas-nueva/finanzas-export.service';
+import { TablaListadoComponent } from 'src/app/shared/tabla/tabla-listado/tabla-listado.component';
+import { armarLibroCuentas } from 'src/app/shared/utils/exportacion-finanzas.util';
 import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -45,6 +48,11 @@ export class FinanzasCuentasComponent implements OnInit, OnDestroy {
     { id: 'pagar', label: 'Registrar pago', clase: 'btn-outline-success', permiso: 'finanzas.agregar', visible: c => c.lado === 'pagar' },
   ];
 
+  /** La tabla: de ahí salen las filas EN EL ORDEN que se ve (F57). */
+  @ViewChild(TablaListadoComponent) tabla?: TablaListadoComponent<Fila>;
+  exportando = false;
+  private exportServ = inject(FinanzasExportService);
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -73,6 +81,21 @@ export class FinanzasCuentasComponent implements OnInit, OnDestroy {
           this.cargando = false;
         },
       });
+  }
+
+  /** Excel / PDF de lo que muestra la tabla (lado, búsqueda y orden; F8a). */
+  async exportar(formato: FormatoExportacionFin): Promise<void> {
+    if (this.exportando) return;
+    this.exportando = true;
+    try {
+      const filas = this.tabla?.filas ?? this.filtradas;
+      await this.exportServ.descargar(armarLibroCuentas(filas, this.filtros.lado, this.filtros.texto, this.hoy), formato);
+    } catch (e: any) {
+      console.error('Error al exportar Cuentas', e);
+      this.error = `No se pudo exportar: ${e?.message ?? e}`;
+    } finally {
+      this.exportando = false;
+    }
   }
 
   ngOnDestroy(): void {

@@ -1,4 +1,6 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { FinanzasExportService, FormatoExportacionFin } from 'src/app/servicios/finanzas-nueva/finanzas-export.service';
+import { armarLibroCuenta } from 'src/app/shared/utils/exportacion-finanzas.util';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, switchMap, takeUntil } from 'rxjs';
@@ -109,6 +111,9 @@ export class CuentaEntidadComponent implements OnInit, OnDestroy {
   readonly columnasMovimiento = columnasMovimientos({ conEntidad: false });
   columnasComprobante: ColumnaListado<FilaComprobante>[] = [];
 
+  exportando = false;
+  private exportServ = inject(FinanzasExportService);
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -169,6 +174,35 @@ export class CuentaEntidadComponent implements OnInit, OnDestroy {
           this.cargando = false;
         },
       });
+  }
+
+  /** Excel / PDF de la cuenta (F40, F8a): Resumen, Comprobantes (con el
+   *  filtro "solo abiertos"), Mayor (rango y orden elegidos) y Movimientos. */
+  async exportar(formato: FormatoExportacionFin): Promise<void> {
+    if (this.exportando || !this.resumen || !this.mayor || this.noExiste) return;
+    this.exportando = true;
+    try {
+      const libro = armarLibroCuenta({
+        tipo: this.tipo,
+        nombre: this.nombre,
+        cuit: this.cuit,
+        resumen: this.resumen,
+        comprobantes: this.comprobantesVisibles,
+        soloAbiertos: this.filtros.soloAbiertos,
+        mayor: this.mayor,
+        lineasMayor: this.lineasMayor,
+        mayorDesde: this.filtros.mayorDesde,
+        mayorHasta: this.filtros.mayorHasta,
+        movimientos: this.movimientos,
+        hoy: this.hoy,
+      });
+      await this.exportServ.descargar(libro, formato);
+    } catch (e: any) {
+      console.error('Error al exportar la cuenta', e);
+      this.error = `No se pudo exportar: ${e?.message ?? e}`;
+    } finally {
+      this.exportando = false;
+    }
   }
 
   ngOnDestroy(): void {

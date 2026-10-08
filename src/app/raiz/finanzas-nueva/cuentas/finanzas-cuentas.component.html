@@ -21,6 +21,10 @@
     placeholder="Buscar por nombre o CUIT"
   />
   <span class="ms-auto text-muted">{{ filtradas.length }} cuenta(s)</span>
+  <div class="btn-group btn-group-sm" role="group" aria-label="Exportar">
+    <button type="button" class="btn btn-outline-secondary" [disabled]="exportando || cargando || filtradas.length === 0" (click)="exportar('excel')">Excel</button>
+    <button type="button" class="btn btn-outline-secondary" [disabled]="exportando || cargando || filtradas.length === 0" (click)="exportar('pdf')">PDF</button>
+  </div>
   <button
     *appPermiso="'finanzas.agregar'"
     type="button"

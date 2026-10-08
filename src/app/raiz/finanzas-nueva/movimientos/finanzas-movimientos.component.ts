@@ -1,4 +1,7 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import { FinanzasExportService, FormatoExportacionFin } from 'src/app/servicios/finanzas-nueva/finanzas-export.service';
+import { TablaListadoComponent } from 'src/app/shared/tabla/tabla-listado/tabla-listado.component';
+import { armarLibroMovimientos } from 'src/app/shared/utils/exportacion-finanzas.util';
 import { BehaviorSubject, Subject, switchMap, takeUntil } from 'rxjs';
 import { EstadoMovimientoFin, TipoMovimientoFin } from 'src/app/interfaces/movimiento-fin';
 import { EventoAccionListado, OrdenListado } from 'src/app/interfaces/tabla-listado';
@@ -47,6 +50,11 @@ export class FinanzasMovimientosComponent implements OnInit, OnDestroy {
   readonly columnas = columnasMovimientos({ conEntidad: true });
 
   private rango$!: BehaviorSubject<{ desde: string; hasta: string }>;
+  /** La tabla: de ahí salen las filas EN EL ORDEN que se ve (F57). */
+  @ViewChild(TablaListadoComponent) tabla?: TablaListadoComponent<Fila>;
+  exportando = false;
+  private exportServ = inject(FinanzasExportService);
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -82,6 +90,21 @@ export class FinanzasMovimientosComponent implements OnInit, OnDestroy {
           this.cargando = false;
         },
       });
+  }
+
+  /** Excel / PDF de lo que muestra la tabla (rango, filtros y orden; F8a). */
+  async exportar(formato: FormatoExportacionFin): Promise<void> {
+    if (this.exportando) return;
+    this.exportando = true;
+    try {
+      const filas = this.tabla?.filas ?? this.filtrados;
+      await this.exportServ.descargar(armarLibroMovimientos(filas, this.filtros, this.hoy), formato);
+    } catch (e: any) {
+      console.error('Error al exportar Movimientos', e);
+      this.error = `No se pudo exportar: ${e?.message ?? e}`;
+    } finally {
+      this.exportando = false;
+    }
   }
 
   ngOnDestroy(): void {

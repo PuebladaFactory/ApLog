@@ -35,6 +35,10 @@
     />
   </div>
   <span class="ms-auto text-muted">{{ filtrados.length }} movimiento(s)</span>
+  <div class="btn-group btn-group-sm" role="group" aria-label="Exportar">
+    <button type="button" class="btn btn-outline-secondary" [disabled]="exportando || cargando || filtrados.length === 0" (click)="exportar('excel')">Excel</button>
+    <button type="button" class="btn btn-outline-secondary" [disabled]="exportando || cargando || filtrados.length === 0" (click)="exportar('pdf')">PDF</button>
+  </div>
 </div>
 
 @if (errorRango) {

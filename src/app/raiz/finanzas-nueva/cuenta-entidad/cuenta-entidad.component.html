@@ -19,6 +19,10 @@
     [disabled]="!nombre || cargando || noExiste || !resumen?.cantidadFacturados"
     (click)="registrarAjuste()"
   >Registrar ajuste</button>
+  <div class="btn-group btn-group-sm" role="group" aria-label="Exportar">
+    <button type="button" class="btn btn-outline-secondary" [disabled]="exportando || cargando || noExiste || !resumen || !mayor" (click)="exportar('excel')">Excel</button>
+    <button type="button" class="btn btn-outline-secondary" [disabled]="exportando || cargando || noExiste || !resumen || !mayor" (click)="exportar('pdf')">PDF</button>
+  </div>
 </div>
 
 @if (error) {
