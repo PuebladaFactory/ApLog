@@ -1,3 +1,210 @@
+````
+# Instrucción G4a — Finanzas: fechas realistas en el Generador de circuito
+
+## Contexto
+
+Frente Finanzas, bloque G4a. En demo, el Mayor de una entidad muestra
+liquidaciones de abril emitidas en octubre. G1 (Generador de circuito) emite
+todo con la fecha del día en que se corre, porque `InformeLiqService`
+siempre usa "hoy". G4 arregla eso en dos bloques:
+
+- **G4a (este):** fecha de emisión opcional en `InformeLiqService` y G1 con
+  fechas realistas.
+- **G4b:** modo "Anticipos" en el Generador de cobros (G2).
+
+Después de G4b, Nico regenera demo.
+
+Decisiones (diseno-finanzas.md §23, F63–F69):
+
+- **F63.** `DatosLiquidacion` suma `fechaEmision?: string` ('YYYY-MM-DD').
+  - La usa solo `crearNuevo` (emitir / crearBorrador).
+  - Sin ella todo sigue igual (hoy). La pantalla de liquidación NO la manda.
+  - Con ella:
+    - formato válido;
+    - fin del período ≤ fecha ≤ hoy;
+    - un movimiento compensado no puede tener fecha posterior a la emisión.
+  - Va a fechaEmision / fechaCreacion del informe y a la fecha de la
+    imputación de compensación (eso ya lo hace `factory.crear` con `fecha`).
+  - Sirve también para la migración de históricos (§16).
+- **F64.** Emisión = fin del período + 1..15 días. Si cae después de hoy, esa
+  liquidación NO se genera: sus InformeOp quedan activos.
+- **F65.** Factura = emisión + 0..10 días. Si cae después de hoy, queda
+  emitida sin factura.
+- **F67.** Compensaciones solo con movimientos de fecha ≤ emisión.
+  - Orden del plan y de la ejecución: primero las emitidas por fecha de
+    emisión, así la numeración LQ queda cronológica.
+  - Después los borradores, clientes primero.
+  - Motivo: solo el BORRADOR de chofer/proveedor bloquea los InformeOp del
+    cliente de la contraparte; una emisión no.
+- **F68.** CUIT de la empresa en las facturas de prueba: el de Datos de la
+  empresa (F8b) si es válido; si no, el ficticio `30711111111`. El anterior,
+  30711111118, no pasaba el dígito verificador.
+
+G1 cambia bastante (planificar se arma en 3 pasos), así que el servicio y el
+HTML del componente se reemplazan completos. `informe-liq.service.ts` y el
+.ts del componente van con BUSCAR/REEMPLAZAR.
+
+Archivos:
+
+- `src/app/servicios/informes-liq/informe-liq.service.ts` (4 cambios)
+- `src/app/servicios/desarrollo/generador-circuito.service.ts` (contenido
+  completo)
+- `src/app/componentes/generador-circuito/generador-circuito.component.ts`
+  (2 cambios)
+- `src/app/componentes/generador-circuito/generador-circuito.component.html`
+  (contenido completo)
+
+Sin reglas ni índices: NO hay deploy.
+
+## Reglas
+
+- Hacé SOLO lo indicado. NO deploy. NO commit.
+- Si un texto BUSCAR no aparece, o aparece más de una vez: pará y reportá,
+  sin improvisar.
+- Editá el archivo en el lugar: leer, reemplazar, escribir. Nunca abras un
+  archivo para escritura antes de haber leído su contenido.
+- Archivos con finales de línea LF.
+- Build: `npm run build:demo`.
+- No toques CLAUDE.md ni CHANGELOG.
+- Si tocás un tipo, revisá todos sus usos, incluidos .spec.ts y .html.
+- Esta instrucción termina con la línea `FIN DE LA INSTRUCCIÓN G4a`. Si no la
+  ves, leé el archivo completo antes de empezar.
+
+## PASO 0 — Verificación (sin cambios)
+
+Corré y reportá la salida:
+
+```bash
+grep -n "compensaciones?: CompensacionSolicitada\[\];" src/app/servicios/informes-liq/informe-liq.service.ts
+grep -n "const fecha = toISODateString(new Date());" src/app/servicios/informes-liq/informe-liq.service.ts
+grep -n "private validarDatos(d: DatosLiquidacion)" src/app/servicios/informes-liq/informe-liq.service.ts
+grep -n "ventanaPeriodo(periodo: PeriodoLiq)" src/app/servicios/informes-liq/informe-liq-factory.service.ts
+grep -n "async obtener(forzar = false)" src/app/servicios/configuracion/configuracion-empresa.service.ts
+grep -n "export function cuitValido\|export function formatearCuit" src/app/shared/utils/datos-empresa.util.ts
+grep -n "CUIT_EMPRESA_DEMO = 30711111118" src/app/servicios/desarrollo/generador-circuito.service.ts
+grep -rln "LiquidacionPlaneada\|ResumenCircuito\|PlanCircuito" src/
+wc -l src/app/servicios/desarrollo/generador-circuito.service.ts src/app/componentes/generador-circuito/generador-circuito.component.html
+```
+
+Esperado:
+
+- **Grep 1:** 2 líneas (`DatosLiquidacion` y `CambiosDatosLiq`).
+- **Grep 2:** 2 líneas (`emitirBorrador` y `crearNuevo`).
+- **Greps 3 a 5:** 1 línea cada uno.
+- **Grep 6:** 2 líneas.
+- **Grep 7:** 1 línea.
+- **Grep 8:** solo aparecen `generador-circuito.service.ts` y
+  `generador-circuito.component.ts`.
+- **wc:** 534 y 150 líneas.
+
+Si algo no coincide, pará y reportá.
+
+## PASO 1 — `src/app/servicios/informes-liq/informe-liq.service.ts`
+
+### 1a — campo opcional en DatosLiquidacion
+
+BUSCAR:
+```ts
+  // transacción). Opcional: sin compensaciones = [] (generadores, etc.).
+  compensaciones?: CompensacionSolicitada[];
+}
+```
+
+REEMPLAZAR:
+```ts
+  // transacción). Opcional: sin compensaciones = [] (generadores, etc.).
+  compensaciones?: CompensacionSolicitada[];
+  // G4: fecha de emisión ('YYYY-MM-DD') para cargar con fecha pasada
+  // (generadores de demo; migración de históricos). La UI NO la manda:
+  // sin ella = hoy. Con ella: fin del período ≤ fecha ≤ hoy, y los
+  // movimientos compensados no pueden ser posteriores.
+  fechaEmision?: string;
+}
+```
+
+### 1b — crearNuevo: fecha
+
+BUSCAR:
+```ts
+    const idInfLiq = this.db.generarId(this.COLECCION);
+    const fecha = toISODateString(new Date());
+```
+
+REEMPLAZAR:
+```ts
+    const hoy = toISODateString(new Date());
+    const errorFecha = this.validarFechaEmision(d, hoy);
+    if (errorFecha) return { exito: false, mensaje: errorFecha };
+    const fecha = d.fechaEmision ?? hoy;
+    const idInfLiq = this.db.generarId(this.COLECCION);
+```
+
+### 1c — crearNuevo: compensaciones no posteriores a la emisión
+
+BUSCAR:
+```ts
+          solicitudes, movimientos, { tipo: d.tipo, id: informes[0].entidad.id }, null,
+        );
+```
+
+REEMPLAZAR:
+```ts
+          solicitudes, movimientos, { tipo: d.tipo, id: informes[0].entidad.id }, null,
+        );
+        const posterior = compensaciones.find(c => c.fecha > fecha);
+        if (posterior) {
+          throw new Error(
+            `El movimiento ${posterior.numero} (${posterior.fecha}) es posterior a la fecha de emisión (${fecha}): no se puede compensar.`,
+          );
+        }
+```
+
+Con "hoy" esto no cambia nada para la UI: un movimiento vigente no tiene
+fecha futura.
+
+### 1d — validarFechaEmision (nuevo método, después de validarDatos)
+
+BUSCAR:
+```ts
+    if (!Number.isInteger(d.periodo.anio)) return 'Período inválido (año).';
+    return null;
+  }
+```
+
+REEMPLAZAR:
+```ts
+    if (!Number.isInteger(d.periodo.anio)) return 'Período inválido (año).';
+    return null;
+  }
+
+  /** G4: fecha de emisión explícita (opcional). Formato real 'YYYY-MM-DD',
+   *  no anterior al fin del período ni posterior a hoy. Mensaje o null. */
+  private validarFechaEmision(d: DatosLiquidacion, hoy: string): string | null {
+    if (d.fechaEmision === undefined) return null;
+    const f = d.fechaEmision;
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(f ?? '');
+    const valida = !!m &&
+      new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).toISOString().slice(0, 10) === f;
+    if (!valida) return `Fecha de emisión inválida: '${f}' (se espera YYYY-MM-DD).`;
+    const fin = this.factory.ventanaPeriodo(d.periodo).hasta;
+    if (f < fin) return `La fecha de emisión (${f}) no puede ser anterior al fin del período (${fin}).`;
+    if (f > hoy) return `La fecha de emisión (${f}) no puede ser posterior a hoy (${hoy}).`;
+    return null;
+  }
+```
+
+`validarFechaEmision` corre después de `validarDatos`, que ya validó el
+período. `new Date(Date.UTC(...))` solo comprueba que la fecha exista (por
+ejemplo, rechaza 2026-02-30); no convierte el string.
+
+`emitirBorrador` NO cambia: emitir un borrador desde la UI sigue siendo con
+fecha de hoy.
+
+## PASO 2 — `src/app/servicios/desarrollo/generador-circuito.service.ts` (contenido completo)
+
+Reemplazá TODO el contenido del archivo por esto:
+
+```ts
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -612,3 +819,327 @@ export class GeneradorCircuitoService {
     }
   }
 }
+```
+
+Qué cambia respecto del anterior:
+
+- **`planificar`** ahora trabaja en 3 pasos:
+  1. Arma las partes con su fecha de emisión y de factura, y saltea lo que
+     caería después de hoy.
+  2. Las ordena para ejecutar.
+  3. Elige las compensaciones en ese orden, filtrando fecha ≤ emisión.
+- **`elegirCompensaciones`** recibe `fechaEmision`.
+- **`facturar` / `datosQr`** reciben el CUIT de la empresa resuelto una vez
+  en el plan (`plan.cuitEmpresa`).
+- **Plan y resumen.** `PlanCircuito` suma `hoy`, `cuitEmpresa` y
+  `cuitEmpresaDeConfiguracion`. `ResumenCircuito` suma
+  `pendientesPorFecha` y `sinFacturaPorFecha`. `LiquidacionPlaneada` suma
+  `fechaEmision`.
+- **`ejecutar`** pasa `fechaEmision` a emitir/crearBorrador y guarda los
+  nuevos contadores y el CUIT en el lote.
+
+## PASO 3 — `src/app/componentes/generador-circuito/generador-circuito.component.ts`
+
+### 3a — import
+
+BUSCAR:
+```ts
+import { igualesPorContenido } from 'src/app/shared/utils/igualdad.util';
+```
+
+REEMPLAZAR:
+```ts
+import { formatearCuit } from 'src/app/shared/utils/datos-empresa.util';
+import { igualesPorContenido } from 'src/app/shared/utils/igualdad.util';
+```
+
+### 3b — constantes para el template
+
+BUSCAR:
+```ts
+  readonly MAX_ERRORES_VISIBLES = 30;
+```
+
+REEMPLAZAR:
+```ts
+  readonly MAX_ERRORES_VISIBLES = 30;
+  readonly MAX_LIQUIDACIONES_VISIBLES = 15;
+  readonly formatearCuit = formatearCuit;
+```
+
+## PASO 4 — `src/app/componentes/generador-circuito/generador-circuito.component.html` (contenido completo)
+
+Reemplazá TODO el contenido del archivo por esto:
+
+```html
+<div class="border border-success rounded-3 p-3 mb-4">
+  <h4 class="text-success">Generador de circuito (liquidar y facturar)</h4>
+
+  @if (!esDemo) {
+    <div class="alert alert-danger mb-0">Herramienta deshabilitada: solo funciona en demo.</div>
+  } @else {
+    <p class="mb-3">
+      Toma los informes de operación <b>activos</b> del rango de meses y sigue el circuito con las funciones reales:
+      liquida por entidad y mes (emite o deja en borrador) y a una parte de lo emitido le vincula una
+      <b>factura de prueba</b> (PDF y QR sintéticos). Fechas realistas: emisión 1–15 días después del fin del período
+      y factura 0–10 días después de la emisión; lo que caería después de hoy no se liquida o queda sin facturar.
+      Se ejecuta en orden de fecha (borradores al final). Compensa saldos con fecha anterior a la emisión.
+      <b>Simular</b> no escribe nada. Correr después del Generador de operaciones y de los anticipos.
+    </p>
+
+    <div class="row g-2 mb-3" style="max-width: 60rem;">
+      <div class="col-md-3">
+        <label class="form-label mb-0">Desde (mes)</label>
+        <input type="month" class="form-control" [(ngModel)]="parametros.desde" [disabled]="simulando || ejecutando" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-0">Hasta (mes)</label>
+        <input type="month" class="form-control" [(ngModel)]="parametros.hasta" [disabled]="simulando || ejecutando" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-0">Semilla</label>
+        <div class="input-group">
+          <input type="number" class="form-control" step="1" [(ngModel)]="parametros.semilla" [disabled]="simulando || ejecutando" />
+          <button type="button" class="btn btn-outline-secondary" [disabled]="simulando || ejecutando" (click)="nuevaSemilla()" title="Semilla nueva">↻</button>
+        </div>
+      </div>
+      <div class="col-md-3"></div>
+
+      <div class="col-md-3">
+        <label class="form-label mb-0">Liquidar, por entidad y mes (0–1)</label>
+        <input type="number" class="form-control" min="0" max="1" step="0.05" [(ngModel)]="parametros.pctLiquidar" [disabled]="simulando || ejecutando" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-0">Quedan en borrador (0–1)</label>
+        <input type="number" class="form-control" min="0" max="1" step="0.01" [(ngModel)]="parametros.pctBorrador" [disabled]="simulando || ejecutando" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-0">Facturar lo emitido (0–1)</label>
+        <input type="number" class="form-control" min="0" max="1" step="0.05" [(ngModel)]="parametros.pctFacturar" [disabled]="simulando || ejecutando" />
+      </div>
+      <div class="col-md-3"></div>
+
+      <div class="col-md-3">
+        <label class="form-label mb-0">Compensar saldos de choferes/proveedores (0–1)</label>
+        <input type="number" class="form-control" min="0" max="1" step="0.05" [(ngModel)]="parametros.pctCompensar" [disabled]="simulando || ejecutando" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-0">De esas facturadas: factura por el neto (0–1)</label>
+        <input type="number" class="form-control" min="0" max="1" step="0.05" [(ngModel)]="parametros.pctFacturaNeto" [disabled]="simulando || ejecutando" />
+      </div>
+    </div>
+
+    <button type="button" class="btn btn-primary me-2" [disabled]="simulando || ejecutando" (click)="simular()">Simular</button>
+    <button type="button" class="btn btn-success" [disabled]="!puedeEjecutar" (click)="ejecutar()">Generar</button>
+    @if (simulando) {
+      <span class="text-muted ms-2">Armando el plan…</span>
+    }
+    @if (parametrosCambiaron) {
+      <span class="text-warning ms-2">Cambiaron los parámetros: volvé a simular antes de generar.</span>
+    }
+    @if (ejecutando) {
+      <div class="alert alert-info mt-3 mb-0">
+        <b>Generando…</b> {{ progreso }}<br />
+        <small>No cierres ni recargues esta pestaña hasta que termine.</small>
+      </div>
+    }
+
+    @if (resultado) {
+      <div class="alert mt-3 mb-0" [class.alert-success]="resultado.errores.length === 0" [class.alert-warning]="resultado.errores.length > 0">
+        <b>Circuito terminado</b> (lote {{ resultado.idLote }}):
+        {{ resultado.emitidas }} emitidas, {{ resultado.borradores }} borradores,
+        {{ resultado.facturadas }} facturadas, {{ resultado.errores.length }} error(es).
+        @if (resultado.errores.length > 0) {
+          <ul class="mb-0 mt-2">
+            @for (x of resultado.errores.slice(0, MAX_ERRORES_VISIBLES); track $index) {
+              <li>{{ x.liquidacion }}: {{ x.mensaje }}</li>
+            }
+          </ul>
+          @if (resultado.errores.length > MAX_ERRORES_VISIBLES) {
+            <small>… y {{ resultado.errores.length - MAX_ERRORES_VISIBLES }} más (ver el lote en generacionesPrueba).</small>
+          }
+        }
+      </div>
+    }
+
+    @if (error) {
+      <div class="alert alert-danger mt-3 mb-0">{{ error }}</div>
+    }
+
+    @if (plan) {
+      <div class="mt-3">
+        <h5>Plan (semilla {{ plan.parametros.semilla }}, hoy {{ plan.hoy }})</h5>
+        <ul class="mb-3">
+          <li>
+            {{ plan.resumen.informesActivos }} informes activos en el rango
+            ({{ plan.resumen.informesBloqueados }} bloqueados por la proforma de la contraparte: se saltean).
+          </li>
+          <li>
+            {{ plan.resumen.grupos }} grupos entidad × mes; {{ plan.resumen.gruposSinLiquidar }} quedan sin liquidar.
+            {{ plan.resumen.pendientesPorFecha }} liquidaciones de períodos recientes no se generan (la emisión caería después de hoy).
+          </li>
+          <li>
+            <b>{{ plan.resumen.liquidaciones }}</b> liquidaciones: {{ totalEmitidas }} emitidas
+            ({{ totalAFacturar }} con factura de prueba) y {{ totalBorradores }} en borrador.
+            @if (plan.resumen.partidas > 0) {
+              {{ plan.resumen.partidas }} salen de partir entidades que superan el tope de informes por liquidación.
+            }
+          </li>
+          <li>
+            {{ plan.resumen.sinFacturaPorFecha }} emitidas quedan sin factura (la factura caería después de hoy).
+          </li>
+          <li>
+            {{ totalCompensadas }} liquidaciones con compensaciones (anticipos / saldos a favor);
+            {{ totalFacturasPorNeto }} se facturan por el neto.
+          </li>
+          <li>
+            CUIT de la empresa en las facturas: {{ formatearCuit(plan.cuitEmpresa) }}
+            ({{ plan.cuitEmpresaDeConfiguracion ? 'Datos de la empresa' : 'ficticio de demo: Datos de la empresa no tiene un CUIT válido' }}).
+          </li>
+        </ul>
+
+        <table class="table table-sm" style="max-width: 60rem;">
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th class="text-end">Liquidaciones</th>
+              <th class="text-end">Emitidas</th>
+              <th class="text-end">Borradores</th>
+              <th class="text-end">A facturar</th>
+              <th class="text-end">Informes</th>
+              <th class="text-end">Total estimado</th>
+              <th class="text-end">Compensadas</th>
+              <th class="text-end">Compensado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of plan.resumen.porTipo; track t.tipo) {
+              <tr>
+                <td class="text-capitalize">{{ t.tipo }}</td>
+                <td class="text-end">{{ t.liquidaciones }}</td>
+                <td class="text-end">{{ t.emitidas }}</td>
+                <td class="text-end">{{ t.borradores }}</td>
+                <td class="text-end">{{ t.aFacturar }}</td>
+                <td class="text-end">{{ t.informesOp }}</td>
+                <td class="text-end">{{ t.total | formatearValor: '$' }}</td>
+                <td class="text-end">{{ t.compensadas }}</td>
+                <td class="text-end">{{ t.totalCompensado | formatearValor: '$' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <table class="table table-sm" style="max-width: 60rem;">
+          <thead>
+            <tr>
+              <th>Emisión</th>
+              <th>Tipo</th>
+              <th>Entidad</th>
+              <th>Período</th>
+              <th>Modo</th>
+              <th>Factura</th>
+              <th class="text-end">Total estimado</th>
+              <th class="text-end">Compensado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (l of plan.liquidaciones.slice(0, MAX_LIQUIDACIONES_VISIBLES); track $index) {
+              <tr>
+                <td>{{ l.fechaEmision }}</td>
+                <td class="text-capitalize">{{ l.tipo }}</td>
+                <td>{{ l.nombre }}</td>
+                <td>{{ l.periodo.mes }}/{{ l.periodo.anio }}{{ l.periodo.tramo === 'mes' ? '' : ' · ' + l.periodo.tramo }}</td>
+                <td>{{ l.modo }}</td>
+                <td>{{ l.fechaFactura ?? '—' }}</td>
+                <td class="text-end">{{ l.totalEstimado | formatearValor: '$' }}</td>
+                <td class="text-end">{{ l.totalCompensado | formatearValor: '$' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (plan.liquidaciones.length > MAX_LIQUIDACIONES_VISIBLES) {
+          <small class="text-muted">Primeras {{ MAX_LIQUIDACIONES_VISIBLES }} de {{ plan.liquidaciones.length }}, en orden de ejecución.</small>
+        }
+      </div>
+    }
+  }
+</div>
+```
+
+Cambios en el HTML:
+
+- Texto descriptivo nuevo.
+- "hoy" en el título del plan.
+- Líneas de pendientes por fecha, sin factura por fecha y CUIT usado.
+- Tabla con las primeras 15 liquidaciones en orden de ejecución: emisión,
+  tipo, entidad, período, modo, factura y compensado.
+
+## PASO 5 — Verificación
+
+```bash
+npm run build:demo
+grep -n "fechaEmision" src/app/servicios/informes-liq/informe-liq.service.ts
+grep -c "fechaEmision" src/app/servicios/desarrollo/generador-circuito.service.ts
+grep -n "30711111118" -r src/
+git status --short
+```
+
+Esperado:
+
+- El build termina sin errores. Los warnings de presupuesto previos no
+  cuentan.
+- `fechaEmision` en informe-liq.service:
+  - 1 línea del campo nuevo;
+  - las de `validarFechaEmision` y `d.fechaEmision ?? hoy`;
+  - las que ya existían (`fechaEmision: fecha` en emitirBorrador y
+    `liq.fechaEmision ?? hoy` en editar).
+- El conteo en el generador es > 5.
+- `30711111118` no aparece en ningún lado.
+- `git status` muestra exactamente 4 archivos modificados (más lo tuyo sin
+  trackear, si lo hay).
+
+Reportá la salida.
+
+## Pruebas manuales (demo, rol dev)
+
+No hace falta limpiar demo para estas pruebas: Simular no escribe. La
+regeneración completa se hace después de G4b.
+
+1. **Simular en /migracion → Generador de circuito**, rango de 3–4 meses
+   que incluya el mes en curso.
+   - El título muestra "hoy". Aparecen las líneas "N liquidaciones de
+     períodos recientes no se generan…" y "N emitidas quedan sin factura…".
+   - La línea del CUIT dice "Datos de la empresa" con tu CUIT.
+   - La tabla nueva:
+     - fechas de emisión ascendentes (borradores al final);
+     - cada emisión es 1–15 días después del fin del período y nunca
+       posterior a hoy;
+     - la factura es 0–10 días después de la emisión, o "—".
+   - Ninguna liquidación del mes en curso.
+   - Simular otra vez con la misma semilla da lo mismo.
+2. **Fecha opcional sin efecto en la UI.** Liquidación → crear un borrador
+   y emitir una liquidación normal: fecha de emisión = hoy, como antes.
+3. **Generar** (opcional, si querés probarlo antes de G4b): en un rango
+   chico con InformeOp activos.
+   - En el listado de liquidaciones, las nuevas tienen fecha de emisión
+     pasada y numeración en orden de fecha.
+   - La factura vinculada tiene la fecha del plan.
+   - En Finanzas → Cuenta de la entidad, el Mayor muestra esas fechas.
+
+## Commit (lo hace Nico)
+
+```
+feat(demo): fechas realistas en el generador de circuito (G4a)
+
+- InformeLiqService: DatosLiquidacion.fechaEmision opcional (crear/emitir);
+  validada (fin del período ≤ fecha ≤ hoy) y sin compensar movimientos
+  posteriores. La UI no la manda: sin cambios para el usuario.
+- Generador de circuito: emisión = fin del período + 1..15 días y factura =
+  emisión + 0..10 (lo que caería después de hoy no se liquida / no se
+  factura); plan y ejecución en orden cronológico (borradores al final,
+  clientes primero); compensa solo saldos con fecha ≤ emisión; CUIT de la
+  empresa desde Datos de la empresa (ficticio válido si no hay).
+```
+
+FIN DE LA INSTRUCCIÓN G4a
+````

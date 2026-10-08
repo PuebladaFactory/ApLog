@@ -7,8 +7,10 @@
     <p class="mb-3">
       Toma los informes de operación <b>activos</b> del rango de meses y sigue el circuito con las funciones reales:
       liquida por entidad y mes (emite o deja en borrador) y a una parte de lo emitido le vincula una
-      <b>factura de prueba</b> (PDF y QR sintéticos, fecha posterior al período). <b>Simular</b> no escribe nada.
-      Correr después del Generador de operaciones; los clientes se liquidan primero.
+      <b>factura de prueba</b> (PDF y QR sintéticos). Fechas realistas: emisión 1–15 días después del fin del período
+      y factura 0–10 días después de la emisión; lo que caería después de hoy no se liquida o queda sin facturar.
+      Se ejecuta en orden de fecha (borradores al final). Compensa saldos con fecha anterior a la emisión.
+      <b>Simular</b> no escribe nada. Correr después del Generador de operaciones y de los anticipos.
     </p>
 
     <div class="row g-2 mb-3" style="max-width: 60rem;">
@@ -92,7 +94,7 @@
 
     @if (plan) {
       <div class="mt-3">
-        <h5>Plan (semilla {{ plan.parametros.semilla }})</h5>
+        <h5>Plan (semilla {{ plan.parametros.semilla }}, hoy {{ plan.hoy }})</h5>
         <ul class="mb-3">
           <li>
             {{ plan.resumen.informesActivos }} informes activos en el rango
@@ -100,6 +102,7 @@
           </li>
           <li>
             {{ plan.resumen.grupos }} grupos entidad × mes; {{ plan.resumen.gruposSinLiquidar }} quedan sin liquidar.
+            {{ plan.resumen.pendientesPorFecha }} liquidaciones de períodos recientes no se generan (la emisión caería después de hoy).
           </li>
           <li>
             <b>{{ plan.resumen.liquidaciones }}</b> liquidaciones: {{ totalEmitidas }} emitidas
@@ -109,8 +112,15 @@
             }
           </li>
           <li>
+            {{ plan.resumen.sinFacturaPorFecha }} emitidas quedan sin factura (la factura caería después de hoy).
+          </li>
+          <li>
             {{ totalCompensadas }} liquidaciones con compensaciones (anticipos / saldos a favor);
             {{ totalFacturasPorNeto }} se facturan por el neto.
+          </li>
+          <li>
+            CUIT de la empresa en las facturas: {{ formatearCuit(plan.cuitEmpresa) }}
+            ({{ plan.cuitEmpresaDeConfiguracion ? 'Datos de la empresa' : 'ficticio de demo: Datos de la empresa no tiene un CUIT válido' }}).
           </li>
         </ul>
 
@@ -144,6 +154,38 @@
             }
           </tbody>
         </table>
+
+        <table class="table table-sm" style="max-width: 60rem;">
+          <thead>
+            <tr>
+              <th>Emisión</th>
+              <th>Tipo</th>
+              <th>Entidad</th>
+              <th>Período</th>
+              <th>Modo</th>
+              <th>Factura</th>
+              <th class="text-end">Total estimado</th>
+              <th class="text-end">Compensado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (l of plan.liquidaciones.slice(0, MAX_LIQUIDACIONES_VISIBLES); track $index) {
+              <tr>
+                <td>{{ l.fechaEmision }}</td>
+                <td class="text-capitalize">{{ l.tipo }}</td>
+                <td>{{ l.nombre }}</td>
+                <td>{{ l.periodo.mes }}/{{ l.periodo.anio }}{{ l.periodo.tramo === 'mes' ? '' : ' · ' + l.periodo.tramo }}</td>
+                <td>{{ l.modo }}</td>
+                <td>{{ l.fechaFactura ?? '—' }}</td>
+                <td class="text-end">{{ l.totalEstimado | formatearValor: '$' }}</td>
+                <td class="text-end">{{ l.totalCompensado | formatearValor: '$' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (plan.liquidaciones.length > MAX_LIQUIDACIONES_VISIBLES) {
+          <small class="text-muted">Primeras {{ MAX_LIQUIDACIONES_VISIBLES }} de {{ plan.liquidaciones.length }}, en orden de ejecución.</small>
+        }
       </div>
     }
   }

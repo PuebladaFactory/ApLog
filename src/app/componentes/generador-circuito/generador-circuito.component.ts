@@ -3,6 +3,7 @@ import Swal from 'sweetalert2';
 import {
   GeneradorCircuitoService, PARAMETROS_CIRCUITO_POR_DEFECTO, ParametrosCircuito, PlanCircuito, ResultadoCircuito,
 } from 'src/app/servicios/desarrollo/generador-circuito.service';
+import { formatearCuit } from 'src/app/shared/utils/datos-empresa.util';
 import { igualesPorContenido } from 'src/app/shared/utils/igualdad.util';
 
 /** Sección "Generador de circuito" de /migracion (solo demo, rol dev) —
@@ -29,6 +30,8 @@ export class GeneradorCircuitoComponent {
   error = '';
 
   readonly MAX_ERRORES_VISIBLES = 30;
+  readonly MAX_LIQUIDACIONES_VISIBLES = 15;
+  readonly formatearCuit = formatearCuit;
 
   constructor(private generador: GeneradorCircuitoService) {
     this.esDemo = generador.esEntornoDemo();

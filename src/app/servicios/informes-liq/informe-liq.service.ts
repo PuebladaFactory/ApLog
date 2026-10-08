@@ -44,6 +44,11 @@ export interface DatosLiquidacion {
   // FC1: movimientos a compensar (se revalidan y snapshotean en la
   // transacción). Opcional: sin compensaciones = [] (generadores, etc.).
   compensaciones?: CompensacionSolicitada[];
+  // G4: fecha de emisión ('YYYY-MM-DD') para cargar con fecha pasada
+  // (generadores de demo; migración de históricos). La UI NO la manda:
+  // sin ella = hoy. Con ella: fin del período ≤ fecha ≤ hoy, y los
+  // movimientos compensados no pueden ser posteriores.
+  fechaEmision?: string;
 }
 
 export interface ResultadoLiquidacion {
@@ -824,8 +829,11 @@ export class InformeLiqService {
     }
 
     // Afuera del callback: el callback puede reintentarse y tiene que ser puro.
+    const hoy = toISODateString(new Date());
+    const errorFecha = this.validarFechaEmision(d, hoy);
+    if (errorFecha) return { exito: false, mensaje: errorFecha };
+    const fecha = d.fechaEmision ?? hoy;
     const idInfLiq = this.db.generarId(this.COLECCION);
-    const fecha = toISODateString(new Date());
     const accion = modo === 'borrador' ? 'Borrador' : 'Emisión';
 
     try {
@@ -849,6 +857,12 @@ export class InformeLiqService {
         const compensaciones = armarCompensaciones(
           solicitudes, movimientos, { tipo: d.tipo, id: informes[0].entidad.id }, null,
         );
+        const posterior = compensaciones.find(c => c.fecha > fecha);
+        if (posterior) {
+          throw new Error(
+            `El movimiento ${posterior.numero} (${posterior.fecha}) es posterior a la fecha de emisión (${fecha}): no se puede compensar.`,
+          );
+        }
         const informeLiq = this.factory.crear(idInfLiq, {
           tipo: d.tipo,
           entidad: informes[0].entidad,
@@ -932,6 +946,21 @@ export class InformeLiqService {
     if (new Set(d.idsInformesOp).size !== n) return 'La selección contiene informes repetidos.';
     if (!Number.isInteger(d.periodo.mes) || d.periodo.mes < 1 || d.periodo.mes > 12) return 'Período inválido (mes).';
     if (!Number.isInteger(d.periodo.anio)) return 'Período inválido (año).';
+    return null;
+  }
+
+  /** G4: fecha de emisión explícita (opcional). Formato real 'YYYY-MM-DD',
+   *  no anterior al fin del período ni posterior a hoy. Mensaje o null. */
+  private validarFechaEmision(d: DatosLiquidacion, hoy: string): string | null {
+    if (d.fechaEmision === undefined) return null;
+    const f = d.fechaEmision;
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(f ?? '');
+    const valida = !!m &&
+      new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).toISOString().slice(0, 10) === f;
+    if (!valida) return `Fecha de emisión inválida: '${f}' (se espera YYYY-MM-DD).`;
+    const fin = this.factory.ventanaPeriodo(d.periodo).hasta;
+    if (f < fin) return `La fecha de emisión (${f}) no puede ser anterior al fin del período (${fin}).`;
+    if (f > hoy) return `La fecha de emisión (${f}) no puede ser posterior a hoy (${hoy}).`;
     return null;
   }
 
