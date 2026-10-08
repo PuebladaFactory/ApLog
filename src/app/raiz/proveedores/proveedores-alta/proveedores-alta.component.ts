@@ -2,6 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { Chofer } from 'src/app/interfaces/chofer';
 import { Contacto, Proveedor } from 'src/app/interfaces/proveedor';
 import { TarifaGralCliente, TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
@@ -237,7 +238,8 @@ export class ProveedoresAltaComponent implements OnInit {
           this.storageService.addItem(this.componente, this.proveedor, this.proveedor.idProveedor, "ALTA", `Alta de Proveedor ${this.proveedor.razonSocial}`)
         } else if (modo === "Edicion"){
           let {id, type, ...proveedor } = this.proveedor
-          this.storageService.updateItem(this.componente, proveedor, this.proveedor.idProveedor, "EDITAR", `Edición de Proveedor ${this.proveedor.razonSocial} editado`, this.proveedor.id)          
+          this.storageService.updateItem(this.componente, proveedor, this.proveedor.idProveedor, "EDITAR", `Edición de Proveedor ${this.proveedor.razonSocial} editado`, this.proveedor.id)
+          this.actualizarTarifaTipoChoferes();
         }              
         Swal.fire({
           title: "Confirmado",
@@ -250,7 +252,28 @@ export class ProveedoresAltaComponent implements OnInit {
         });   
         
       }
-    });   
+    });
+  }
+
+  // Los choferes de un proveedor heredan su tarifaTipo. Si cambia en la edición, se propaga a todos sus choferes.
+  actualizarTarifaTipoChoferes(): void {
+    const anterior = this.proveedorEditar.tarifaTipo;
+    const nuevo = this.proveedor.tarifaTipo;
+    const cambio =
+      anterior.general !== nuevo.general ||
+      anterior.especial !== nuevo.especial ||
+      anterior.eventual !== nuevo.eventual ||
+      anterior.personalizada !== nuevo.personalizada;
+    if (!cambio) return;
+
+    const choferes: ConIdType<Chofer>[] = this.storageService.loadInfo("choferes") || [];
+    choferes
+      .filter((c) => c.idProveedor === this.proveedor.idProveedor)
+      .forEach((c) => {
+        const { id, type, ...chofer } = c;
+        chofer.tarifaTipo = { ...nuevo };
+        this.storageService.updateItem("choferes", chofer, c.idChofer, "INTERNA", "", c.id);
+      });
   }
 
   toggle() {

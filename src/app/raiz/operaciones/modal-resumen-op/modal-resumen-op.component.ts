@@ -11,6 +11,7 @@ import { NgbActiveModal } from "@ng-bootstrap/ng-bootstrap";
 import { Subject, takeUntil } from "rxjs";
 import { Chofer } from "src/app/interfaces/chofer";
 import { ConId, ConIdType } from "src/app/interfaces/conId";
+import { Proveedor } from "src/app/interfaces/proveedor";
 import {
   Operacion,
   TarifaEventual,
@@ -120,6 +121,10 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
       case "cerrar":
         this.cerrar = true;
         break;
+    }
+    // en el cierre se usa la tarifa vigente del chofer/proveedor, no la copia del alta
+    if (this.cerrar) {
+      this.refrescarTarifaTipoChofer();
     }
     if (this.op.tarifaTipo.personalizada) {
       let tarifas = this.storageService.loadInfo("tarifasPersCliente");
@@ -608,6 +613,46 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
       return "bg-primary";
     }
     return "bg-secondary";
+  }
+
+  // Al cerrar, el tipo de tarifa del chofer se toma VIGENTE (no la copia del alta):
+  // - chofer de proveedor → tarifaTipo actual del proveedor
+  // - chofer propio → tarifaTipo actual del chofer
+  // Recalcula op.tarifaTipo con la misma regla del alta. No toca personalizada ni eventual.
+  refrescarTarifaTipoChofer(): void {
+    if (!this.op.tarifaTipo.general && !this.op.tarifaTipo.especial) return;
+
+    let tarifaTipoVigente: TarifaTipo | undefined;
+    if (this.op.chofer.idProveedor !== 0) {
+      const proveedores: ConIdType<Proveedor>[] =
+        this.storageService.loadInfo("proveedores") || [];
+      tarifaTipoVigente = proveedores.find(
+        (p) => p.idProveedor === this.op.chofer.idProveedor,
+      )?.tarifaTipo;
+    } else {
+      const choferes: ConIdType<Chofer>[] =
+        this.storageService.loadInfo("choferes") || [];
+      tarifaTipoVigente = choferes.find(
+        (c) => c.idChofer === this.op.chofer.idChofer,
+      )?.tarifaTipo;
+    }
+
+    if (!tarifaTipoVigente) {
+      console.warn(
+        "No se encontró la tarifa vigente del chofer/proveedor; se mantiene la del alta",
+      );
+      return;
+    }
+
+    this.op.chofer.tarifaTipo = { ...tarifaTipoVigente };
+    const especial =
+      this.op.cliente.tarifaTipo.especial || this.op.chofer.tarifaTipo.especial;
+    this.op.tarifaTipo = {
+      general: !especial,
+      especial: especial,
+      eventual: false,
+      personalizada: false,
+    };
   }
 
   obtenerTarifas() {
