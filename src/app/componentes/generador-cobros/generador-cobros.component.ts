@@ -1,7 +1,8 @@
 import { Component, HostListener } from '@angular/core';
 import Swal from 'sweetalert2';
 import {
-  GeneradorCobrosService, PARAMETROS_COBROS_POR_DEFECTO, ParametrosCobros, PlanCobros, ResultadoCobros,
+  ClavePctCobros, GeneradorCobrosService, ModoCobros, PARAMETROS_COBROS_POR_DEFECTO, ParametrosCobros, PlanCobros,
+  ResultadoCobros,
 } from 'src/app/servicios/desarrollo/generador-cobros.service';
 import { igualesPorContenido } from 'src/app/shared/utils/igualdad.util';
 
@@ -31,20 +32,38 @@ export class GeneradorCobrosComponent {
   readonly MAX_ERRORES_VISIBLES = 30;
   readonly MAX_MOVIMIENTOS_VISIBLES = 15;
 
-  /** Inputs de porcentajes (clave, etiqueta, paso). */
-  readonly campos: { clave: keyof Omit<ParametrosCobros, 'semilla'>; etiqueta: string; paso: number }[] = [
-    { clave: 'pctMorosos', etiqueta: 'Clientes: facturas que no se cobran', paso: 0.01 },
-    { clave: 'pctAtrasados', etiqueta: 'Clientes: cobro atrasado (61–120 días)', paso: 0.05 },
-    { clave: 'pctParciales', etiqueta: 'Clientes: cobro en dos partes', paso: 0.05 },
-    { clave: 'pctRetencion', etiqueta: 'Cobros con retención IIBB', paso: 0.05 },
-    { clave: 'pctSaldoAFavor', etiqueta: 'Cobros que pagan de más', paso: 0.01 },
-    { clave: 'pctPagosPendientes', etiqueta: 'Choferes/proveedores: pago pendiente', paso: 0.01 },
-    { clave: 'pctAnticipos', etiqueta: 'Choferes/proveedores con anticipo (mes en curso)', paso: 0.05 },
+  /** Inputs de porcentajes (clave, etiqueta, paso, modo en que se usa). */
+  readonly campos: { clave: ClavePctCobros; etiqueta: string; paso: number; modo: ModoCobros }[] = [
+    { clave: 'pctMorosos', etiqueta: 'Clientes: facturas que no se cobran', paso: 0.01, modo: 'cobros' },
+    { clave: 'pctAtrasados', etiqueta: 'Clientes: cobro atrasado (61–120 días)', paso: 0.05, modo: 'cobros' },
+    { clave: 'pctParciales', etiqueta: 'Clientes: cobro en dos partes', paso: 0.05, modo: 'cobros' },
+    { clave: 'pctRetencion', etiqueta: 'Cobros con retención IIBB', paso: 0.05, modo: 'cobros' },
+    { clave: 'pctSaldoAFavor', etiqueta: 'Cobros que pagan de más', paso: 0.01, modo: 'cobros' },
+    { clave: 'pctPagosPendientes', etiqueta: 'Choferes/proveedores: pago pendiente', paso: 0.01, modo: 'cobros' },
+    { clave: 'pctAnticipos', etiqueta: 'Chofer/proveedor × mes con anticipo', paso: 0.05, modo: 'anticipos' },
   ];
 
   constructor(private generador: GeneradorCobrosService) {
     this.esDemo = generador.esEntornoDemo();
-    this.parametros = { ...PARAMETROS_COBROS_POR_DEFECTO, semilla: this.semillaNueva() };
+    // Por defecto: modo anticipos (va antes del circuito), los últimos 6
+    // meses incluido el actual.
+    const hoy = new Date();
+    const mes = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    this.parametros = {
+      ...PARAMETROS_COBROS_POR_DEFECTO,
+      modo: 'anticipos',
+      desde: mes(new Date(hoy.getFullYear(), hoy.getMonth() - 5, 1)),
+      hasta: mes(hoy),
+      semilla: this.semillaNueva(),
+    };
+  }
+
+  get camposVisibles() {
+    return this.campos.filter(c => c.modo === this.parametros.modo);
+  }
+
+  get esAnticipos(): boolean {
+    return this.parametros.modo === 'anticipos';
   }
 
   get parametrosCambiaron(): boolean {
@@ -85,13 +104,18 @@ export class GeneradorCobrosComponent {
     if (!this.plan || !this.puedeEjecutar) return;
     this.error = '';
     const r0 = this.plan.resumen;
+    const anticipos = this.plan.parametros.modo === 'anticipos';
 
     const r = await Swal.fire({
       title: `¿Registrar ${this.plan.movimientos.length} movimientos?`,
       html:
-        `<p>${r0.cobros} cobros, ${r0.pagos} pagos y ${r0.anticipos} anticipos, con la función real de Finanzas. ` +
+        (anticipos
+          ? `<p>${r0.anticipos} anticipos sin imputar, con la función real de Finanzas. `
+          : `<p>${r0.cobros} cobros y ${r0.pagos} pagos, con la función real de Finanzas. `) +
         `Tarda varios minutos: <b>no cierres ni recargues esta pestaña</b>.</p>` +
-        `<p>No es repetible: una segunda corrida cobra lo que quedó abierto. Para rehacer: Limpieza de demo y regenerar.</p>`,
+        (anticipos
+          ? `<p>No es repetible: una segunda corrida agrega otros anticipos. Para rehacer: Limpieza de demo y regenerar.</p>`
+          : `<p>No es repetible: una segunda corrida cobra lo que quedó abierto. Para rehacer: Limpieza de demo y regenerar.</p>`),
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Generar',

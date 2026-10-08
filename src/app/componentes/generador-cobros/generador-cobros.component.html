@@ -4,16 +4,43 @@
   @if (!esDemo) {
     <div class="alert alert-danger mb-0">Herramienta deshabilitada: solo funciona en demo.</div>
   } @else {
-    <p class="mb-3">
-      Sobre los informes de liquidación <b>facturados con saldo</b> registra cobros, pagos y anticipos con la función
-      real de Finanzas, con fechas realistas desde la factura y nunca futuras: clientes a 30–60 días (algunos
-      atrasados o morosos, algunos en dos partes, con retención o pagando de más); choferes y proveedores a 2–10
-      días; anticipos del mes en curso pendientes de compensar. <b>Simular</b> no escribe nada. Correr después del
-      Generador de circuito, una sola vez.
+    <p class="mb-2">
+      Registra movimientos con la función real de Finanzas, con fechas realistas y nunca futuras. Dos corridas, una
+      vez cada una: <b>Simular</b> no escribe nada.
     </p>
+    <ul class="mb-3">
+      <li>
+        <b>Anticipos</b> — correr ANTES del Generador de circuito: por chofer/proveedor y mes con operaciones, un
+        anticipo (día 5–25, 10–25 % del total del mes) sin imputar; el circuito lo compensa al liquidar ese mes.
+      </li>
+      <li>
+        <b>Cobros y pagos</b> — correr DESPUÉS del circuito, sobre los informes <b>facturados con saldo</b>: clientes a
+        30–60 días (algunos atrasados o morosos, en dos partes, con retención o pagando de más); choferes y
+        proveedores a 2–10 días de su factura.
+      </li>
+    </ul>
+
+    <div class="btn-group mb-3" role="group">
+      <input type="radio" class="btn-check" name="modoCobros" id="modoAnticipos" value="anticipos"
+        [(ngModel)]="parametros.modo" [disabled]="simulando || ejecutando" />
+      <label class="btn btn-outline-success" for="modoAnticipos">1 · Anticipos</label>
+      <input type="radio" class="btn-check" name="modoCobros" id="modoCobrosPagos" value="cobros"
+        [(ngModel)]="parametros.modo" [disabled]="simulando || ejecutando" />
+      <label class="btn btn-outline-success" for="modoCobrosPagos">2 · Cobros y pagos</label>
+    </div>
 
     <div class="row g-2 mb-3" style="max-width: 60rem;">
-      @for (c of campos; track c.clave) {
+      @if (esAnticipos) {
+        <div class="col-md-3">
+          <label class="form-label mb-0 small">Desde (mes)</label>
+          <input type="month" class="form-control" [(ngModel)]="parametros.desde" [disabled]="simulando || ejecutando" />
+        </div>
+        <div class="col-md-3">
+          <label class="form-label mb-0 small">Hasta (mes)</label>
+          <input type="month" class="form-control" [(ngModel)]="parametros.hasta" [disabled]="simulando || ejecutando" />
+        </div>
+      }
+      @for (c of camposVisibles; track c.clave) {
         <div class="col-md-3">
           <label class="form-label mb-0 small">{{ c.etiqueta }} (0–1)</label>
           <input type="number" class="form-control" min="0" max="1" [step]="c.paso"
@@ -69,22 +96,29 @@
       <div class="mt-3">
         <h5>Plan (semilla {{ plan.parametros.semilla }}, hoy {{ plan.hoy }})</h5>
         <ul class="mb-3">
-          <li>
-            Entrada: {{ plan.resumen.facturadosCliente }} facturas de clientes y
-            {{ plan.resumen.facturadosPago }} de choferes/proveedores con saldo.
-          </li>
-          <li>
-            <b>{{ plan.resumen.cobros }}</b> cobros por {{ plan.resumen.totalCobrado | formatearValor: '$' }}
-            ({{ plan.resumen.conRetencion }} con retención, {{ plan.resumen.parciales }} facturas en dos partes,
-            {{ plan.resumen.conSaldoAFavor }} con saldo a favor). Quedan abiertas {{ plan.resumen.quedanAbiertosCliente }} facturas de clientes.
-          </li>
-          <li>
-            <b>{{ plan.resumen.pagos }}</b> pagos por {{ plan.resumen.totalPagado | formatearValor: '$' }}.
-            Quedan abiertas {{ plan.resumen.quedanAbiertosPago }} facturas de choferes/proveedores.
-          </li>
-          <li>
-            <b>{{ plan.resumen.anticipos }}</b> anticipos por {{ plan.resumen.totalAnticipos | formatearValor: '$' }} (sin imputar).
-          </li>
+          @if (plan.parametros.modo === 'anticipos') {
+            <li>
+              Entrada: {{ plan.resumen.gruposAnticipo }} choferes/proveedores × mes con operaciones
+              ({{ plan.parametros.desde }} a {{ plan.parametros.hasta }}).
+            </li>
+            <li>
+              <b>{{ plan.resumen.anticipos }}</b> anticipos por {{ plan.resumen.totalAnticipos | formatearValor: '$' }} (sin imputar).
+            </li>
+          } @else {
+            <li>
+              Entrada: {{ plan.resumen.facturadosCliente }} facturas de clientes y
+              {{ plan.resumen.facturadosPago }} de choferes/proveedores con saldo.
+            </li>
+            <li>
+              <b>{{ plan.resumen.cobros }}</b> cobros por {{ plan.resumen.totalCobrado | formatearValor: '$' }}
+              ({{ plan.resumen.conRetencion }} con retención, {{ plan.resumen.parciales }} facturas en dos partes,
+              {{ plan.resumen.conSaldoAFavor }} con saldo a favor). Quedan abiertas {{ plan.resumen.quedanAbiertosCliente }} facturas de clientes.
+            </li>
+            <li>
+              <b>{{ plan.resumen.pagos }}</b> pagos por {{ plan.resumen.totalPagado | formatearValor: '$' }}.
+              Quedan abiertas {{ plan.resumen.quedanAbiertosPago }} facturas de choferes/proveedores.
+            </li>
+          }
         </ul>
 
         <table class="table table-sm" style="max-width: 60rem;">

@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { ConId } from 'src/app/interfaces/conId';
 import { InformeLiqNuevo } from 'src/app/interfaces/informe-liq-nuevo';
+import { InformeOpNuevo } from 'src/app/interfaces/informe-op-nuevo';
 import { EntidadMovimientoFin, MedioMovimientoFin } from 'src/app/interfaces/movimiento-fin';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { LimpiezaDemoService } from 'src/app/servicios/desarrollo/limpieza-demo.service';
@@ -16,7 +16,15 @@ import { nombreEntidadRef } from 'src/app/shared/utils/entidad-informe.util';
 import { normalizarValoresFinancieros, redondear2 } from 'src/app/shared/utils/finanzas.util';
 import { DatosMovimientoFin } from 'src/app/shared/utils/movimiento-fin.util';
 
+/** G4b: qué genera una corrida. 'anticipos' va ANTES del Generador de
+ *  circuito (así la liquidación los compensa con fechas coherentes);
+ *  'cobros' va DESPUÉS (cobros y pagos sobre lo facturado). */
+export type ModoCobros = 'anticipos' | 'cobros';
+
 export interface ParametrosCobros {
+  modo: ModoCobros;
+  desde: string;               // 'YYYY-MM' — solo modo 'anticipos' (primer mes, inclusive)
+  hasta: string;               // 'YYYY-MM' — solo modo 'anticipos' (último mes, inclusive)
   semilla: number;
   pctMorosos: number;          // clientes: facturas que no se cobran nunca (0..1)
   pctAtrasados: number;        // clientes: se cobran a 61–120 días en vez de 30–60 (0..1)
@@ -24,10 +32,13 @@ export interface ParametrosCobros {
   pctRetencion: number;        // cobros con retención de IIBB del 2,5 % (0..1)
   pctSaldoAFavor: number;      // cobros completos que pagan de más (1–5 %): queda saldo a favor (0..1)
   pctPagosPendientes: number;  // choferes/proveedores: facturas que todavía no se pagan (0..1)
-  pctAnticipos: number;        // choferes/proveedores con un anticipo en el mes en curso (0..1)
+  pctAnticipos: number;        // modo 'anticipos': por chofer/proveedor y mes con operaciones, prob. de un anticipo (0..1)
 }
 
-export const PARAMETROS_COBROS_POR_DEFECTO: Omit<ParametrosCobros, 'semilla'> = {
+/** Porcentajes de cada modo (los demás se ignoran en esa corrida). */
+export type ClavePctCobros = Exclude<keyof ParametrosCobros, 'modo' | 'desde' | 'hasta' | 'semilla'>;
+
+export const PARAMETROS_COBROS_POR_DEFECTO: Omit<ParametrosCobros, 'modo' | 'desde' | 'hasta' | 'semilla'> = {
   pctMorosos: 0.05,
   pctAtrasados: 0.15,
   pctParciales: 0.10,
@@ -56,6 +67,7 @@ export interface ResumenCobros {
   totalPagado: number;
   anticipos: number;
   totalAnticipos: number;
+  gruposAnticipo: number;         // modo 'anticipos': chofer/proveedor × mes con operaciones evaluados
   quedanAbiertosCliente: number;  // facturas de clientes que quedan con saldo (morosas, no vencidas o parciales)
   quedanAbiertosPago: number;     // ídem choferes/proveedores
 }
@@ -82,21 +94,24 @@ export interface ResultadoCobros {
  *  Finanzas G2. Sobre los InformeLiq FACTURADOS con saldo (lo que dejó el
  *  Generador de circuito) registra movimientos con la función REAL
  *  (MovimientoFinService.registrar), con fechas realistas respecto de la
- *  fecha de la factura y nunca futuras:
+ *  fecha de la factura y nunca futuras. Dos modos (G4b):
+ *   - 'anticipos' (ANTES del Generador de circuito): por chofer/proveedor y
+ *     mes del rango con InformeOp, con probabilidad pctAnticipos, un
+ *     anticipo entre el día 5 y el 25 del mes (nunca futuro) por el 10–25 %
+ *     del total de ese mes (redondeo $ 1.000), sin imputar. El circuito los
+ *     compensa al emitir (solo saldos con fecha ≤ emisión).
+ *   - 'cobros' (DESPUÉS del circuito):
  *   - Clientes: cobro a 30–60 días; una parte se atrasa (61–120) y otra no
  *     se cobra (morosos). Algunos en dos partes, algunos con retención de
  *     IIBB, algunos pagan de más (saldo a favor). Medio: transferencia o
  *     e-cheq. Lo que caería después de hoy queda abierto (antigüedad real).
  *   - Choferes/proveedores: pago a 2–10 días de su factura (transferencia o
  *     efectivo); unos pocos quedan pendientes.
- *   - Anticipos: a una parte de los choferes/proveedores, un anticipo en el
- *     mes en curso (10–25 % de su última liquidación), sin imputar: quedan
- *     pendientes para compensar en la próxima liquidación (FC1).
  *  Un movimiento por factura (o dos si es parcial). Se registran en orden de
  *  fecha (la numeración RC/OPG queda cronológica). Reproducible: misma
  *  semilla + mismos datos = mismo plan. NO es idempotente: correrlo dos
  *  veces cobra lo que quedó abierto; para rehacer, Limpieza de demo y
- *  regenerar. Lote en `generacionesPrueba` (tipo 'cobros').
+ *  regenerar. Lote en `generacionesPrueba` (tipo 'anticipos' o 'cobros').
  *  Diseño: claude/diseno-finanzas.md (G2). */
 @Injectable({ providedIn: 'root' })
 export class GeneradorCobrosService {
@@ -107,6 +122,7 @@ export class GeneradorCobrosService {
   private usuarioSesion = inject(UsuarioSesionService);
 
   private readonly COL_LOTES = 'generacionesPrueba';
+  private readonly MAX_MESES = 12;
   private readonly ORDEN_TIPOS = ['cliente', 'chofer', 'proveedor'];
   private readonly BANCOS = ['Banco Nación', 'Banco Provincia', 'Banco Galicia', 'Banco Santander', 'BBVA', 'Banco Macro'];
   private readonly OBSERVACION = 'Generado por el Generador de cobros y pagos (demo).';
@@ -122,6 +138,7 @@ export class GeneradorCobrosService {
 
     const azar = new Azar(p.semilla);
     const hoy = toISODateString(new Date());
+    if (p.modo === 'anticipos') return this.planificarAnticipos(p, azar, hoy);
     const abiertos = (await firstValueFrom(this.consulta.observarInformesAbiertos()))
       .sort((a, b) =>
         this.ORDEN_TIPOS.indexOf(a.tipo) - this.ORDEN_TIPOS.indexOf(b.tipo) ||
@@ -133,7 +150,7 @@ export class GeneradorCobrosService {
     const movimientos: MovimientoPlaneado[] = [];
     const r: ResumenCobros = {
       facturadosCliente: 0, facturadosPago: 0, cobros: 0, totalCobrado: 0, conRetencion: 0, parciales: 0,
-      conSaldoAFavor: 0, pagos: 0, totalPagado: 0, anticipos: 0, totalAnticipos: 0,
+      conSaldoAFavor: 0, pagos: 0, totalPagado: 0, anticipos: 0, totalAnticipos: 0, gruposAnticipo: 0,
       quedanAbiertosCliente: 0, quedanAbiertosPago: 0,
     };
 
@@ -203,36 +220,66 @@ export class GeneradorCobrosService {
       }
     }
 
-    // Anticipos del mes en curso: base = total de la última liquidación
-    // (emitida o facturada) de cada chofer/proveedor.
-    const ultimas = new Map<string, ConId<InformeLiqNuevo>>();
-    for (const liq of abiertos) {
-      if (liq.tipo === 'cliente') continue;
-      const clave = `${liq.tipo}_${liq.entidad.id}`;
-      const actual = ultimas.get(clave);
-      if (!actual || (liq.periodoClave ?? '') > (actual.periodoClave ?? '')) ultimas.set(clave, liq);
+    return this.armarPlan(p, hoy, movimientos, r);
+  }
+
+  /** G4b — modo 'anticipos': por chofer/proveedor × mes del rango con
+   *  InformeOp (cualquier estado salvo anulado), con probabilidad
+   *  pctAnticipos, un anticipo sin imputar entre el día 5 y el 25 del mes
+   *  (en el mes en curso, hasta hoy; meses futuros no) por el 10–25 % del
+   *  total del mes, redondeado a $ 1.000. Orden determinista (tipo, nombre,
+   *  id, mes). */
+  private async planificarAnticipos(p: ParametrosCobros, azar: Azar, hoy: string): Promise<PlanCobros> {
+    const desde = `${p.desde}-01`;
+    const hasta = `${p.hasta}-${String(this.ultimoDia(p.hasta)).padStart(2, '0')}`;
+    const informes = (await this.db.consultarPorRango<InformeOpNuevo>('informesOp', 'fecha', desde, hasta))
+      .filter(i => i.tipo !== 'cliente' && i.estado !== 'anulado');
+
+    const grupos = new Map<string, InformeOpNuevo[]>();
+    for (const inf of informes) {
+      const clave = `${inf.tipo}|${inf.entidad.id}|${inf.fecha.slice(0, 7)}`;
+      const lista = grupos.get(clave);
+      if (lista) lista.push(inf); else grupos.set(clave, [inf]);
     }
+    const ordenados = [...grupos.values()].sort((a, b) =>
+      this.ORDEN_TIPOS.indexOf(a[0].tipo) - this.ORDEN_TIPOS.indexOf(b[0].tipo) ||
+      nombreEntidadRef(a[0].entidad).localeCompare(nombreEntidadRef(b[0].entidad)) ||
+      a[0].entidad.id.localeCompare(b[0].entidad.id) ||
+      a[0].fecha.slice(0, 7).localeCompare(b[0].fecha.slice(0, 7)));
+
+    const movimientos: MovimientoPlaneado[] = [];
+    const r = this.resumenVacio();
+    const mesHoy = hoy.slice(0, 7);
     const diaHoy = Number(hoy.slice(8, 10));
-    for (const liq of ultimas.values()) {
+    for (const lista of ordenados) {
+      const mes = lista[0].fecha.slice(0, 7);
+      if (mes > mesHoy) continue;
+      r.gruposAnticipo++;
       if (!azar.chance(p.pctAnticipos)) continue;
-      const importe = Math.max(1000, Math.round(liq.valores.total * azar.entero(10, 25) / 100 / 1000) * 1000);
-      const fecha = `${hoy.slice(0, 8)}${String(azar.entero(1, diaHoy)).padStart(2, '0')}`;
-      const entidad = this.entidadDe(liq);
+      const diaMax = mes === mesHoy ? Math.min(25, diaHoy) : 25;
+      const dia = azar.entero(Math.min(5, diaMax), diaMax);
+      const fecha = `${mes}-${String(dia).padStart(2, '0')}`;
+      const totalMes = lista.reduce((acc, i) => acc + (i.valores?.total ?? 0), 0);
+      const importe = Math.max(1000, Math.round(totalMes * azar.entero(10, 25) / 100 / 1000) * 1000);
+      const entidad = this.entidadDe(lista[0]);
       movimientos.push({
-        etiqueta: `Anticipo — ${entidad.razonSocial}`,
+        etiqueta: `Anticipo ${mes} — ${entidad.razonSocial}`,
         total: importe,
         datos: this.datos('pago', entidad, fecha, 'anticipo', this.mediosPago(importe, azar), []),
       });
       r.anticipos++;
       r.totalAnticipos += importe;
     }
+    return this.armarPlan(p, hoy, movimientos, r);
+  }
 
-    // Orden de registro: por fecha (numeración cronológica); estable.
+  /** Orden de registro por fecha (numeración cronológica; estable) y
+   *  totales redondeados. */
+  private armarPlan(p: ParametrosCobros, hoy: string, movimientos: MovimientoPlaneado[], r: ResumenCobros): PlanCobros {
     const ordenados = movimientos
       .map((m, i) => ({ m, i }))
       .sort((a, b) => a.m.datos.fecha.localeCompare(b.m.datos.fecha) || a.i - b.i)
       .map(x => x.m);
-
     return {
       parametros: { ...p },
       hoy,
@@ -243,6 +290,14 @@ export class GeneradorCobrosService {
         totalPagado: redondear2(r.totalPagado),
         totalAnticipos: redondear2(r.totalAnticipos),
       },
+    };
+  }
+
+  private resumenVacio(): ResumenCobros {
+    return {
+      facturadosCliente: 0, facturadosPago: 0, cobros: 0, totalCobrado: 0, conRetencion: 0, parciales: 0,
+      conSaldoAFavor: 0, pagos: 0, totalPagado: 0, anticipos: 0, totalAnticipos: 0, gruposAnticipo: 0,
+      quedanAbiertosCliente: 0, quedanAbiertosPago: 0,
     };
   }
 
@@ -263,7 +318,7 @@ export class GeneradorCobrosService {
       id: idLote,
       modo: 'crear',
       data: {
-        tipo: 'cobros',
+        tipo: plan.parametros.modo === 'anticipos' ? 'anticipos' : 'cobros',
         estado: 'en curso',
         usuario: this.usuarioSesion.getUsuarioActual()?.email ?? 'Desconocido',
         inicio: new Date().toISOString(),
@@ -391,13 +446,21 @@ export class GeneradorCobrosService {
   // Auxiliares
   // ---------------------------------------------------------------------------
 
-  private entidadDe(liq: ConId<InformeLiqNuevo>): EntidadMovimientoFin {
+  /** Entidad del movimiento desde un InformeLiq o un InformeOp (mismo
+   *  `tipo` y `entidad`). */
+  private entidadDe(doc: Pick<InformeLiqNuevo, 'tipo' | 'entidad'> | Pick<InformeOpNuevo, 'tipo' | 'entidad'>): EntidadMovimientoFin {
     return {
-      tipo: liq.tipo,
-      id: liq.entidad.id,
-      razonSocial: nombreEntidadRef(liq.entidad),
-      cuit: Number(liq.entidad.cuit) || 0,
+      tipo: doc.tipo,
+      id: doc.entidad.id,
+      razonSocial: nombreEntidadRef(doc.entidad),
+      cuit: Number(doc.entidad.cuit) || 0,
     };
+  }
+
+  /** Último día del mes 'YYYY-MM' (sin depender del huso horario). */
+  private ultimoDia(mesClave: string): number {
+    const [a, m] = mesClave.split('-').map(Number);
+    return new Date(Date.UTC(a, m, 0)).getUTCDate();
   }
 
   /** 'YYYY-MM-DD' + n días, en UTC sobre las partes del string. */
@@ -414,6 +477,15 @@ export class GeneradorCobrosService {
     if (pcts.some(x => !(x >= 0 && x <= 1))) throw new Error('Los porcentajes tienen que estar entre 0 y 1.');
     if (p.pctMorosos + p.pctAtrasados > 1) throw new Error('Morosos + atrasados no pueden superar 1.');
     if (!Number.isInteger(p.semilla)) throw new Error('La semilla tiene que ser un número entero.');
+    if (p.modo !== 'anticipos' && p.modo !== 'cobros') throw new Error(`Modo inválido: '${p.modo}'.`);
+    if (p.modo === 'anticipos') {
+      const formato = /^\d{4}-(0[1-9]|1[0-2])$/;
+      if (!formato.test(p.desde) || !formato.test(p.hasta)) throw new Error('Meses inválidos (YYYY-MM).');
+      if (p.desde > p.hasta) throw new Error('"Desde" no puede ser posterior a "hasta".');
+      const [a1, m1] = p.desde.split('-').map(Number);
+      const [a2, m2] = p.hasta.split('-').map(Number);
+      if ((a2 - a1) * 12 + (m2 - m1) + 1 > this.MAX_MESES) throw new Error(`El rango no puede superar ${this.MAX_MESES} meses.`);
+    }
   }
 
   private verificarEntorno(): void {
