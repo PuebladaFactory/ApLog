@@ -1,6 +1,8 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import Swal from 'sweetalert2';
+import { ReciboPdfService } from 'src/app/servicios/finanzas-nueva/recibo-pdf.service';
 import { ConId } from 'src/app/interfaces/conId';
 import { MedioMovimientoFin, MovimientoFin } from 'src/app/interfaces/movimiento-fin';
 import { fechaComprobanteLegible } from 'src/app/shared/utils/factura-electronica.util';
@@ -14,7 +16,8 @@ import {
  *  medios, imputaciones y anulación. Muestra el movimiento tal como llegó
  *  (snapshot de la fila, no escucha cambios). Los botones Imputar saldo y
  *  Anular cierran el modal con 'imputar' / 'anular' y el que lo abrió sigue
- *  el flujo. Imprimir (recibo / orden de pago) llega en F8. */
+ *  el flujo. Imprimir (F8c): Recibo (cobro) / Orden de pago (pago) en PDF
+ *  con ReciboPdfService; los ajustes no tienen comprobante. */
 @Component({
   selector: 'app-detalle-movimiento',
   standalone: false,
@@ -36,6 +39,35 @@ export class DetalleMovimientoComponent {
     public activeModal: NgbActiveModal,
     private router: Router,
   ) {}
+
+  imprimiendo = false;
+  private reciboPdf = inject(ReciboPdfService);
+
+  /** "Imprimir recibo" / "Imprimir orden de pago"; null en un ajuste. */
+  get textoImprimir(): string | null {
+    if (this.movimiento.tipo === 'ajuste') return null;
+    return this.movimiento.tipo === 'cobro' ? 'Imprimir recibo' : 'Imprimir orden de pago';
+  }
+
+  /** Descarga el PDF (F8c). Si faltan los datos de la empresa, avisa dónde
+   *  cargarlos (el PDF sale igual, solo con el logo). */
+  async imprimir(): Promise<void> {
+    if (this.imprimiendo) return;
+    this.imprimiendo = true;
+    try {
+      const res = await this.reciboPdf.descargar(this.movimiento);
+      if (!res.exito) {
+        Swal.fire({ icon: 'error', text: res.mensaje });
+      } else if (res.objeto?.sinDatosEmpresa) {
+        Swal.fire({
+          icon: 'info',
+          text: 'El PDF salió sin los datos de la empresa: cargalos en Ajustes → Datos de la empresa.',
+        });
+      }
+    } finally {
+      this.imprimiendo = false;
+    }
+  }
 
   /** Si ya estamos en la cuenta de esta entidad, no hay a dónde ir (F5d). */
   get enCuentaDeLaEntidad(): boolean {

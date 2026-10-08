@@ -209,8 +209,13 @@ export class PdfTabularService {
           startY: y + 2,
           head,
           body: tabla.filas.map(f => f.map((v, i) => formatearCelda(v, tabla.columnas[i].tipo))),
+          // jspdf-autotable NO aplica columnStyles al pie: cada celda de la
+          // fila Total lleva la alineación de su columna (montos a la derecha).
           foot: tabla.filaTotal
-            ? [tabla.filaTotal.map((v, i) => formatearCelda(v, tabla.columnas[i].tipo))]
+            ? [tabla.filaTotal.map((v, i) => ({
+                content: formatearCelda(v, tabla.columnas[i].tipo),
+                styles: { halign: alineacion(tabla.columnas[i]) },
+              }))]
             : undefined,
           showHead: 'everyPage',
           showFoot: 'lastPage',
