@@ -283,11 +283,14 @@ export class ValoresOpService {
         );
       } else if (op.tarifaTipo.especial) {
         //tarifa especial proveedor
-        if (this.proveedorSeleccionado.tarifaTipo.especial) {
+        // decide con op.chofer.tarifaTipo (refrescado al abrir el cierre), igual que el alta y el modal
+        if (op.chofer.tarifaTipo.especial) {
           ///////////// TARIFA ESPECIAL PROVEEDOR ///////////////////
           const tarifas = this.storageService.loadInfo("tarifasEspProveedor");
+          // las tarifas especiales de proveedor se guardan con idChofer: 0 → se buscan por idProveedor
+          const idProveedor = this.proveedorSeleccionado.idProveedor;
           this.$ultTarifaEspProveedor = tarifas.find(
-            (t) => t.idChofer === op.chofer.idChofer,
+            (t) => t.idProveedor === idProveedor,
           );
           //////console.log("3)C.2) tarifa ESPECIAL Proveedor: ", this.$ultTarifaGralProveedor);
           if (

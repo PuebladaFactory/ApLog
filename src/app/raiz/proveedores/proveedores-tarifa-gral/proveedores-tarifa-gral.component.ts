@@ -559,7 +559,7 @@ onGenerarNuevaTarifaAutomatica() {
           if(c.tarifaTipo.general){
             c.idTarifa = this.nuevaTarifaGral.idTarifa;
             let{id, type, ...ch} = c
-            this.storageService.updateItem("proveedores", ch, c.idChofer,"INTERNA", "", c.id);       
+            this.storageService.updateItem("choferes", ch, c.idChofer,"INTERNA", "", c.id);       
           }
         })
     }      
@@ -590,7 +590,7 @@ onGenerarNuevaTarifaAutomatica() {
           if(c.tarifaTipo.especial && c.idProveedor === this.idProveedorEsp[0]){
             c.idTarifa = this.nuevaTarifaGral.idTarifa;
             let{id, type, ...ch} = c
-            this.storageService.updateItem("proveedores", ch, c.idChofer,"INTERNA", "", c.id);       
+            this.storageService.updateItem("choferes", ch, c.idChofer,"INTERNA", "", c.id);       
           }
         })
       }    
