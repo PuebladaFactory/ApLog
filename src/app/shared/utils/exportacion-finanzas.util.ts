@@ -82,17 +82,21 @@ function textoLado(lado: LadoCuenta): string {
 /** Pestaña Cuentas: las filas en el orden de la tabla. */
 export function armarLibroCuentas(cuentas: CuentaEntidadFin[], lado: LadoCuenta, texto: string, hoy: string): LibroTabular {
   const cobrar = lado === 'cobrar';
+  // Anchos (≈ caracteres): también deciden la orientación del PDF (más de
+  // ANCHO_HOJA_HORIZONTAL = 140 → apaisada). Los montos van en 17 (el valor
+  // más largo, "$ 326.240.416,00", tiene 16): así A cobrar suma 149 y sale
+  // apaisada como A pagar, sin partir "$" e importe en dos líneas (F8a.1).
   const columnas: ColumnaDoc[] = [
     col(cobrar ? 'Cliente' : 'Entidad', 'texto', 32),
     ...(cobrar ? [] : [col('Tipo', 'texto', 10)]),
     col('CUIT', 'texto', 13),
-    col('Facturado abierto', 'moneda', 16),
-    col('Comprob.', 'numero', 8),
-    col(`+${DIAS_ALERTA_ANTIGUEDAD} días`, 'moneda', 15),
+    col('Facturado abierto', 'moneda', 17),
+    col('Comprob.', 'numero', 9),
+    col(`+${DIAS_ALERTA_ANTIGUEDAD} días`, 'moneda', 17),
     col('Antigüedad (días)', 'numero', 10),
-    col('Sin facturar', 'moneda', 15),
-    col(cobrar ? 'Saldo a favor' : 'Anticipos', 'moneda', 15),
-    col('Neto', 'moneda', 16),
+    col('Sin facturar', 'moneda', 17),
+    col(cobrar ? 'Saldo a favor' : 'Anticipos', 'moneda', 17),
+    col('Neto', 'moneda', 17),
   ];
   const filas: ValorCeldaDoc[][] = cuentas.map(c => [
     c.nombre,
