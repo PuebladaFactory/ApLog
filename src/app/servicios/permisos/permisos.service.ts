@@ -27,6 +27,7 @@ type ModuloReglas =
   | 'numeradores'
   | 'logs'
   | 'papelera'
+  | 'configuracion'
   | 'usuarios';
 
 @Injectable({
@@ -173,6 +174,14 @@ export class PermisosService {
       editar:   { dev: true, admin: false, manager: false, user: false, demo: false },
       eliminar: { dev: true, admin: true,  manager: false, user: false, demo: false },
     },
+    // Configuración de la app (F8b): `configuracion/empresa`. La leen todos
+    // los roles con acceso (la usan los comprobantes); escriben dev/admin.
+    configuracion: {
+      leer:     { dev: true, admin: true,  manager: false, user: true,  demo: true },
+      crear:    { dev: true, admin: true,  manager: false, user: false, demo: false },
+      editar:   { dev: true, admin: true,  manager: false, user: false, demo: false },
+      eliminar: { dev: true, admin: false, manager: false, user: false, demo: false },
+    },
     // Caso especial (Opción A): no pasa por permitido()/moduloDe() — regla
     // propia en firestore.rules (/users/{uid}: write solo 'dev', lectura
     // dev/admin/propio uid). 'admin' SÍ puede editar/eliminar usuarios en la
@@ -209,6 +218,7 @@ export class PermisosService {
     liquidaciones: 'finanzas',
     finanzas: 'finanzas',
     reportes: 'finanzas',
+    configuracion: 'configuracion',
   };
 
   // AccionPermiso (semántica de UI/botón) → AccionCrud (lo que distingue

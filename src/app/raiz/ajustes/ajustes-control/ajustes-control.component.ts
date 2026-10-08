@@ -14,6 +14,7 @@ import { tabActivaDesdeUrl } from 'src/app/shared/utils/tabs-url.util';
       <div class="tab" [class.active]="selectedTab === 'tab4'" (click)="selectTab('tab4')">Registro Log</div>
       <div class="tab" [class.active]="selectedTab === 'tab3'" (click)="selectTab('tab3')">Papelera</div>
       <div class="tab" [class.active]="selectedTab === 'tab5'" (click)="selectTab('tab5')">Papelera (legado)</div>
+      <div class="tab" [class.active]="selectedTab === 'tab6'" (click)="selectTab('tab6')">Datos de la empresa</div>
 
   </div>
   <router-outlet></router-outlet>
@@ -29,6 +30,7 @@ export class AjustesControlComponent implements OnInit {
     { id: 'tab3', route: 'ajustes/papelera' },
     { id: 'tab4', route: 'ajustes/registro-log' },
     { id: 'tab5', route: 'ajustes/papelera-legado' },
+    { id: 'tab6', route: 'ajustes/empresa' },
   ];
 
   /** Pestaña activa derivada de la URL real (ver tabs-url.util). */

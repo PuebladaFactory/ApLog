@@ -108,6 +108,8 @@ service cloud.firestore {
         'tarifasCliente': 'legacySoloLectura', 'tarifasProveedor': 'legacySoloLectura',
 
         'numeradores': 'numeradores',
+        // Configuración de la app (F8b): datos de la empresa (doc 'empresa').
+        'configuracion': 'configuracion',
         'logs': 'logs',
         'registroLog': 'logs',
         'papelera': 'papelera',
@@ -125,6 +127,11 @@ service cloud.firestore {
       let r = rol();
       return
         (modulo == 'desarrollo' && r == 'dev') ||
+        (modulo == 'configuracion' && (
+          r == 'dev' ||
+          (r == 'admin' && accion in ['leer','crear','editar']) ||
+          (r in ['user','demo'] && accion == 'leer')
+        )) ||
         (modulo == 'entidades' && (
           r in ['dev','admin'] ||
           (r == 'user' && accion in ['leer','crear','editar']) ||

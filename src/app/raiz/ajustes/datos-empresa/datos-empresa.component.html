@@ -1,0 +1,98 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="m-0 mt-2">Datos de la empresa</h2>
+  @if (existe) {
+    <span class="text-muted small mt-2">Última actualización: {{ fechaHora(datos.actualizado) }} — {{ datos.usuario }}</span>
+  }
+</div>
+
+@if (cargando) {
+  <app-spinner></app-spinner>
+} @else {
+  @if (!existe) {
+    <div class="alert alert-warning py-2">
+      Todavía no se cargaron los datos de la empresa. Se usan en el encabezado del Recibo y de la Orden de pago.
+    </div>
+  }
+  @if (!puedeEditar) {
+    <div class="alert alert-light border py-2">Solo lectura.</div>
+  }
+
+  <div class="row g-3">
+    <div class="col-12 col-lg-8">
+      <div class="row g-3">
+        <div class="col-md-8">
+          <label class="form-label mb-0" for="razonSocial">Razón social *</label>
+          <input id="razonSocial" class="form-control" [(ngModel)]="datos.razonSocial" [disabled]="!puedeEditar || guardando" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label mb-0" for="fantasia">Nombre de fantasía</label>
+          <input id="fantasia" class="form-control" [(ngModel)]="datos.nombreFantasia" [disabled]="!puedeEditar || guardando" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label mb-0" for="cuit">CUIT *</label>
+          <input id="cuit" class="form-control" inputmode="numeric" placeholder="30-71111111-8"
+            [(ngModel)]="cuitTexto" [disabled]="!puedeEditar || guardando" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label mb-0" for="iva">Condición frente al IVA</label>
+          <select id="iva" class="form-select" [(ngModel)]="datos.condicionIva" [disabled]="!puedeEditar || guardando">
+            @for (c of condiciones; track c[0]) {
+              <option [ngValue]="c[0]">{{ c[1] }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label mb-0" for="iibb">Ingresos Brutos</label>
+          <input id="iibb" class="form-control" [(ngModel)]="datos.ingresosBrutos" [disabled]="!puedeEditar || guardando" />
+        </div>
+        <div class="col-md-8">
+          <label class="form-label mb-0" for="domicilio">Domicilio *</label>
+          <input id="domicilio" class="form-control" placeholder="Calle 123" [(ngModel)]="datos.domicilio" [disabled]="!puedeEditar || guardando" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label mb-0" for="inicio">Inicio de actividades</label>
+          <input id="inicio" type="date" class="form-control" [(ngModel)]="datos.inicioActividades" [disabled]="!puedeEditar || guardando" />
+        </div>
+        <div class="col-md-12">
+          <label class="form-label mb-0" for="localidad">Localidad</label>
+          <input id="localidad" class="form-control" placeholder="Ciudad, Provincia (CP)" [(ngModel)]="datos.localidad" [disabled]="!puedeEditar || guardando" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label mb-0" for="telefono">Teléfono</label>
+          <input id="telefono" class="form-control" [(ngModel)]="datos.telefono" [disabled]="!puedeEditar || guardando" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label mb-0" for="email">Email</label>
+          <input id="email" type="email" class="form-control" [(ngModel)]="datos.email" [disabled]="!puedeEditar || guardando" />
+        </div>
+      </div>
+
+      @if (puedeEditar) {
+        @if (errorValidacion) {
+          <div class="text-danger small mt-2">{{ errorValidacion }}</div>
+        }
+        @if (error) {
+          <div class="alert alert-danger mt-2 mb-0">{{ error }}</div>
+        }
+        <button type="button" class="btn btn-primary mt-3" [disabled]="guardando || errorValidacion !== null" (click)="guardar()">
+          Guardar
+        </button>
+      }
+    </div>
+
+    <div class="col-12 col-lg-4">
+      <div class="card vista-previa">
+        <div class="card-body">
+          <div class="text-muted small mb-2">Así sale en el encabezado de los comprobantes</div>
+          @for (l of vistaPrevia; track $index) {
+            <div [class.fw-bold]="$index === 0">{{ l }}</div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+@if (guardando) {
+  <app-spinner></app-spinner>
+}

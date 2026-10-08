@@ -11,6 +11,7 @@ import { NgbDatepickerModule } from '@ng-bootstrap/ng-bootstrap';
 import { PapeleraComponent } from './papelera/papelera.component';
 import { PapeleraLegadoComponent } from './papelera-legado/papelera-legado.component';
 import { RegistroLogComponent } from './registro-log/registro-log.component';
+import { DatosEmpresaComponent } from './datos-empresa/datos-empresa.component';
 import { FilterPipeModule } from 'ngx-filter-pipe';
 
 
@@ -24,6 +25,7 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
     PapeleraComponent,
     PapeleraLegadoComponent,
     RegistroLogComponent,
+    DatosEmpresaComponent,
   ],
   imports: [
     CommonModule,

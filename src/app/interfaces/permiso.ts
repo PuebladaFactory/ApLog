@@ -9,6 +9,7 @@ export type ModuloPermiso =
   | 'facturacion'
   | 'finanzas'
   | 'reportes'
+  | 'configuracion'   // Ajustes → Datos de la empresa (F8b)
   | 'usuarios';
 
 // Unión abierta (no unión cerrada): agregar acciones nuevas simplemente

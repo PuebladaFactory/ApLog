@@ -7,6 +7,7 @@ import { RegistroComponent } from './registro/registro.component';
 import { PapeleraComponent } from './papelera/papelera.component';
 import { PapeleraLegadoComponent } from './papelera-legado/papelera-legado.component';
 import { RegistroLogComponent } from './registro-log/registro-log.component';
+import { DatosEmpresaComponent } from './datos-empresa/datos-empresa.component';
 
 const routes: Routes = [
   {path: '', component:AjustesControlComponent,
@@ -31,6 +32,10 @@ const routes: Routes = [
       {path: 'papelera-legado', component:PapeleraLegadoComponent,
         canActivate: [RoleGuard],
         data: { roles: ['dev', 'admin', 'demo'] }, // no se permiten usuarios
+      },
+      {path: 'empresa', component:DatosEmpresaComponent,
+        canActivate: [RoleGuard],
+        data: { roles: ['dev', 'admin', 'demo'] }, // demo: solo lectura (F8b)
       },
   ]}
 ];
