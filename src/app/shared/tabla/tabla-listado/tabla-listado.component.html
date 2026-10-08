@@ -23,7 +23,12 @@
               @if (col.tipo === 'moneda') {
                 {{ valorMoneda(col, item) | formatearValor: '$' }}
               } @else {
-                {{ col.valor(item) }}
+                @let enlace = enlaceDe(col, item);
+                @if (enlace) {
+                  <a class="enlace-celda" [routerLink]="enlace.ruta" [queryParams]="enlace.queryParams">{{ col.valor(item) }}</a>
+                } @else {
+                  {{ col.valor(item) }}
+                }
               }
             </td>
           }

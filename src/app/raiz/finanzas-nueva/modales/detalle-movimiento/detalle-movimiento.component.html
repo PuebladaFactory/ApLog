@@ -7,7 +7,14 @@
       }
     </h4>
     <div class="text-muted">
-      <span class="text-capitalize">{{ m.entidad.tipo }}</span> {{ m.entidad.razonSocial }} — CUIT {{ m.entidad.cuit }}
+      <span class="text-capitalize">{{ m.entidad.tipo }}</span>
+      @if (enCuentaDeLaEntidad) {
+        {{ m.entidad.razonSocial }}
+      } @else {
+        <a class="enlace-entidad" role="link" tabindex="0" (click)="irACuenta()" (keydown.enter)="irACuenta()"
+          title="Ver la cuenta">{{ m.entidad.razonSocial }}</a>
+      }
+      — CUIT {{ m.entidad.cuit }}
     </div>
   </div>
   <button type="button" class="btn-close" (click)="cerrar()"></button>

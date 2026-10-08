@@ -4,6 +4,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { AccionListado, ColumnaListado, EventoAccionListado, OrdenListado } from 'src/app/interfaces/tabla-listado';
 import { RegistrarMovimientoComponent } from '../modales/registrar-movimiento/registrar-movimiento.component';
+import { enlaceCuenta } from '../enlace-cuenta';
 import { toISODateString } from 'src/app/servicios/fechas/date-range.service';
 import { FinanzasConsultaService } from 'src/app/servicios/finanzas-nueva/finanzas-consulta.service';
 import {
@@ -119,7 +120,10 @@ export class FinanzasCuentasComponent implements OnInit, OnDestroy {
   private armarColumnas(): ColumnaListado<Fila>[] {
     const cobrar = this.filtros.lado === 'cobrar';
     const columnas: ColumnaListado<Fila>[] = [
-      { key: 'nombre', label: cobrar ? 'Cliente' : 'Entidad', valor: c => c.nombre, orden: c => c.nombre },
+      {
+        key: 'nombre', label: cobrar ? 'Cliente' : 'Entidad', valor: c => c.nombre, orden: c => c.nombre,
+        enlace: c => enlaceCuenta(c.tipo, c.idEntidad, 'cuentas'),
+      },
     ];
     if (!cobrar) {
       columnas.push({ key: 'tipo', label: 'Tipo', valor: c => c.tipo, orden: c => c.tipo, clase: 'text-capitalize' });

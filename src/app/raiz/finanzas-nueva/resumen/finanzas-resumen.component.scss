@@ -126,3 +126,14 @@ $color-movido: #20c997;
   color: #6c757d;
   padding-top: 0.25rem;
 }
+
+// F5d: nombre de entidad que lleva a su cuenta (sin estilo de link clásico).
+.enlace-entidad {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.enlace-entidad:hover {
+  text-decoration: underline;
+}

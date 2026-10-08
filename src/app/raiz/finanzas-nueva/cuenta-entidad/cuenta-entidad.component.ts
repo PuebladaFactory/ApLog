@@ -283,6 +283,7 @@ export class CuentaEntidadComponent implements OnInit, OnDestroy {
     const o = this.route.snapshot.queryParamMap.get('origen');
     if (o === 'antiguedad') return { ruta: '/finanzasNueva/antiguedad', etiqueta: 'Antigüedad' };
     if (o === 'resumen') return { ruta: '/finanzasNueva/resumen', etiqueta: 'Resumen' };
+    if (o === 'movimientos') return { ruta: '/finanzasNueva/movimientos', etiqueta: 'Movimientos' };
     return { ruta: '/finanzasNueva/cuentas', etiqueta: 'Cuentas' };
   }
 

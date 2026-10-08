@@ -2,6 +2,7 @@ import { ConId } from 'src/app/interfaces/conId';
 import { MovimientoFin } from 'src/app/interfaces/movimiento-fin';
 import { AccionListado, ColumnaListado } from 'src/app/interfaces/tabla-listado';
 import { fechaComprobanteLegible } from 'src/app/shared/utils/factura-electronica.util';
+import { enlaceCuenta } from './enlace-cuenta';
 import {
   ETIQUETA_TIPO_MOVIMIENTO, esDevolucion, etiquetaConceptoMovimiento, resumenMedios, validarAnulable,
 } from 'src/app/shared/utils/movimiento-fin.util';
@@ -56,7 +57,10 @@ export function columnasMovimientos(opciones: { conEntidad: boolean }): ColumnaL
           ? 'text-warning-emphasis fw-semibold'
           : esDevolucion(m) ? 'text-primary fw-semibold' : ''),
       },
-      { key: 'entidad', label: 'Entidad', valor: m => m.entidad.razonSocial, orden: m => m.entidad.razonSocial },
+      {
+        key: 'entidad', label: 'Entidad', valor: m => m.entidad.razonSocial, orden: m => m.entidad.razonSocial,
+        enlace: m => enlaceCuenta(m.entidad.tipo, m.entidad.id, 'movimientos'),
+      },
       {
         key: 'tipoEntidad', label: 'Tipo entidad', valor: m => m.entidad.tipo, orden: m => m.entidad.tipo,
         clase: 'text-capitalize',

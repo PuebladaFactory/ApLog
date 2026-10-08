@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import {
-  AccionListado, ColumnaListado, EventoAccionListado, OrdenListado,
+  AccionListado, ColumnaListado, EnlaceListado, EventoAccionListado, OrdenListado,
 } from 'src/app/interfaces/tabla-listado';
 import { AccionPermiso, ModuloPermiso } from 'src/app/interfaces/permiso';
 import { PermisosService } from 'src/app/servicios/permisos/permisos.service';
@@ -84,6 +84,11 @@ export class TablaListadoComponent<T = any> implements OnChanges {
     const extra = typeof col.clase === 'function' ? col.clase(item) : col.clase;
     if (extra) clases.push(extra);
     return clases;
+  }
+
+  /** Enlace de la celda (columna con `enlace`), o null. */
+  enlaceDe(col: ColumnaListado<T>, item: T): EnlaceListado | null {
+    return col.enlace ? col.enlace(item) : null;
   }
 
   valorMoneda(col: ColumnaListado<T>, item: T): number | null {

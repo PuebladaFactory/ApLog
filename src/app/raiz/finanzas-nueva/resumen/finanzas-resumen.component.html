@@ -205,7 +205,8 @@
                 @for (c of top; track c.clave) {
                   @let st = estadoDe(c);
                   <tr>
-                    <td>{{ c.nombre }} @if (lado === 'pagar') { <span class="text-muted small text-capitalize">· {{ c.tipo }}</span> }</td>
+                    <td><a class="enlace-entidad" [routerLink]="['/finanzasNueva/cuenta', c.tipo, c.idEntidad]"
+                        [queryParams]="{ origen: 'resumen' }">{{ c.nombre }}</a> @if (lado === 'pagar') { <span class="text-muted small text-capitalize">· {{ c.tipo }}</span> }</td>
                     <td class="text-end text-danger">{{ c.saldoVencido | formatearValor: '$' }}</td>
                     <td class="text-end">{{ c.saldoFacturado | formatearValor: '$' }}</td>
                     <td class="text-center">{{ c.diasPromedio ?? '—' }}</td>
@@ -247,7 +248,8 @@
                 @for (i of a.items; track i.tipo + i.idEntidad) {
                   <tr>
                     <td>
-                      {{ i.nombre }}
+                      <a class="enlace-entidad" [routerLink]="['/finanzasNueva/cuenta', i.tipo, i.idEntidad]"
+                        [queryParams]="{ origen: 'resumen' }">{{ i.nombre }}</a>
                       <div class="text-muted small">{{ i.detalle }}</div>
                     </td>
                     <td class="text-end text-nowrap">{{ i.importe | formatearValor: '$' }}</td>

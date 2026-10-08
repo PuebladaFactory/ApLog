@@ -12,6 +12,7 @@ import {
 } from 'src/app/shared/utils/cuentas-finanzas.util';
 import { fechaComprobanteLegible } from 'src/app/shared/utils/factura-electronica.util';
 import { TRAMOS_ANTIGUEDAD, TramoAntiguedad } from 'src/app/shared/utils/finanzas.util';
+import { enlaceCuenta } from '../enlace-cuenta';
 
 type Fila = CuentaEntidadFin;
 
@@ -148,7 +149,10 @@ export class FinanzasAntiguedadComponent implements OnInit, OnDestroy {
   private armarColumnas(): ColumnaListado<Fila>[] {
     const cobrar = this.filtros.lado === 'cobrar';
     const columnas: ColumnaListado<Fila>[] = [
-      { key: 'nombre', label: cobrar ? 'Cliente' : 'Entidad', valor: c => c.nombre, orden: c => c.nombre },
+      {
+        key: 'nombre', label: cobrar ? 'Cliente' : 'Entidad', valor: c => c.nombre, orden: c => c.nombre,
+        enlace: c => enlaceCuenta(c.tipo, c.idEntidad, 'antiguedad'),
+      },
     ];
     if (!cobrar) {
       columnas.push({ key: 'tipo', label: 'Tipo', valor: c => c.tipo, orden: c => c.tipo, clase: 'text-capitalize' });

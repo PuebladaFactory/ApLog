@@ -1,8 +1,10 @@
 import { Component, Input } from '@angular/core';
+import { Router } from '@angular/router';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { ConId } from 'src/app/interfaces/conId';
 import { MedioMovimientoFin, MovimientoFin } from 'src/app/interfaces/movimiento-fin';
 import { fechaComprobanteLegible } from 'src/app/shared/utils/factura-electronica.util';
+import { enlaceCuenta } from '../../enlace-cuenta';
 import {
   ETIQUETA_CONCEPTO, ETIQUETA_IMPUESTO, ETIQUETA_MEDIO, ETIQUETA_MOTIVO_AJUSTE, ETIQUETA_ORIGEN_IMPUTACION,
   ETIQUETA_TIPO_MOVIMIENTO, etiquetaConceptoMovimiento, validarAnulable,
@@ -30,7 +32,23 @@ export class DetalleMovimientoComponent {
   readonly etiquetaOrigen = ETIQUETA_ORIGEN_IMPUTACION;
   readonly fechaLegible = fechaComprobanteLegible;
 
-  constructor(public activeModal: NgbActiveModal) {}
+  constructor(
+    public activeModal: NgbActiveModal,
+    private router: Router,
+  ) {}
+
+  /** Si ya estamos en la cuenta de esta entidad, no hay a dónde ir (F5d). */
+  get enCuentaDeLaEntidad(): boolean {
+    const ruta = `/finanzasNueva/cuenta/${this.movimiento.entidad.tipo}/${this.movimiento.entidad.id}`;
+    return this.router.url.split('?')[0] === ruta;
+  }
+
+  /** Nombre de la entidad → su cuenta: cierra el modal y navega (F5d). */
+  irACuenta(): void {
+    const e = enlaceCuenta(this.movimiento.entidad.tipo, this.movimiento.entidad.id, 'movimientos');
+    this.activeModal.dismiss();
+    this.router.navigate(e.ruta, { queryParams: e.queryParams });
+  }
 
   get m(): ConId<MovimientoFin> {
     return this.movimiento;

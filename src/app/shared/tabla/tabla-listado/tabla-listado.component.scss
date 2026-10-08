@@ -37,3 +37,14 @@ th.ordenable:hover {
   cursor: not-allowed;
   opacity: 0.5;
 }
+
+// Celda con enlace (ColumnaListado.enlace): mismo color, mano, subrayado al pasar.
+.enlace-celda {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.enlace-celda:hover {
+  text-decoration: underline;
+}

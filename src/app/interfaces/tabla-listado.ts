@@ -17,6 +17,16 @@ export interface ColumnaListado<T> {
   align?: 'start' | 'center' | 'end';
   /** Clases extra de la celda (estáticas o por fila). */
   clase?: string | ((item: T) => string);
+  /** Si devuelve un enlace, el valor de la celda se muestra como un
+   *  [routerLink] (mismo color, mano, subrayado al pasar). Solo columnas que
+   *  no son 'moneda'. null = celda normal. */
+  enlace?: (item: T) => EnlaceListado | null;
+}
+
+/** Destino de una celda con enlace (ColumnaListado.enlace). */
+export interface EnlaceListado {
+  ruta: any[];
+  queryParams?: Record<string, string>;
 }
 
 /** Acción de fila (botón de texto en la columna "Acciones"). */
