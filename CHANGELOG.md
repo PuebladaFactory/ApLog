@@ -2104,6 +2104,49 @@ Detalle completo en `CLAUDE.md` → "Frente Vendedores — comisiones de venta".
 
 ---
 
+## Frente Finanzas — cobros, pagos y cuentas (Octubre 2026)
+
+- Módulo nuevo `raiz/finanzas-nueva` (ruta `finanzas`, dev/admin/demo,
+  lazy): pestañas Resumen (posición, flujo del mes, evolución de 6 meses,
+  top 5, alertas), Cuentas, Antigüedad (tramos, días promedio ponderados,
+  estado por lado) y Movimientos; página Cuenta de la entidad con
+  comprobantes, movimientos, Mayor e historia de un comprobante; el nombre
+  de la entidad enlaza a su cuenta.
+- Saldos en el informe (`valoresFinancieros` con `totalCompensado` /
+  `totalCobrado` / `totalAjustado`; `estadoFinanciero` + 'incobrable') y
+  cuentas calculadas al consultar, sin agregado por entidad.
+- Colección nueva `movimientosFin` (RC / OPG / AJ): cobros y pagos con
+  varios medios (transferencia, cheque, e-cheq, efectivo, retenciones),
+  anticipos y préstamos sin imputar, imputar saldo, anular, ajustes
+  (incobrable, bonificación, redondeo, otro), cierre de saldos y
+  devoluciones; cada gesto en una transacción con su log.
+- Compensaciones en la liquidación (anticipos / saldos a favor descontados
+  en el borrador, aplicados al emitir, liberados al revertir); neto en el
+  PDF/Excel de la liquidación; la factura se valida contra el total o el
+  neto.
+- Excel/PDF de Cuentas, Antigüedad, Movimientos y la cuenta de la entidad;
+  Recibo / Orden de pago en PDF con monto en letras.
+- Datos de la empresa (`configuracion/empresa`, Ajustes → Datos de la
+  empresa) con módulo de permisos 'configuracion'.
+- Facturación: desvincular también exige `totalAjustado = 0`.
+- Generadores de demo: Circuito (liquidar, facturar, compensar, con fechas
+  realistas) y Cobros y pagos (modos Anticipos y Cobros y pagos);
+  `DatosLiquidacion.fechaEmision` opcional para cargar liquidaciones con
+  fecha pasada.
+- Reglas: `movimientosFin` ('finanzas') y `configuracion`; índice
+  `informesLiq (estado, estadoFinanciero)` (desplegado solo en demo).
+- Retiro del módulo viejo (`raiz/finanzas`, `servicios/finanzas`,
+  `servicios/cuenta-corriente`, interfaces, `resumenFinanzas$`,
+  `generarMovimientoPdf`, llamadas de `LiquidacionService`) y de los
+  componentes viejos de Facturación que dependían de él; `FinanzasModule`
+  ya no se importa en `RaizModule` (bundle inicial 8,79 → 8,60 MB).
+
+Detalle completo en `CLAUDE.md` → "Frente Finanzas — cobros, pagos y cuentas".
+
+**Verificación:** `ng build --configuration=demo` limpio.
+
+---
+
 ### Pendiente
 
 Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
@@ -2115,9 +2158,8 @@ Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
   sobre las colecciones viejas); multiplicidad real en operaciones-editor
   (hoy el shim `tarifaTipoDesdeHabilitadas`); documentar el tarifario nuevo
   en CLAUDE.md.
-- Finanzas: cascada sobre InformeLiqNuevo (cobros/pagos sobre 'facturado',
-  cuenta corriente, aging, ledger, incobrable); hoy lee las colecciones
-  viejas.
+- Finanzas (frentes aparte): cartera de cheques, pago de liquidaciones de
+  vendedores como movimiento, plazo de pago por entidad.
 - Campos legacy de Operacion (`valores`, `tarifaTipo`,
   `datosTarifaPersonalizada`): retirar con el cierre de Tarifas (Reportes
   ya usa `valoresNuevos`; queda su fallback legacy hasta migrar Vantruck).
@@ -2130,16 +2172,20 @@ Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
   de `servicios/exportacion/`.
 - RaizModule: imports eager de los módulos de feature (lazy loading, bundle
   inicial).
-- Estilo global `.col-numero` (hoy repetido en Vendedores e
-  `informes-tabla`).
+- Estilo global `.col-numero` (hoy repetido en Vendedores y
+  `tabla-listado`).
 
 **Migración a Vantruck (al final)**
 - Migración de datos (entidades, tarifas, operaciones, liquidaciones y
   facturación, con los checklists registrados en CLAUDE.md), deploy de
   reglas / índices / `storage.rules` en `pf-logistics` (incluidas las de
-  `informesOp` / `resumenesOp` / `comisionesVenta` / `liquidacionesVenta`),
-  Recálculo de `resumenesOp` y de `comisionesVenta` sobre el histórico,
-  vendedores y asignaciones (mapa de idCliente viejo), lo pagado con
-  `resumenVenta`, borrado de `resumenOpMensual` / `informesVenta` /
-  `resumenVenta`, y retiro del camino viejo (LiquidacionesOp, Proforma,
-  facturación vieja, exportaciones viejas de liquidación).
+  `informesOp` / `resumenesOp` / `comisionesVenta` / `liquidacionesVenta` /
+  `movimientosFin` / `configuracion` y el índice
+  `informesLiq (estado, estadoFinanciero)`), Recálculo de `resumenesOp` y
+  de `comisionesVenta` sobre el histórico, vendedores y asignaciones (mapa
+  de idCliente viejo), lo pagado con `resumenVenta`, Datos de la empresa,
+  apertura de Finanzas (fecha de corte, saldos reales, importador),
+  liquidaciones históricas con su `fechaEmision` real, borrado de
+  `resumenOpMensual` / `informesVenta` / `resumenVenta` / `movimientos` /
+  `resumenFinanzas`, y retiro del camino viejo (LiquidacionesOp, Proforma,
+  exportaciones viejas de liquidación).
