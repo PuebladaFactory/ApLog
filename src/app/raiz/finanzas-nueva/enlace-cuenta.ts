@@ -9,5 +9,5 @@ export type OrigenCuenta = 'cuentas' | 'antiguedad' | 'resumen' | 'movimientos';
  *  las columnas con enlace de TablaListado y los [routerLink] de las
  *  plantillas. */
 export function enlaceCuenta(tipo: TipoEntidadFin, idEntidad: string, origen: OrigenCuenta): EnlaceListado {
-  return { ruta: ['/finanzasNueva/cuenta', tipo, idEntidad], queryParams: { origen } };
+  return { ruta: ['/finanzas/cuenta', tipo, idEntidad], queryParams: { origen } };
 }

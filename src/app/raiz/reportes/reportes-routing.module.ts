@@ -10,15 +10,6 @@ const routes: Routes = [
             { path: '', redirectTo: 'opGeneral', pathMatch: 'full' },             
             {path: 'opGeneral', component:ResumenOpGeneralComponent},
             {path: 'opEntidad', component:ResumenOpEntidadComponent},
-            /*{path: 'historial', component:HistorialMovimientosComponent},
-            {path: 'movimiento/:id',component: MovimientoDetalleComponent},          
-            {path: 'cuenta-corriente',component: CuentaCorrienteComponent},
-            {path: 'cuenta-corriente/:id',component: DetalleCuentaCorrienteComponent},
-            {path: 'informe/:id', component: InformeLiqCuentaCorrienteComponent },
-            {path: 'ledger', component: LedgerComponent},
-            {path: 'aging', component: AgingListadoComponent},
-            {path: 'ranking', component: RankingMorososComponent},          
-                                          */
         ]   },
 ];
 

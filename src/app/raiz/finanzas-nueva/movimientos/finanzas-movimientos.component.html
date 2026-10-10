@@ -68,6 +68,14 @@
   <div class="col-6 col-lg">
     <div class="card tarjeta h-100">
       <div class="card-body">
+        <div class="tarjeta-label">Devoluciones ({{ totales.cantidadDevoluciones }})</div>
+        <div class="tarjeta-valor">{{ totales.devoluciones | formatearValor: '$' }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg">
+    <div class="card tarjeta h-100">
+      <div class="card-body">
         <div class="tarjeta-label">Sin imputar (saldo a favor / anticipos)</div>
         <div class="tarjeta-valor" [class.text-warning]="totales.sinImputar > 0">{{ totales.sinImputar | formatearValor: '$' }}</div>
       </div>

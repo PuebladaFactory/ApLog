@@ -41,7 +41,7 @@ const ETIQUETA_ESTADO: Readonly<Record<InformeLiqNuevo['estado'], string>> = {
   anulado: 'Anulado',
 };
 
-/** Finanzas → Cuenta de UNA entidad (F5, ruta `finanzasNueva/cuenta/:tipo/:id`,
+/** Finanzas → Cuenta de UNA entidad (F5, ruta `finanzas/cuenta/:tipo/:id`,
  *  F39). En vivo (FinanzasConsultaService.observarCuentaEntidad): todos sus
  *  InformeLiq y movimientos.
  *  - Encabezado: facturado abierto, emitido sin facturar, saldo a favor /
@@ -315,10 +315,10 @@ export class CuentaEntidadComponent implements OnInit, OnDestroy {
    *  Cuentas. Solo valores conocidos: un origen inventado vuelve a Cuentas. */
   get origen(): { ruta: string; etiqueta: string } {
     const o = this.route.snapshot.queryParamMap.get('origen');
-    if (o === 'antiguedad') return { ruta: '/finanzasNueva/antiguedad', etiqueta: 'Antigüedad' };
-    if (o === 'resumen') return { ruta: '/finanzasNueva/resumen', etiqueta: 'Resumen' };
-    if (o === 'movimientos') return { ruta: '/finanzasNueva/movimientos', etiqueta: 'Movimientos' };
-    return { ruta: '/finanzasNueva/cuentas', etiqueta: 'Cuentas' };
+    if (o === 'antiguedad') return { ruta: '/finanzas/antiguedad', etiqueta: 'Antigüedad' };
+    if (o === 'resumen') return { ruta: '/finanzas/resumen', etiqueta: 'Resumen' };
+    if (o === 'movimientos') return { ruta: '/finanzas/movimientos', etiqueta: 'Movimientos' };
+    return { ruta: '/finanzas/cuentas', etiqueta: 'Cuentas' };
   }
 
   volver(): void {

@@ -167,7 +167,7 @@ export class FinanzasResumenComponent implements OnInit, OnDestroy {
   }
 
   verCuenta(tipo: CuentaEntidadFin['tipo'], idEntidad: string): void {
-    this.router.navigate(['/finanzasNueva/cuenta', tipo, idEntidad], { queryParams: { origen: 'resumen' } });
+    this.router.navigate(['/finanzas/cuenta', tipo, idEntidad], { queryParams: { origen: 'resumen' } });
   }
 
   trackMes = (_: number, b: { mes: string }) => b.mes;

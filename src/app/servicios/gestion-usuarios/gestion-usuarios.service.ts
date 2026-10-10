@@ -9,8 +9,7 @@ export class GestionUsuariosService {
   constructor(private firestore: Firestore) {}
 
   /**
-   * Lectura puntual (no listener) de toda la colección `users`. Mismo
-   * patrón que CuentaCorrienteService.obtenerRankingMorosos(): getDocs
+   * Lectura puntual (no listener) de toda la colección `users`: getDocs
    * directo sobre la colección, sin ConId (el doc ya trae su propio
    * campo `uid`, que coincide con el id de Firestore).
    */

@@ -74,9 +74,9 @@ type Lado = 'cliente' | 'chofer';
  *  vida del informe de liquidación y las transiciones que arrastra sobre los
  *  InformeOp que lo componen, sus contrapartes y las Operaciones.
  *  Camino paralelo a LiquidacionService (modelo viejo, sin tocar).
- *
- *  TODO Finanzas: ningún orquestador actualiza resumenFinanzas / cuenta
- *  corriente — la cascada de Finanzas es un frente propio. */
+ *  Finanzas no usa un agregado por entidad: los saldos viven en
+ *  valoresFinancieros del informe y la cuenta se calcula al consultar
+ *  (diseno-finanzas.md F2). */
 @Injectable({ providedIn: 'root' })
 export class InformeLiqService {
 
@@ -446,9 +446,7 @@ export class InformeLiqService {
    *      'proforma'/'liquidado' (sync 'soloMonto'), cambia su
    *      contraParte.monto → delta de SU valores.totalContraParte.
    *  Lecturas previas no transaccionales (mismo criterio que editar: la
-   *  ventana de carrera es la del editor abierto).
-   *  TODO Finanzas: sobre un 'emitido', el cambio de total impacta en
-   *  resumenFinanzas cuando se conecte la cascada. */
+   *  ventana de carrera es la del editor abierto). */
   async editarInformeOp(
     resultado: ResultadoEdicionInformeOp,
     msj: string = 'Edición de InformeOp en liquidación',
@@ -563,9 +561,7 @@ export class InformeLiqService {
    *  imputación 'compensacion' a este informe y recupera el saldo sin
    *  imputar). Quedan en el informe revertido como historia.
    *  Presupuesto: 2 por InformeOp + informe + copia + log (≤ 303) + 1 por
-   *  compensación (≤ MAX_COMPENSACIONES).
-   *  TODO Finanzas: cuando exista la cascada, revertir tiene que descontar
-   *  el informe de resumenFinanzas / cuenta corriente. */
+   *  compensación (≤ MAX_COMPENSACIONES). */
   async revertirEmitido(idInfLiq: string, motivo: string): Promise<Resultado<void>> {
     const motivoLimpio = (motivo ?? '').trim();
     if (!motivoLimpio) return { exito: false, mensaje: 'El motivo de la reversión es obligatorio.' };

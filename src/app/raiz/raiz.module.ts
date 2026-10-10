@@ -24,7 +24,6 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 import { AjustesModule } from './ajustes/ajustes.module';
 import { LegajosModule } from './legajos/legajos.module';
 import { VendedoresModule } from './vendedores/vendedores.module';
-import { FinanzasModule } from './finanzas/finanzas.module';
 import { NuevaFacturacionModule } from './nueva-facturacion/nueva-facturacion.module';
 import { ReportesModule } from './reportes/reportes.module';
 /* import { NuevaFacturacionModule } from './nueva-facturacion/nueva-facturacion.module'; */
@@ -60,7 +59,6 @@ import { ReportesModule } from './reportes/reportes.module';
         AgGridModule,
         DragDropModule, 
         NuevaFacturacionModule,
-        FinanzasModule,
         ReportesModule
     ],
 })

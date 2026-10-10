@@ -71,7 +71,7 @@ export class DetalleMovimientoComponent {
 
   /** Si ya estamos en la cuenta de esta entidad, no hay a dónde ir (F5d). */
   get enCuentaDeLaEntidad(): boolean {
-    const ruta = `/finanzasNueva/cuenta/${this.movimiento.entidad.tipo}/${this.movimiento.entidad.id}`;
+    const ruta = `/finanzas/cuenta/${this.movimiento.entidad.tipo}/${this.movimiento.entidad.id}`;
     return this.router.url.split('?')[0] === ruta;
   }
 

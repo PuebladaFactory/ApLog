@@ -70,15 +70,10 @@ const routes: Routes = [
       data: { roles: ['dev','admin','user','demo'] },
     },
     {
+      // Frente Finanzas (F9): el módulo viejo se retiró; la ruta 'finanzas'
+      // es el módulo nuevo (carpeta finanzas-nueva). Solo lazy: NO se
+      // importa en RaizModule. demo lee (reglas 'finanzas').
       path: 'finanzas',
-      loadChildren: () => import('./finanzas/finanzas.module').then(m => m.FinanzasModule),
-      canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['dev','admin'] }, // 
-    },
-    {
-      // Frente Finanzas: módulo nuevo en paralelo al viejo ('finanzas').
-      // Solo lazy: NO se importa en RaizModule. demo lee (reglas 'finanzas').
-      path: 'finanzasNueva',
       loadChildren: () => import('./finanzas-nueva/finanzas-nueva.module').then(m => m.FinanzasNuevaModule),
       canActivate: [RoleGuard],
       data: { roles: ['dev', 'admin', 'demo'] },

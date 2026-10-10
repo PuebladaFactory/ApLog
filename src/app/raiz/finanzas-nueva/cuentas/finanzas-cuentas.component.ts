@@ -21,7 +21,7 @@ type Fila = CuentaEntidadFin;
  *  proveedores). En vivo, calculado al consultar (FinanzasConsultaService →
  *  armarCuentas). Acciones (F3): registrar cobro/pago desde la fila o
  *  "Nuevo cobro/pago" (RegistrarMovimientoComponent). "Ver cuenta" abre la
- *  Cuenta de la entidad (F5, ruta finanzasNueva/cuenta/:tipo/:id). */
+ *  Cuenta de la entidad (F5, ruta finanzas/cuenta/:tipo/:id). */
 @Component({
   selector: 'app-finanzas-cuentas',
   standalone: false,
@@ -124,7 +124,7 @@ export class FinanzasCuentasComponent implements OnInit, OnDestroy {
   }
 
   onAccion(ev: EventoAccionListado<Fila>): void {
-    if (ev.id === 'cuenta') this.router.navigate(['/finanzasNueva/cuenta', ev.item.tipo, ev.item.idEntidad]);
+    if (ev.id === 'cuenta') this.router.navigate(['/finanzas/cuenta', ev.item.tipo, ev.item.idEntidad]);
     else if (ev.id === 'cobrar' || ev.id === 'pagar') this.abrirRegistro(ev.item);
   }
 

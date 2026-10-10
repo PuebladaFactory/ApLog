@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { TabRuta, tabActivaDesdeUrl } from 'src/app/shared/utils/tabs-url.util';
 
-/** Shell del módulo Finanzas (camino nuevo, ruta `finanzasNueva`). Pestaña
+/** Shell del módulo Finanzas (camino nuevo, ruta `finanzas`). Pestaña
  *  activa derivada de la URL (tabs-url.util). Cada bloque del frente suma su
  *  pestaña cuando existe la pantalla (no hay pestañas vacías).
  *  Diseño: claude/diseno-finanzas.md §4.5. */
@@ -61,10 +61,10 @@ import { TabRuta, tabActivaDesdeUrl } from 'src/app/shared/utils/tabs-url.util';
 })
 export class FinanzasNuevaControlComponent {
   readonly tabs: TabRuta[] = [
-    { id: 'resumen', name: 'Resumen', route: 'finanzasNueva/resumen' },
-    { id: 'cuentas', name: 'Cuentas', route: 'finanzasNueva/cuentas', alias: ['finanzasNueva/cuenta'] },
-    { id: 'antiguedad', name: 'Antigüedad', route: 'finanzasNueva/antiguedad' },
-    { id: 'movimientos', name: 'Movimientos', route: 'finanzasNueva/movimientos' },
+    { id: 'resumen', name: 'Resumen', route: 'finanzas/resumen' },
+    { id: 'cuentas', name: 'Cuentas', route: 'finanzas/cuentas', alias: ['finanzas/cuenta'] },
+    { id: 'antiguedad', name: 'Antigüedad', route: 'finanzas/antiguedad' },
+    { id: 'movimientos', name: 'Movimientos', route: 'finanzas/movimientos' },
   ];
 
   /** Pestaña activa derivada de la URL real (ver tabs-url.util). */

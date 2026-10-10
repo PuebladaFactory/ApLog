@@ -18,7 +18,7 @@ import { HistoriaComprobanteComponent } from './modales/historia-comprobante/his
 
 /** Módulo Finanzas — camino nuevo (Frente Finanzas), en paralelo a
  *  raiz/finanzas (módulo viejo, se retira al cerrar el frente). Solo lazy
- *  desde raiz-routing (`finanzasNueva`): NO se importa en RaizModule. */
+ *  desde raiz-routing (`finanzas`): NO se importa en RaizModule. */
 @NgModule({
   declarations: [
     FinanzasNuevaControlComponent,

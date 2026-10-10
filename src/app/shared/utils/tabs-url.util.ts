@@ -1,7 +1,7 @@
 /** Pestaña de un componente shell-con-pestañas (*-control, LiqGral).
  *  `route`: ruta a la que navega la pestaña (ej. 'clientes/listado').
  *  `alias`: otras rutas que también la marcan activa (pantallas hijas que
- *  no tienen pestaña propia, ej. 'finanzas/movimiento' → Historial). */
+ *  no tienen pestaña propia, ej. 'finanzas/cuenta' → Cuentas). */
 export interface TabRuta {
   id: string;
   name?: string;

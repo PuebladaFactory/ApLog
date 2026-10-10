@@ -44,8 +44,6 @@ import { InformeOpNuevo } from "src/app/interfaces/informe-op-nuevo";
 import { InformeLiq, ValoresFinancieros } from "src/app/interfaces/informe-liq";
 import { NumeradorService } from "../numerador/numerador.service";
 
-import { MovimientoFinanciero } from "src/app/interfaces/movimiento-financiero";
-
 export interface Resultado {
   exito: boolean;
   mensaje: string;

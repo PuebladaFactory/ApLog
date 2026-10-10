@@ -15,7 +15,6 @@ import {
   WriteBatch,
   writeBatch,
 } from "@angular/fire/firestore";
-import { FinanzasResumenService } from "../finanzas/finanzas-resumen.service";
 import { EstadoOp, Operacion } from "src/app/interfaces/operacion";
 import { chunk } from "lodash";
 import {
@@ -55,7 +54,6 @@ export class LiquidacionService {
 
   constructor(
     private firestore: Firestore,
-    private finanzasResumenService: FinanzasResumenService,
     private builder: LiquidacionBuilderService,
   ) {}
 
@@ -140,14 +138,6 @@ export class LiquidacionService {
         await batch.commit();
       }
 
-      // actualizar resumen financiero
-      if (params.modo === "factura") {
-        try {
-          await this.finanzasResumenService.aplicarNuevaLiquidacion(informeLiq);
-        } catch (error) {
-          console.error("Error actualizando resumen financiero", error);
-        }
-      }
       let respuesta = {
         exito: resultado.exito,
         mensaje: resultado.mensaje,
@@ -759,14 +749,6 @@ export class LiquidacionService {
         await batch.commit();
       }
 
-      // actualizar resumen financiero
-      if (params.modo === "factura") {
-        try {
-          await this.finanzasResumenService.revertirLiquidacion(params.informeLiq);
-        } catch (error) {
-          console.error("Error actualizando resumen financiero", error);
-        }
-      }
       let respuesta = {
         exito: resultado.exito,
         mensaje: resultado.mensaje,

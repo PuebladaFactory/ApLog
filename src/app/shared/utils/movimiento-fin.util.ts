@@ -298,22 +298,31 @@ export interface TotalesMovimientos {
   cantidadCobros: number;
   pagos: number;
   cantidadPagos: number;
+  devoluciones: number;                   // F9 (F72): cobros/pagos contra el saldo de otro movimiento
+  cantidadDevoluciones: number;
   sinImputar: number;                     // Σ sinImputar de cobros/pagos vigentes
   anulados: number;                       // cantidad
 }
 
 /** Totales de las tarjetas. Solo suman los VIGENTES; los anulados se
- *  cuentan aparte. Los ajustes no suman (llegan en F7). */
+ *  cuentan aparte. Los ajustes no suman. Las devoluciones (F7b) van en su
+ *  propia tarjeta, no en Cobros / Pagos (F72). */
 export function totalizarMovimientos(
-  movimientos: Pick<MovimientoFin, 'tipo' | 'estado' | 'total' | 'sinImputar'>[],
+  movimientos: Pick<MovimientoFin, 'tipo' | 'estado' | 'total' | 'sinImputar' | 'imputaciones'>[],
 ): TotalesMovimientos {
-  const t: TotalesMovimientos = { cobros: 0, cantidadCobros: 0, pagos: 0, cantidadPagos: 0, sinImputar: 0, anulados: 0 };
+  const t: TotalesMovimientos = {
+    cobros: 0, cantidadCobros: 0, pagos: 0, cantidadPagos: 0, devoluciones: 0, cantidadDevoluciones: 0,
+    sinImputar: 0, anulados: 0,
+  };
   for (const m of movimientos) {
     if (m.estado === 'anulado') {
       t.anulados++;
       continue;
     }
-    if (m.tipo === 'cobro') {
+    if (esDevolucion(m)) {
+      t.devoluciones += m.total;
+      t.cantidadDevoluciones++;
+    } else if (m.tipo === 'cobro') {
       t.cobros += m.total;
       t.cantidadCobros++;
     } else if (m.tipo === 'pago') {
@@ -322,7 +331,13 @@ export function totalizarMovimientos(
     }
     if (m.tipo !== 'ajuste') t.sinImputar += m.sinImputar;
   }
-  return { ...t, cobros: redondear2(t.cobros), pagos: redondear2(t.pagos), sinImputar: redondear2(t.sinImputar) };
+  return {
+    ...t,
+    cobros: redondear2(t.cobros),
+    pagos: redondear2(t.pagos),
+    devoluciones: redondear2(t.devoluciones),
+    sinImputar: redondear2(t.sinImputar),
+  };
 }
 
 // ---------------------------------------------------------------------------

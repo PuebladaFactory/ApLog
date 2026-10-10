@@ -20,8 +20,7 @@ import {
  *  vs liquidación, avisa si el comprobante ya está vinculado a otra
  *  liquidación y, al confirmar (con confirmación extra si hay
  *  discrepancias — D8), llama a InformeLiqService.vincularFactura (que
- *  revalida todo en su transacción). Cierra con `true` si vinculó.
- *  Camino paralelo a ModalVincularFacturaComponent (modelo viejo). */
+ *  revalida todo en su transacción). Cierra con `true` si vinculó. */
 @Component({
   selector: 'app-vincular-factura-liq',
   standalone: false,

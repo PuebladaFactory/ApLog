@@ -167,7 +167,7 @@ export class FinanzasAntiguedadComponent implements OnInit, OnDestroy {
 
   onAccion(ev: EventoAccionListado<Fila>): void {
     if (ev.id === 'cuenta') {
-      this.router.navigate(['/finanzasNueva/cuenta', ev.item.tipo, ev.item.idEntidad], { queryParams: { origen: 'antiguedad' } });
+      this.router.navigate(['/finanzas/cuenta', ev.item.tipo, ev.item.idEntidad], { queryParams: { origen: 'antiguedad' } });
     }
   }
 

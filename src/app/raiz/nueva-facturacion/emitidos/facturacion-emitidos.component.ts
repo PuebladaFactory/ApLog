@@ -21,8 +21,7 @@ type Fila = ConId<InformeLiqNuevo>;
  *  de facturar), en vivo, de todas las entidades. Tabla: TablaListadoComponent.
  *  Acciones: ver/editar (detalle con modulo='facturacion'), facturar
  *  (VincularFacturaLiqComponent → InformeLiqService.vincularFactura) y
- *  revertir (InformeLiqService.revertirEmitido). Camino paralelo a
- *  FacturacionListadoComponent (modelo viejo, resumenLiq). */
+ *  revertir (InformeLiqService.revertirEmitido). */
 @Component({
   selector: 'app-facturacion-emitidos',
   standalone: false,
