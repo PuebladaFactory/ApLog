@@ -3632,6 +3632,57 @@ a cachear si hubiera cientos de clientes. Hoy trivial.
 
 **Item con cliente borrado** (papelera) sin columna: `// TODO: refactor Papelera`.
 
+### Pendiente — sidebar: apertura/cierre según tamaño de pantalla y navegación
+
+**Síntoma (Nico, Octubre 2026):** el sidebar "ya no se cierra de forma
+automática"; revisar su comportamiento con distintos tamaños de pantalla y
+en las distintas pestañas/pantallas. Sin reproducir todavía: falta precisar
+en qué ancho y después de qué acción (navegar desde el menú, cambiar el
+tamaño de la ventana, cambiar de pestaña del navegador).
+
+**Cómo funciona hoy (relevado del código, sin cambios):**
+- El estado vive en `HomeComponent` (`raiz/home`), el shell de TODAS las
+  rutas de raiz: `activo: boolean`; el template pone la clase `active`
+  cuando `!activo` (nombre invertido: `active` = oculto,
+  `#sidebar.active { margin-left: -200px }`).
+- Reglas: al iniciar, `activo = window.innerWidth >= 1600`; en CADA evento
+  `resize` se vuelve a calcular igual (pisa lo que eligió el usuario con el
+  botón); el botón ☰ (`toogleSidebar`) lo invierte.
+- **Navegar NO lo cierra:** `HomeComponent` no se recrea al cambiar de
+  ruta hija y no escucha eventos del router; los links del menú son
+  `routerLink` sin `(click)`. Con ancho < 1600, si se abre con ☰ queda
+  abierto en todas las pantallas siguientes hasta cerrarlo a mano o hasta
+  un `resize`. Probable explicación del síntoma.
+- Es un elemento flex al lado del contenido (empuja, no se superpone): en
+  pantallas angostas abierto achica el contenido (tablas anchas como
+  tablero-op o Finanzas).
+- **Bug:** el resize se escucha DOS veces: `@HostListener('window:resize')`
+  (funciona) y `window.addEventListener('resize', this.onResize)` en
+  `ngOnInit` SIN bind → en ese listener `this` es `window` y cada resize
+  tira `TypeError: this.setInitialSidebarState is not a function` en la
+  consola (no rompe el cierre porque el HostListener corre antes).
+- Otros: `<body id="content">` anidado dentro del componente (HTML
+  inválido); `SidebarComponent.navegar()` (solo el logo) escribe `ruta` en
+  localStorage, sin efecto sobre el sidebar; `#menu { height: 93vh }` +
+  `sticky-top`; `home.component.css` conserva media queries comentadas.
+
+**Propuesta (a confirmar al encarar):**
+1. Dos modos por ancho (breakpoint a definir, hoy 1600): ancho → fijo
+   abierto, empuja el contenido (como hoy); angosto → superpuesto
+   (offcanvas) cerrado por defecto, con fondo que lo cierra al tocar
+   afuera.
+2. En modo angosto, cerrarlo al navegar (`Router.events` →
+   `NavigationEnd`) y con Esc.
+3. Reaccionar solo al CRUZAR el breakpoint (`matchMedia(...).addEventListener('change')`
+   o `BreakpointObserver` de CDK, que ya está en el proyecto) en lugar de en
+   cada `resize`: así se respeta la elección manual mientras el ancho no
+   cambia de lado.
+4. Quitar el listener duplicado sin bind; renombrar `activo`/`active` a
+   algo explícito (`sidebarAbierto` / clase `cerrado`); `<body>` → `<main>`.
+5. Pruebas: ≥ 1600, 1200–1599, 768–1199, < 768; navegar desde el menú;
+   abrir/cerrar a mano y redimensionar sin cruzar el breakpoint; volver de
+   otra pestaña del navegador; pantallas con tablas anchas.
+
 ### Frente futuro — persistencia de filtros/rango de fechas vs. listener en background
 
 **Síntoma reportado (sin confirmar con pruebas propias):** en `tablero-op`, al cambiar

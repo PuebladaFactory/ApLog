@@ -2174,6 +2174,10 @@ Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
   inicial).
 - Estilo global `.col-numero` (hoy repetido en Vendedores y
   `tabla-listado`).
+- Sidebar: no se cierra solo al navegar en pantallas < 1600 px; revisar
+  apertura/cierre por tamaño de pantalla (modo superpuesto en angostas,
+  cerrar al navegar, reaccionar solo al cruzar el breakpoint) y el listener
+  de resize duplicado que tira error en consola.
 
 **Migración a Vantruck (al final)**
 - Migración de datos (entidades, tarifas, operaciones, liquidaciones y
