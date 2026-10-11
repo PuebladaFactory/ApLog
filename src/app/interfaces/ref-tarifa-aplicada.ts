@@ -1,11 +1,10 @@
 // Referencia congelada a la tarifa efectivamente aplicada a UN lado de una
 // operación. Sirve para general/especial/personalizada por igual — no hace
 // falta una interfaz de snapshot por nivel.
-// Cableada a Operacion desde Bloque 6 (ValoresTarifaService) — se resuelve y
-// congela en el alta (operacion.service.ts → calcularAlta) y NO se vuelve a
-// resolver en el cierre (ValoresTarifaService.calcularCierre, llamado desde
-// ModalDetalleOpComponent, reutiliza esta misma referencia con valores
-// actualizados).
+// Se elige antes del alta (operaciones-editor / generador, vía
+// ResolucionTarifaOpService), se congela en el alta (calcularAlta la exige) y
+// NO se vuelve a resolver: calcularCierre (cierre, edición de InformeOp,
+// restaurar) reutiliza esta misma referencia con valores actualizados.
 export interface RefTarifaAplicada {
   idTarifa: string;
   nivel: 'general' | 'especial' | 'personalizada';   // eventual no usa esta referencia

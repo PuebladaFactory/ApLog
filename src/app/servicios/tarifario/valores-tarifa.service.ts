@@ -9,9 +9,7 @@ import { TarifaEspecial, CategoriaEspecial } from 'src/app/interfaces/tarifa-esp
 import { RegistroOpEventual } from 'src/app/interfaces/registro-op-eventual';
 
 import { TarifarioService } from 'src/app/servicios/tarifario/tarifario.service';
-import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
 import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
-import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 import { toISODateString } from 'src/app/servicios/fechas/date-range.service';
 
@@ -40,39 +38,36 @@ export interface CandidatosLado {
   motivoSinCandidatos: string | null;
 }
 
-/** Resolución de jerarquía + cálculo del sistema NUEVO de Tarifas (Bloque 6).
- *  Corre en paralelo al sistema viejo (ValoresOpService / op.tarifaTipo /
- *  op.valores) sin tocarlo ni reemplazarlo — completa exclusivamente
- *  op.tarifaAplicadaCliente/Chofer y op.valoresNuevos.
+/** Candidatos y cálculo de valores del sistema de Tarifas.
  *
- *  Dos momentos de uso:
- *   - ALTA (calcularAlta): resuelve jerarquía (Eventual > Personalizada >
- *     Especial > General) y calcula valores iniciales. Congela la referencia.
- *   - CIERRE (calcularCierre): NO vuelve a resolver — reusa la referencia
- *     congelada en el alta y recalcula con km/multiplicadores/acompañantes
- *     actuales (pueden haber cambiado desde el alta).
+ *  La ELECCIÓN de la tarifa de cada lado (op.tarifaAplicadaCliente/Chofer) no
+ *  se hace en el alta: la hace el usuario en operaciones-editor (o el
+ *  generador de pruebas), vía ResolucionTarifaOpService, sobre los candidatos
+ *  de listarCandidatosLado (niveles HABILITADOS de la entidad, sin fallback
+ *  implícito entre niveles) + resolverSeccionCategoria / armarRefManual.
+ *  Personalizada es exclusiva de Clientes y determina ambos lados (el lado
+ *  chofer/proveedor espeja la misma referencia). Eventual no usa referencias:
+ *  se identifica por op.datosTarifaEventual.
  *
- *  Resolución automática con fallback a selección manual en operaciones-editor
- *  (Bloque 7 Paso 1). Si no puede determinar un único ganador (nivel habilitado
- *  sin tarifa vigente, más de una vigente simultánea, una tarifa con más de una
- *  sección, o — Personalizada por km — más de una categoría libre en su única
- *  sección) NO bloquea: deja la referencia/valores en null para ese lado y
- *  devuelve el motivo en `errores` para que el caller lo registre en el log de
- *  actividad.
+ *  Momentos de cálculo:
+ *   - ALTA (calcularAlta): EXIGE las dos referencias ya elegidas (o eventual).
+ *     Si falta alguna, valoresNuevos queda en null y el motivo vuelve en
+ *     `errores`; altaDesdeAsignacion aborta el alta (TC2).
+ *   - CIERRE, edición de InformeOp y restaurar (calcularCierre): reusa las
+ *     referencias congeladas y recalcula con km/multiplicadores/acompañantes
+ *     actuales.
  *
  *  modoTarifacion === 'km' (Personalizada): sin escalones de distancia — el valor
  *  cargado en la categoría ES la tarifa por km, se multiplica por op.km al calcular
- *  (ver calcularLado). Igual que en modo categoría, con una sola categoría se
- *  resuelve sola; con 2+ no hay forma automática de saber cuál corresponde (no
- *  matchean por categoría de vehículo) y requiere elegir a mano. */
+ *  (ver calcularLado). Con una sola categoría, resolverSeccionCategoria la elige
+ *  sola; con 2+ no hay forma automática de saber cuál corresponde (no matchean
+ *  por categoría de vehículo) y se elige a mano. */
 @Injectable({ providedIn: 'root' })
 export class ValoresTarifaService {
 
   constructor(
     private tarifario: TarifarioService,
-    private clienteServ: ClienteService,
     private choferServ: ChoferService,
-    private proveedorServ: ProveedorService,
     private logRegistro: LogRegistroService,
   ) {}
 
@@ -88,57 +83,35 @@ export class ValoresTarifaService {
       return { op, errores };
     }
 
-    const cliente = this.clienteServ.getClientePorId(op.cliente.id);
-    if (!cliente) {
-      errores.push(`cliente ${op.cliente.id} no encontrado`);
-      op.tarifaAplicadaCliente = null;
-      op.tarifaAplicadaChofer = null;
+    // Personalizada determina AMBOS lados (calcularLado lee aPagar/
+    // aPagarProveedor de la misma categoría para el lado chofer). En el flujo
+    // real ya viene espejada desde ResolucionTarifaOpService.aplicarRef — esto
+    // es defensa en profundidad.
+    if (op.tarifaAplicadaCliente?.nivel === 'personalizada' && !op.tarifaAplicadaChofer) {
+      op.tarifaAplicadaChofer = op.tarifaAplicadaCliente;
+    }
+
+    // TC2: el alta EXIGE las referencias ya elegidas — no se resuelve
+    // jerarquía acá (se retiró resolverLado, que caía a General aunque no
+    // estuviera habilitada).
+    if (!op.tarifaAplicadaCliente) {
+      errores.push('lado cliente sin tarifa elegida (se elige en operaciones-editor o en el generador)');
+    }
+    if (!op.tarifaAplicadaChofer) {
+      errores.push('lado chofer/proveedor sin tarifa elegida (se elige en operaciones-editor o en el generador)');
+    }
+    if (errores.length > 0) {
       op.valoresNuevos = null;
       return { op, errores };
     }
 
     const chofer = this.choferServ.getChoferPorId(op.chofer.id);
-    if (!chofer) {
-      errores.push(`chofer ${op.chofer.id} no encontrado`);
-      op.tarifaAplicadaCliente = null;
-      op.tarifaAplicadaChofer = null;
-      op.valoresNuevos = null;
-      return { op, errores };
+    const esProveedor = chofer ? chofer.contratacion.tipo === 'proveedor' : op.proveedor !== null;
+
+    op.valoresNuevos = this.armarValoresNuevos(op, op.tarifaAplicadaCliente, op.tarifaAplicadaChofer, esProveedor);
+    if (!op.valoresNuevos) {
+      errores.push('no se pudieron calcular los valores: la tarifa o la sección/categoría elegida no está en memoria');
     }
-
-    const esProveedor = chofer.contratacion.tipo === 'proveedor';
-    const idEntidadChofer = esProveedor
-      ? (chofer.contratacion as { tipo: 'proveedor'; idProveedor: string }).idProveedor
-      : chofer.id;
-    const entidadTipoChofer: EntidadTipo = esProveedor ? 'proveedor' : 'chofer';
-    const habilitadasChofer = this.proveedorServ.resolverTarifasHabilitadasChofer(chofer);
-
-    // Bloque 7 (mini-frente operaciones-editor): si el lado ya viene resuelto desde la
-    // selección manual del usuario en el editor, se respeta tal cual — NO se vuelve a
-    // resolver la jerarquía acá (pisaría una elección de Personalizada o una tarifa
-    // elegida entre varias vigentes simultáneas).
-    const resCliente = op.tarifaAplicadaCliente
-      ? { ref: op.tarifaAplicadaCliente, error: null }
-      : this.resolverLado('cliente', cliente.id, cliente.tarifasHabilitadas, op.vehiculo.categoria, op.cliente.id);
-
-    // Personalizada es exclusiva de Clientes y determina AMBOS lados de la
-    // operación — si el cliente resolvió a una Personalizada, el chofer/proveedor
-    // NO resuelve su propia jerarquía: hereda la misma referencia (misma tarifa/
-    // sección/categoría; calcularLado ya lee aPagar/aPagarProveedor de esa
-    // categoría para el lado chofer). Defensa en profundidad — en el flujo real
-    // esto ya viene resuelto así desde operaciones-editor (Bloque 7 Paso 1/2).
-    const resChofer = op.tarifaAplicadaChofer
-      ? { ref: op.tarifaAplicadaChofer, error: null }
-      : resCliente.ref?.nivel === 'personalizada'
-        ? { ref: resCliente.ref, error: null }
-        : this.resolverLado(entidadTipoChofer, idEntidadChofer, habilitadasChofer, op.vehiculo.categoria, op.cliente.id);
-
-    op.tarifaAplicadaCliente = resCliente.ref;
-    op.tarifaAplicadaChofer = resChofer.ref;
-    if (resCliente.error) errores.push(resCliente.error);
-    if (resChofer.error) errores.push(resChofer.error);
-
-    op.valoresNuevos = this.armarValoresNuevos(op, resCliente.ref, resChofer.ref, esProveedor);
 
     return { op, errores };
   }
@@ -201,105 +174,14 @@ export class ValoresTarifaService {
     }
   }
 
-  // ── Resolución de jerarquía (privado) ───────────────────────────
-
-  private resolverLado(
-    entidadTipo: EntidadTipo,
-    idEntidad: string,
-    habilitadas: RefTarifaHabilitada[],
-    categoriaVehiculo: { catOrden: number; nombre: string },
-    idClienteOp: string,
-  ): { ref: RefTarifaAplicada | null; error: string | null } {
-
-    const niveles = new Set(habilitadas.map(h => h.nivel));
-
-    // 1. Personalizada
-    if (niveles.has('personalizada')) {
-      const candidatas = this.tarifario.getTarifasPersonalizadasVigentes(idEntidad);
-      const r = this.resolverEnCandidatas(candidatas, categoriaVehiculo);
-      if (r.ref) return { ref: r.ref, error: null };
-      return { ref: null, error: `personalizada de ${entidadTipo} ${idEntidad}: ${r.motivo}` };
-    }
-
-    // 2. Especial (alcance específico al cliente de la operación gana sobre el genérico)
-    if (niveles.has('especial')) {
-      let candidatas = this.tarifario.getTarifasEspecialesVigentes(idEntidad).filter(t => t.entidadTipo === entidadTipo);
-      if (entidadTipo !== 'cliente') {
-        const especificas = candidatas.filter(t => t.alcance.tipo === 'entidadCliente' && t.alcance.idCliente === idClienteOp);
-        candidatas = especificas.length > 0 ? especificas : candidatas.filter(t => t.alcance.tipo === 'entidad');
-      }
-      const r = this.resolverEnCandidatas(candidatas, categoriaVehiculo);
-      if (r.ref) return { ref: r.ref, error: null };
-      if (!r.categoriaNoIncluida) {
-        return { ref: null, error: `especial de ${entidadTipo} ${idEntidad}: ${r.motivo}` };
-      }
-      // categoriaNoIncluida → Bloque 4 ajuste 1: la especial no cubre esta categoría del vehículo → cae a General.
-    }
-
-    // 3. General
-    const general = this.tarifario.getTarifaGeneralVigente();
-    if (!general) return { ref: null, error: `no hay tarifa general vigente` };
-    const r = this.resolverEnCandidatas([general], categoriaVehiculo);
-    if (r.ref) return { ref: r.ref, error: null };
-    return { ref: null, error: `general: ${r.motivo}` };
-  }
-
-  /** Exige exactamente 1 tarifa vigente y exactamente 1 sección (más de una
-   *  sección requiere elegir a mano cuál — no disponible en este bloque). */
-  private resolverEnCandidatas(
-    candidatas: (ConIdType<Tarifa> | ConIdType<TarifaEspecial>)[],
-    categoriaVehiculo: { catOrden: number; nombre: string },
-  ): { ref: RefTarifaAplicada | null; motivo: string | null; categoriaNoIncluida: boolean } {
-
-    if (candidatas.length === 0) {
-      return { ref: null, motivo: 'sin tarifa vigente', categoriaNoIncluida: false };
-    }
-    if (candidatas.length > 1) {
-      return { ref: null, motivo: `${candidatas.length} tarifas vigentes simultáneas (ambigüedad)`, categoriaNoIncluida: false };
-    }
-    const tarifa = candidatas[0];
-    if (tarifa.secciones.length !== 1) {
-      return { ref: null, motivo: `tiene ${tarifa.secciones.length} secciones — requiere selección manual (pendiente, mini-frente operaciones-editor)`, categoriaNoIncluida: false };
-    }
-    const seccion = tarifa.secciones[0];
-    let categoria: any;
-    if (tarifa.modoTarifacion === 'km') {
-      // Personalizada por km: categorías libres, no matchean por nombre de vehículo.
-      // Con una sola no hay ambigüedad — se resuelve sola. Con 2+ no hay forma
-      // automática de saber cuál corresponde — requiere elegir a mano.
-      if (seccion.categorias.length === 0) {
-        return { ref: null, motivo: `modoTarifacion 'km': la tarifa no tiene categorías cargadas`, categoriaNoIncluida: false };
-      }
-      if (seccion.categorias.length > 1) {
-        return { ref: null, motivo: `modoTarifacion 'km' con ${seccion.categorias.length} categorías — requiere selección manual (mini-frente operaciones-editor)`, categoriaNoIncluida: false };
-      }
-      categoria = seccion.categorias[0];
-    } else {
-      categoria = seccion.categorias.find((c: any) => c.nombre === categoriaVehiculo.nombre);
-      if (!categoria) {
-        return { ref: null, motivo: `categoría '${categoriaVehiculo.nombre}' no está en la tarifa`, categoriaNoIncluida: true };
-      }
-    }
-    return {
-      ref: {
-        idTarifa: tarifa.idTarifa,
-        nivel: tarifa.nivel as 'general' | 'especial' | 'personalizada',
-        nombreTarifa: tarifa.nombre,
-        seccion: seccion.orden,
-        nombreSeccion: seccion.nombre,
-        categoria: categoria.orden,
-        nombreCategoria: categoria.nombre,
-      },
-      motivo: null,
-      categoriaNoIncluida: false,
-    };
-  }
+  // (TC2: resolverLado / resolverEnCandidatas retirados — la elección de
+  // tarifa vive en listarCandidatosLado + resolverSeccionCategoria /
+  // armarRefManual, usados por ResolucionTarifaOpService.)
 
   // ── Listado de candidatos para selección manual (mini-frente operaciones-editor) ──
 
-  /** A diferencia de resolverLado (que exige un único ganador de la jerarquía
-   *  Personalizada > Especial > General), acá se devuelven TODOS los candidatos
-   *  vigentes de TODOS los niveles habilitados que tengan alguno — el usuario elige
+  /** Devuelve TODOS los candidatos vigentes de TODOS los niveles habilitados
+   *  de la entidad (Personalizada, Especial, General) que tengan alguno — el usuario elige
    *  en operaciones-editor cuando hay más de uno, incluso entre niveles distintos.
    *  Eventual no pasa por acá: se detecta en el componente vía op.datosTarifaEventual
    *  y usa sus propios campos, no RefTarifaAplicada.
@@ -338,8 +220,8 @@ export class ValoresTarifaService {
         const especificas = candidatas.filter(t => t.alcance.tipo === 'entidadCliente' && t.alcance.idCliente === idClienteOp);
         candidatas = especificas.length > 0 ? especificas : candidatas.filter(t => t.alcance.tipo === 'entidad');
       }
-      // Mismo criterio que resolverLado: una especial de 1 sola sección que no cubre
-      // la categoría del vehículo no es candidata.
+      // Una especial de 1 sola sección que no cubre la categoría del vehículo no
+      // es candidata.
       candidatas = candidatas.filter(t =>
         t.secciones.length !== 1 || t.secciones[0].categorias.some((cat: any) => cat.nombre === categoriaVehiculo.nombre));
       if (candidatas.length > 0) {
@@ -377,8 +259,8 @@ export class ValoresTarifaService {
 
   /** Intenta resolver Sección + Categoría automáticamente para un candidato ya elegido
    *  (nivel general/especial siempre, o personalizada cuando tiene una sola sección).
-   *  Categoría por match de nombre contra la categoría del vehículo — mismo criterio
-   *  que resolverEnCandidatas. Si la tarifa tiene más de una sección devuelve
+   *  Categoría por match exacto de nombre contra la categoría del vehículo.
+   *  Si la tarifa tiene más de una sección devuelve
    *  requiereSeleccionManual=true — el picker de Sección/Categoría de la fila
    *  expandible completa el resto a mano (armarRefManual). */
   resolverSeccionCategoria(

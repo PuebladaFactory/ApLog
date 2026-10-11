@@ -38,14 +38,13 @@ export interface Operacion {
 
   valores: Valores;
 
-  // Sistema nuevo de Tarifas (Bloque 6) — corre en paralelo al sistema viejo
-  // (tarifaTipo/valores) sin reemplazarlo todavía. Se completa en el alta
-  // (ValoresTarifaService.calcularAlta, jerarquía Eventual > Personalizada >
-  // Especial > General) y se recalcula en el cierre (calcularCierre) sin
-  // volver a resolver la jerarquía. Si la resolución automática no puede
-  // determinar un único ganador queda en null — no bloquea el alta, se
-  // registra en el log de actividad. Eventual no usa tarifaAplicada*: se
-  // identifica leyendo datosTarifaEventual de la operación.
+  // Sistema de Tarifas. tarifaAplicada*: referencia elegida ANTES del alta
+  // (operaciones-editor / generador, vía ResolucionTarifaOpService) y
+  // congelada; el alta la exige (ValoresTarifaService.calcularAlta) y nunca
+  // se vuelve a resolver. valoresNuevos: calculado en el alta y recalculado
+  // en cierre / edición de InformeOp / restaurar (calcularCierre). Eventual no
+  // usa tarifaAplicada* (quedan en null): se identifica por
+  // datosTarifaEventual !== null.
   tarifaAplicadaCliente: RefTarifaAplicada | null;
   tarifaAplicadaChofer: RefTarifaAplicada | null;
   valoresNuevos: Valores | null;

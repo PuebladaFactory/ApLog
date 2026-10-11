@@ -230,19 +230,26 @@ export class OperacionService implements OnDestroy {
 
     // 3. CALCULAR VALORES + RECONSTRUIR SUJETO/REF DESDE OP FINAL (un solo recorrido, antes de tocar red)
     for (const c of creadas) {
-      // Sistema nuevo de Tarifas: resuelve jerarquía y calcula valoresNuevos.
-      // Corre ANTES de calcularValoresIniciales — desde Bloque 7 Paso 2,
-      // valoresNuevos es la única fuente de op.valores (ver ese método). No
-      // bloquea el alta si no puede resolver: deja tarifaAplicada*/valoresNuevos
-      // en null para ese lado y lo registra en el log de actividad.
+      // Tarifas: calcula valoresNuevos con las referencias YA elegidas
+      // (operaciones-editor / generador). Corre ANTES de
+      // calcularValoresIniciales. TC2: si falta una referencia o no se pueden
+      // calcular los valores, se ABORTA el alta completa (nada tocó la red
+      // todavía) — antes quedaba la op con valoresNuevos en null y fallaba
+      // recién al cerrarla.
       const resultadoTarifaNueva = this.valoresTarifaServ.calcularAlta(c.operacion);
       c.operacion = resultadoTarifaNueva.op;
       if (resultadoTarifaNueva.errores.length > 0) {
+        const detalle = resultadoTarifaNueva.errores.join(' | ');
         await this.logRegistro.registrarError(
           'ALTA', 'operaciones', fecha,
-          `Tarifa nueva no resuelta al alta (cliente ${c.operacion.cliente.id}, chofer ${c.operacion.chofer.id}): ` +
-          resultadoTarifaNueva.errores.join(' | '),
+          `Tarifa no resuelta al alta (cliente ${c.operacion.cliente.id}, chofer ${c.operacion.chofer.id}): ${detalle}`,
         );
+        return {
+          exito: false,
+          mensaje: `No se pudo calcular la tarifa de una operación de ${c.operacion.cliente.razonSocial}: ` +
+                   `${detalle}. No se guardó ninguna operación.`,
+          objeto: { creadas, errores: [] },
+        };
       }
 
       c.operacion = this.calcularValoresIniciales(c.operacion);

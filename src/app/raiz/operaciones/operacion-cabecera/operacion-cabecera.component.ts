@@ -33,7 +33,7 @@ export class OperacionCabeceraComponent implements OnChanges {
 
     const chofer = this.choferServ.getChoferPorId(this.op.chofer.id);
     // resolverTarifasHabilitadasChofer ya resuelve directo vs. proveedor
-    // internamente (mismo método que usa ValoresTarifaService.calcularAlta).
+    // internamente (mismo método que usa ResolucionTarifaOpService.candidatosOp).
     this.tarifasHabilitadasChofer = chofer
       ? this.proveedorServ.resolverTarifasHabilitadasChofer(chofer)
       : this.legacyComoHabilitadas(this.op.tarifaTipo);
