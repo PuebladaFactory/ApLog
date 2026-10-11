@@ -204,7 +204,7 @@ export class TarifaEspecialFormComponent implements OnInit, OnDestroy {
       // partida razonable — pero queda editable en ambos casos.
       ...(this.tieneKm ? {
         kmPrimerSector: [fuente?.kmDistancia?.primerSector ?? this.general?.kmDistancia?.primerSector ?? 0, [Validators.required, Validators.min(0)]],
-        kmSectoresSiguientes: [fuente?.kmDistancia?.sectoresSiguientes ?? this.general?.kmDistancia?.sectoresSiguientes ?? 0, [Validators.required, Validators.min(0)]],
+        kmSectoresSiguientes: [fuente?.kmDistancia?.sectoresSiguientes ?? this.general?.kmDistancia?.sectoresSiguientes ?? 0, [Validators.required, Validators.min(1)]],
       } : {}),
       vigenciaDesde: [null],
     });

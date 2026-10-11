@@ -119,7 +119,7 @@ export class TarifaFormComponent implements OnInit {
       vigenciaDesde: [null],
       ...(necesitaControlesKm ? {
         kmPrimerSector: [{ value: base?.kmDistancia?.primerSector ?? 0, disabled: !kmActivoInicial }, [Validators.required, Validators.min(0)]],
-        kmSectoresSiguientes: [{ value: base?.kmDistancia?.sectoresSiguientes ?? 0, disabled: !kmActivoInicial }, [Validators.required, Validators.min(0)]],
+        kmSectoresSiguientes: [{ value: base?.kmDistancia?.sectoresSiguientes ?? 0, disabled: !kmActivoInicial }, [Validators.required, Validators.min(1)]],
       } : {}),
       secciones: this.fb.array(seccionesBase.map(s => this.crearGrupoSeccion(s, usaProveedor))),
       acompanianteACobrar: [base?.acompanianteACobrar ?? 0, [Validators.required, Validators.min(0)]],

@@ -569,13 +569,22 @@ export class ValoresTarifaService {
     };
   }
 
+  /** Adicional por km. Con kmDistancia.primerSector = P y
+   *  kmDistancia.sectoresSiguientes = S (ej. P = 50, S = 10):
+   *   - hasta P inclusive (0-50): sin adicional, lo cubre la tarifa base;
+   *   - primer tramo después de P, (P, P+S] (51-60): valores.primerSector;
+   *   - cada tramo de S km empezado después de ese (61-70, 71-80, ...): suma
+   *     valores.sectoresSiguientes. Cada límite (60, 70, ...) cierra su tramo.
+   *  Guard: S <= 0 (dato inválido — el form lo bloquea desde TC1, pero puede
+   *  haber tarifas ya guardadas así) cobra solo el primer tramo, en vez de
+   *  dividir por cero (Infinity / NaN). */
   private calcularKmAdicional(km: number, kmDistancia: KmDistancia | null, valores: AdicionalKmValores | undefined): number {
     if (!kmDistancia || !valores || kmDistancia.primerSector <= 0) return 0;
-    if (km < kmDistancia.primerSector) return 0;
+    if (km <= kmDistancia.primerSector) return 0;
     let monto = valores.primerSector;
-    const kmRestantes = km - kmDistancia.primerSector;
-    const sectoresAdicionales = Math.floor(kmRestantes / kmDistancia.sectoresSiguientes);
-    monto += sectoresAdicionales * valores.sectoresSiguientes;
+    if (kmDistancia.sectoresSiguientes <= 0) return monto;
+    const tramosSiguientes = Math.ceil((km - kmDistancia.primerSector) / kmDistancia.sectoresSiguientes) - 1;
+    monto += tramosSiguientes * valores.sectoresSiguientes;
     return monto;
   }
 
