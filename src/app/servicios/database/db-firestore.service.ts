@@ -1480,43 +1480,9 @@ export class DbFirestoreService {
     return snap.exists() ? (snap.data() as T) : null;
   }
 
-  /** Reemplaza 'anterior' por una versión nueva de forma TRANSACCIONAL — la
-   *  protección de idempotencia que el TODO de commitBatch() deja pendiente
-   *  para cuando haga falta, aplicada acá porque tarifas-historial demostró
-   *  que hacía falta: dos ediciones concurrentes de la misma entidad (dos
-   *  pestañas, dos usuarios) podían generar dos documentos nuevos apuntando
-   *  al mismo 'anterior' (bifurcación de versionAnteriorId) porque
-   *  nuevaVersionTarifa() decidía si 'anterior' seguía vigente mirando el
-   *  estado LOCAL cacheado, no el server. Acá se relee 'anterior' fresco
-   *  dentro de la transacción — si ya no está activo, aborta con un error
-   *  legible en vez de crear la bifurcación. El SDK reintenta la transacción
-   *  sola si detecta una escritura concurrente sobre el mismo documento, así
-   *  que la protección es real incluso si dos llamadas caen exactamente al
-   *  mismo tiempo. */
-  async reemplazarConVersionNueva(
-    coleccion: string,
-    idAnterior: string,
-    idNuevo: string,
-    dataNueva: any,
-  ): Promise<void> {
-    await runTransaction(this.firestore, async (transaction) => {
-      const refAnterior = doc(this.firestore, `/Vantruck/datos/${coleccion}/${idAnterior}`);
-      const snapAnterior = await transaction.get(refAnterior);
-      if (!snapAnterior.exists()) {
-        throw new Error(`No se encontró el documento ${idAnterior} en ${coleccion} para versionar.`);
-      }
-      const anteriorData = snapAnterior.data();
-      if (anteriorData['activo'] === false) {
-        throw new Error('Esta tarifa ya fue actualizada por otra persona mientras la estabas editando. Recargá la página para ver la versión vigente antes de volver a guardar.');
-      }
-      const refNuevo = doc(this.firestore, `/Vantruck/datos/${coleccion}/${idNuevo}`);
-      transaction.set(refNuevo, dataNueva);
-      // fechaActualizacion de la anterior pasa a ser la vigenciaDesde de la
-      // nueva — el instante en que una deja de aplicar es el mismo en que
-      // empieza a aplicar la otra, no hace falta un dato aparte.
-      transaction.set(refAnterior, { ...anteriorData, activo: false, fechaActualizacion: dataNueva.vigenciaDesde });
-    });
-  }
+  // (TC3: reemplazarConVersionNueva retirado — el versionado de tarifas pasó a
+  // TarifarioService.versionarEnTransaccion, sobre commitEnTransaccion con el
+  // log adentro.)
 
   /** Escribe/reemplaza un documento por id SIN inyectar el id en el cuerpo.
    *  Patrón nuevo: el id es el doc id de Firestore, no se persiste dentro del

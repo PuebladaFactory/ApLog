@@ -203,10 +203,9 @@ export class OperacionService implements OnDestroy {
 
   /** Copia op.valoresNuevos (calculado por ValoresTarifaService.calcularAlta,
    *  que corre ANTES en el loop de altaDesdeAsignacion) a la estructura vieja
-   *  op.valores — única fuente de valores desde Bloque 7 Paso 2. Si
-   *  valoresNuevos quedó en null (algún lado no se pudo resolver — ya
-   *  registrado en el log de actividad por altaDesdeAsignacion) op.valores
-   *  queda en los ceros que trae crearOperacionBase. */
+   *  op.valores. Desde TC2 el alta se aborta si valoresNuevos no se pudo
+   *  calcular, así que acá siempre llega poblado; el if es defensivo (si
+   *  faltara, op.valores queda en los ceros de crearOperacionBase). */
   calcularValoresIniciales(op: Operacion): Operacion {
     if (op.valoresNuevos) {
       op.valores = {

@@ -29,9 +29,10 @@ export interface CandidatoTarifa {
   secciones: Seccion<CategoriaTarifa | CategoriaEspecial>[];
 }
 
-/** Resultado de listar candidatos de un lado (cliente o chofer/proveedor) en el nivel
- *  de jerarquía que ganó (Personalizada > Especial > General). Con 1 candidato la UI
- *  puede autoseleccionar; con 2+ el usuario elige. */
+/** Resultado de listar candidatos de un lado (cliente o chofer/proveedor): todos
+ *  los vigentes de los niveles HABILITADOS de la entidad. nivelResuelto es el nivel
+ *  del candidato cuando hay exactamente uno (null con 0 o 2+). Con 1 candidato la
+ *  UI autoselecciona; con 2+ el usuario elige. */
 export interface CandidatosLado {
   nivelResuelto: 'personalizada' | 'especial' | 'general' | null;
   candidatos: CandidatoTarifa[];
