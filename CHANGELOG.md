@@ -2147,22 +2147,60 @@ Detalle completo en `CLAUDE.md` → "Frente Finanzas — cobros, pagos y cuentas
 
 ---
 
+## Frente Tarifas — tarifario nuevo y cierre (Agosto–Octubre 2026)
+
+- Tarifario nuevo (`servicios/tarifario/`, `raiz/tarifas`): `Tarifa` (General
+  singleton / Personalizada por cliente) y `TarifaEspecial` en `tarifas` /
+  `tarifasEspeciales`, append-only con `versionAnteriorId`; pantallas General,
+  Personalizada, Especial, Eventual e Historial con viewers, forms, aumento
+  (único / segmentado / manual, redondeo hasta miles), duplicar, historial
+  por linaje y baja.
+- Motor `ValoresTarifaService`: candidatos de los niveles habilitados sin
+  fallback implícito, alta con la tarifa elegida y cierre con la referencia
+  congelada, modo km, multiplicador 0, tarifa base manual, Personalizada que
+  define los dos lados; `operaciones-editor` con multiplicidad real.
+- Cierre (Octubre 2026):
+  - Fixes del motor: adicional por km sin división por cero y con límites de
+    tramo inclusivos (antes cobraba de más en 50, 60, 70…); el alta se aborta
+    sin tarifa elegida; vigencia por fecha de la operación
+    (`vigencia-tarifa.util`): un aumento con fecha futura ya no rige en el
+    acto.
+  - Versionado y baja de tarifas en transacción, con el log adentro.
+  - `RegistroOpEventual` dentro de la transacción del cierre y anulado en la
+    baja de una cerrada; reglas: `registrosOpEventuales` → 'informesOp'
+    (antes `user` no podía crearlo).
+  - Retiro del módulo viejo de tarifas (rutas y pantallas por entidad,
+    `TarifasService`, componentes shared, listeners de Home y cachés de
+    `StorageService`) y del código muerto acoplado de Liquidación
+    (`EditarInfOp`, `EditarTarifaOp`, `BuscarTarifaService`).
+  - `Operacion` sin campos legacy de tarifa: marca de eventual =
+    `datosTarifaEventual`, adicional extra en `op.adExtra`, única fuente de
+    valores `valoresNuevos` (Excel de operaciones y papelera incluidos);
+    Reportes sin fuente legacy.
+  - Entidades sin `idTarifa`/`tarifaAsignada`; badges con varios niveles
+    habilitados (`nivelesHabilitados`); helpers del historial en
+    `historial-tarifa.util`.
+  - Herramienta de demo en `/migracion` para limpiar los campos de tarifa de
+    las operaciones.
+  - Reglas: fuera `historialTarifas` / `historialTarifasEspeciales` (nunca
+    usadas). Desplegadas solo en demo.
+
+Detalle completo en `CLAUDE.md` → "Frente Tarifas — tarifario nuevo";
+checklist de Vantruck en "Deuda conocida" → "Checklist — migración de Tarifas
+a Vantruck".
+
+**Verificación:** `ng build --configuration=demo` limpio en cada bloque;
+pruebas manuales en demo.
+
+---
+
 ### Pendiente
 
 Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
 
 **Frentes de refactor**
-- Tarifas — cierre: retirar el módulo viejo (pantallas `*-tarifa-gral` /
-  especial / personalizada, rutas `clientes|choferes|proveedores/general|
-  especial|personalizada|eventual`, listeners de HomeComponent/StorageService
-  sobre las colecciones viejas); multiplicidad real en operaciones-editor
-  (hoy el shim `tarifaTipoDesdeHabilitadas`); documentar el tarifario nuevo
-  en CLAUDE.md.
 - Finanzas (frentes aparte): cartera de cheques, pago de liquidaciones de
   vendedores como movimiento, plazo de pago por entidad.
-- Campos legacy de Operacion (`valores`, `tarifaTipo`,
-  `datosTarifaPersonalizada`): retirar con el cierre de Tarifas (Reportes
-  ya usa `valoresNuevos`; queda su fallback legacy hasta migrar Vantruck).
 - Ajustes: retirar el `LogService` viejo (colección `logs`) y la Papelera
   legado.
 
@@ -2181,8 +2219,11 @@ Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
 
 **Migración a Vantruck (al final)**
 - Migración de datos (entidades, tarifas, operaciones, liquidaciones y
-  facturación, con los checklists registrados en CLAUDE.md), deploy de
+  facturación, con los checklists registrados en CLAUDE.md; tarifas:
+  "Checklist — migración de Tarifas a Vantruck", que incluye el método de
+  migración de operaciones al modelo nuevo antes del Recálculo), deploy de
   reglas / índices / `storage.rules` en `pf-logistics` (incluidas las de
+  `tarifas` / `tarifasEspeciales` / `registrosOpEventuales` /
   `informesOp` / `resumenesOp` / `comisionesVenta` / `liquidacionesVenta` /
   `movimientosFin` / `configuracion` y el índice
   `informesLiq (estado, estadoFinanciero)`), Recálculo de `resumenesOp` y
@@ -2191,5 +2232,6 @@ Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
   apertura de Finanzas (fecha de corte, saldos reales, importador),
   liquidaciones históricas con su `fechaEmision` real, borrado de
   `resumenOpMensual` / `informesVenta` / `resumenVenta` / `movimientos` /
-  `resumenFinanzas`, y retiro del camino viejo (LiquidacionesOp, Proforma,
-  exportaciones viejas de liquidación).
+  `resumenFinanzas` y de las colecciones viejas de tarifas, y retiro del
+  camino viejo (LiquidacionesOp, Proforma, exportaciones viejas de
+  liquidación).

@@ -186,43 +186,35 @@ Escritura (alta/edición/baja simple, y baja/restauración con papelera):
 
 ### Capa de datos
 
-`DbFirestoreService` (`servicios/database/db-firestore.service.ts`) envuelve todas las operaciones de Firestore. Todas las colecciones viven bajo `/Vantruck/datos/`. Colecciones principales: `operaciones`, `clientes`, `choferes`, `proveedores`, `tarifasGralCliente/Esp/Pers`, `tarifasGralChofer/Esp`, `facturaCliente`, `facturaChofer`, `liquidaciones`, `legajos`, `vendedores`, `comisionesVenta`, `liquidacionesVenta`, `movimientosFin`, `configuracion`, `logs`, `registroLog`, `users`.
+`DbFirestoreService` (`servicios/database/db-firestore.service.ts`) envuelve todas las operaciones de Firestore. Todas las colecciones viven bajo `/Vantruck/datos/`. Colecciones principales: `operaciones`, `clientes`, `choferes`, `proveedores`, `tarifas`, `tarifasEspeciales`, `registrosOpEventuales`, `facturaCliente`, `facturaChofer`, `liquidaciones`, `legajos`, `vendedores`, `comisionesVenta`, `liquidacionesVenta`, `movimientosFin`, `configuracion`, `logs`, `registroLog`, `users`.
 
 ### Sistema de tarifas
 
-Cada entidad (cliente, chofer, proveedor) tiene `tarifasHabilitadas:
-RefTarifaHabilitada[]` (`Chofer`: `| null`, ver abajo) — reemplaza al viejo
-`tarifaTipo: TarifaTipo` (4 booleanos, selección única). Una entidad puede tener
-múltiples tarifas habilitadas a la vez (ej. general + especial). `RefTarifaHabilitada`
-(`interfaces/tarifa-habilitada.ts`): `{ nivel: 'general' | 'eventual' }` o
-`{ nivel: 'especial' | 'personalizada'; idTarifa: string }` (`idTarifa: ''` = habilitado,
-tarifa concreta aún no creada — estado válido esperado, se completa desde el módulo de
-Tarifas). Reglas: `'eventual'` solo válida como única entrada; al menos una tarifa
-habilitada es obligatoria (`validarTarifasHabilitadas`, en los 3 factories).
+Resumen del modelo; el detalle (versionado, vigencia por fecha, motor, pantallas,
+reglas, migración) está en "Frente Tarifas — tarifario nuevo".
+
+- **Tarifas:** `Tarifa` (`nivel` 'general' | 'personalizada'; `aCobrar`/`aPagar`/
+  `aPagarProveedor` por categoría) y `TarifaEspecial` (parche de la General para una
+  entidad), en las colecciones `tarifas` y `tarifasEspeciales`. Append-only: editar o
+  aumentar crea una versión nueva. Eventual no tiene documento de tarifa: los valores se
+  cargan por operación (`op.datosTarifaEventual`) y el historial queda en
+  `registrosOpEventuales`.
+- **Entidades:** `tarifasHabilitadas: RefTarifaHabilitada[]` (`Chofer`: `| null`, ver
+  abajo). `RefTarifaHabilitada` (`interfaces/tarifa-habilitada.ts`) es solo `{ nivel }`
+  ('general' | 'especial' | 'personalizada' | 'eventual'), sin id de tarifa: la tarifa
+  concreta se elige POR OPERACIÓN entre las vigentes de los niveles habilitados. Reglas:
+  al menos una entrada; 'eventual' solo como única (`validarTarifasHabilitadas`, en los 3
+  factories). Para leerla: `nivelesHabilitados(lista)` (orden fijo personalizada,
+  especial, general, eventual). Personalizada: solo Clientes.
+- **Operación:** `tarifaAplicadaCliente/Chofer: RefTarifaAplicada | null` (elegida antes
+  del alta y congelada), `valoresNuevos` (única fuente de valores), `datosTarifaEventual`
+  (única marca de eventual: `!== null`), `adExtra` (entrada del adicional extra),
+  `tarifaBaseManualCliente/Chofer?`, `multiplicadorCliente/Chofer`.
 
 **Chofer de proveedor:** `tarifasHabilitadas: null` — no tiene tarifa propia, hereda la
 del proveedor. Resolver SIEMPRE vía
 `ProveedorService.resolverTarifasHabilitadasChofer(chofer)` (nunca leer
 `chofer.tarifasHabilitadas` directo sin chequear `contratacion.tipo` antes).
-
-**Shim de compatibilidad:** `tarifaTipoDesdeHabilitadas(lista): TarifaTipo`
-(`interfaces/tarifa-habilitada.ts`) reconstruye los 4 booleanos legacy para
-consumidores que aún no resuelven multiplicidad real: `OperacionFactoryService` (varios
-métodos), `operaciones-editor` (badges), `ProveedorService.getTarifaTipo`, los 3
-listados, `objeto-papelera`. Marcados `// TODO: refactor Tarifas`.
-
-> **Refactor grande planificado (no iniciado):** unificar en un tarifario único con
-> interfaz común para general/especial/personalizada (eventual aparte, por ser ad-hoc
-> por operación) — `TarifaBase`, `Tarifa`, `TarifaEspecial`, `TarifaEventual`. Incluye
-> resolver `operaciones-editor` para multiplicidad real (hoy usa el shim, que colapsa a
-> "la primera tarifa que matchea", igual que hacía `TarifaTipo` antes), migrar
-> `idTarifa`/`tarifaAsignada` de las 3 entidades a `RefTarifaHabilitada`, y reescribir el
-> módulo de Tarifas actual (`Xxx-tarifa-gral`/`Xxx-tarifa-especial`/
-> `cliente-tarifa-personalizada`, `TarifasService`), hoy con las líneas que leían
-> `tarifaTipo` comentadas al mínimo para compilar. Hasta entonces, la lógica de cálculo
-> de tarifas en los servicios de Operaciones se toca al mínimo (marcada con
-> `// TODO: refactor Tarifas`), no se reescribe. Ver `CHANGELOG.md` → mini-frente
-> "Multiplicidad de tarifas por entidad" para el detalle completo de lo ya resuelto.
 
 ### Operaciones — modelo de estado y reglas de dominio
 
@@ -267,7 +259,7 @@ Por eso `Proforma CH` tiene mayor prioridad visual que `Proforma CL` en el badge
 | `log-registro/` | `LogRegistroService` (escritura, dentro del batch atómico de negocio) + `RegistroLogConsultaService` (lectura/paginación, para `RegistroLogComponent`) sobre `registroLog` — ver "Frente Log — mecanismo unificado" |
 | `papelera/` | `PapeleraService` (preparación de escrituras de baja/restauración por referencia, dentro del batch atómico de negocio) + `PapeleraConsultaService` (lectura/paginación, para `PapeleraComponent`) sobre `papeleraEventos`/`objetosEliminados` — ver "Frente Papelera — mecanismo de referencia" |
 | `visualizador-objeto/` | `VisualizadorObjetoService` — dispatcher `coleccion -> modal de vista real`, usado por `RegistroLogComponent` y (desde el Frente Papelera) por `PapeleraComponent` vía el parámetro `snapshot` de `verObjeto` |
-| `tarifas/` | Resolución y cálculo de tarifas |
+| `tarifario/` | Tarifario nuevo: `TarifarioService` (estado y escritura de `tarifas` / `tarifasEspeciales` / `registrosOpEventuales`), factories, `TarifaGuardadoService`, motor `ValoresTarifaService` y `ResolucionTarifaOpService` — ver "Frente Tarifas — tarifario nuevo" |
 | `liquidaciones/` | Cálculo de liquidaciones y transiciones de estado de operación (proformas, InformeLiq) — camino VIEJO (InformeLiq/resumenLiq/proforma), reemplazado por `informes-liq/`; sin tocar hasta retirar el camino viejo (desde el Frente Finanzas ya no escribe `resumenFinanzas`) |
 | `informes-op/` | `InformeOpService` (+ Factory) — `InformeOpNuevo` en la colección única `informesOp` (un doc por lado de cada operación, con `contraParte`). `armarEscriturasEdicion` (armado sin commit) + `editar` (armado + commit) |
 | `informes-liq/` | `InformeLiqService` + `InformeLiqFactoryService` — `InformeLiqNuevo` en `informesLiq`: borradores, emisión, edición. Ver "Frente Liquidación — InformeLiqNuevo" |
@@ -586,18 +578,21 @@ Las entidades eliminadas van a papelera (otra colección), por lo que `getXxxPor
 | Contexto | Tratamiento del `undefined` |
 |---|---|
 | Exhibición (tablas, dropdowns, reportes) | Fallback al snapshot (datos congelados); `—`/etiqueta para datos no disponibles; en filtros/contadores, excluir el ítem (degradación silenciosa) |
-| Cálculo en servicios `valores-op*` | `op.datosTarifaX!` + `// TODO: refactor Tarifas` |
+| Cálculo de valores (motor de tarifas) | No resuelve entidades: usa lo congelado en la op (`tarifaAplicada*`, `datosTarifaEventual`) y la tarifa por id en `TarifarioService` (ver "Frente Tarifas — tarifario nuevo") |
 | Cálculo/cascada viva (borrados, batch) | `throw` explícito o `Swal + return` — NUNCA dejar caer en rama por defecto (riesgo de borrar/escribir colección equivocada) |
 
 Solución futura: resolver contra la papelera (guarda id + colección de origen). Todos los puntos marcados con `// TODO: refactor Papelera`.
 
-#### Nullable de tarifa (datosTarifaEventual / datosTarifaPersonalizada)
+#### Nullable de tarifa (datosTarifaEventual)
 
-Ahora son `| null`. Invariante confirmado: `datosTarifaEventual !== null ⟺ tarifaTipo.eventual` (idem personalizada). Tratamiento por contexto:
-- **Cálculo:** `op.datosTarifaX!` + `// TODO: refactor Tarifas`.
-- **Exhibición que lee un valor:** `op.datosTarifaX?.… ?? 0/'—'`.
-- **Getter de exhibición:** guard `if (!op.datosTarifaX) return ''/[]`.
-- **Múltiples accesos en un método de una sola tarifa:** guard al inicio (`if (!op.datosTarifaX) return;`) que estrecha todo el cuerpo, en vez de `!` repetido.
+`datosTarifaEventual: DatosTarifaEventual | null`. Desde el cierre de Tarifas es la ÚNICA
+marca de eventual (`!== null`); el campo de datos de Personalizada y el tipo de tarifa de
+4 booleanos se retiraron de `Operacion`. Mutarla solo con
+`OperacionFactoryService.aplicarEventual` (mantiene el invariante). Tratamiento por contexto:
+- **Exhibición que lee un valor:** `op.datosTarifaEventual?.… ?? 0/'—'`.
+- **Getter de exhibición:** guard `if (!op.datosTarifaEventual) return ''/[]`.
+- **Múltiples accesos en un método:** guard al inicio (`if (!op.datosTarifaEventual) return;`)
+  que estrecha todo el cuerpo, en vez de `!` repetido.
 
 #### OperacionRuntime: divergencia runtime-vs-tipo
 
@@ -774,6 +769,12 @@ cargados.
 
 Patrones fijados al resolver "una entidad puede tener múltiples tarifas habilitadas a
 la vez"; aplican como precedente al frente grande de Tarifas.
+
+> **Nota (cierre de Tarifas, Octubre 2026):** `RefTarifaHabilitada` ya no lleva
+> `idTarifa` en ningún nivel: es solo `{ nivel }`, y la tarifa concreta se elige por
+> operación. Lo que sigue sobre `idTarifa` en especial/personalizada es histórico; los
+> patrones (union discriminada, `null` explícito, puente con vencimiento, preservar
+> sub-estado no editable) siguen valiendo.
 
 **Union type discriminado por `nivel`, no un array de un tipo único con campos
 opcionales.** `RefTarifaHabilitada` fuerza en el tipo que solo `especial`/
@@ -1984,7 +1985,7 @@ todavía** — `PapeleraComponent.modalObjeto` sigue con su mecanismo propio,
   `PapeleraComponent.modalObjeto` NO usa el patrón "modal real en modo vista" — abre
   `ObjetoPapeleraComponent` (`shared/modales/objeto-papelera/`), un componente bespoke
   con markup propio por colección (`@switch` gigante sobre campos legacy, ya señalado
-  en otras partes de este archivo por su uso de `tarifaTipoDesdeHabilitadas`). Por eso
+  en otras partes de este archivo; el shim de tarifas que usaba se retiró en el cierre de Tarifas). Por eso
   "reusar el mismo mecanismo que ya usa Papelera" en la consigna de este frente se
   interpretó como reusar el PATRÓN de bajo nivel (`NgbModal.open` + `fromParent =
   {modo, item}`), no literalmente `ObjetoPapeleraComponent` — que sigue existiendo tal
@@ -2712,7 +2713,7 @@ de proyecto `claude/diseno-generador-operaciones.md`; instrucciones:
 ### ResolucionTarifaOpService (`servicios/tarifario/resolucion-tarifa-op.service.ts`)
 Extraído de `operaciones-editor` (P2) para que el editor y el generador
 usen las mismas reglas: `choferesDisponibles`, `vehiculosDisponibles`,
-`asignarChofer` (→ `{asignado, tipoRecalculado}`), `asignarVehiculo`,
+`asignarChofer` (→ `{asignado, eventualRecalculado}`), `asignarVehiculo`,
 `esEventualForzada`, `candidatosOp` ('eventual' | 'pendiente' |
 'sinEntidad' | 'ok'), `aplicarRef` (espejo de Personalizada al lado
 chofer), `requiereSeleccionManual`. Sobre los métodos públicos de
@@ -2743,9 +2744,8 @@ chofer), `requiereSeleccionManual`. Sobre los métodos públicos de
 - Ejecutar: vuelve a planificar con los mismos parámetros (objetos nuevos:
   `altaDesdeAsignacion` les asigna ids y números); por día
   `altaDesdeAsignacion(fecha, creadas, 'bloquear')`; después cierre una por
-  una como el modal de cierre (km; adicional en
-  `op.valores.<lado>.adExtraValor` + `adExtraConcepto`; `calcularCierre`;
-  espejo aCobrar/aPagar a `op.valores`; `cerrarOperacion`). No es atómico
+  una como el modal de cierre (km; adicional en `op.adExtra` con
+  `armarAdExtra`; `calcularCierre`; `cerrarOperacion`). No es atómico
   en conjunto: un error se registra y sigue; lo escrito queda en un estado
   válido. Rehacer = Limpieza + generar con la misma semilla.
 - Lote `generacionesPrueba/{id}`: 'en curso' al empezar (usuario,
@@ -2897,10 +2897,10 @@ Todo se hizo y probó en demo. Diseño y decisiones R1–R16: doc de proyecto
   dos lados si hay `datosTarifaEventual`. Acompañantes:
   `acompaniante ? (acompanianteCant ?? 1) : 0` (criterio único; antes había
   tres).
-- Fallback legacy (`usaFuenteLegacy`): sin `valoresNuevos` (o sin
-  `tarifaAplicada` de un lado) → `op.valores` (tarifaBase ya multiplicada) y
-  el nivel de `op.tarifaTipo` en los dos lados. Para ops históricas de
-  Vantruck; lo usan el Recálculo y el camino en vivo.
+- ~~Fallback legacy (`usaFuenteLegacy`)~~ — retirado en el cierre de Tarifas: una op
+  sin `valoresNuevos`, o sin `tarifaAplicada` de un lado y no eventual, es un error
+  del aporte. Las ops históricas de Vantruck se traducen al modelo nuevo con el
+  método de migración de operaciones ANTES del Recálculo.
 - `clavesDeOperacion`, `escriturasSuma(op, ±1)` (cierre +1, baja −1),
   `escriturasEdicion(opVieja, opNueva)` (resta lo viejo en SUS claves y suma
   lo nuevo en las suyas, neteo por clave, omite claves sin diferencia: cubre
@@ -2928,12 +2928,12 @@ Todo se hizo y probó en demo. Diseño y decisiones R1–R16: doc de proyecto
 
 - Editor de InformeOp (`InformeOpEditorComponent`): después de
   `calcularCierre` reutiliza `ValoresOpClienteService` /
-  `ValoresOpChoferService` → espeja `valoresNuevos` a `op.valores` y guarda
+  `ValoresOpChoferService` (calculadoras puras sobre `valoresNuevos`) y guarda
   en el InformeOp la tarifaBase multiplicada (igual que el cierre). Con la
   contraparte congelada (proforma/liquidada), el lado contrario de
   `valoresNuevos` vuelve al de la op original.
-- Editores viejos (`editar-tarifa-op`, `editar-inf-op`): NO tocan
-  resúmenes (camino viejo).
+- ~~Editores viejos (`editar-tarifa-op`, `editar-inf-op`)~~ — borrados en el
+  cierre de Tarifas.
 
 ### Recálculo (`servicios/desarrollo/recalculo-resumenes.service.ts`, `componentes/recalculo-resumenes/`, en `/migracion`)
 - Por rango de meses (YYYY-MM). Lee las operaciones del rango
@@ -2992,8 +2992,8 @@ y sus helpers, `LogRegistroService.construirEntradaSuelta`,
 `TablaResumenConfigService` pasó a `servicios/reportes/resumenes-op/` (la
 carpeta `reportes-op/` ya no existe). Se conservan: la colección
 `resumenOpMensual` en Vantruck y su mapeo en `firestore.rules` /
-`LimpiezaDemoService` (hasta la migración) y `buscarContraParteInformeOp` (lo
-usa `editar-inf-op`).
+`LimpiezaDemoService` (hasta la migración). (`buscarContraParteInformeOp` se
+borró con `editar-inf-op` en el cierre de Tarifas.)
 
 ## Frente Vendedores — comisiones de venta (Octubre 2026)
 
@@ -3258,6 +3258,155 @@ inicial bajó de 8,79 a 8,60 MB), `servicios/finanzas`,
 conservan: las colecciones `movimientos` / `resumenFinanzas` en Vantruck y
 sus mapeos en `firestore.rules` (ver "Deuda — Finanzas").
 
+## Frente Tarifas — tarifario nuevo (Agosto–Octubre 2026)
+
+Reemplaza al sistema viejo: 7 colecciones vigentes por entidad (`tarifasGral*`,
+`tarifasEsp*`, `tarifasPersCliente`) + 7 historiales + `tarifasEventuales`, pantallas
+de tarifas dentro de Clientes/Choferes/Proveedores, `TarifasService` y el tipo de tarifa
+de 4 booleanos. El tarifario nuevo factura todo desde el alta. El cierre del frente
+(Octubre 2026, bloques TC1–TC11, TC-R1–TC-R5, TC-L y TC-P1) retiró el módulo viejo y
+los campos legacy de `Operacion` y de las entidades, y corrigió bugs del motor. Diseño y
+avance: `claude/diseno-tarifas-cierre.md` (Project).
+
+### Modelo
+- `interfaces/tarifa.ts` — `TarifaBase`: `idTarifa` (id del documento, poblado al
+  leer), `nivel`, `idEntidadDueño` (null en General), `nombre`, `modoTarifacion`
+  ('categoria' | 'km'), `kmDistancia`, `activo`, `vigenciaDesde`, `versionAnteriorId`,
+  `fechaActualizacion?`, `actualizadoPor?`, `metadataAumento?`. `Tarifa` (General y
+  Personalizada): secciones de `CategoriaTarifa` (`aCobrar`, `aPagar`,
+  `aPagarProveedor?` y adicional por km por columna), acompañante por columna,
+  `usaValoresProveedor`.
+- `interfaces/tarifa-especial.ts` — `TarifaEspecial`: parche de la General para UNA
+  entidad (`entidadTipo` + `idEntidadDueño`), solo con las categorías elegidas; un
+  `valor` por categoría (la columna del lado de esa entidad) y `adicionalAcompaniante`.
+  `alcance`: `entidad` o `entidadCliente` (chofer/proveedor: rige solo con ese cliente).
+- General: singleton (una sola activa; `crearTarifa` lo valida). Personalizada: solo
+  Clientes, varias vigentes posibles, y define LOS DOS lados (el lado chofer espeja la
+  misma referencia). Especial: varias vigentes por entidad. Eventual: sin documento de
+  tarifa.
+- `registrosOpEventuales` (`RegistroOpEventual`, 3 lados): historial de operaciones
+  eventuales; `estado?` ('activo' | 'anulado') + `anulacion`; sin `estado` = activo
+  (registros migrados).
+- `RefTarifaAplicada` (`interfaces/ref-tarifa-aplicada.ts`): `idTarifa`, `nivel`,
+  `nombreTarifa`, `seccion`/`nombreSeccion`, `categoria`/`nombreCategoria` — referencia
+  congelada de la tarifa usada en un lado de la operación.
+
+### Versionado append-only y vigencia por fecha
+- Editar o aumentar = documento nuevo con `versionAnteriorId` = el anterior; el
+  anterior queda `activo: false` con `fechaActualizacion` = `vigenciaDesde` de la nueva.
+  Los valores de una versión nunca se modifican. Baja sin reemplazo (`darDeBaja*`):
+  `activo: false`, irreversible (para volver, se carga una tarifa nueva).
+- `TarifarioService.nuevaVersionTarifa*` / `darDeBajaTarifa*` corren en
+  `commitEnTransaccion`: releen el documento y abortan si ya no está activo (dos
+  ediciones simultáneas no bifurcan el linaje), con el log adentro (EDITAR con diff
+  contra la versión anterior / BAJA).
+- Vigencia POR FECHA (`shared/utils/vigencia-tarifa.util.ts`, puro): una versión rige
+  en la fecha F si `vigenciaDesde <= F < fin`; `fin` = `vigenciaDesde` de la versión
+  que la reemplaza; sin sucesora y dada de baja, su `fechaActualizacion`; sin sucesora y
+  activa, sin fin. `getTarifaGeneralVigente(fecha?)`,
+  `getTarifasPersonalizadasVigentes(id, fecha?)` y `getTarifasEspecialesVigentes(id,
+  fecha?)`: sin fecha, las activas hoy (pantallas de Tarifas); con fecha, las vigentes
+  ese día (operaciones: candidatos y acompañante eventual a `op.fecha`). Un aumento con
+  `vigenciaDesde` futura no rige hasta esa fecha.
+- `vigenciaDesde` manual (fechas retroactivas): solo rol `dev`, para la migración.
+
+### Servicios (`servicios/tarifario/`)
+| Servicio | Responsabilidad |
+|---|---|
+| `TarifarioService` | Listener en memoria de `tarifas`, `tarifasEspeciales` y `registrosOpEventuales` (TODAS las versiones: hacen falta para la vigencia por fecha); getters por id y vigentes; alta, versionado y baja; escrituras del `RegistroOpEventual` (alta en el cierre, anulación en la baja de una cerrada) |
+| `TarifaFactoryService` / `TarifaEspecialFactoryService` | Arman el documento desde el form (puros) |
+| `TarifaGuardadoService` | Guardado centralizado de forms y aumentos (crear o versión nueva) y bajas, con sus avisos |
+| `ValoresTarifaService` | Motor: `listarCandidatosLado`, `resolverSeccionCategoria`, `armarRefManual`, `calcularAlta`, `calcularCierre`, `armarRegistroEventual` |
+| `ResolucionTarifaOpService` | Reglas compartidas por `operaciones-editor` y el generador (ver "Herramientas de desarrollo") |
+
+### Motor (`ValoresTarifaService`)
+- **Elección (antes del alta):** `operaciones-editor` y el generador, vía
+  `ResolucionTarifaOpService.candidatosOp`. `listarCandidatosLado` devuelve TODAS las
+  versiones vigentes a `op.fecha` de los niveles HABILITADOS de la entidad, sin
+  fallback implícito entre niveles. Con un candidato y una sola sección/categoría
+  posible se autoselecciona; si no, el usuario elige tarifa y sección/categoría.
+  Especial: solo cubre sus categorías; con alcance por cliente, solo ese cliente.
+- **Alta (`calcularAlta`, en `altaDesdeAsignacion`):** EXIGE las referencias elegidas
+  (o eventual); si falta alguna, el alta se aborta. No resuelve jerarquía por su cuenta.
+- **Cierre, edición de InformeOp y restaurar (`calcularCierre`):** reusa las
+  referencias congeladas (no re-resuelve) con km, multiplicadores, acompañantes,
+  adicional extra y overrides actuales.
+- **Cálculo por lado:** tarifa base de la categoría (modo km: valor × `op.km`);
+  adicional por km con P = primer sector y S = intervalo: `km <= P` → 0; si no, primer
+  sector + (ceil((km − P) / S) − 1) × intervalo (cada límite cierra su tramo; S = 0 no
+  divide); acompañante de la tarifa aplicada (eventual: de la General vigente a
+  `op.fecha`); `adExtra`; multiplicador 0 → el lado entero en 0;
+  `tarifaBaseManual*` congela la base.
+- **Eventual:** `valoresNuevos` desde `datosTarifaEventual`. Al cerrar,
+  `armarRegistroEventual` arma el registro que `cerrarOperacion` escribe en SU
+  transacción. `bajaOperacionCerrada` lo anula (query por `idOperacion` fuera de la
+  transacción, relectura y anulación adentro, misma anulación que el par de InformeOp).
+
+### Operaciones
+- `operaciones-editor`: candidatos por lado, selector de sección/categoría, toggle
+  Eventual (`OperacionFactoryService.aplicarEventual`, mantiene el invariante
+  eventual ⟺ `datosTarifaEventual !== null`), badges de los niveles habilitados del
+  cliente (`nivelesHabilitados`). No deja dar el alta sin referencias.
+- Eventual forzada: cliente o chofer/proveedor con Eventual habilitada
+  (`OperacionFactoryService.esEventualPorHabilitadas` /
+  `ResolucionTarifaOpService.esEventualForzada`). Al resolver el chofer de un
+  proveedor, `asignarChofer` recalcula la marca (`eventualRecalculado`).
+- Leen `valoresNuevos`: InformeOp (tarifaBase × multiplicador), `modal-detalle-op`,
+  `tablero-op` y su Excel, Reportes, comisiones de venta y la papelera.
+
+### Pantallas (`raiz/tarifas`, ruta `tarifas`, lazy)
+- Pestañas General, Personalizada, Especial, Eventual (registros, con los anulados
+  marcados) e Historial (linajes).
+- Viewers, forms, aumento (único / segmentado / manual; en Especial, único / manual;
+  redondeo hasta miles; `metadataAumento` queda en la versión), duplicar (nombre único
+  entre vigentes), "Ver historial" y dar de baja.
+- Helpers del historial: `shared/utils/historial-tarifa.util.ts` (`deltaTarifa`,
+  `deltaTarifaEspecial`, `textoAumentoTarifa`), expuestos en los componentes como
+  propiedades.
+- Permisos: entran dev/admin/user/demo; editar, solo dev/admin (`puedeEditar`).
+
+### Reglas (`firestore.rules`)
+- `tarifas`, `tarifasEspeciales` → módulo 'tarifas' (escritura dev/admin; lectura
+  user/demo). `registrosOpEventuales` → 'informesOp' (lo escribe el cierre, que hace
+  `user`, y lo anula la baja de una cerrada).
+- Las colecciones viejas (vigentes → 'tarifas', `historialTarifas<…>` →
+  'tarifasHistorial') siguen mapeadas: las leen las herramientas de `/migracion` hasta
+  migrar Vantruck.
+
+### Retiro del sistema viejo (cierre)
+- Módulo viejo: rutas `clientes|choferes|proveedores/general|especial|personalizada|eventual`,
+  sus pantallas, `servicios/tarifas/` (`TarifasService`), componentes shared
+  (`ConsolaTarifa`, `HistorialTarifasGral`, `TarifasEventuales`, `TarigaGralEdicion`),
+  7 listeners de `HomeComponent` y 33 subjects de `StorageService`.
+- Código muerto acoplado: `EditarInfOp`, `EditarTarifaOp`, `BuscarTarifaService`,
+  `ValoresOpClienteService.$calcularKm`, `DbFirestoreService.buscarContraParteInformeOp`
+  / `guardarOpMultiple` / `buscarInformesPorIdOperacion` / `reemplazarConVersionNueva`,
+  interfaces `TarifaEventual` y `TarifaPersonalizadaCliente`.
+- `Operacion`: fuera `datosTarifaPersonalizada`, el tipo de tarifa de 4 booleanos (con
+  su shim y el getter del proveedor), `adExtraConcepto` y el espejo `valores`
+  (con sus espejos en el modal, el generador y `ValoresOpCliente/ChoferService`, que
+  quedaron como calculadoras puras del InformeOp sobre `valoresNuevos`).
+- Entidades: fuera `idTarifa` y `tarifaAsignada`.
+- Reportes: fuera la fuente legacy; una op sin `valoresNuevos`, o sin tarifa aplicada y
+  no eventual, es un error del aporte.
+- Reglas: fuera `historialTarifas` / `historialTarifasEspeciales` (nunca se usaron).
+- Se queda `interfaces/tarifa-gral-cliente.ts` (tipos viejos): lo usan `InformeOp`
+  viejo, `migrar-datos` y `choferes-alta`; se va con la Liquidación vieja.
+
+### Herramientas de `/migracion`
+- `TarifaMigrationService` (lee las colecciones viejas directo de Firestore, como
+  `any`): auditoría de colecciones viejas, auditoría de categorías de vehículo contra la
+  General, volcado histórico de la General (para armar el linaje a mano) y migración
+  Eventual → `RegistroOpEventual` (previsualizar / confirmar).
+- Migración de entidades: `migrar<Entidad>()` deja `tarifaTipo` en el documento A
+  PROPÓSITO; `migrarTarifasHabilitadas()` lo lee, arma `tarifasHabilitadas`
+  (`habilitadasDesdeTarifaTipoMigracion`) y lo quita. El orden es obligatorio.
+- Limpieza de campos de tarifa en operaciones (solo demo, rol dev;
+  `OperacionMigrationService.auditarLimpiezaCamposTarifas` /
+  `aplicarLimpiezaCamposTarifas`): traduce el adicional viejo a `adExtra` y borra con
+  `deleteField()` los campos retirados de `Operacion`. Hace falta porque
+  `opToFirestore` reescribe lo que se leyó (spread).
+
 ## Deuda conocida
 
 Deuda técnica activa. Actualizar cuando se salda.
@@ -3454,19 +3603,15 @@ tableros guardados/dados de alta, no el borrador local no guardado). DIFERIDO.
 
 ### Deuda — operaciones-editor / Tarifas
 
-**`idCliente` de TarifaPersonalizadaCliente: tipo vs dato divergen.** La interfaz declara
-`idCliente: number`, pero los datos en Firestore se corrigieron a string (consola Firestore)
-para cruzar con `op.cliente.id` (string). `getTarifaPersonalizada(idCliente: any)` usa `any`
-para forzar la igualdad sin romper la interfaz. RIESGO: el alta/edición de tarifas
-personalizadas en el módulo viejo lee `idCliente` esperando number — verificar al refactor de
-Tarifas. Marcado `// TODO: refactor Tarifas`.
+~~**`idCliente` de TarifaPersonalizadaCliente: tipo vs dato divergen.**~~ — RESUELTO en el
+cierre de Tarifas (la interfaz y el módulo viejo ya no existen).
 
 **Estilos duplicados:** las clases SCSS de tarifa eventual/personalizada se copiaron de
 operaciones-table a operaciones-editor. operaciones-table ya fue eliminado en el switch de
 Asignaciones (Bloques 13-19) — pendiente ahora consolidar los estilos duplicados en
 operaciones-editor (ya no hay original que mantenga la copia sincronizada).
 
-**Celdas de tarifa en el template:** los bindings a `datosTarifaEventual`/`datosTarifaPersonalizada`
+**Celdas de tarifa en el template:** los bindings a `datosTarifaEventual`
 usan guarda `@if (objeto)` (no `[disabled]` + `!`): el `disabled` NO impide que Angular evalúe
 el binding, y el `!` revienta en runtime cuando el objeto es null. Patrón a respetar en
 cualquier template que bindee tarifas nullable.
@@ -3495,9 +3640,10 @@ esas reglas (siguen vigentes); el editor ya no inyecta `ChoferService` /
 
 **Resolución de pendientes:**
 - Chofer (caso proveedor, `op.chofer.id === ''`): selector con
-  `ChoferService.getChoferesPorProveedor(idProveedor)`. Al resolver, recalcula `tarifaTipo`
-  con la tarifa del PROVEEDOR (`ProveedorService.getTarifaTipo`, NO `chofer.tarifaTipo`) vía
-  `OperacionFactoryService.recalcularTarifaTipo` + `aplicarTarifaTipo`.
+  `ChoferService.getChoferesPorProveedor(idProveedor)`. Al resolver,
+  `ResolucionTarifaOpService.asignarChofer` recalcula si la op es eventual con las
+  tarifas habilitadas del PROVEEDOR (`resolverTarifasHabilitadasChofer`) y devuelve
+  `eventualRecalculado`.
 - Vehículo (`op.vehiculo.id === ''`): selector con vehículos del dueño (proveedor si
   `op.proveedor`, chofer si directo), filtro síncrono sobre `getVehiculosActuales()`.
 
@@ -3505,21 +3651,19 @@ esas reglas (siguen vigentes); el editor ya no inyecta `ChoferService` /
 del render y se excluyen del array devuelto. NO muta `operacionesCreadas` (cancelar reabre
 desde cero, inocuo). NO toca Firestore.
 
-**Toggle eventual reversible:** `tarifaOriginal: Map<idItem, TarifaTipo>` guarda el tipo
-original (estado de UI, no ensucia la Operacion — reemplaza el viejo `OperacionRuntime`).
-La mutación coherente (tarifaTipo + datosTarifaX, manteniendo el invariante) vive en
-`OperacionFactoryService.aplicarTarifaEventual`.
+**Toggle eventual reversible:** `eventualOriginal: Map<idItem, boolean>` guarda si la op
+era eventual al entrar (estado de UI, no ensucia la Operacion — reemplaza el viejo
+`OperacionRuntime`). La mutación coherente (`datosTarifaEventual`, manteniendo el
+invariante) vive en `OperacionFactoryService.aplicarEventual`.
 
-**Badge tarifa de cliente:** inmune a toggles — leído del cliente vivo
-(`ClienteService.getClientePorId(idCliente)?.tarifaTipo`), con fallback al snapshot si el
-cliente está en papelera.
+**Badges de tarifa del encabezado:** los niveles habilitados del CLIENTE vivo
+(`nivelesHabilitados(cliente.tarifasHabilitadas)`), uno por nivel; informativos. La
+tarifa elegida de cada lado se ve en su fila.
 
-**Badge tarifa de chofer (informativo):** resuelto por ID, no congelado. Directo →
-`chofer.tarifaTipo`; proveedor → `ProveedorService.getTarifaTipo`. Solo display.
-
-**El editor NO calcula valores ni persiste:** edita un snapshot en memoria y devuelve.
-`calcularValoresIniciales` + persistencia siguen en `altaDesdeAsignacion`. Sin suscripciones
-(resolución síncrona puntual): edita, no observa.
+**El editor NO calcula valores ni persiste:** edita un snapshot en memoria y devuelve
+(con las referencias de tarifa elegidas). El cálculo (`calcularAlta`) y la persistencia
+siguen en `altaDesdeAsignacion`. Sin suscripciones (resolución síncrona puntual): edita,
+no observa.
 
 `OperacionRuntime` y `patenteChofer` ELIMINADOS en operaciones-editor. El viejo
 operaciones-table (que sí los usaba) fue eliminado por completo en el switch de
@@ -3758,27 +3902,47 @@ Operación para `user` ahora refleja el resultado correcto en la UI (oculto, no 
 bloqueado al escribir). Detalle completo en "Frente Botones y Permisos" → Bloque 6. El
 resto de los `*appRole`/`esRol()` puntuales sigue sin migrar, ver "Pendiente" ahí.
 
-### Deuda — `idTarifa`/`tarifaAsignada` en Cliente/Chofer/Proveedor
+### Deuda — Tarifas (tras el cierre del frente)
+- Datos de demo: clientes/choferes/proveedores conservan `idTarifa`/`tarifaAsignada`
+  en Firestore (inertes; las ediciones con merge no los borran).
+- Papelera: una op sin `valoresNuevos` muestra $0 en "Tarifa Base" (solo ops de
+  Vantruck dadas de baja antes de migrar).
+- `interfaces/tarifa-gral-cliente.ts` sobrevive por `InformeOp` viejo, `migrar-datos`
+  (sus arrays de operaciones son `any[]`) y `choferes-alta`; se va con la Liquidación
+  vieja.
+- Demo: las ops con adicional viejo editadas o cerradas entre TC9 y TC-L quedaron con
+  `adExtra: null` (el adicional viejo se perdió; datos de prueba).
+- Cosmético: los campos de TC-L en `MigracionComponent` quedaron entre los de
+  documentación y los de legajos.
+- ~~`idCliente` number de `TarifaPersonalizadaCliente`, `idTarifa`/`tarifaAsignada` en
+  entidades, bug de `proveedores-tarifa-gral` (colección equivocada), bug de
+  `modal-resumen-op` (leía el tipo de tarifa sobre snapshots)~~ — RESUELTOS en el cierre
+  de Tarifas: las interfaces, los campos y los componentes ya no existen
+  (`modal-resumen-op` lo reemplazó `modal-detalle-op`).
 
-Campos legacy sin migrar a `RefTarifaHabilitada` (que no tiene `idTarifa` en los
-niveles `general`/`eventual`, no alcanza para sustituirlos todavía). Consumidores
-activos confirmados por auditoría: el módulo de Tarifas actual completo
-(`Xxx-tarifa-gral.component.ts` × 3, `TarifasService.guardarTarifaPersonalizada`).
-Resolver junto con el frente grande de Tarifas, cuando ese módulo se reescriba.
-
-### Bug — `proveedores-tarifa-gral.component.ts` escribe en colección equivocada
-
-Líneas ~560/~591: al asignar `idTarifa` a un `Chofer` de proveedor, hace
-`updateItem("proveedores", ch, ...)` en vez de `"choferes"`. Detectado en auditoría del
-mini-frente RefTarifaHabilitada (Agosto 2026), no corregido — el archivo entero se
-elimina con el frente grande de Tarifas.
-
-### Bug — `modal-resumen-op.component.html` lee `tarifaTipo` sobre snapshots sin ese campo
-
-Lee `op.cliente.tarifaTipo`/`op.chofer.tarifaTipo` sobre `RefCliente`/`RefChofer`
-(snapshots de Operación, sin ese campo desde la Fase D). Probablemente `undefined` en
-runtime hoy. Detectado en auditoría del mini-frente RefTarifaHabilitada (Agosto 2026),
-no corregido, sin relación con ese frente — revisar en sesión propia de ese componente.
+### Checklist — migración de Tarifas a Vantruck
+Después del backup completo y de deployar este código en `pf-logistics`:
+1. Reglas: `tarifas`, `tarifasEspeciales` ('tarifas') y `registrosOpEventuales`
+   ('informesOp'; sin esta, `user` no puede cerrar una eventual).
+2. Auditar en `/migracion` las colecciones viejas de tarifas y
+   `Vehiculo.categoria.nombre` contra la General; corregir los vehículos antes de
+   cargar Especiales de chofer/proveedor.
+3. Entidades: `migrar<Entidad>()` y DESPUÉS `migrarTarifasHabilitadas()`; revisar a
+   mano los niveles habilitados que quedaron.
+4. Tarifas, a mano con los forms (rol dev, `vigenciaDesde` retroactiva): General (el
+   linaje se arma con el volcado histórico), Especiales y Personalizadas, en orden
+   cronológico real (la vigencia por fecha depende de eso).
+5. Eventual: previsualizar y confirmar → `registrosOpEventuales`.
+6. Operaciones: método de migración propio (por diseñar), con entidades, vehículos y
+   tarifas nuevos ya cargados: cada op vieja → `tarifaAplicada*` /
+   `datosTarifaEventual` / `valoresNuevos` / `adExtra`, sin `valores`, `tarifaTipo`,
+   `datosTarifaPersonalizada` ni `adExtraConcepto`. Recién después, Recálculo de
+   `resumenesOp` y de comisiones (sin `valoresNuevos`, la op es un error y bloquea).
+7. Entidades: borrar `idTarifa` y `tarifaAsignada` (`deleteField`).
+8. Al terminar, con backup: borrar las colecciones viejas de tarifas (7 vigentes, 7
+   historiales, `tarifasEventuales` y `tarifasChofer`/`tarifasCliente`/
+   `tarifasProveedor`), sus mapeos en `firestore.rules`, `TarifaMigrationService` y
+   su sección de `/migracion`, y los `_backup_*` de entidades que usa.
 
 ### Deuda — migración a Vantruck: Choferes/Vehículos/Legajos (y Proveedores/Choferes-de-proveedor/Vehículos/Legajos) deben migrarse en un mismo proceso, no por colección aislada
 
@@ -3902,15 +4066,14 @@ eager uno por uno. Detectado en el frente Facturación (F0).
   `informesOp` (módulo 'informesOp') y `resumenesOp` (módulo 'resumenes') en
   `pf-logistics` junto con el código nuevo (sin ellas, `user` no puede cerrar
   operaciones); Recálculo de todo el histórico (rol dev + id del proyecto),
-  simulando primero un rango con operaciones históricas para validar el
-  fallback legacy con datos reales (nivel de `op.tarifaTipo` contado en los
-  dos lados; las ops con error bloquean la ejecución); después, borrar la
+  simulando primero un rango (las ops con error bloquean la ejecución); las
+  ops históricas tienen que estar ya traducidas al modelo nuevo (ver
+  "Checklist — migración de Tarifas a Vantruck", paso 6); después, borrar la
   colección `resumenOpMensual`, su mapeo en `firestore.rules` y en
   `LimpiezaDemoService`, y los índices compuestos de su query que se habían
   creado desde la consola.
-- Fallback legacy de `aporteDeOperacion`: también lo usa el camino en vivo,
-  así que editar o dar de baja una op histórica sin `valoresNuevos` suma o
-  resta desde `op.valores`. Se retira con los campos legacy de Operacion.
+- ~~Fallback legacy de `aporteDeOperacion`~~ — retirado en el cierre de
+  Tarifas.
 - `app-filtro-periodo` (shared): "últimos 12 meses" calcula el desde con
   `setMonth(getMonth() - 11)` → los días 29–31 puede desbordar al mes
   siguiente y el rango queda de 11 meses. No se corrigió (componente
@@ -3920,9 +4083,8 @@ eager uno por uno. Detectado en el frente Facturación (F0).
 - Pantallas: un listener por mes y por clave (12 docs para un año). Con el
   tope de 36 meses está bien; para rangos mayores, pasar a una query por
   `periodo` con índice.
-- Editores viejos (`editar-tarifa-op`, `editar-inf-op`): no actualizan
-  `resumenesOp` (tampoco actualizaban `resumenOpMensual`). Se retiran con el
-  camino viejo de Liquidación.
+- ~~Editores viejos (`editar-tarifa-op`, `editar-inf-op`)~~ — borrados en el
+  cierre de Tarifas.
 - Cierre: `existeParaOperacion` sigue siendo una query fuera de la
   transacción (el SDK web no las permite adentro); la guarda real es el
   estado de la op leído en la transacción. ~~Anti-duplicado de InformeVenta~~
@@ -4033,8 +4195,8 @@ Reportes: la auditoría quedó fuera). Semilla: `shared/utils/periodo.util.ts`
 - Eventuales: cliente y chofer se varían ±20% por separado → puede quedar
   pago al chofer mayor que el cobro al cliente. Inofensivo para pruebas; si
   molesta, derivar el valor del chofer del cliente con un margen.
-- Vigencia de tarifas por `activo`, no por fecha (`vigenciaDesde` no se usa
-  al resolver): generar meses pasados usa las tarifas de hoy.
+- ~~Vigencia de tarifas por `activo`, no por fecha~~ — RESUELTO en el cierre de
+  Tarifas: el generador toma la General vigente a la fecha de cada día.
 - ~~`idInfVenta = Date.now() + random(0..999)`: puede colisionar en cierres
   rápidos~~ — RESUELTO en el Frente Vendedores (`comisionesVenta` con id
   determinista). Para tener comisiones en demo: asignar vendedores a
@@ -4044,10 +4206,10 @@ Reportes: la auditoría quedó fuera). Semilla: `shared/utils/periodo.util.ts`
 - La limpieza no toca Storage (ver "Herramientas de desarrollo").
 - `idsOperacion` del lote es un array en el doc: con ~500 ids no hay
   problema; con varios miles se acercaría al límite de 1 MB por documento.
-- Registradas durante el frente (diseño §10): rutas viejas de tarifas
+- Registradas durante el frente (diseño §10): ~~rutas viejas de tarifas
   (`clientes|choferes|proveedores/general|especial|personalizada|eventual`)
-  siguen activas y HomeComponent escucha las colecciones viejas (retirar en
-  el cierre de Tarifas); `LogService` viejo sigue escribiendo en `logs`
+  activas y listeners de HomeComponent sobre las colecciones viejas~~ —
+  RESUELTO en el cierre de Tarifas; `LogService` viejo sigue escribiendo en `logs`
   (`AsignacionService.reactivarItem`,
   `TableroService.altaOperacionYActualizarTablero`, `StorageService`
   add/update/deleteItem/logSimple); ~~la papelera vieja todavía recibe bajas
@@ -4058,31 +4220,14 @@ Reportes: la auditoría quedó fuera). Semilla: `shared/utils/periodo.util.ts`
   `resumenVenta`); `firestore.rules` conserva el mapeo de las
   colecciones purgadas.
 
-### Deuda — campos legacy de Operacion (`valores`, `tarifaTipo`, `datosTarifaPersonalizada`)
-Siguen siendo necesarios hoy (verificado en el frente Generador, diseño
-§11):
-- `op.valores`: `valores.<lado>.adExtraValor` es dato real (lo carga el
-  modal de cierre) y solo vive ahí; el motor nuevo lo lee de ahí
-  (`ValoresTarifaService`) e InformeOpEditor también. Desde el frente
-  Reportes, el editor de InformeOp vuelve a espejar `valoresNuevos` →
-  `op.valores` (tarifaBase multiplicada, como el cierre) y Reportes ya NO
-  lee `op.valores`, salvo el fallback legacy de ops históricas sin
-  `valoresNuevos`. Tablero-op y el Excel viejo leen el espejo (las comisiones
-  de venta toman la base de `valoresNuevos` desde el Frente Vendedores).
-- `op.tarifaTipo`: `tarifaTipo.eventual` gobierna el invariante eventual ⇔
-  `datosTarifaEventual` (OperacionFactoryService) y el toggle/badge del
-  editor; Reportes solo lo lee en el fallback legacy (nivel de las ops sin
-  `tarifaAplicada*`).
-- `datosTarifaPersonalizada`: peso muerto en el camino nuevo (solo lo lee
-  el modal viejo `editar-inf-op`).
-Para retirarlos (cierre de Tarifas + migración de Vantruck): mover
-`adExtraValor` a un campo propio de la op (o tomar `valoresNuevos` como
-fuente); ~~Reportes a `valoresNuevos` + `tarifaAplicada*.nivel` /
-`datosTarifaEventual !== null`~~ (hecho en el frente Reportes; queda su
-fallback legacy hasta migrar Vantruck); editor y factory a `datosTarifaEventual`
-como única marca de eventual; tablero-op a `valoresNuevos` (~~InformeVenta~~:
-hecho en el Frente Vendedores);
-retirar `editar-inf-op` / `buscar-tarifa`.
+### ~~Deuda — campos legacy de Operacion~~ — RESUELTO (cierre de Tarifas, Octubre 2026)
+Fuera de `Operacion`: el campo de datos de Personalizada, el tipo de tarifa de 4
+booleanos, `adExtraConcepto` y el espejo `valores`. Marca de eventual:
+`datosTarifaEventual !== null`; adicional extra: `op.adExtra` (entrada) →
+`valoresNuevos.<lado>.adExtraValor` (salida); única fuente de valores:
+`valoresNuevos` (tablero-op, su Excel, la papelera, Reportes y comisiones). Las ops de
+demo se limpiaron con la herramienta de `/migracion`; las de Vantruck se traducen con el
+método de migración (ver "Checklist — migración de Tarifas a Vantruck").
 
 ### Deuda — Excel/PDF
 - Servicios viejos `ExcelService` / `PdfService`: siguen en uso por el
