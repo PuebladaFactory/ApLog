@@ -13,20 +13,11 @@ import { GeneradorCobrosComponent } from '../componentes/generador-cobros/genera
 import { RecalculoResumenesComponent } from '../componentes/recalculo-resumenes/recalculo-resumenes.component';
 import { RecalculoComisionesComponent } from '../componentes/recalculo-comisiones/recalculo-comisiones.component';
 
-import { ChoferesModule } from './choferes/choferes.module';
-
-import { ProveedoresModule } from './proveedores/proveedores.module';
-import { LiquidacionModule } from './liquidacion/liquidacion.module';
 import { SharedModule } from "../shared/shared.module";
-import { FilterPipeModule } from 'ngx-filter-pipe';
-import { AgGridModule } from 'ag-grid-angular';
-import { DragDropModule } from '@angular/cdk/drag-drop';
-import { AjustesModule } from './ajustes/ajustes.module';
-import { LegajosModule } from './legajos/legajos.module';
-import { VendedoresModule } from './vendedores/vendedores.module';
-import { NuevaFacturacionModule } from './nueva-facturacion/nueva-facturacion.module';
-import { ReportesModule } from './reportes/reportes.module';
-/* import { NuevaFacturacionModule } from './nueva-facturacion/nueva-facturacion.module'; */
+
+// Frente lazy-fechas (LZ2): RaizModule NO importa módulos de feature. Cada
+// feature se carga solo lazy desde raiz-routing (importarlos acá anulaba
+// el lazy loading y registraba sus rutas sueltas dentro de Raiz).
 
 
 @NgModule({
@@ -41,25 +32,11 @@ import { ReportesModule } from './reportes/reportes.module';
         RecalculoResumenesComponent,
         RecalculoComisionesComponent,
     ],
-    exports: [
-        HomeComponent,
-    ],
     imports: [
         CommonModule,
         FormsModule,
         RaizRoutingModule,
-        AjustesModule,
-        ChoferesModule,
-        LegajosModule,
-        ProveedoresModule,
-        LiquidacionModule,
-        VendedoresModule,
         SharedModule,
-        FilterPipeModule,
-        AgGridModule,
-        DragDropModule, 
-        NuevaFacturacionModule,
-        ReportesModule
     ],
 })
 export class RaizModule { }
