@@ -51,8 +51,6 @@ export class ClienteMigrationService {
         tarifaTipo: datos.tarifaTipo ?? {
           general: true, especial: false, eventual: false, personalizada: false
         },
-        tarifaAsignada: datos.tarifaAsignada ?? false,
-        idTarifa: datos.idTarifa !== undefined ? String(datos.idTarifa) : '',
         // TODO: migrar vendedor a string[] cuando se refactorice ese módulo
         vendedor: Array.isArray(datos.vendedor)
           ? datos.vendedor.map((v: any) => String(v))

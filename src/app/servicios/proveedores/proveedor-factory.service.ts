@@ -41,8 +41,6 @@ export class ProveedorFactoryService {
       ),
       contactos: data.contactos,
       tarifasHabilitadas,
-      tarifaAsignada: false,
-      idTarifa: '',
       activo: true,
       visible: true,
     };

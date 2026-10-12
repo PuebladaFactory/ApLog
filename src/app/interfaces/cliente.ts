@@ -11,10 +11,6 @@ export interface Cliente {
     condFiscal: string;
     contactos: Contacto[];
     tarifasHabilitadas: RefTarifaHabilitada[];
-    // TODO: refactor Tarifas — reemplazar por RefTarifaHabilitada
-    tarifaAsignada: boolean;
-    // TODO: refactor Tarifas — reemplazar por RefTarifaHabilitada
-    idTarifa: string;
     // LEGACY (modelo viejo de Vendedores): ids de vendedor. Sin uso en el
     // camino nuevo; se retira con la migración de Vantruck.
     vendedor: string[];

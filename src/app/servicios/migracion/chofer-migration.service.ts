@@ -89,8 +89,6 @@ export class ChoferMigrationService {
           eventual: false,
           personalizada: false,
         },
-        tarifaAsignada: datos.tarifaAsignada ?? false,
-        idTarifa: datos.idTarifa !== undefined ? String(datos.idTarifa) : '',
         activo: datos.activo ?? true,
         visible: datos.visible ?? true,
       };

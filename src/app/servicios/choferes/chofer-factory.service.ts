@@ -38,8 +38,6 @@ export class ChoferFactoryService {
       condFiscal: data.condFiscal,
       contratacion: data.contratacion,
       tarifasHabilitadas,
-      tarifaAsignada: false,
-      idTarifa: '',
       activo: true,
       visible: true,
     };

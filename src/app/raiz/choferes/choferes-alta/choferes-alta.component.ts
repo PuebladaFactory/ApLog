@@ -73,7 +73,6 @@ export class ChoferesAltaComponent implements OnInit {
     domicilio: "",
   };
   condFiscal: string = "";
-  tarifaAsignada: boolean = false;
   cargando: boolean = false;
 
   constructor(
@@ -157,13 +156,11 @@ export class ChoferesAltaComponent implements OnInit {
       });
 
     if (this.fromParent.modo === "vista") {
-      this.tarifaAsignada = this.chofer.tarifaAsignada;
       this.soloVista = true;
       this.armarForm();
       this.form.disable();
       this.formTipoTarifa.disable();
     } else if (this.fromParent.modo === "edicion") {
-      this.tarifaAsignada = this.chofer.tarifaAsignada;
       this.soloVista = false;
       this.armarForm();
     } else {

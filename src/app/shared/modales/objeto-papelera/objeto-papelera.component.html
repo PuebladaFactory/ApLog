@@ -65,7 +65,7 @@
                               <label for="Base" class="fs-5">Tarifa Base</label>
                               <div class="input-group">
                                 <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                <input  class="form-control edicion" type="text" [value]="objeto.valoresNuevos?.cliente?.tarifaBase | formatearValor" >
+                                <input  class="form-control edicion" type="text" [value]="(objeto.valoresNuevos?.cliente?.tarifaBase ?? 0) * (objeto.multiplicadorCliente ?? 0) | formatearValor" >
                               </div>
                             </div>
                             <div class="form-group mb-3">
@@ -105,7 +105,7 @@
                           <label for="Base" class="fs-5">Tarifa Base</label>
                           <div class="input-group">
                             <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                            <input  class="form-control edicion" type="text" [value]="objeto.valoresNuevos?.chofer?.tarifaBase | formatearValor" >
+                            <input  class="form-control edicion" type="text" [value]="(objeto.valoresNuevos?.chofer?.tarifaBase ?? 0) * (objeto.multiplicadorChofer ?? 0) | formatearValor" >
                           </div>
                         </div>
                         <div class="form-group mb-3">

@@ -41,8 +41,6 @@ export class ClienteFactoryService {
       ),
       contactos: data.contactos,
       tarifasHabilitadas,
-      tarifaAsignada: false,
-      idTarifa: '',
       // TODO: asignar vendedores cuando se refactorice ese módulo
       vendedor: [],
       activo: true,

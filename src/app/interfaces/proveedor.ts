@@ -10,10 +10,6 @@ export interface Proveedor {
     direccionOperativa: Direccion;
     contactos: Contacto[];
     tarifasHabilitadas: RefTarifaHabilitada[];
-    // TODO: refactor Tarifas — reemplazar por RefTarifaHabilitada
-    tarifaAsignada: boolean;
-    // TODO: refactor Tarifas — reemplazar por RefTarifaHabilitada
-    idTarifa: string;
     activo: boolean;
     visible?: boolean;
 }

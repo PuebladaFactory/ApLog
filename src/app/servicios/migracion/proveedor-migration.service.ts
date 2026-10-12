@@ -83,8 +83,6 @@ export class ProveedorMigrationService {
         direccionOperativa: datos.direccionOperativa ?? { provincia: '', municipio: '', localidad: '', domicilio: '' },
         contactos: datos.contactos ?? [],
         tarifaTipo: datos.tarifaTipo ?? { general: true, especial: false, eventual: false, personalizada: false },
-        tarifaAsignada: datos.tarifaAsignada ?? false,
-        idTarifa: datos.idTarifa !== undefined ? String(datos.idTarifa) : '',
         activo: true,
         visible: datos.visible ?? true,
       };
