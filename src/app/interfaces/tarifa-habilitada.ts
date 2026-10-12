@@ -4,11 +4,25 @@ export type RefTarifaHabilitada =
   | { nivel: 'general' } | { nivel: 'especial' }
   | { nivel: 'personalizada' } | { nivel: 'eventual' };
 
+export type NivelHabilitado = RefTarifaHabilitada['nivel'];
+
+/** Orden de exhibición de los niveles (del más específico al más genérico). */
+const ORDEN_NIVELES: NivelHabilitado[] = ['personalizada', 'especial', 'general', 'eventual'];
+
+/** Niveles habilitados de una entidad, sin repetidos y en orden fijo
+ *  (personalizada, especial, general, eventual). Lista vacía o ausente → [].
+ *  Helper puro para leer tarifasHabilitadas sin pasar por TarifaTipo: forms
+ *  de alta, badges, etiquetas (TC7). */
+export function nivelesHabilitados(lista: RefTarifaHabilitada[] | null | undefined): NivelHabilitado[] {
+  const presentes = new Set((lista ?? []).map(t => t.nivel));
+  return ORDEN_NIVELES.filter(n => presentes.has(n));
+}
+
 /**
- * Shim de compatibilidad — reconstruye los 4 booleanos legacy a partir de
- * tarifasHabilitadas, para los consumidores que todavía esperan TarifaTipo.
- * TODO: refactor Tarifas — reemplazar cada consumidor por lectura directa de
- * tarifasHabilitadas cuando se resuelva multiplicidad real en cada uno.
+ * Shim de compatibilidad — reconstruye los 4 booleanos legacy (TarifaTipo) a
+ * partir de tarifasHabilitadas. Desde TC7 solo lo usan los que todavía
+ * producen op.tarifaTipo (OperacionFactoryService y
+ * ProveedorService.getTarifaTipo); se retira en TC8 junto con tarifaTipo.
  */
 export function tarifaTipoDesdeHabilitadas(lista: RefTarifaHabilitada[]): TarifaTipo {
   return {

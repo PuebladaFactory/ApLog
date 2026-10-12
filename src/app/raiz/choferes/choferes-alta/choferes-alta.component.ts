@@ -21,7 +21,7 @@ import {
   AsignacionVehiculo,
 } from "src/app/interfaces/chofer";
 import { ProveedorService } from "src/app/servicios/proveedores/proveedor.service";
-import { RefTarifaHabilitada, tarifaTipoDesdeHabilitadas } from "src/app/interfaces/tarifa-habilitada";
+import { RefTarifaHabilitada, nivelesHabilitados } from "src/app/interfaces/tarifa-habilitada";
 
 @Component({
   selector: "app-choferes-alta",
@@ -254,11 +254,11 @@ export class ChoferesAltaComponent implements OnInit {
       direccion: this.chofer.datosPersonales.direccion.domicilio,
     });
     if (this.chofer.contratacion.tipo === "directo") {
-      const tipoTarifaChofer = tarifaTipoDesdeHabilitadas(this.chofer.tarifasHabilitadas ?? []);
+      const nivelesChofer = nivelesHabilitados(this.chofer.tarifasHabilitadas);
       this.formTipoTarifa.patchValue({
-        general: tipoTarifaChofer.general,
-        especial: tipoTarifaChofer.especial,
-        eventual: tipoTarifaChofer.eventual,
+        general: nivelesChofer.includes('general'),
+        especial: nivelesChofer.includes('especial'),
+        eventual: nivelesChofer.includes('eventual'),
       });
       this.actualizarDisabledTarifa();
     } else {

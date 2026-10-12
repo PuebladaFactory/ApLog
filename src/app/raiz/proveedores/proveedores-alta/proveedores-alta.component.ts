@@ -11,7 +11,7 @@ import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { DomicilioService } from 'src/app/servicios/domicilio/domicilio.service';
 import { ProveedorFormData } from 'src/app/servicios/proveedores/proveedor-factory.service';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
-import { RefTarifaHabilitada, tarifaTipoDesdeHabilitadas } from 'src/app/interfaces/tarifa-habilitada';
+import { RefTarifaHabilitada, nivelesHabilitados } from 'src/app/interfaces/tarifa-habilitada';
 
 @Component({
     selector: 'app-proveedores-alta',
@@ -138,11 +138,11 @@ export class ProveedoresAltaComponent implements OnInit {
         direccionOperativa: this.proveedorEditar.direccionOperativa.domicilio,
         cuit: this.formatCuit(this.proveedorEditar.cuit),
       });
-      const tipoTarifaProveedor = tarifaTipoDesdeHabilitadas(this.proveedorEditar.tarifasHabilitadas);
+      const nivelesProveedor = nivelesHabilitados(this.proveedorEditar.tarifasHabilitadas);
       this.formTipoTarifa.patchValue({
-          general: tipoTarifaProveedor.general,
-          especial: tipoTarifaProveedor.especial,
-          eventual: tipoTarifaProveedor.eventual,
+          general: nivelesProveedor.includes('general'),
+          especial: nivelesProveedor.includes('especial'),
+          eventual: nivelesProveedor.includes('eventual'),
       });
       this.actualizarDisabledTarifa();
       this.$provinciaSeleccionadaF = this.proveedorEditar.direccionFiscal.provincia;

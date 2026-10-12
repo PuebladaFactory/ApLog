@@ -10,7 +10,7 @@ import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { DomicilioService } from 'src/app/servicios/domicilio/domicilio.service';
 import { ClienteFormData } from 'src/app/servicios/clientes/cliente-factory.service';
 import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
-import { RefTarifaHabilitada, tarifaTipoDesdeHabilitadas } from 'src/app/interfaces/tarifa-habilitada';
+import { RefTarifaHabilitada, nivelesHabilitados } from 'src/app/interfaces/tarifa-habilitada';
 
 @Component({
     selector: 'app-cliente-alta',
@@ -335,12 +335,12 @@ export class ClienteAltaComponent implements OnInit {
       direccionOperativa: this.clienteEditar.direccionOperativa.domicilio,
       cuit: this.formatCuit(this.clienteEditar.cuit),
     });
-    const tipoTarifaCliente = tarifaTipoDesdeHabilitadas(this.clienteEditar.tarifasHabilitadas);
+    const nivelesCliente = nivelesHabilitados(this.clienteEditar.tarifasHabilitadas);
     this.formTipoTarifa.patchValue({
-        general: tipoTarifaCliente.general,
-        especial: tipoTarifaCliente.especial,
-        eventual: tipoTarifaCliente.eventual,
-        personalizada: tipoTarifaCliente.personalizada,
+        general: nivelesCliente.includes('general'),
+        especial: nivelesCliente.includes('especial'),
+        eventual: nivelesCliente.includes('eventual'),
+        personalizada: nivelesCliente.includes('personalizada'),
     });
     this.actualizarDisabledTarifa();
     this.$provinciaSeleccionadaF = this.clienteEditar.direccionFiscal.provincia;

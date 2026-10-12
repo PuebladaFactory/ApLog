@@ -4,7 +4,7 @@ import { Operacion } from 'src/app/interfaces/operacion';
 import { AsignacionItem } from 'src/app/interfaces/asignacion';
 import { Chofer, Vehiculo, TarifaTipo } from 'src/app/interfaces/chofer';
 import { ConIdType } from 'src/app/interfaces/conId';
-import { tarifaTipoDesdeHabilitadas } from 'src/app/interfaces/tarifa-habilitada';
+import { NivelHabilitado, nivelesHabilitados } from 'src/app/interfaces/tarifa-habilitada';
 import { OperacionCreada } from 'src/app/servicios/operaciones/operacion.service';
 import { OperacionFactoryService } from 'src/app/servicios/operaciones/operacion-factory.service';
 import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
@@ -16,8 +16,10 @@ import Swal from 'sweetalert2';
 interface GrupoEditor {
   idCliente:   string;
   razonSocial: string;
-  /** tarifaTipo del CLIENTE (informativo, para el badge del encabezado). */
-  tipoCliente: 'general' | 'especial' | 'eventual' | 'personalizada';
+  /** Niveles de tarifa habilitados del CLIENTE (informativo, badges del
+   *  encabezado; uno por nivel, como operacion-cabecera). Vacío si el cliente
+   *  no está en memoria (p. ej. en papelera). */
+  nivelesCliente: NivelHabilitado[];
   creadas:     OperacionCreada[];
 }
 
@@ -103,10 +105,7 @@ export class OperacionesEditorComponent implements OnInit {
         grupo = {
           idCliente,
           razonSocial: c.operacion.cliente.razonSocial,
-          tipoCliente: clienteVivo
-            // TODO: refactor Tarifas — operaciones-editor con multiplicidad
-            ? this.tipoClienteLabel(tarifaTipoDesdeHabilitadas(clienteVivo.tarifasHabilitadas))
-            : this.tipoClienteLabel(c.operacion.tarifaTipo),  // fallback: cliente en papelera
+          nivelesCliente: nivelesHabilitados(clienteVivo?.tarifasHabilitadas),
           creadas: [],
         };
         mapa.set(idCliente, grupo);
@@ -122,16 +121,6 @@ export class OperacionesEditorComponent implements OnInit {
     }
 
     this.grupos = Array.from(mapa.values());
-  }
-
-  /** Etiqueta del badge de cliente. NOTA: usa el tarifaTipo de la PRIMERA op del
-   *  cliente como referencia de exhibición (todas las ops del mismo cliente comparten
-   *  la tarifa de cliente; la eventual es override por op, no cambia la del cliente). */
-  private tipoClienteLabel(t: TarifaTipo): GrupoEditor['tipoCliente'] {
-    if (t.personalizada) return 'personalizada';
-    if (t.especial)      return 'especial';
-    if (t.eventual)      return 'eventual';
-    return 'general';
   }
 
   /** Si chofer o vehículo quedaron pendientes pero solo hay UNA opción disponible, se

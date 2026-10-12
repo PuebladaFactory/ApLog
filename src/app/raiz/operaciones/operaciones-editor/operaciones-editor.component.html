@@ -17,17 +17,13 @@
         <div class="grupo-container mb-4 shadow-sm rounded border p-2">
             <h5 class="mt-2">
                 {{ grupo.razonSocial }} — Tarifa Cliente:
-                <span
-                    class="badge align-middle mb-1"
-                    [ngClass]="{
-                        'bg-primary': grupo.tipoCliente === 'general',
-                        'bg-info': grupo.tipoCliente === 'especial',
-                        'bg-success': grupo.tipoCliente === 'personalizada',
-                        'bg-warning': grupo.tipoCliente === 'eventual',
-                    }"
-                >
-                    {{ grupo.tipoCliente }}
-                </span>
+                @for (nivel of grupo.nivelesCliente; track nivel) {
+                    <span class="badge align-middle mb-1 me-1 {{ nivel | claseNivelTarifa }}">
+                        {{ nivel | etiquetaNivelTarifa }}
+                    </span>
+                } @empty {
+                    <span class="badge align-middle mb-1 bg-secondary">—</span>
+                }
             </h5>
 
             <table class="table table-bordered table-sm mt-2">

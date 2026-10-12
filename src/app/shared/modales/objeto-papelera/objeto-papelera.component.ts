@@ -7,7 +7,8 @@ import { InformeOp } from 'src/app/interfaces/informe-op';
 
 import { LogDoc } from 'src/app/interfaces/log-doc';
 import { Proveedor } from 'src/app/interfaces/proveedor';
-import { RefTarifaHabilitada, tarifaTipoDesdeHabilitadas } from 'src/app/interfaces/tarifa-habilitada';
+import { RefTarifaHabilitada, nivelesHabilitados } from 'src/app/interfaces/tarifa-habilitada';
+import { EtiquetaNivelTarifaPipe } from 'src/app/shared/pipes/etiqueta-nivel-tarifa.pipe';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
@@ -229,18 +230,20 @@ export class ObjetoPapeleraComponent implements OnInit {
       this.tarifasProveedorFallback = proveedorEliminado?.tarifasHabilitadas ?? null;
     }
 
-    // TODO: refactor Tarifas — reemplazar por lectura directa de tarifasHabilitadas
+    /** Tarifas habilitadas como texto ("Personalizada + General"). Chofer de
+     *  proveedor: las del proveedor (vivo o en papelera). Sin datos → '—'.
+     *  Antes mostraba un solo nivel, y 'Eventual' si la lista venía vacía. */
     getTarifaLabel(objeto: any): string {
-      if (objeto?.contratacion?.tipo === 'proveedor') {
-        const proveedor = this.proveedorService.getProveedorPorId(objeto.contratacion.idProveedor);
-        const tarifasHabilitadas = proveedor?.tarifasHabilitadas ?? this.tarifasProveedorFallback;
-        if (!tarifasHabilitadas) return '—';
-        const tProveedor = tarifaTipoDesdeHabilitadas(tarifasHabilitadas);
-        return tProveedor.general ? 'General' : tProveedor.especial ? 'Especial' : tProveedor.personalizada ? 'Personalizada' : 'Eventual';
-      }
-      const t = tarifaTipoDesdeHabilitadas(objeto?.tarifasHabilitadas ?? []);
-      return t.general ? 'General' : t.especial ? 'Especial' : t.personalizada ? 'Personalizada' : 'Eventual';
+      const lista: RefTarifaHabilitada[] | null = objeto?.contratacion?.tipo === 'proveedor'
+        ? (this.proveedorService.getProveedorPorId(objeto.contratacion.idProveedor)?.tarifasHabilitadas
+           ?? this.tarifasProveedorFallback)
+        : (objeto?.tarifasHabilitadas ?? null);
+      const niveles = nivelesHabilitados(lista);
+      if (niveles.length === 0) return '—';
+      return niveles.map(n => this.etiquetaNivel.transform(n)).join(' + ');
     }
+
+    private etiquetaNivel = new EtiquetaNivelTarifaPipe();
 
     getCliente(id:number){
       let cliente
