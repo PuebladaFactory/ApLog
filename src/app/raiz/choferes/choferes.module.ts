@@ -9,8 +9,6 @@ import { ChoferesAltaComponent } from './choferes-alta/choferes-alta.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 
-import { ChoferesTarifaGralComponent } from './choferes-tarifa-gral/choferes-tarifa-gral.component';
-import { ChoferesTarifaEspecialComponent } from './choferes-tarifa-especial/choferes-tarifa-especial.component';
 import { ModalVehiculoComponent } from './modal-vehiculo/modal-vehiculo.component';
 import { FilterPipeModule } from 'ngx-filter-pipe';
 import { ChoferesListadoComponent } from './choferes-listado/choferes-listado.component';
@@ -22,12 +20,10 @@ import { AgGridModule } from 'ag-grid-angular';
 
 @NgModule({
   declarations: [
-    ChoferesControlComponent,    
-    ChoferesAltaComponent,   
-    ChoferesTarifaGralComponent,
-    ChoferesTarifaEspecialComponent,    
+    ChoferesControlComponent,
+    ChoferesAltaComponent,
     ModalVehiculoComponent,
-    ChoferesListadoComponent    
+    ChoferesListadoComponent,
   ],
   imports: [
     CommonModule,

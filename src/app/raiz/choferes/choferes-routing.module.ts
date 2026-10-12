@@ -2,9 +2,6 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { ChoferesAltaComponent } from './choferes-alta/choferes-alta.component';
 import { ChoferesControlComponent } from './choferes-control/choferes-control.component';
-import { ChoferesTarifaGralComponent } from './choferes-tarifa-gral/choferes-tarifa-gral.component';
-import { ChoferesTarifaEspecialComponent } from './choferes-tarifa-especial/choferes-tarifa-especial.component';
-import { TarifasEventualesComponent } from 'src/app/shared/tarifas-eventuales/tarifas-eventuales.component';
 import { RoleGuard } from 'src/app/guards/role.guard';
 import { ChoferesListadoComponent } from './choferes-listado/choferes-listado.component';
 
@@ -17,9 +14,8 @@ const routes: Routes = [
           canActivate: [RoleGuard],
           data: { roles: ['dev', 'admin', 'manager'] }, // no se permiten usuarios
     },        
-    {path: 'general', component:ChoferesTarifaGralComponent},
-    {path: 'especial', component:ChoferesTarifaEspecialComponent},
-    {path: 'eventual', component:TarifasEventualesComponent},    
+    // Tarifas de choferes: módulo Tarifas (/tarifas). Las rutas viejas
+    // (general, especial, eventual) se retiraron en TC-R2.
     {path: 'listado', component:ChoferesListadoComponent},
 ]  },
   

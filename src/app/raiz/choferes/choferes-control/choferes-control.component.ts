@@ -28,9 +28,7 @@ export class ChoferesControlComponent implements OnInit {
   
   tabs = [
     { id: 'tab1', name: 'Alta/Listado', route: 'choferes/listado', alias: ['choferes/alta'] },
-    { id: 'tab2', name: 'Tarifa General', route: 'choferes/general' },
-    { id: 'tab3', name: 'Tarifa Especial', route: 'choferes/especial' },
-    { id: 'tab4', name: 'Tarifa Eventual', route: 'choferes/eventual' },
+    // Pestañas de tarifas retiradas en TC-R2: las tarifas viven en /tarifas.
 
   ];
 
