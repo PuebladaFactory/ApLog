@@ -35,7 +35,6 @@ export interface SimulacionRecalculo {
   opsLeidas: number;
   opsAbiertas: number;    // excluidas
   opsSumadas: number;
-  opsLegacy: number;      // sumadas desde op.valores / op.tarifaTipo
   errores: ErrorAgregado[];
   meses: ResumenMesRecalculo[];   // desde los docs general_ recalculados
   docsRecalculados: number;
@@ -138,7 +137,7 @@ export class RecalculoResumenesService {
     const cerradas = ops.filter(op => op.estado?.ciclo !== 'abierta');
 
     alAvanzar?.(`Recalculando ${cerradas.length} operaciones…`);
-    const { resumenes, errores, legacy } = this.factory.agregados(cerradas, Date.now());
+    const { resumenes, errores } = this.factory.agregados(cerradas, Date.now());
 
     alAvanzar?.('Leyendo resúmenes guardados…');
     const guardados = await this.db.consultarPorRango<ResumenOpNuevo>(
@@ -181,7 +180,6 @@ export class RecalculoResumenesService {
       opsLeidas: ops.length,
       opsAbiertas: ops.length - cerradas.length,
       opsSumadas: cerradas.length - errores.length,
-      opsLegacy: legacy,
       errores,
       meses,
       docsRecalculados: resumenes.size,

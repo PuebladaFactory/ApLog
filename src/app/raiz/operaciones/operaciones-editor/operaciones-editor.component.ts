@@ -2,7 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { AsignacionItem } from 'src/app/interfaces/asignacion';
-import { Chofer, Vehiculo, TarifaTipo } from 'src/app/interfaces/chofer';
+import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { ConIdType } from 'src/app/interfaces/conId';
 import { NivelHabilitado, nivelesHabilitados } from 'src/app/interfaces/tarifa-habilitada';
 import { OperacionCreada } from 'src/app/servicios/operaciones/operacion.service';
@@ -50,9 +50,9 @@ export class OperacionesEditorComponent implements OnInit {
    *  del resultado, SIN mutar destructivamente operacionesCreadas. Cancelar = inocuo. */
   private eliminados = new Set<string>();
 
-  /** tarifaTipo original de cada op (clave idItem), para volver atrás del toggle eventual.
-   *  Estado de UI puro; no ensucia la Operacion. */
-  private tarifaOriginal = new Map<string, TarifaTipo>();
+  /** Si cada op era eventual al entrar al editor (clave idItem): punto de
+   *  retorno del toggle Eventual. Estado de UI puro; no ensucia la Operacion. */
+  private eventualOriginal = new Map<string, boolean>();
 
   /** Candidatos de tarifa del sistema nuevo (Bloque 6/7), por lado y por op (clave
    *  idItem). Se calculan una vez que chofer y vehículo están resueltos; ausente
@@ -75,15 +75,15 @@ export class OperacionesEditorComponent implements OnInit {
   ) {}
 
   // ===========================================================================
-  // INIT — agrupar por cliente + sembrar tarifaOriginal
+  // INIT — agrupar por cliente + sembrar eventualOriginal
   // ===========================================================================
 
   ngOnInit(): void {
     this.fecha = this.operacionesCreadas[0].operacion.fecha;
 
-    // Sembrar el tipo original de cada op (antes de cualquier toggle).
+    // Sembrar si cada op era eventual (antes de cualquier toggle).
     for (const c of this.operacionesCreadas) {
-      this.tarifaOriginal.set(c.item.idItem, { ...c.operacion.tarifaTipo });
+      this.eventualOriginal.set(c.item.idItem, c.operacion.datosTarifaEventual !== null);
     }
 
     this.reagrupar();
@@ -154,15 +154,16 @@ export class OperacionesEditorComponent implements OnInit {
     return this.resolucionTarifa.choferesDisponibles(op);
   }
 
-  /** Resuelve el chofer pendiente: puebla RefChofer, recalcula tarifaTipo con la tarifa
-   *  del PROVEEDOR (no del chofer, que la hereda) y re-siembra el tipo original. */
+  /** Resuelve el chofer pendiente: puebla RefChofer, recalcula si la op es
+   *  eventual (con la tarifa del PROVEEDOR, que el chofer hereda) y re-siembra
+   *  el punto de retorno del toggle. */
   onChoferSeleccionado(c: OperacionCreada, idChofer: string): void {
-    const { asignado, tipoRecalculado } = this.resolucionTarifa.asignarChofer(c.operacion, idChofer);
+    const { asignado, eventualRecalculado } = this.resolucionTarifa.asignarChofer(c.operacion, idChofer);
     if (!asignado) return;
 
-    // Re-sembrar el tipo original (este pasa a ser el nuevo punto de retorno del toggle).
-    if (tipoRecalculado) {
-      this.tarifaOriginal.set(c.item.idItem, { ...tipoRecalculado });
+    // Re-sembrar el punto de retorno del toggle con el estado recalculado.
+    if (eventualRecalculado !== null) {
+      this.eventualOriginal.set(c.item.idItem, eventualRecalculado);
     }
 
     // Sistema nuevo (Bloque 6/7): el chofer recién resuelto cambia los candidatos
@@ -219,15 +220,15 @@ export class OperacionesEditorComponent implements OnInit {
 
   /** True si la op está actualmente en tarifa eventual. */
   esEventual(op: Operacion): boolean {
-    return op.tarifaTipo.eventual;
+    return op.datosTarifaEventual !== null;
   }
 
-  /** Toggle eventual. La mutación coherente (tarifaTipo + datosTarifaX) vive en el factory.
-   *  El punto de retorno es el tarifaOriginal sembrado para esta op. */
+  /** Toggle eventual. La mutación coherente (datosTarifaEventual) vive en el
+   *  factory. Al desactivar, la op vuelve a su estado sembrado
+   *  (eventualOriginal): solo sigue eventual si ya lo era al entrar. */
   onEventualToggle(c: OperacionCreada, activar: boolean): void {
-    const original = this.tarifaOriginal.get(c.item.idItem)
-      ?? { ...c.operacion.tarifaTipo };
-    this.operacionFactory.aplicarTarifaEventual(c.operacion, activar, original);
+    const eraEventual = this.eventualOriginal.get(c.item.idItem) ?? false;
+    this.operacionFactory.aplicarEventual(c.operacion, activar || eraEventual);
 
     // Sistema nuevo: eventual no usa tarifaAplicada*; al entrar se limpia todo, al
     // salir se recalculan candidatos desde cero (puede haber cambiado el nivel).
@@ -242,8 +243,8 @@ export class OperacionesEditorComponent implements OnInit {
    *  eventual, la op solo puede estar eventual porque el usuario la marcó a mano
    *  (onEventualToggle) — ahí el toggle sigue habilitado para poder volver atrás.
    *  Con chofer pendiente todavía no se puede resolver la tarifa del proveedor —
-   *  se asume no forzado hasta ese momento, igual que tarifaTipo.eventual en ese
-   *  mismo estado transitorio (ver OperacionFactoryService.crearOperacionBase). */
+   *  se asume no forzado hasta ese momento, igual que en el alta (ver
+   *  OperacionFactoryService.esEventualPorHabilitadas). */
   esEventualForzada(c: OperacionCreada): boolean {
     return this.resolucionTarifa.esEventualForzada(c.operacion);
   }

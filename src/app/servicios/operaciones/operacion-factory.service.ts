@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
 import { Operacion, EstadoOp } from 'src/app/interfaces/operacion';
 import { Cliente } from 'src/app/interfaces/cliente';
-import { Chofer, TarifaTipo, Vehiculo } from 'src/app/interfaces/chofer';
+import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { ConId } from 'src/app/interfaces/conId';
-import { tarifaTipoDesdeHabilitadas } from 'src/app/interfaces/tarifa-habilitada';
+import { RefTarifaHabilitada } from 'src/app/interfaces/tarifa-habilitada';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
 import { EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
 
@@ -31,11 +31,10 @@ export class OperacionFactoryService {
   crearOperacionBase(datos: DatosCrearOperacion): Operacion {
     const { cliente, chofer, vehiculo, proveedor, fecha, observacion, hojaDeRuta } = datos;
 
-    // TODO: refactor Tarifas — operaciones-editor con multiplicidad
-    const tarifaSecundariaChofer = chofer
-      ? tarifaTipoDesdeHabilitadas(this.proveedorService.resolverTarifasHabilitadasChofer(chofer))
-      : undefined;
-    const tarifaTipo = this.resolverJerarquiaTarifa(cliente, tarifaSecundariaChofer);
+    const esEventual = this.esEventualPorHabilitadas(
+      cliente,
+      chofer ? this.proveedorService.resolverTarifasHabilitadasChofer(chofer) : undefined,
+    );
 
     return {
       idOperacion:      '',
@@ -79,9 +78,8 @@ export class OperacionFactoryService {
       informeOpCliente: '',
       informeOpChofer:  '',
 
-      tarifaTipo,
       // Nace con objeto en cero SOLO si la op es eventual; sino null.
-      datosTarifaEventual: tarifaTipo.eventual
+      datosTarifaEventual: esEventual
         ? { chofer: { concepto: '', valor: 0 }, cliente: { concepto: '', valor: 0 } }
         : null,
 
@@ -110,91 +108,31 @@ export class OperacionFactoryService {
     };
   }
 
-  /**
-   * Jerarquía de tarifas: eventual > personalizada > especial > general.
-   * `tarifaSecundaria` es la tarifa de la entidad que acompaña al cliente: para chofer
-   * directo o de proveedor por igual, tarifaTipoDesdeHabilitadas(proveedorService.
-   * resolverTarifasHabilitadasChofer(chofer)) — el resolver ya distingue ambos casos.
-   * undefined cuando todavía no hay chofer/proveedor resuelto (alta con pendiente).
-   * Personalizada es exclusiva del cliente; no la aporta la tarifa secundaria.
-   * TODO: refactor Tarifas — esta lógica migrará al sistema de tarifas unificado.
-   */
-  private resolverJerarquiaTarifa(
-    cliente: Cliente,
-    tarifaSecundaria: TarifaTipo | undefined,
-  ): TarifaTipo {
-    // TODO: refactor Tarifas — operaciones-editor con multiplicidad
-    const tipoCliente = tarifaTipoDesdeHabilitadas(cliente.tarifasHabilitadas);
-    if (tipoCliente.eventual || tarifaSecundaria?.eventual) {
-      return { general: false, especial: false, eventual: true,  personalizada: false };
-    }
-    if (tipoCliente.personalizada) {
-      return { general: false, especial: false, eventual: false, personalizada: true  };
-    }
-    if (tipoCliente.especial || tarifaSecundaria?.especial) {
-      return { general: false, especial: true,  eventual: false, personalizada: false };
-    }
-    return   { general: true,  especial: false, eventual: false, personalizada: false };
+  /** True si la op es eventual porque el cliente o el chofer/proveedor tienen
+   *  el nivel Eventual habilitado (por invariante, cuando Eventual está
+   *  habilitado es el único nivel de esa entidad). `habilitadasChofer`:
+   *  proveedorService.resolverTarifasHabilitadasChofer(chofer), que ya
+   *  resuelve directo vs. proveedor; undefined con chofer pendiente → solo
+   *  cuenta el cliente. Mismo criterio que
+   *  ResolucionTarifaOpService.esEventualForzada.
+   *  Reemplaza a la jerarquía legacy de 4 booleanos de la op (TC8): de ella
+   *  solo se usaba la marca de eventual. */
+  esEventualPorHabilitadas(cliente: Cliente, habilitadasChofer: RefTarifaHabilitada[] | undefined): boolean {
+    return cliente.tarifasHabilitadas.some(h => h.nivel === 'eventual')
+      || (habilitadasChofer ?? []).some(h => h.nivel === 'eventual');
   }
 
-  /**
-   * Recalcula el tarifaTipo de una op cuando se resuelve el chofer pendiente
-   * (caso proveedor). Quien llama resuelve la tarifa secundaria y la pasa ya resuelta,
-   * vía proveedorService.resolverTarifasHabilitadasChofer(chofer) + tarifaTipoDesdeHabilitadas
-   * (mismo resolver para chofer directo o de proveedor). Devuelve el nuevo TarifaTipo;
-   * NO muta la op (la mutación coherente, con datosTarifaX, la hace aplicarTarifaTipo
-   * más abajo si hace falta).
-   * TODO: refactor Tarifas — operaciones-editor con multiplicidad
-   */
-  recalcularTarifaTipo(cliente: Cliente, tarifaSecundaria: TarifaTipo | undefined): TarifaTipo {
-    return this.resolverJerarquiaTarifa(cliente, tarifaSecundaria);
-  }
-
-  /**
-   * Aplica o revierte la tarifa eventual sobre una op, manteniendo el invariante
-   * de datosTarifaX. Estado de UI de operaciones-editor.
-   *
-   *  - activar=true: pasa la op a eventual. Crea datosTarifaEventual en cero si
-   *    no existía. (El tipo original lo guarda el componente en su Map para
-   *    poder volver atrás.)
-   *  - activar=false: restaura tarifaOriginal y reconstruye datosTarifaEventual
-   *    (en cero si la original era eventual; null si no).
-   *
-   * TODO: refactor Tarifas — la mutación de datosTarifaX migrará al sistema unificado.
-   */
-  /**
-   * Aplica un tarifaTipo ya resuelto sobre una op, manteniendo el invariante de
-   * datosTarifaX (eventual ⟺ datosTarifaEventual).
-   * Lo usa operaciones-editor al resolver el chofer de un proveedor (el tipo se
-   * recalcula con recalcularTarifaTipo y se aplica acá). Muta la op in-place.
-   * TODO: refactor Tarifas — la mutación de datosTarifaX migrará al sistema unificado.
-   * TODO: refactor Tarifas — operaciones-editor con multiplicidad
-   */
-  aplicarTarifaTipo(op: Operacion, tipo: TarifaTipo): void {
-    op.tarifaTipo = { ...tipo };
-    op.datosTarifaEventual = tipo.eventual
+  /** Deja la op eventual o no, manteniendo el invariante
+   *  eventual ⟺ datosTarifaEventual !== null. Al pasar a eventual crea
+   *  datosTarifaEventual en cero si no existía (si ya existía conserva lo
+   *  cargado); al salir lo deja en null. Muta la op in-place. Lo usan
+   *  ResolucionTarifaOpService.asignarChofer (chofer de proveedor resuelto) y
+   *  el toggle Eventual de operaciones-editor. */
+  aplicarEventual(op: Operacion, eventual: boolean): void {
+    op.datosTarifaEventual = eventual
       ? (op.datosTarifaEventual
          ?? { chofer: { concepto: '', valor: 0 }, cliente: { concepto: '', valor: 0 } })
       : null;
-  }
-
-  // TODO: refactor Tarifas — operaciones-editor con multiplicidad
-  aplicarTarifaEventual(
-    op: Operacion,
-    activar: boolean,
-    tarifaOriginal: TarifaTipo,
-  ): void {
-    if (activar) {
-      op.tarifaTipo = { general: false, especial: false, eventual: true, personalizada: false };
-      op.datosTarifaEventual = op.datosTarifaEventual
-        ?? { chofer: { concepto: '', valor: 0 }, cliente: { concepto: '', valor: 0 } };
-    } else {
-      op.tarifaTipo = { ...tarifaOriginal };
-      op.datosTarifaEventual = tarifaOriginal.eventual
-        ? (op.datosTarifaEventual
-           ?? { chofer: { concepto: '', valor: 0 }, cliente: { concepto: '', valor: 0 } })
-        : null;
-    }
   }
 
   /** Convierte una Operación (ConId) al body que se persiste en Firestore —

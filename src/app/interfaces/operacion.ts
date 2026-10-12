@@ -1,4 +1,3 @@
-import { TarifaTipo } from "./tarifa-gral-cliente";
 import { RefTarifaAplicada } from "./ref-tarifa-aplicada";
 import { AsignacionVenta } from "./vendedor-nuevo";
 
@@ -32,7 +31,9 @@ export interface Operacion {
   informeOpCliente: string;
   informeOpChofer: string;
 
-  tarifaTipo: TarifaTipo;
+  // Marca de eventual: datosTarifaEventual !== null (TC8: fuera los 4
+  // booleanos legacy de tipo de tarifa; la tarifa elegida vive en
+  // tarifaAplicada*).
   datosTarifaEventual: DatosTarifaEventual | null;
   // (TC6: retirado el campo de datos de tarifa Personalizada — no tenía
   // lectores; la Personalizada se identifica por

@@ -2,10 +2,10 @@ import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { Proveedor } from 'src/app/interfaces/proveedor';
-import { Chofer, Vehiculo, TarifaTipo } from 'src/app/interfaces/chofer';
+import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Legajo } from 'src/app/interfaces/legajo';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
-import { RefTarifaHabilitada, tarifaTipoDesdeHabilitadas } from 'src/app/interfaces/tarifa-habilitada';
+import { RefTarifaHabilitada } from 'src/app/interfaces/tarifa-habilitada';
 import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 import { PapeleraService } from 'src/app/servicios/papelera/papelera.service';
@@ -97,16 +97,6 @@ export class ProveedorService implements OnDestroy {
    *  (p. ej. en papelera). */
   getProveedorPorId(id: string): ConIdType<Proveedor> | undefined {
     return this.getProveedoresActuales().find(p => p.idProveedor === id);
-  }
-
-  /** Devuelve el tarifaTipo del proveedor por id, o undefined si no está.
-   *  Fuente de verdad de la tarifa heredada por los choferes de proveedor.
-   *  TODO: refactor Tarifas — eliminar el campo tarifasHabilitadas de la interfaz Chofer
-   *  (hoy duplicado al crear el chofer); los choferes de proveedor deben resolver
-   *  su tarifa SIEMPRE por acá, no por tarifaTipoDesdeHabilitadas(chofer.tarifasHabilitadas). */
-  getTarifaTipo(idProveedor: string): TarifaTipo | undefined {
-    const proveedor = this.getProveedorPorId(idProveedor);
-    return proveedor ? tarifaTipoDesdeHabilitadas(proveedor.tarifasHabilitadas) : undefined;
   }
 
   /** Resuelve las tarifas habilitadas de un chofer sin importar su contratación.

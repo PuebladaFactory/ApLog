@@ -26,31 +26,17 @@ export class OperacionCabeceraComponent implements OnChanges {
   ) {}
 
   ngOnChanges(): void {
+    // Entidad no encontrada en memoria (p. ej. en papelera) → sin badges.
+    // (TC8: fuera el respaldo que reconstruía la lista desde los booleanos
+    // legacy de la operación.)
     const cliente = this.clienteServ.getClientePorId(this.op.cliente.id);
-    this.tarifasHabilitadasCliente = cliente
-      ? cliente.tarifasHabilitadas
-      : this.legacyComoHabilitadas(this.op.tarifaTipo);
+    this.tarifasHabilitadasCliente = cliente ? cliente.tarifasHabilitadas : [];
 
     const chofer = this.choferServ.getChoferPorId(this.op.chofer.id);
     // resolverTarifasHabilitadasChofer ya resuelve directo vs. proveedor
     // internamente (mismo método que usa ResolucionTarifaOpService.candidatosOp).
     this.tarifasHabilitadasChofer = chofer
       ? this.proveedorServ.resolverTarifasHabilitadasChofer(chofer)
-      : this.legacyComoHabilitadas(this.op.tarifaTipo);
-  }
-
-  /** Fallback cuando la entidad viva no está en memoria (cliente/chofer en
-   *  papelera) — reconstruye la lista de habilitadas desde el tarifaTipo
-   *  legacy de la operación, mismo precedente de respaldo que usa
-   *  operaciones-editor.reagrupar(). No es exacto (tarifaTipo es un snapshot
-   *  de la operación puntual, no la configuración actual de la entidad) pero
-   *  evita mostrar la cabecera vacía. */
-  private legacyComoHabilitadas(t: Operacion['tarifaTipo']): RefTarifaHabilitada[] {
-    const out: RefTarifaHabilitada[] = [];
-    if (t.general) out.push({ nivel: 'general' });
-    if (t.especial) out.push({ nivel: 'especial' });
-    if (t.personalizada) out.push({ nivel: 'personalizada' });
-    if (t.eventual) out.push({ nivel: 'eventual' });
-    return out;
+      : [];
   }
 }

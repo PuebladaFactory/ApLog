@@ -422,9 +422,6 @@ export class GeneradorOperacionesService {
     }
 
     if (eventual !== 'no') {
-      if (!op.tarifaTipo.eventual) {
-        this.operacionFactory.aplicarTarifaEventual(op, true, { ...op.tarifaTipo });
-      }
       const datos = this.valoresEventual(azar, op, general);
       if (!datos) return { motivo: `sin tarifa general para la categoría '${op.vehiculo.categoria.nombre}' (valor eventual)` };
       op.datosTarifaEventual = datos;

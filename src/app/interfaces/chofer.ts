@@ -62,10 +62,3 @@ export interface Direccion {
     localidad: string;
     domicilio: string;
 }
-
-export interface TarifaTipo {
-    general: boolean;
-    especial: boolean;
-    eventual: boolean;
-    personalizada: boolean;
-}

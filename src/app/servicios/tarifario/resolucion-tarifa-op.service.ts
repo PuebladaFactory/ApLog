@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Operacion } from 'src/app/interfaces/operacion';
-import { Chofer, TarifaTipo, Vehiculo } from 'src/app/interfaces/chofer';
+import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { ConIdType } from 'src/app/interfaces/conId';
 import { EntidadTipo } from 'src/app/interfaces/tarifa';
 import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
@@ -60,15 +60,18 @@ export class ResolucionTarifaOpService {
     return [];
   }
 
-  /** Resuelve el chofer: puebla RefChofer y recalcula tarifaTipo con la tarifa
-   *  del PROVEEDOR (el chofer de proveedor la hereda), manteniendo el
-   *  invariante de datosTarifaX (aplicarTarifaTipo). `tipoRecalculado` es null
-   *  si el cliente no está en memoria (no se recalcula). `asignado` false si
-   *  el id es vacío o el chofer no existe (la op no se toca). */
-  asignarChofer(op: Operacion, idChofer: string): { asignado: boolean; tipoRecalculado: TarifaTipo | null } {
-    if (!idChofer) return { asignado: false, tipoRecalculado: null };
+  /** Resuelve el chofer: puebla RefChofer y recalcula si la op es eventual
+   *  (cliente o chofer/proveedor con Eventual habilitado — el chofer de
+   *  proveedor hereda la tarifa del proveedor vía
+   *  resolverTarifasHabilitadasChofer), manteniendo el invariante de
+   *  datosTarifaEventual (OperacionFactoryService.aplicarEventual).
+   *  `eventualRecalculado` es null si el cliente no está en memoria (no se
+   *  recalcula). `asignado` false si el id es vacío o el chofer no existe (la
+   *  op no se toca). */
+  asignarChofer(op: Operacion, idChofer: string): { asignado: boolean; eventualRecalculado: boolean | null } {
+    if (!idChofer) return { asignado: false, eventualRecalculado: null };
     const chofer = this.choferService.getChoferPorId(idChofer);
-    if (!chofer) return { asignado: false, tipoRecalculado: null };
+    if (!chofer) return { asignado: false, eventualRecalculado: null };
 
     op.chofer = {
       id:       chofer.id,
@@ -77,16 +80,14 @@ export class ResolucionTarifaOpService {
       cuit:     chofer.datosPersonales.cuit,
     };
 
-    // Recalcular tarifaTipo. Cliente vivo + tarifa secundaria del proveedor.
     const cliente = this.clienteService.getClientePorId(op.cliente.id);
-    if (!cliente) return { asignado: true, tipoRecalculado: null };
+    if (!cliente) return { asignado: true, eventualRecalculado: null };
 
-    const tarifaProveedor = op.proveedor
-      ? this.proveedorService.getTarifaTipo(op.proveedor.id)
-      : undefined;
-    const nuevoTipo = this.operacionFactory.recalcularTarifaTipo(cliente, tarifaProveedor);
-    this.operacionFactory.aplicarTarifaTipo(op, nuevoTipo);
-    return { asignado: true, tipoRecalculado: nuevoTipo };
+    const eventual = this.operacionFactory.esEventualPorHabilitadas(
+      cliente, this.proveedorService.resolverTarifasHabilitadasChofer(chofer),
+    );
+    this.operacionFactory.aplicarEventual(op, eventual);
+    return { asignado: true, eventualRecalculado: eventual };
   }
 
   /** Resuelve el vehículo: puebla RefVehiculo. false si el id es vacío o el

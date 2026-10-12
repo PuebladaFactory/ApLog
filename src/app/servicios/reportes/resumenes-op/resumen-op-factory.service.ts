@@ -27,7 +27,10 @@ export interface ErrorAgregado {
  *
  *  Fuente: op.valoresNuevos (tarifaBase cruda × multiplicador del lado;
  *  el resto ya viene final) + nivel desde tarifaAplicadaCliente/Chofer o
- *  datosTarifaEventual. NO lee op.valores ni op.tarifaTipo (legacy). */
+ *  datosTarifaEventual. Sin fuente legacy (TC8): una operación sin
+ *  valoresNuevos o sin tarifa aplicada (y no eventual) es un error — las ops
+ *  históricas de Vantruck se traducen con la migración antes de usar este
+ *  código. */
 @Injectable({ providedIn: 'root' })
 export class ResumenOpFactoryService {
 
@@ -35,17 +38,15 @@ export class ResumenOpFactoryService {
 
   // ── Aporte y claves ─────────────────────────────────────────────
 
-  /** Lo que suma UNA operación a cada uno de sus resúmenes.
-   *  Fuente normal: op.valoresNuevos (tarifaBase × multiplicador) + nivel
-   *  por lado desde tarifaAplicadaCliente/Chofer (o eventual).
-   *  Fuente LEGACY (ops históricas sin valoresNuevos, ej. Vantruck antes de
-   *  la migración): op.valores — su tarifaBase YA está multiplicada — y
-   *  nivel desde op.tarifaTipo, el mismo en los dos lados. Lanza solo si la
-   *  op no tiene ninguna de las dos fuentes. */
+  /** Lo que suma UNA operación a cada uno de sus resúmenes: op.valoresNuevos
+   *  (tarifaBase × multiplicador) + nivel por lado desde
+   *  tarifaAplicadaCliente/Chofer (o eventual). Lanza si la op no tiene
+   *  valoresNuevos. */
   aporteDeOperacion(op: Operacion): MetricasResumen {
-    const { cliente, chofer } = op.valoresNuevos
-      ? this.ladosDesdeValoresNuevos(op)
-      : this.ladosDesdeLegacy(op);
+    if (!op.valoresNuevos) {
+      throw new Error(`ResumenOpFactory: la operación ${this.etiqueta(op)} no tiene valoresNuevos.`);
+    }
+    const { cliente, chofer } = this.ladosDesdeValoresNuevos(op);
 
     return {
       cantidadOps: 1,
@@ -130,15 +131,13 @@ export class ResumenOpFactoryService {
 
   /** Suma en memoria el aporte de un conjunto de operaciones, por clave.
    *  Una op que falla (sin datos de valores, fecha inválida, etc.) se
-   *  reporta en `errores` y no se suma. `legacy`: cuántas ops sumadas
-   *  usaron la fuente legacy (op.valores / op.tarifaTipo). */
+   *  reporta en `errores` y no se suma. */
   agregados(
     ops: Operacion[],
     ahora: number,
-  ): { resumenes: Map<string, ResumenOpNuevo>; errores: ErrorAgregado[]; legacy: number } {
+  ): { resumenes: Map<string, ResumenOpNuevo>; errores: ErrorAgregado[] } {
     const resumenes = new Map<string, ResumenOpNuevo>();
     const errores: ErrorAgregado[] = [];
-    let legacy = 0;
 
     for (const op of ops) {
       let aporte: MetricasResumen;
@@ -154,7 +153,6 @@ export class ResumenOpFactoryService {
         });
         continue;
       }
-      if (this.usaFuenteLegacy(op)) legacy++;
       for (const clave of claves) {
         const { id, ...identidad } = clave;
         const previo = resumenes.get(id);
@@ -162,7 +160,7 @@ export class ResumenOpFactoryService {
         resumenes.set(id, { ...identidad, ...this.sumar(base, aporte), actualizado: ahora });
       }
     }
-    return { resumenes, errores, legacy };
+    return { resumenes, errores };
   }
 
   metricasVacias(): MetricasResumen {
@@ -214,11 +212,6 @@ export class ResumenOpFactoryService {
     };
   }
 
-  /** true si el aporte de la op sale de la fuente legacy (sin valoresNuevos). */
-  usaFuenteLegacy(op: Operacion): boolean {
-    return !op.valoresNuevos;
-  }
-
   private ladosDesdeValoresNuevos(op: Operacion): { cliente: LadoResumen; chofer: LadoResumen } {
     const vn = op.valoresNuevos!;
     const esEventual = op.datosTarifaEventual != null;
@@ -236,40 +229,16 @@ export class ResumenOpFactoryService {
     };
   }
 
-  private ladosDesdeLegacy(op: Operacion): { cliente: LadoResumen; chofer: LadoResumen } {
-    const v = op.valores;
-    if (!v?.cliente || !v?.chofer) {
-      throw new Error(`ResumenOpFactory: la operación ${this.etiqueta(op)} no tiene valoresNuevos ni valores.`);
-    }
-    const nivel = this.nivelLegacy(op);
-    return {
-      cliente: this.lado(
-        v.cliente.tarifaBase, v.cliente.kmAdicional, v.cliente.acompValor,
-        v.cliente.adExtraValor ?? 0, v.cliente.aCobrar, nivel,
-      ),
-      chofer: this.lado(
-        v.chofer.tarifaBase, v.chofer.kmAdicional, v.chofer.acompValor,
-        v.chofer.adExtraValor ?? 0, v.chofer.aPagar, nivel,
-      ),
-    };
-  }
-
-  /** Nivel por lado: eventual (de la op) > tarifa aplicada del lado >
-   *  fallback op.tarifaTipo (ops sin referencia congelada). */
+  /** Nivel por lado: eventual (de la op) > tarifa aplicada del lado. Sin
+   *  ninguna de las dos es un error (TC8: fuera el respaldo con los booleanos
+   *  legacy de la op). */
   private nivelDeLado(op: Operacion, lado: 'cliente' | 'chofer', esEventual: boolean): NivelResumen {
     if (esEventual) return 'eventual';
     const ref = lado === 'cliente' ? op.tarifaAplicadaCliente : op.tarifaAplicadaChofer;
-    return ref ? ref.nivel : this.nivelLegacy(op);
-  }
-
-  /** Nivel único del modelo viejo (op.tarifaTipo). */
-  private nivelLegacy(op: Operacion): NivelResumen {
-    const t = op.tarifaTipo;
-    if (t?.general) return 'general';
-    if (t?.especial) return 'especial';
-    if (t?.eventual) return 'eventual';
-    if (t?.personalizada) return 'personalizada';
-    throw new Error(`ResumenOpFactory: la operación ${this.etiqueta(op)} no tiene nivel de tarifa (ni tarifaAplicada ni tarifaTipo).`);
+    if (!ref) {
+      throw new Error(`ResumenOpFactory: la operación ${this.etiqueta(op)} no tiene tarifa aplicada del lado ${lado}.`);
+    }
+    return ref.nivel;
   }
 
   private lado(
