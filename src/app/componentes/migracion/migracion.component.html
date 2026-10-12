@@ -14,6 +14,36 @@
   <app-recalculo-comisiones></app-recalculo-comisiones>
 
   <div style="margin-bottom: 2rem; border-bottom: 1px solid #ccc; padding-bottom: 1rem;">
+    <h4>Limpieza de campos viejos de tarifas en operaciones (demo, TC-L)</h4>
+    <p class="text-muted mb-2">
+      Traduce el adicional extra viejo (adExtraConcepto + valores.cliente/chofer.adExtraValor)
+      a adExtra y borra tarifaTipo, datosTarifaPersonalizada y esos campos viejos.
+      Auditar no escribe nada.
+    </p>
+    <button
+      (click)="auditarLimpiezaCamposOp()"
+      [disabled]="ejecutando"
+      class="btn btn-info me-2">
+      1. Auditar
+    </button>
+    <button
+      (click)="aplicarLimpiezaCamposOp()"
+      [disabled]="ejecutando || planLimpiezaCamposOp.length === 0"
+      class="btn btn-danger me-2">
+      2. Aplicar
+    </button>
+    <p *ngIf="estadoLimpiezaCamposOp" style="margin-top: 0.5rem;">{{ estadoLimpiezaCamposOp }}</p>
+    <div *ngIf="conflictosLimpiezaCamposOp.length > 0" style="margin-top: 0.5rem;">
+      <p><strong>Conflictos (se conserva adExtra; revisar a mano):</strong></p>
+      <ul>
+        <li *ngFor="let c of conflictosLimpiezaCamposOp">
+          Op N° {{ c.numeroOperacion ?? c.id }} — adExtra actual: {{ c.adExtraActual | json }} — viejo: {{ c.adExtraViejo | json }}
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="margin-bottom: 2rem; border-bottom: 1px solid #ccc; padding-bottom: 1rem;">
     <h4>Migración inicial</h4>
     <button
       (click)="migrarChoferes()"

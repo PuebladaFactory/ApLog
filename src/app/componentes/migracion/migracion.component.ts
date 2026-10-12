@@ -4,7 +4,7 @@ import { ProveedorMigrationService } from 'src/app/servicios/migracion/proveedor
 import { ClienteMigrationService } from 'src/app/servicios/migracion/cliente-migration.service';
 import { LegajoMigrationService } from 'src/app/servicios/migracion/legajo-migracion.service';
 import { TarifaMigrationService, ItemPreviewEventual, ItemHistorialGeneral } from 'src/app/servicios/migracion/tarifa-migration.service';
-import { OperacionMigrationService } from 'src/app/servicios/migracion/operacion-migration.service';
+import { OperacionMigrationService, PlanLimpiezaOp, ConflictoLimpiezaOp } from 'src/app/servicios/migracion/operacion-migration.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -53,6 +53,10 @@ export class MigracionComponent {
   private mapaCategoriasLegajos: Map<string, string> | null = null;
 
   estadoDocumentacionOperaciones: string = '';
+
+  estadoLimpiezaCamposOp: string = '';
+  planLimpiezaCamposOp: PlanLimpiezaOp[] = [];
+  conflictosLimpiezaCamposOp: ConflictoLimpiezaOp[] = [];
   documentosSinMatchCategoria: { idLegajo: string; idChofer: string; tituloOriginal: string }[] = [];
   documentosFechaRequiereRevision: { idLegajo: string; idChofer: string; titulo: string; fechaVtoOriginal: any }[] = [];
 
@@ -74,6 +78,58 @@ export class MigracionComponent {
     } catch (e: any) {
       this.estadoDocumentacionOperaciones = `Error: ${e.message}`;
       console.error('Error en normalización de documentacion de operaciones:', e);
+    } finally {
+      this.ejecutando = false;
+    }
+  }
+
+  /** TC-L — paso 1: auditoría (solo lectura). */
+  async auditarLimpiezaCamposOp(): Promise<void> {
+    this.ejecutando = true;
+    this.estadoLimpiezaCamposOp = 'Auditando operaciones...';
+    this.planLimpiezaCamposOp = [];
+    this.conflictosLimpiezaCamposOp = [];
+    try {
+      const r = await this.operacionMigration.auditarLimpiezaCamposTarifas();
+      this.planLimpiezaCamposOp = r.aLimpiar;
+      this.conflictosLimpiezaCamposOp = r.conflictos;
+      this.estadoLimpiezaCamposOp =
+        `Leídas: ${r.leidas} — a actualizar: ${r.aLimpiar.length} — ` +
+        `con adicional traducido a adExtra: ${r.conAdicionalTraducido} — conflictos: ${r.conflictos.length}.`;
+      console.log('Auditoría limpieza campos de tarifas (operaciones)', r);
+    } catch (e: any) {
+      this.estadoLimpiezaCamposOp = `Error: ${e.message}`;
+      console.error('Error en auditoría de limpieza de campos de operaciones:', e);
+    } finally {
+      this.ejecutando = false;
+    }
+  }
+
+  /** TC-L — paso 2: aplica el plan de la última auditoría. */
+  async aplicarLimpiezaCamposOp(): Promise<void> {
+    if (this.planLimpiezaCamposOp.length === 0) {
+      this.estadoLimpiezaCamposOp = 'No hay nada para aplicar — corré primero la auditoría.';
+      return;
+    }
+    const confirmacion = await Swal.fire({
+      icon: 'warning',
+      title: '¿Aplicar limpieza de campos de tarifas?',
+      text: `Se van a actualizar ${this.planLimpiezaCamposOp.length} operación(es) en demo. No se puede deshacer.`,
+      showCancelButton: true,
+      confirmButtonText: 'Sí, aplicar',
+      cancelButtonText: 'Cancelar',
+    });
+    if (!confirmacion.isConfirmed) return;
+
+    this.ejecutando = true;
+    this.estadoLimpiezaCamposOp = 'Aplicando...';
+    try {
+      const n = await this.operacionMigration.aplicarLimpiezaCamposTarifas(this.planLimpiezaCamposOp);
+      this.estadoLimpiezaCamposOp = `✅ ${n} operación(es) actualizadas. Volvé a auditar: tiene que dar 0.`;
+      this.planLimpiezaCamposOp = [];
+    } catch (e: any) {
+      this.estadoLimpiezaCamposOp = `Error: ${e.message}`;
+      console.error('Error al aplicar limpieza de campos de operaciones:', e);
     } finally {
       this.ejecutando = false;
     }
