@@ -46,8 +46,13 @@
           </thead>
           <tbody>
             @for (r of registros; track r) {
-              <tr>
-                <td>{{ r.fecha | date:'dd/MM/yyyy' }}</td>
+              <tr [class.opacity-50]="r.estado === 'anulado'">
+                <td>
+                  {{ r.fecha | date:'dd/MM/yyyy' }}
+                  @if (r.estado === 'anulado') {
+                    <span class="badge bg-secondary ms-1" [title]="'Operación dada de baja — motivo: ' + (r.anulacion?.motivo ?? '-')">Anulado</span>
+                  }
+                </td>
                 <td>{{ r.cliente.concepto }} — {{ r.cliente.valor | formatearValor : "$" }}</td>
                 <td>
                   @if (r.chofer) {
@@ -58,7 +63,9 @@
                   }
                 </td>
                 <td>
-                  <button class="btn btn-sm btn-outline-primary" (click)="verDetalle(r)">Ver operación</button>
+                  @if (r.estado !== 'anulado') {
+                    <button class="btn btn-sm btn-outline-primary" (click)="verDetalle(r)">Ver operación</button>
+                  }
                 </td>
               </tr>
             }

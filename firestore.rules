@@ -48,7 +48,10 @@ service cloud.firestore {
         'tarifasPersCliente': 'tarifas', 'tarifasGralChofer': 'tarifas',
         'tarifasEspChofer': 'tarifas', 'tarifasGralProveedor': 'tarifas',
         'tarifasEspProveedor': 'tarifas', 'tarifasEventuales': 'tarifas',
-        'registrosOpEventuales': 'tarifas',
+        // Historial de operaciones eventuales: lo escribe el CIERRE de la
+        // operación (que hace 'user') en la misma transacción, y lo anula la
+        // baja de una operación cerrada → mismo perfil que 'informesOp'.
+        'registrosOpEventuales': 'informesOp',
 
         'historialTarifasGralCliente': 'tarifasHistorial',
         'historialTarifasEspCliente': 'tarifasHistorial',

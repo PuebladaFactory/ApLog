@@ -1,9 +1,10 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { Transaction } from '@angular/fire/firestore';
 import { EntidadTipo, Tarifa } from 'src/app/interfaces/tarifa';
 import { TarifaEspecial } from 'src/app/interfaces/tarifa-especial';
-import { RegistroOpEventual } from 'src/app/interfaces/registro-op-eventual';
+import { RegistroOpEventual, AnulacionRegistroOpEventual } from 'src/app/interfaces/registro-op-eventual';
 import { ConIdType } from 'src/app/interfaces/conId';
 import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
@@ -135,7 +136,8 @@ export class TarifarioService implements OnDestroy {
    *  operaciones eventuales en su historial sin importar su
    *  tarifasHabilitadas actual (es historial de operación, no depende de la
    *  configuración vigente). Los registros los crea el cierre de una
-   *  operación eventual (y la migración del historial viejo). */
+   *  operación eventual (y la migración del historial viejo). Incluye los
+   *  anulados (estado 'anulado'): la pestaña Eventual los muestra marcados. */
   getRegistrosEventualesDe(entidadTipo: EntidadTipo, idEntidad: string): ConIdType<RegistroOpEventual>[] {
     return this.getRegistrosEventualesActuales()
       .filter(r => {
@@ -311,17 +313,50 @@ export class TarifarioService implements OnDestroy {
     await this.darDeBajaEnTransaccion('tarifasEspeciales', idTarifa, actualizadoPor, 'Baja de tarifa especial sin reemplazo');
   }
 
-  // ── Escritura — RegistroOpEventual (historial de eventuales, Bloque 6) ──
+  // ── Escritura — RegistroOpEventual (historial de eventuales) ──
 
-  /** Crea el registro histórico de una operación eventual — alimenta la
-   *  pantalla de Historial de Eventuales (Bloque 5b). Se llama al cerrar la
-   *  operación (ValoresTarifaService.registrarEventualSiCorresponde), nunca
-   *  al alta: recién en el cierre existen los valores finales. */
-  async crearRegistroEventual(registro: Omit<RegistroOpEventual, 'idTarifa'>): Promise<string> {
+  /** Suma el alta de un RegistroOpEventual a `escrituras` y devuelve su id
+   *  (aleatorio: restaurar y volver a cerrar la operación genera un registro
+   *  nuevo; el anterior queda 'anulado'). No commitea ni loguea: el caller lo
+   *  suma a su batch/transacción con su propio log (cierre:
+   *  OperacionService.cerrarOperacion, log CERRAR). Llamar FUERA de un
+   *  `armar` de commitEnTransaccion (armar se reejecuta). */
+  agregarEscrituraRegistroEventual(escrituras: EscrituraBatch[], registro: Omit<RegistroOpEventual, 'idTarifa'>): string {
     const id = this.db.generarId('registrosOpEventuales');
-    const escrituras: EscrituraBatch[] = [
-      { coleccion: 'registrosOpEventuales', id, data: registro, modo: 'crear' },
-    ];
+    escrituras.push({ coleccion: 'registrosOpEventuales', id, data: registro, modo: 'crear' });
+    return id;
+  }
+
+  /** Ids de los registros NO anulados de una operación (normalmente 0 o 1).
+   *  Es una query: llamar FUERA de la transacción (el SDK web no permite
+   *  queries adentro) y releer cada uno adentro con
+   *  leerRegistroEventualEnTransaccion. */
+  async buscarIdsRegistrosEventualesActivos(idOperacion: string): Promise<string[]> {
+    const docs = await this.db.getByField<RegistroOpEventual>('registrosOpEventuales', 'idOperacion', idOperacion);
+    return docs.filter(d => d.data.estado !== 'anulado').map(d => d.id);
+  }
+
+  /** Relectura de un registro dentro de una transacción. Body tal cual está
+   *  en Firestore (sin idTarifa). null si no existe. */
+  async leerRegistroEventualEnTransaccion(tx: Transaction, id: string): Promise<Omit<RegistroOpEventual, 'idTarifa'> | null> {
+    return this.db.leerEnTransaccion<Omit<RegistroOpEventual, 'idTarifa'>>(tx, 'registrosOpEventuales', id);
+  }
+
+  /** Suma la anulación de un registro a `escrituras` ('actualizar' solo de
+   *  estado + anulacion). No commitea ni loguea (caller:
+   *  OperacionService.bajaOperacionCerrada). */
+  agregarAnulacionRegistroEventual(escrituras: EscrituraBatch[], id: string, anulacion: AnulacionRegistroOpEventual): void {
+    escrituras.push({ coleccion: 'registrosOpEventuales', id, data: { estado: 'anulado', anulacion }, modo: 'actualizar' });
+  }
+
+  /** Alta suelta de un registro, con su log ALTA en el mismo batch. Solo la
+   *  usa la migración del historial viejo de eventuales
+   *  (TarifaMigrationService.confirmarMigracionEventual); el cierre de una
+   *  operación escribe el suyo dentro de su propia transacción
+   *  (agregarEscrituraRegistroEventual). */
+  async crearRegistroEventual(registro: Omit<RegistroOpEventual, 'idTarifa'>): Promise<string> {
+    const escrituras: EscrituraBatch[] = [];
+    const id = this.agregarEscrituraRegistroEventual(escrituras, registro);
     await this.logRegistro.agregarAlBatch(
       escrituras, 'ALTA', 'registrosOpEventuales', id,
       `Registro de operación eventual ${registro.idOperacion} — cliente ${registro.idCliente}, chofer ${registro.idChofer}`,

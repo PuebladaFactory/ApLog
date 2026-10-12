@@ -10,7 +10,6 @@ import { RegistroOpEventual } from 'src/app/interfaces/registro-op-eventual';
 
 import { TarifarioService } from 'src/app/servicios/tarifario/tarifario.service';
 import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
-import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 import { toISODateString } from 'src/app/servicios/fechas/date-range.service';
 
 export interface ResultadoCalculoTarifa {
@@ -69,7 +68,6 @@ export class ValoresTarifaService {
   constructor(
     private tarifario: TarifarioService,
     private choferServ: ChoferService,
-    private logRegistro: LogRegistroService,
   ) {}
 
   // ── ALTA ─────────────────────────────────────────────────────────
@@ -142,37 +140,32 @@ export class ValoresTarifaService {
     return { op, errores };
   }
 
-  // ── Registro histórico de operaciones eventuales (alimenta Historial, Bloque 5b) ──
+  // ── Registro histórico de operaciones eventuales (pestaña Eventual) ──
 
-  /** Best-effort, nunca tira — mismo criterio que LogRegistroService. Hasta
-   *  este bloque registrosOpEventuales quedaba siempre vacía: nadie escribía
-   *  ahí. Se llama al cerrar, nunca al alta — recién en el cierre existen
-   *  los valores finales de la operación eventual. */
-  async registrarEventualSiCorresponde(op: ConId<Operacion>): Promise<void> {
-    if (op.datosTarifaEventual === null) return;
+  /** Arma el RegistroOpEventual de una operación eventual al CERRARLA (nunca
+   *  al alta: recién en el cierre existen los valores finales). null si la
+   *  operación no es eventual. No escribe: OperacionService.cerrarOperacion
+   *  lo suma a la transacción del cierre
+   *  (TarifarioService.agregarEscrituraRegistroEventual). Chofer de
+   *  proveedor → el lado chofer de datosTarifaEventual va a `proveedor`. */
+  armarRegistroEventual(op: ConId<Operacion>): Omit<RegistroOpEventual, 'idTarifa'> | null {
+    if (op.datosTarifaEventual === null) return null;
 
     const chofer = this.choferServ.getChoferPorId(op.chofer.id);
     const esProveedor = chofer ? chofer.contratacion.tipo === 'proveedor' : op.proveedor !== null;
+    const ladoChofer = { concepto: op.datosTarifaEventual.chofer.concepto, valor: op.datosTarifaEventual.chofer.valor };
 
-    const registro: Omit<RegistroOpEventual, 'idTarifa'> = {
+    return {
       idOperacion: op.idOperacion,
       fecha: toISODateString(new Date()),
       idCliente: op.cliente.id,
       idChofer: op.chofer.id,
       idProveedor: op.proveedor?.id ?? null,
       cliente: { concepto: op.datosTarifaEventual.cliente.concepto, valor: op.datosTarifaEventual.cliente.valor },
-      chofer: esProveedor ? null : { concepto: op.datosTarifaEventual.chofer.concepto, valor: op.datosTarifaEventual.chofer.valor },
-      proveedor: esProveedor ? { concepto: op.datosTarifaEventual.chofer.concepto, valor: op.datosTarifaEventual.chofer.valor } : null,
+      chofer: esProveedor ? null : ladoChofer,
+      proveedor: esProveedor ? ladoChofer : null,
+      estado: 'activo',
     };
-
-    try {
-      await this.tarifario.crearRegistroEventual(registro);
-    } catch (e: any) {
-      await this.logRegistro.registrarError(
-        'EDITAR', 'registrosOpEventuales', op.idOperacion,
-        `No se pudo registrar la operación eventual ${op.idOperacion}: ${e?.message ?? e}`,
-      );
-    }
   }
 
   // (TC2: resolverLado / resolverEnCandidatas retirados — la elección de

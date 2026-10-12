@@ -2,7 +2,6 @@ import { Injectable, inject } from '@angular/core';
 import { Firestore, collection, getDocs, query, where } from '@angular/fire/firestore';
 import { RegistroOpEventual } from 'src/app/interfaces/registro-op-eventual';
 import { TarifarioService } from 'src/app/servicios/tarifario/tarifario.service';
-import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
 import { toISODateString } from 'src/app/servicios/fechas/date-range.service';
 
 export interface ResultadoAuditoriaTarifas {
@@ -45,17 +44,6 @@ export interface ResultadoAuditoriaCategoriasVehiculo {
   vehiculosInvalidos: VehiculoCategoriaInvalida[];
 }
 
-export interface ItemHuerfanoEventual {
-  id: string;
-  idOperacion: string;
-  resumen: string;
-}
-
-export interface ResultadoAuditoriaHuerfanosEventual {
-  total: number;
-  huerfanos: ItemHuerfanoEventual[];
-}
-
 export interface ItemHistorialGeneral {
   lado: 'cliente' | 'chofer' | 'proveedor';
   origen: 'vigente' | 'historial';
@@ -70,7 +58,6 @@ export interface ItemHistorialGeneral {
 export class TarifaMigrationService {
   private firestore = inject(Firestore);
   private tarifario = inject(TarifarioService);
-  private db = inject(DbFirestoreService);
 
   // Colecciones de backup usadas para resolver ids viejos (numéricos) de
   // Cliente/Chofer/Proveedor a los ids string vigentes hoy — ver
@@ -389,48 +376,6 @@ export class TarifaMigrationService {
       }
     }
     return { creados, errores };
-  }
-
-  /** Auditoría de solo lectura de `registrosOpEventuales`. Separa los
-   *  registros que vienen de `confirmarMigracionEventual()` (`idOperacion`
-   *  numérico — id viejo de `tarifasEventuales`, ver previsualización de
-   *  arriba) de cualquier otro que haya quedado de probar el cierre real de
-   *  una operación tipo Eventual (`idOperacion` ahí es el id de Firestore
-   *  de esa operación — nunca puramente numérico, porque `generarId()` usa
-   *  el auto-id de Firestore, no un timestamp). No borra nada. */
-  async auditarRegistrosOpEventualesHuerfanos(): Promise<ResultadoAuditoriaHuerfanosEventual> {
-    const snap = await getDocs(collection(this.firestore, '/Vantruck/datos/registrosOpEventuales'));
-    const huerfanos: ItemHuerfanoEventual[] = [];
-
-    snap.docs.forEach(d => {
-      const datos = d.data() as any;
-      const idOperacion = String(datos.idOperacion ?? '');
-      const esIdMigrado = /^\d+$/.test(idOperacion);
-      if (!esIdMigrado) {
-        huerfanos.push({
-          id: d.id,
-          idOperacion,
-          resumen: `idOperacion "${idOperacion}" (no viene de la migración) — idCliente ${datos.idCliente ?? '?'} — fecha ${datos.fecha ?? '?'}`,
-        });
-      }
-    });
-
-    return { total: snap.size, huerfanos };
-  }
-
-  /** Borra los `registrosOpEventuales` ya identificados como huérfanos por
-   *  `auditarRegistrosOpEventualesHuerfanos()`. Recibe la lista exacta de
-   *  ids a borrar (nunca decide por su cuenta) para no arriesgar los
-   *  registros migrados si algo cambió entre la auditoría y la
-   *  confirmación. */
-  async borrarRegistrosOpEventualesHuerfanos(ids: string[]): Promise<void> {
-    const escrituras: EscrituraBatch[] = ids.map(id => ({
-      coleccion: 'registrosOpEventuales',
-      id,
-      data: null,
-      modo: 'eliminar' as const,
-    }));
-    await this.db.commitBatch(escrituras);
   }
 
   /** Volcado de solo lectura del historial viejo de Tarifa General — junta

@@ -3,7 +3,7 @@ import { ChoferMigrationService } from 'src/app/servicios/migracion/chofer-migra
 import { ProveedorMigrationService } from 'src/app/servicios/migracion/proveedor-migration.service';
 import { ClienteMigrationService } from 'src/app/servicios/migracion/cliente-migration.service';
 import { LegajoMigrationService } from 'src/app/servicios/migracion/legajo-migracion.service';
-import { TarifaMigrationService, ItemPreviewEventual, ItemHuerfanoEventual, ItemHistorialGeneral } from 'src/app/servicios/migracion/tarifa-migration.service';
+import { TarifaMigrationService, ItemPreviewEventual, ItemHistorialGeneral } from 'src/app/servicios/migracion/tarifa-migration.service';
 import { OperacionMigrationService } from 'src/app/servicios/migracion/operacion-migration.service';
 import Swal from 'sweetalert2';
 
@@ -48,10 +48,6 @@ export class MigracionComponent {
   previewEventual: { total: number; resueltos: string[]; noResueltos: { idTarifaVieja: number; motivo: string }[] } | null = null;
   estadoConfirmacionEventual: string = '';
   private itemsEventualParaConfirmar: ItemPreviewEventual[] = [];
-
-  estadoAuditoriaHuerfanosEventual: string = '';
-  huerfanosEventual: ItemHuerfanoEventual[] = [];
-  private idsHuerfanosEventualParaBorrar: string[] = [];
 
   estadoVolcadoGeneral: string = '';
   private mapaCategoriasLegajos: Map<string, string> | null = null;
@@ -410,56 +406,6 @@ export class MigracionComponent {
     } catch (e: any) {
       this.estadoConfirmacionEventual = `Error: ${e.message}`;
       console.error('Error en confirmación de migración Eventual:', e);
-    } finally {
-      this.ejecutando = false;
-    }
-  }
-
-  async auditarRegistrosOpEventualesHuerfanos(): Promise<void> {
-    this.ejecutando = true;
-    this.estadoAuditoriaHuerfanosEventual = 'Auditando registrosOpEventuales...';
-    this.huerfanosEventual = [];
-    this.idsHuerfanosEventualParaBorrar = [];
-    try {
-      const resultado = await this.tarifaMigration.auditarRegistrosOpEventualesHuerfanos();
-      this.huerfanosEventual = resultado.huerfanos;
-      this.idsHuerfanosEventualParaBorrar = resultado.huerfanos.map(h => h.id);
-      this.estadoAuditoriaHuerfanosEventual = `Total registrosOpEventuales: ${resultado.total} — huérfanos (de pruebas): ${resultado.huerfanos.length}.`;
-      console.log('Auditoría de registrosOpEventuales huérfanos', resultado);
-    } catch (e: any) {
-      this.estadoAuditoriaHuerfanosEventual = `Error: ${e.message}`;
-      console.error('Error en auditoría de registrosOpEventuales huérfanos:', e);
-    } finally {
-      this.ejecutando = false;
-    }
-  }
-
-  async borrarRegistrosOpEventualesHuerfanos(): Promise<void> {
-    if (this.idsHuerfanosEventualParaBorrar.length === 0) {
-      this.estadoAuditoriaHuerfanosEventual = 'No hay huérfanos para borrar — corré primero la auditoría.';
-      return;
-    }
-
-    const confirmacion = await Swal.fire({
-      icon: 'warning',
-      title: '¿Borrar registrosOpEventuales huérfanos?',
-      text: `Se van a borrar ${this.idsHuerfanosEventualParaBorrar.length} documento(s). Esta acción no se puede deshacer.`,
-      showCancelButton: true,
-      confirmButtonText: 'Sí, borrar',
-      cancelButtonText: 'Cancelar',
-    });
-    if (!confirmacion.isConfirmed) return;
-
-    this.ejecutando = true;
-    this.estadoAuditoriaHuerfanosEventual = 'Borrando...';
-    try {
-      await this.tarifaMigration.borrarRegistrosOpEventualesHuerfanos(this.idsHuerfanosEventualParaBorrar);
-      this.estadoAuditoriaHuerfanosEventual = `✅ ${this.idsHuerfanosEventualParaBorrar.length} documento(s) borrado(s) correctamente.`;
-      this.huerfanosEventual = [];
-      this.idsHuerfanosEventualParaBorrar = [];
-    } catch (e: any) {
-      this.estadoAuditoriaHuerfanosEventual = `Error: ${e.message}`;
-      console.error('Error al borrar registrosOpEventuales huérfanos:', e);
     } finally {
       this.ejecutando = false;
     }

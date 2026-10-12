@@ -15,6 +15,7 @@ import { OperacionFactoryService } from 'src/app/servicios/operaciones/operacion
 import { AsignacionService } from 'src/app/servicios/operaciones/asignacion.service';
 import { ValoresOpService } from 'src/app/servicios/valores-op/valores-op/valores-op.service';
 import { ValoresTarifaService } from 'src/app/servicios/tarifario/valores-tarifa.service';
+import { TarifarioService } from 'src/app/servicios/tarifario/tarifario.service';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { NumeradorService } from 'src/app/servicios/numerador/numerador.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
@@ -68,6 +69,7 @@ export class OperacionService implements OnDestroy {
     private usuarioSesion: UsuarioSesionService,
     private resumenOpFactory: ResumenOpFactoryService,
     private comisionVentaFactory: ComisionVentaFactoryService,
+    private tarifario:        TarifarioService,
   ) {}
 
   /**
@@ -483,9 +485,20 @@ export class OperacionService implements OnDestroy {
    *  quedan 'anulado' (InformeOpListado solo consulta activo/proforma).
    *  Comisiones de venta: ComisionVentaFactoryService.escriturasBaja (monto a
    *  0 + anulada, 'fusionar' sin lecturas; si ya estaban liquidadas, el saldo
-   *  queda negativo = ajuste en la próxima liquidación). */
+   *  queda negativo = ajuste en la próxima liquidación).
+   *  Operación eventual: sus RegistroOpEventual no anulados quedan 'anulado'
+   *  con la misma anulación que los InformeOp (TC4). Se buscan por query
+   *  FUERA de la transacción (el SDK web no permite queries adentro): antes
+   *  se lee el InformeOp para saber la operación; adentro se valida que siga
+   *  siendo la misma y se relee cada registro. */
   async bajaOperacionCerrada(idInfOp: string, motivo: string): Promise<Resultado<void>> {
     try {
+      // — Pre-lecturas (query, fuera de la transacción) —
+      const informePrevio = await this.informeOpServ.obtenerPorId(idInfOp);
+      const idsRegistrosEventuales = informePrevio
+        ? await this.tarifario.buscarIdsRegistrosEventualesActivos(informePrevio.idOperacion)
+        : [];
+
       const numero = await this.db.commitEnTransaccion<number>(async (tx) => {
         const escrituras: EscrituraBatch[] = [];
 
@@ -521,6 +534,16 @@ export class OperacionService implements OnDestroy {
             `de la operación ${op.numeroOperacion}. Baja abortada.`,
           );
         }
+        if (informePrevio && informePrevio.idOperacion !== op.idOperacion) {
+          throw new Error(`El InformeOp ${idInfOp} cambió de operación mientras se procesaba la baja. Reintentá.`);
+        }
+        const idsRegistrosAAnular: string[] = [];
+        for (const idRegistro of idsRegistrosEventuales) {
+          const registro = await this.tarifario.leerRegistroEventualEnTransaccion(tx, idRegistro);
+          if (registro && registro.estado !== 'anulado' && registro.idOperacion === op.idOperacion) {
+            idsRegistrosAAnular.push(idRegistro);
+          }
+        }
         // — fin de lecturas —
 
         // Reversión de resúmenes (resumenesOp): sin lecturas, modo 'fusionar'.
@@ -542,6 +565,9 @@ export class OperacionService implements OnDestroy {
         };
         this.informeOpServ.agregarAnulacionInformeOp(escrituras, informe.idInfOp, anulacion);
         this.informeOpServ.agregarAnulacionInformeOp(escrituras, contraparte.idInfOp, anulacion);
+        for (const idRegistro of idsRegistrosAAnular) {
+          this.tarifario.agregarAnulacionRegistroEventual(escrituras, idRegistro, anulacion);
+        }
 
         let detalle =
           `Baja de operación ${op.numeroOperacion} (cerrada) desde Liquidación — motivo: ${motivo} — ` +
@@ -549,6 +575,9 @@ export class OperacionService implements OnDestroy {
         if (!op.resumenProcesado) detalle += ' — sin reversión de resúmenes (no procesada)';
         if (escriturasComision.length > 0) {
           detalle += ` — comisiones de venta anuladas: ${escriturasComision.length}`;
+        }
+        if (idsRegistrosAAnular.length > 0) {
+          detalle += ` — registros de operación eventual anulados: ${idsRegistrosAAnular.join(', ')}`;
         }
         await this.logRegistro.agregarAlBatch(escrituras, 'BAJA', 'operaciones', op.idOperacion, detalle);
 
@@ -703,8 +732,10 @@ export class OperacionService implements OnDestroy {
    *    suma el log a una copia del array.
    *  - Guarda real contra doble cierre: la op releída en la transacción
    *    tiene que seguir 'abierta' y sin resumenProcesado.
-   *  Registrar la tarifa eventual (si corresponde) queda FUERA, después del
-   *  commit — best-effort de ValoresTarifaService (registrarEventualSiCorresponde). */
+   *  Operación eventual: su RegistroOpEventual
+   *  (ValoresTarifaService.armarRegistroEventual) se crea en la MISMA
+   *  transacción (TarifarioService.agregarEscrituraRegistroEventual) — si
+   *  falla, no se cierra nada. */
   async cerrarOperacion(op: ConId<Operacion>, msj: string = 'Cierre de Operación'): Promise<Resultado<void>> {
     try {
       // — Pre-chequeos (queries, fuera de la transacción) —
@@ -736,6 +767,13 @@ export class OperacionService implements OnDestroy {
       this.informeOpServ.agregarEscriturasCreacionPar(escriturasNegocio, informeCliente, informeOtro);
       escriturasNegocio.push(...this.comisionVentaFactory.escriturasCierre(op));
       escriturasNegocio.push(...this.resumenOpFactory.escriturasSuma(op, 1));
+      const registroEventual = this.valoresTarifaServ.armarRegistroEventual(op);
+      const idRegistroEventual = registroEventual
+        ? this.tarifario.agregarEscrituraRegistroEventual(escriturasNegocio, registroEventual)
+        : null;
+      const detalleLog = idRegistroEventual
+        ? `${msj} — registro de operación eventual ${idRegistroEventual}`
+        : msj;
 
       // — Transacción: relectura + validación + log —
       await this.db.commitEnTransaccion<void>(async (tx) => {
@@ -751,13 +789,9 @@ export class OperacionService implements OnDestroy {
         // — fin de lecturas —
 
         const escrituras = [...escriturasNegocio];
-        await this.logRegistro.agregarAlBatch(escrituras, 'CERRAR', 'operaciones', op.idOperacion, msj);
+        await this.logRegistro.agregarAlBatch(escrituras, 'CERRAR', 'operaciones', op.idOperacion, detalleLog);
         return { escrituras, resultado: undefined };
       });
-
-      if (op.datosTarifaEventual !== null) {
-        await this.valoresTarifaServ.registrarEventualSiCorresponde(op);
-      }
 
       return { exito: true, mensaje: `Operación ${op.idOperacion} cerrada correctamente.` };
     } catch (e: any) {

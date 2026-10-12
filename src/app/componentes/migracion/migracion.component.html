@@ -225,30 +225,6 @@
   </div>
 
   <div style="margin-bottom: 2rem; border-top: 1px solid #ccc; padding-top: 1rem;">
-    <h4>Limpieza de registrosOpEventuales de prueba (demo)</h4>
-    <div style="margin-bottom: 1rem;">
-      <button
-        (click)="auditarRegistrosOpEventualesHuerfanos()"
-        [disabled]="ejecutando"
-        class="btn btn-info me-2">
-        Auditar registrosOpEventuales huérfanos
-      </button>
-      <button
-        (click)="borrarRegistrosOpEventualesHuerfanos()"
-        [disabled]="ejecutando || huerfanosEventual.length === 0"
-        class="btn btn-danger me-2">
-        Borrar huérfanos
-      </button>
-      <p *ngIf="estadoAuditoriaHuerfanosEventual" style="margin-top: 0.5rem;">{{ estadoAuditoriaHuerfanosEventual }}</p>
-      <div *ngIf="huerfanosEventual.length > 0" style="margin-top: 0.5rem;">
-        <ul>
-          <li *ngFor="let h of huerfanosEventual">{{ h.resumen }}</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
-  <div style="margin-bottom: 2rem; border-top: 1px solid #ccc; padding-top: 1rem;">
     <h4>Volcado histórico de Tarifa General (para migración manual)</h4>
     <div style="margin-bottom: 1rem;">
       <button
