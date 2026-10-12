@@ -31,7 +31,6 @@ import { LogoutComponent } from './appLogin/logout/logout.component';
 
 import { PagenotfoundComponent } from './pagenotfound/pagenotfound.component';
 
-import { RaizModule } from './raiz/raiz.module';
 import { SharedModule } from './shared/shared.module';
 
 
@@ -43,7 +42,6 @@ import { AppRoutingModule } from './app-routing.module';
 import { AgGridModule } from 'ag-grid-angular';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ServiceWorkerModule } from '@angular/service-worker';
-import { LiquidacionModule } from "./raiz/liquidacion/liquidacion.module";
 import { registerLocaleData } from '@angular/common';
 import localeEs from '@angular/common/locales/es'; // Importa los datos en español
 
@@ -68,7 +66,6 @@ registerLocaleData(localeEs);
     NgbModule,
     ReactiveFormsModule,
     CloudinaryModule,
-    RaizModule,
     SharedModule,
     FilterPipeModule,
     AgGridModule,
@@ -79,7 +76,6 @@ registerLocaleData(localeEs);
         // or after 30 seconds (whichever comes first).
         registrationStrategy: 'registerWhenStable:30000'
     }),
-    LiquidacionModule
 ],
   providers: [
     provideFirebaseApp(() => initializeApp(environment.firebase)),

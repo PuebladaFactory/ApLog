@@ -25,7 +25,7 @@ export class CargaComponent implements OnInit {
       this.storageService.initializerAdmin()
       setTimeout(() => {
         this.storageService.setInfo("ruta", ["op"])
-        this.router.navigate(['raiz']);
+        this.router.navigate(['op']);
       }, 3000); // 5000 milisegundos = 5 segundos 
       
       
