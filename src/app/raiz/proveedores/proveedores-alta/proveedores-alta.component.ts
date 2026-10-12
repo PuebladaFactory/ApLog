@@ -3,7 +3,6 @@ import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Contacto, Proveedor } from 'src/app/interfaces/proveedor';
-import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { ModalContactoProveedoresComponent } from '../modal-contacto-proveedores/modal-contacto-proveedores.component';
@@ -101,7 +100,6 @@ export class ProveedoresAltaComponent implements OnInit {
    }
 
   onSubmit(): void {
-    const tarifaGeneral = this.storageService.loadInfo('tarifasGralProveedor');
     if (this.$provinciaSeleccionadaF === '' || this.$municipioSeleccionadoF === '' || this.$localidadSeleccionadaF === '') {
       return this.mensajesError('Debe completar el domicilio fiscal');
     }

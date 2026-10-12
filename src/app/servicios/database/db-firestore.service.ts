@@ -39,7 +39,6 @@ import { Operacion } from "src/app/interfaces/operacion";
 import Swal from "sweetalert2";
 import { Firestore } from "@angular/fire/firestore";
 import { inject } from "@angular/core";
-import { InformeOp } from "src/app/interfaces/informe-op";
 import { InformeOpNuevo } from "src/app/interfaces/informe-op-nuevo";
 import { InformeLiq, ValoresFinancieros } from "src/app/interfaces/informe-liq";
 import { NumeradorService } from "../numerador/numerador.service";
@@ -1277,59 +1276,6 @@ export class DbFirestoreService {
     }
   }
 
-  async guardarOpMultiple(
-    operaciones: Operacion[],
-  ): Promise<{ exito: boolean; mensaje: string }> {
-    const batch = writeBatch(this.firestore);
-    const colRef = collection(this.firestore, `/Vantruck/datos/operaciones`);
-
-    try {
-      // Validación interna: verificar duplicados dentro del mismo lote
-      const ids = operaciones.map((op) => op.idOperacion);
-      const idsDuplicados = ids.filter(
-        (id, index) => ids.indexOf(id) !== index,
-      );
-      if (idsDuplicados.length > 0) {
-        return {
-          exito: false,
-          mensaje: `Se encontraron ${idsDuplicados.length} operaciones duplicadas dentro del lote: ${idsDuplicados.join(", ")}`,
-        };
-      }
-
-      // Verificación externa: verificar que NINGUNO ya exista en Firestore
-      for (const idOperacion of ids) {
-        const q = query(colRef, where("idOperacion", "==", idOperacion));
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-          return {
-            exito: false,
-            mensaje: `Ya existe una operación con idOperacion: ${idOperacion}`,
-          };
-        }
-      }
-
-      // Si todo está OK, agregar al batch
-      for (const op of operaciones) {
-        const docRef = doc(colRef); // id autogenerado
-        batch.set(docRef, op);
-      }
-
-      await batch.commit();
-
-      return {
-        exito: true,
-        mensaje: "Todas las operaciones fueron guardadas correctamente.",
-      };
-    } catch (error: any) {
-      console.error("❌ Error al guardar operaciones múltiples:", error);
-      return {
-        exito: false,
-        mensaje: `Error inesperado al guardar: ${error.message || error}`,
-      };
-    }
-  }
-
   async guardarMultipleOtraColeccion(
     objetos: any[],
     coleccionAlta: string,
@@ -1651,111 +1597,6 @@ export class DbFirestoreService {
     }
 
     console.log("🏁 Asignación de números internos finalizada.");
-  }
-
-  // ------------------------------------------
-  // MÉTODO AUXILIAR: Buscar contra-parte
-  // ------------------------------------------
-  /**
-   * Busca la contra-parte de un InformeOp original, deduciendo las colecciones
-   * a inspeccionar según:
-   *  - Si el original es de Clientes => buscar en Choferes o Proveedores (según idProveedor)
-   *  - Si el original es de Choferes/Proveedores => buscar en Clientes
-   *  - Primero busca en la colección "no liquidada", luego en la "liquidada"
-   *
-   * Devuelve null si no la encuentra.
-   */
-  public async buscarContraParteInformeOp(
-    informeOriginal: ConId<InformeOp>,
-    coleccionOriginal: string,
-  ): Promise<{
-    docRef: DocumentReference<DocumentData>;
-    data: ConId<InformeOp>;
-    coleccion: string;
-  } | null> {
-    // Colecciones
-    const COLS = {
-      clientes: { noLiq: "informesOpClientes", liq: "infOpLiqClientes" },
-      choferes: { noLiq: "informesOpChoferes", liq: "infOpLiqChoferes" },
-      proveedores: {
-        noLiq: "informesOpProveedores",
-        liq: "infOpLiqProveedores",
-      },
-    };
-
-    // Detectar "lado" del informe original
-    const esCliente = coleccionOriginal.includes("Clientes");
-    const esChofer = coleccionOriginal.includes("Choferes");
-    const esProveedor = coleccionOriginal.includes("Proveedores");
-
-    // Determinar a dónde buscar la contra-parte
-    let targets: { noLiq: string; liq: string };
-
-    if (esCliente) {
-      // El original es del cliente ⇒ buscar chofer o proveedor
-      targets =
-        informeOriginal.idProveedor === '' ? COLS.choferes : COLS.proveedores;
-    } else {
-      // El original es del chofer o proveedor ⇒ buscar cliente
-      targets = COLS.clientes;
-    }
-
-    // Buscar por contraParteId (idInfOp del otro informe)
-    const contraId = informeOriginal.contraParteId;
-
-    // 1) Primero "no liquidado"
-    for (const colName of [targets.noLiq, targets.liq]) {
-      const colRef = collection(this.firestore, `/Vantruck/datos/${colName}`);
-      const qContra = query(colRef, where("idInfOp", "==", contraId));
-      const snap = await getDocs(qContra);
-
-      if (!snap.empty) {
-        const d = snap.docs[0];
-        const data = {
-          id: d.id,
-          ...(d.data() as InformeOp),
-        } as ConId<InformeOp>;
-        return { docRef: d.ref, data, coleccion: colName };
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Busca en una colección destino informesOp cuyo idOperacion coincida
-   * con los idOperacion de los informes pasados en el array.
-   *
-   * @param informeOps Array de InformeOp base
-   * @param coleccionDestino Ruta de la colección destino
-   * @returns Promise<InformeOp[]> Array de informes encontrados (vacío si ninguno coincide)
-   */
-  async buscarInformesPorIdOperacion(
-    informeOps: ConId<InformeOp>[],
-    coleccionDestino: string,
-  ): Promise<InformeOp[]> {
-    try {
-      const colRef = collection(
-        this.firestore,
-        `Vantruck/datos/${coleccionDestino}`,
-      );
-      const resultados: InformeOp[] = [];
-
-      for (const inf of informeOps) {
-        const snap = await getDocs(
-          query(colRef, where("idOperacion", "==", inf.idOperacion)),
-        );
-
-        snap.forEach((docSnap) => {
-          resultados.push(docSnap.data() as InformeOp);
-        });
-      }
-
-      return resultados;
-    } catch (error) {
-      console.error("Error en buscarInformesPorIdOperacion:", error);
-      return [];
-    }
   }
 
   async existeCuit(coleccion: string, cuit: string): Promise<boolean> {

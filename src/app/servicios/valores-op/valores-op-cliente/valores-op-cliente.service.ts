@@ -3,11 +3,6 @@ import { Injectable } from "@angular/core";
 import { Operacion } from "src/app/interfaces/operacion";
 import { Valores } from "src/app/interfaces/informe-op-nuevo";
 
-import {
-  TarifaGralCliente,
-  CategoriaTarifa,
-} from "src/app/interfaces/tarifa-gral-cliente";
-
 @Injectable({
   providedIn: "root",
 })
@@ -42,39 +37,5 @@ export class ValoresOpClienteService {
       adExtra,
       total: tarifaBase + acompaniante + kmMonto + adExtra,
     };
-  }
-
-  // TODO: refactor Tarifas — firma ampliada de Vehiculo a tipo estructural mínimo
-  // (solo se usa categoria.catOrden). Acepta Vehiculo y RefVehiculo por igual.
-  $calcularKm(op: Operacion, tarifa: TarifaGralCliente, vehiculo: { categoria: { catOrden: number } }) {
-    let catCg = tarifa.cargasGenerales.filter((cat: CategoriaTarifa) => {
-      return cat.orden === vehiculo.categoria.catOrden;
-    });
-
-    let montoTotal = 0;
-
-    if (tarifa.adicionales.KmDistancia.primerSector > 0) {
-      // Verifica si los kilómetros recorridos son menores o iguales al primer sector
-      if (op.km < tarifa.adicionales.KmDistancia.primerSector) {
-        return montoTotal; // No se cobra adicional
-      }
-
-      // Si supera el primer sector, se cobra el valor del primer sector
-      montoTotal = catCg[0].adicionalKm.primerSector;
-
-      // Calcula cuántos kilómetros adicionales quedan luego del primer sector
-      let kmRestantes = op.km - tarifa.adicionales.KmDistancia.primerSector;
-
-      // Calcula cuántos sectores adicionales completos se recorren
-      let sectoresAdicionales = Math.floor(
-        kmRestantes / tarifa.adicionales.KmDistancia.sectoresSiguientes,
-      );
-
-      // Suma el costo de los sectores adicionales
-      montoTotal +=
-        sectoresAdicionales * catCg[0].adicionalKm.sectoresSiguientes;
-    }
-
-    return montoTotal;
   }
 }

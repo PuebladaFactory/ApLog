@@ -36,8 +36,8 @@ export interface ResultadoEdicionInformeOp {
   contraparte: ResultadoContraparteEdicion | null;
 }
 
-/** Modal nuevo de edición de InformeOp — en paralelo a EditarInfOpComponent
- *  (viejo, sin tocar). Edita UN SOLO lado (el que se le pasa por @Input);
+/** Modal nuevo de edición de InformeOp (reemplaza a EditarInfOpComponent,
+ *  el viejo, retirado en TC-R4). Edita UN SOLO lado (el que se le pasa por @Input);
  *  no permite cambiar la tarifa aplicada, solo recalcular valores y cargar
  *  un valor manual de tarifa base. NO escribe a Firestore — devuelve todo
  *  recalculado para que un orquestador (todavía sin diseñar) decida cómo

@@ -47,8 +47,8 @@ export interface DatosOperacionInforme {
   tarifaAplicada: RefTarifaAplicada | null;                    // null ⇔ eventual
   datosEventual: DatosEventualInforme | null;                  // presente solo si
                                                                 // tarifaAplicada es null
-  observaciones: string;        // copia denormalizada de la operación —
-                                 // EditarInfOpComponent es el único write path
+  observaciones: string;        // copia denormalizada de la operación, tomada
+                                 // al armar el InformeOp (InformeOpFactoryService)
   hojaRuta: string;
 }
 

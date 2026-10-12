@@ -2,7 +2,6 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Cliente, Contacto  } from 'src/app/interfaces/cliente';
-import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { ModalContactoComponent } from '../modal-contacto/modal-contacto.component';

@@ -15,7 +15,8 @@ import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-s
 /** Modal compartido de detalle de liquidación/proforma — lo abren Proforma,
  *  FacturacionListado y FacturacionHistorico. La edición individual de un
  *  InformeOp (botón "Editar" por fila) está deshabilitada temporalmente —
- *  vuelve en el chunk de edición, junto con EditarInfOpComponent. */
+ *  vuelve en el chunk de edición (el editor viejo, EditarInfOpComponent, se
+ *  retiró en TC-R4; el nuevo es InformeOpEditorComponent). */
 @Component({
   selector: "app-modal-factura",
   templateUrl: "./informe-liq-detalle.component.html",

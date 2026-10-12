@@ -4,10 +4,7 @@ import { Router } from "@angular/router";
 import { NgbActiveModal, NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { Categoria, Chofer, Vehiculo } from "src/app/interfaces/chofer";
 import { Proveedor } from "src/app/interfaces/proveedor";
-import {
-  CategoriaTarifa,
-  TarifaGralCliente,
-} from "src/app/interfaces/tarifa-gral-cliente";
+import { CategoriaTarifa } from "src/app/interfaces/tarifa-gral-cliente";
 import { StorageService } from "src/app/servicios/storage/storage.service";
 import Swal from "sweetalert2";
 import { ModalVehiculoComponent } from "../modal-vehiculo/modal-vehiculo.component";
@@ -58,7 +55,6 @@ export class ChoferesAltaComponent implements OnInit {
   editForm: any;
   publicidad!: boolean;
   categorias: Categoria[] = [];
-  tarifaGralCliente!: TarifaGralCliente;
   categoriaSeleccionada: CategoriaTarifa | null = null;
   vehiculos: ConIdType<Vehiculo>[] = [];
   //satelital!: SeguimientoSatelital | boolean;

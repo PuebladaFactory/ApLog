@@ -8,8 +8,6 @@ import { StorageService } from './servicios/storage/storage.service';
 import { Cliente } from './interfaces/cliente';
 import { Chofer } from './interfaces/chofer';
 import { Proveedor } from './interfaces/proveedor';
-import { TarifaGralCliente } from './interfaces/tarifa-gral-cliente';
-import { TarifaPersonalizadaCliente } from './interfaces/tarifa-personalizada-cliente';
 
 let version = 'v0.0.0'; // fallback por defecto
 
