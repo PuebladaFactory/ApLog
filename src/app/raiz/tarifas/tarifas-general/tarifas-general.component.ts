@@ -1,8 +1,9 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Subject, takeUntil } from 'rxjs';
 import { ConIdType } from 'src/app/interfaces/conId';
-import { MetadataAumento, Tarifa } from 'src/app/interfaces/tarifa';
+import { Tarifa } from 'src/app/interfaces/tarifa';
 import { TarifarioService } from 'src/app/servicios/tarifario/tarifario.service';
+import { deltaTarifa, textoAumentoTarifa } from 'src/app/shared/utils/historial-tarifa.util';
 import { TarifaFormData } from 'src/app/servicios/tarifario/tarifa-factory.service';
 import { TarifaGuardadoService } from 'src/app/servicios/tarifario/tarifa-guardado.service';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
@@ -114,37 +115,8 @@ export class TarifasGeneralComponent implements OnInit, OnDestroy {
     this.tarifaHistorialSeleccionada = null;
   }
 
-  /** % de variación aproximado contra la versión anterior — mismo criterio que
-   *  TarifasHistorialComponent.deltaPersonalizada (General usa la misma
-   *  interfaz Tarifa, el cálculo es idéntico). Suma de todas las categorías,
-   *  no por categoría individual. null si no hay anterior o si la base es 0. */
-  deltaGeneral(actual: ConIdType<Tarifa>, anterior?: ConIdType<Tarifa>): { cobrar: number | null; pagar: number | null } {
-    if (!anterior) return { cobrar: null, pagar: null };
-    const sumar = (t: ConIdType<Tarifa>, campo: 'aCobrar' | 'aPagar') =>
-      t.secciones.flatMap(s => s.categorias).reduce((acc, c) => acc + c[campo], 0);
-    const calc = (campo: 'aCobrar' | 'aPagar'): number | null => {
-      const base = sumar(anterior, campo);
-      if (base === 0) return null;
-      return ((sumar(actual, campo) - base) / base) * 100;
-    };
-    return { cobrar: calc('aCobrar'), pagar: calc('aPagar') };
-  }
-
-  /** Texto descriptivo de metadataAumento para el historial, o null si la
-   *  versión no vino de la herramienta de aumento (edición manual, o versión
-   *  anterior a este campo). */
-  textoAumento(t: { metadataAumento?: MetadataAumento }): string | null {
-    const m = t.metadataAumento;
-    if (!m) return null;
-    const redondeo = m.redondeo ? `, redondeo ${m.redondeo}` : '';
-    const ajuste = m.ajustadoManualmente ? ' (con ajuste manual)' : '';
-    if (m.modo === 'manual') return `Aumento manual${redondeo}`;
-    if (m.modo === 'unico') return `Aumento único +${m.porcentajeUnico}%${redondeo}${ajuste}`;
-    const partes = [
-      m.porcentajeCobrar !== undefined ? `cobrar +${m.porcentajeCobrar}%` : null,
-      m.porcentajePagar !== undefined ? `pagar +${m.porcentajePagar}%` : null,
-      m.porcentajeProveedor !== undefined ? `proveedor +${m.porcentajeProveedor}%` : null,
-    ].filter((p): p is string => p !== null);
-    return `Aumento segmentado — ${partes.join(', ')}${redondeo}${ajuste}`;
-  }
+  /** Helpers del historial (shared/utils/historial-tarifa.util — TC-P1),
+   *  expuestos para el template. */
+  readonly deltaGeneral = deltaTarifa;
+  readonly textoAumento = textoAumentoTarifa;
 }

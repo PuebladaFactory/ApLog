@@ -4,12 +4,13 @@ import { ConIdType } from 'src/app/interfaces/conId';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Proveedor } from 'src/app/interfaces/proveedor';
-import { EntidadTipo, MetadataAumento, Tarifa } from 'src/app/interfaces/tarifa';
+import { EntidadTipo, Tarifa } from 'src/app/interfaces/tarifa';
 import { TarifaEspecial } from 'src/app/interfaces/tarifa-especial';
 import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
 import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
 import { TarifarioService } from 'src/app/servicios/tarifario/tarifario.service';
+import { deltaTarifa, deltaTarifaEspecial, textoAumentoTarifa } from 'src/app/shared/utils/historial-tarifa.util';
 
 interface EntidadOpcion {
   id: string;
@@ -180,48 +181,11 @@ export class TarifasHistorialComponent implements OnInit, OnDestroy {
       .sort((a, b) => b[0].vigenciaDesde.localeCompare(a[0].vigenciaDesde));
   }
 
-  /** % de variación aproximado contra la versión inmediata anterior del mismo
-   *  linaje — suma de todas las categorías, no por categoría individual (el
-   *  detalle real se ve entrando a "Ver" en cada versión). null si no hay
-   *  anterior o si la base es 0. */
-  deltaPersonalizada(actual: ConIdType<Tarifa>, anterior?: ConIdType<Tarifa>): { cobrar: number | null; pagar: number | null } {
-    if (!anterior) return { cobrar: null, pagar: null };
-    const sumar = (t: ConIdType<Tarifa>, campo: 'aCobrar' | 'aPagar') =>
-      t.secciones.flatMap(s => s.categorias).reduce((acc, c) => acc + c[campo], 0);
-    const calc = (campo: 'aCobrar' | 'aPagar'): number | null => {
-      const base = sumar(anterior, campo);
-      if (base === 0) return null;
-      return ((sumar(actual, campo) - base) / base) * 100;
-    };
-    return { cobrar: calc('aCobrar'), pagar: calc('aPagar') };
-  }
-
-  deltaEspecial(actual: ConIdType<TarifaEspecial>, anterior?: ConIdType<TarifaEspecial>): number | null {
-    if (!anterior) return null;
-    const sumar = (t: ConIdType<TarifaEspecial>) =>
-      t.secciones.flatMap(s => s.categorias).reduce((acc, c) => acc + c.valor, 0);
-    const base = sumar(anterior);
-    if (base === 0) return null;
-    return ((sumar(actual) - base) / base) * 100;
-  }
-
-  /** Texto descriptivo de metadataAumento para el historial, o null si la
-   *  versión no vino de la herramienta de aumento (edición manual, o versión
-   *  anterior a este campo). Mismo criterio que TarifasGeneralComponent. */
-  textoAumento(t: { metadataAumento?: MetadataAumento }): string | null {
-    const m = t.metadataAumento;
-    if (!m) return null;
-    const redondeo = m.redondeo ? `, redondeo ${m.redondeo}` : '';
-    const ajuste = m.ajustadoManualmente ? ' (con ajuste manual)' : '';
-    if (m.modo === 'manual') return `Aumento manual${redondeo}`;
-    if (m.modo === 'unico') return `Aumento único +${m.porcentajeUnico}%${redondeo}${ajuste}`;
-    const partes = [
-      m.porcentajeCobrar !== undefined ? `cobrar +${m.porcentajeCobrar}%` : null,
-      m.porcentajePagar !== undefined ? `pagar +${m.porcentajePagar}%` : null,
-      m.porcentajeProveedor !== undefined ? `proveedor +${m.porcentajeProveedor}%` : null,
-    ].filter((p): p is string => p !== null);
-    return `Aumento segmentado — ${partes.join(', ')}${redondeo}${ajuste}`;
-  }
+  /** Helpers del historial (shared/utils/historial-tarifa.util — TC-P1),
+   *  expuestos para el template. */
+  readonly deltaPersonalizada = deltaTarifa;
+  readonly deltaEspecial = deltaTarifaEspecial;
+  readonly textoAumento = textoAumentoTarifa;
 
   /** Para resolver el nombre del cliente en el alcance de una Especial —
    *  mismo criterio que TarifasEspecialComponent.nombreClientePorId. */
