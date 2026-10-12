@@ -9,7 +9,6 @@ import { SharedModule } from 'src/app/shared/shared.module';
 import { ModalContactoComponent } from './modal-contacto/modal-contacto.component';
 import { FilterPipeModule } from 'ngx-filter-pipe';
 import { ClientesListadoComponent } from './clientes-listado/clientes-listado.component';
-import { AgGridModule } from 'ag-grid-angular';
 
 
 
@@ -34,7 +33,6 @@ import { AgGridModule } from 'ag-grid-angular';
     SharedModule,
     FilterPipeModule,
     
-    AgGridModule 
   ]
 })
 export class ClientesModule { }

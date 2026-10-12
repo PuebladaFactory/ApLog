@@ -4,11 +4,6 @@ import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import { AppModule } from './app/app.module';
 import { environment } from './environments/environment';
 
-// AG Grid - registrar módulos
-import { ModuleRegistry } from 'ag-grid-community';
-import { AllCommunityModule } from 'ag-grid-community';
-ModuleRegistry.registerModules([AllCommunityModule]);
-
 if (environment.production) {
   enableProdMode();
 }

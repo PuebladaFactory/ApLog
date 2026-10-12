@@ -39,7 +39,6 @@ import { CloudinaryModule } from '@cloudinary/ng';
 import { LimboComponent } from './limbo/limbo.component';
 import { FilterPipeModule } from 'ngx-filter-pipe';
 import { AppRoutingModule } from './app-routing.module';
-import { AgGridModule } from 'ag-grid-angular';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { registerLocaleData } from '@angular/common';
@@ -68,7 +67,6 @@ registerLocaleData(localeEs);
     CloudinaryModule,
     SharedModule,
     FilterPipeModule,
-    AgGridModule,
     DragDropModule,
     ServiceWorkerModule.register('ngsw-worker.js', {
         enabled: !isDevMode(),

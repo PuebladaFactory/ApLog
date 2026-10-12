@@ -11,7 +11,6 @@ import { ProveedoresControlComponent } from './proveedores-control/proveedores-c
 import { ModalContactoProveedoresComponent } from './modal-contacto-proveedores/modal-contacto-proveedores.component';
 import { FilterPipeModule } from 'ngx-filter-pipe';
 import { ProveedoresListadoComponent } from './proveedores-listado/proveedores-listado.component';
-import { AgGridModule } from 'ag-grid-angular';
 
 
 @NgModule({
@@ -29,7 +28,6 @@ import { AgGridModule } from 'ag-grid-angular';
     SharedModule,
     FilterPipeModule,
     
-    AgGridModule
   ]
 })
 export class ProveedoresModule { }

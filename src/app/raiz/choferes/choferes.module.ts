@@ -12,7 +12,6 @@ import { SharedModule } from 'src/app/shared/shared.module';
 import { ModalVehiculoComponent } from './modal-vehiculo/modal-vehiculo.component';
 import { FilterPipeModule } from 'ngx-filter-pipe';
 import { ChoferesListadoComponent } from './choferes-listado/choferes-listado.component';
-import { AgGridModule } from 'ag-grid-angular';
 
 
 
@@ -33,7 +32,6 @@ import { AgGridModule } from 'ag-grid-angular';
     SharedModule,
     FilterPipeModule,
     
-    AgGridModule
   ]
 })
 export class ChoferesModule { }

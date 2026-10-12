@@ -13,7 +13,6 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 
 import { FilterPipeModule } from 'ngx-filter-pipe';
-import { AgGridModule } from 'ag-grid-angular';
 
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ModalObjetosActivosComponent } from './modal-objetos-activos/modal-objetos-activos.component';
@@ -56,7 +55,6 @@ import { ɵɵDir } from "@angular/cdk/scrolling";
     SharedModule,
     FilterPipeModule,
     NgbModule,
-    AgGridModule,
     DragDropModule,
     ɵɵDir
 ],
