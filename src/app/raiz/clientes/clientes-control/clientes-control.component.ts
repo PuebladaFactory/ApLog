@@ -28,10 +28,7 @@ export class ClientesControlComponent implements OnInit {
 
   tabs = [
     { id: 'tab1', name: 'Alta/Listado', route: 'clientes/listado', alias: ['clientes/alta'] },
-    { id: 'tab2', name: 'Tarifa General', route: 'clientes/general' },
-    { id: 'tab3', name: 'Tarifa Especial', route: 'clientes/especial' },
-    { id: 'tab4', name: 'Tarifa Personalizada', route: 'clientes/personalizada' },
-    { id: 'tab5', name: 'Tarifa Eventual', route: 'clientes/eventual' },
+    // Pestañas de tarifas retiradas en TC-R1: las tarifas viven en /tarifas.
   ];
 
   /** Pestaña activa derivada de la URL real (ver tabs-url.util). */
