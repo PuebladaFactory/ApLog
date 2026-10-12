@@ -75,6 +75,7 @@ export class OperacionMigrationService {
     'adExtraConcepto',
     'valores.cliente.adExtraValor',
     'valores.chofer.adExtraValor',
+    'valores',   // TC10: el espejo legacy completo
   ];
 
   private verificarDemo(): void {
@@ -139,7 +140,10 @@ export class OperacionMigrationService {
       const batch = writeBatch(this.firestore);
       for (const p of lote) {
         const cambios: Record<string, any> = {};
-        for (const ruta of p.borrar) cambios[ruta] = deleteField();
+        // Si se borra un mapa entero ('valores'), sus subrutas sobran (un
+        // update con rutas solapadas falla).
+        const rutas = p.borrar.filter(r => !p.borrar.some(padre => padre !== r && r.startsWith(padre + '.')));
+        for (const ruta of rutas) cambios[ruta] = deleteField();
         if (p.adExtra !== undefined) cambios['adExtra'] = p.adExtra;
         batch.update(doc(colRef, p.id), cambios);
       }

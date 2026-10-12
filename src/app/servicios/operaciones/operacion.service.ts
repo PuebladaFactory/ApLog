@@ -203,21 +203,6 @@ export class OperacionService implements OnDestroy {
     return { creadas, errores };
   }
 
-  /** Copia op.valoresNuevos (calculado por ValoresTarifaService.calcularAlta,
-   *  que corre ANTES en el loop de altaDesdeAsignacion) a la estructura vieja
-   *  op.valores. Desde TC2 el alta se aborta si valoresNuevos no se pudo
-   *  calcular, así que acá siempre llega poblado; el if es defensivo (si
-   *  faltara, op.valores queda en los ceros de crearOperacionBase). */
-  calcularValoresIniciales(op: Operacion): Operacion {
-    if (op.valoresNuevos) {
-      op.valores = {
-        cliente: { ...op.valoresNuevos.cliente },
-        chofer: { ...op.valoresNuevos.chofer },
-      };
-    }
-    return op;
-  }
-
   /** Alta atómica de N operaciones + el tablero de la fecha, desde OperacionCreada[].
    *  Recibe las ops FINALES (completadas en operaciones-table). Calcula valores,
    *  reconstruye el sujeto y el ref del item desde la op y persiste atómicamente.
@@ -232,8 +217,7 @@ export class OperacionService implements OnDestroy {
     // 3. CALCULAR VALORES + RECONSTRUIR SUJETO/REF DESDE OP FINAL (un solo recorrido, antes de tocar red)
     for (const c of creadas) {
       // Tarifas: calcula valoresNuevos con las referencias YA elegidas
-      // (operaciones-editor / generador). Corre ANTES de
-      // calcularValoresIniciales. TC2: si falta una referencia o no se pueden
+      // (operaciones-editor / generador). TC2: si falta una referencia o no se pueden
       // calcular los valores, se ABORTA el alta completa (nada tocó la red
       // todavía) — antes quedaba la op con valoresNuevos en null y fallaba
       // recién al cerrarla.
@@ -252,8 +236,6 @@ export class OperacionService implements OnDestroy {
           objeto: { creadas, errores: [] },
         };
       }
-
-      c.operacion = this.calcularValoresIniciales(c.operacion);
 
       const op   = c.operacion;
       const tipo = this.choferService.getTipoContratacion(op.chofer.id);
@@ -601,7 +583,7 @@ export class OperacionService implements OnDestroy {
    *  par de InformeOp nuevo.
    *  Vuelve al estado del ALTA: se descarta todo lo cargado al cerrar o al
    *  editar el InformeOp (km, acompañantes, multiplicadores, adicional extra,
-   *  tarifa base manual) y se recalculan valoresNuevos / op.valores con la
+   *  tarifa base manual) y se recalcula valoresNuevos con la
    *  tarifa congelada del alta (calcularCierre: sin resolver jerarquía). Se
    *  conservan tarifaAplicada*, datosTarifaEventual y el snapshot de
    *  comisiones (cliente.comisiones). */
@@ -639,14 +621,9 @@ export class OperacionService implements OnDestroy {
     op.tarifaBaseManualCliente = null;
     op.tarifaBaseManualChofer = null;
     op.adExtra = null;
-    op.valores = {
-      cliente: { acompValor: 0, kmAdicional: 0, tarifaBase: 0, aCobrar: 0 },
-      chofer:  { acompValor: 0, kmAdicional: 0, tarifaBase: 0, aPagar:  0 },
-    };
     // Valores del alta con la tarifa congelada (sin volver a resolver la
-    // jerarquía) + espejo en op.valores, igual que altaDesdeAsignacion.
+    // jerarquía).
     const recalculo = this.valoresTarifaServ.calcularCierre(op);
-    this.calcularValoresIniciales(op);
 
     const tablero = await this.asignacionService.getTableroPorFecha(op.fecha);
     if (!tablero) {
@@ -714,7 +691,7 @@ export class OperacionService implements OnDestroy {
 
   /** Cierra una operación — orquestador atómico con commitEnTransaccion
    *  (Frente Reportes, R2). Calcula los valores del motor nuevo de Tarifas
-   *  (ValoresOpService.calcularValoresCierre, que además espeja op.valores),
+   *  (ValoresOpService.calcularValoresCierre),
    *  arma el par de InformeOpNuevo (InformeOpService.crearPar) y persiste
    *  todo junto: Operación (estado.ciclo → 'cerrada', informeOpCliente/
    *  informeOpChofer, resumenProcesado), los 2 InformeOp, las comisiones de

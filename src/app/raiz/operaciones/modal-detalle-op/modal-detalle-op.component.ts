@@ -140,12 +140,6 @@ export class ModalDetalleOpComponent implements OnInit, OnDestroy {
   recalcular(): void {
     this.sincronizarFormHaciaOp();
     this.valoresTarifaServ.calcularCierre(this.op);
-    // Espejo legacy — op.valores todavía lo lee tablero-op (ver Deuda anotada
-    // en el diseño). Solo copia lo que calcularCierre ya resolvió, sin lógica nueva.
-    if (this.op.valoresNuevos) {
-      this.op.valores.cliente.aCobrar = this.op.valoresNuevos.cliente.aCobrar;
-      this.op.valores.chofer.aPagar = this.op.valoresNuevos.chofer.aPagar;
-    }
   }
 
   private sincronizarFormHaciaOp(): void {

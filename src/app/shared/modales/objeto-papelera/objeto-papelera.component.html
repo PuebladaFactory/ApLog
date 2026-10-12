@@ -65,28 +65,28 @@
                               <label for="Base" class="fs-5">Tarifa Base</label>
                               <div class="input-group">
                                 <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                <input  class="form-control edicion" type="text" [value]="objeto.valores.cliente.tarifaBase | formatearValor" >
+                                <input  class="form-control edicion" type="text" [value]="objeto.valoresNuevos?.cliente?.tarifaBase | formatearValor" >
                               </div>
                             </div>
                             <div class="form-group mb-3">
                               <label for="adiconalAcompaniante" class="fs-5">Adicional Acompañante</label>
                               <div class="input-group">
                                 <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                <input  class="form-control edicion" type="text" [value]="objeto.valores.cliente.acompValor | formatearValor" >
+                                <input  class="form-control edicion" type="text" [value]="objeto.valoresNuevos?.cliente?.acompValor | formatearValor" >
                               </div>
                             </div>
                             <div class="form-group mb-3">
                               <label for="adiconalKm" class="fs-5">Adicional Km</label>
                               <div class="input-group">
                                 <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                <input  class="form-control edicion" type="text" [value]="objeto.valores.cliente.kmAdicional | formatearValor" >
+                                <input  class="form-control edicion" type="text" [value]="objeto.valoresNuevos?.cliente?.kmAdicional | formatearValor" >
                               </div>
                             </div>
                             <div class="form-group mb-3">
                               <label for="total" class="fs-5">Total</label>
                               <div class="input-group">
                                 <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                <input  class="form-control edicion" type="text" [value]="objeto.valores.cliente.aCobrar | formatearValor" >
+                                <input  class="form-control edicion" type="text" [value]="objeto.valoresNuevos?.cliente?.aCobrar | formatearValor" >
                               </div>
                             </div>
                           </div>
@@ -105,28 +105,28 @@
                           <label for="Base" class="fs-5">Tarifa Base</label>
                           <div class="input-group">
                             <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                            <input  class="form-control edicion" type="text" [value]="objeto.valores.chofer.tarifaBase | formatearValor" >
+                            <input  class="form-control edicion" type="text" [value]="objeto.valoresNuevos?.chofer?.tarifaBase | formatearValor" >
                           </div>
                         </div>
                         <div class="form-group mb-3">
                           <label for="adiconalAcompaniante" class="fs-5">Adicional Acompañante</label>
                           <div class="input-group">
                             <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                            <input  class="form-control edicion" type="text" [value]="objeto.valores.chofer.acompValor | formatearValor" >
+                            <input  class="form-control edicion" type="text" [value]="objeto.valoresNuevos?.chofer?.acompValor | formatearValor" >
                           </div>
                         </div>
                         <div class="form-group mb-3">
                           <label for="adiconalKm" class="fs-5">Adicional Km</label>
                           <div class="input-group">
                             <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                            <input  class="form-control edicion" type="text" [value]="objeto.valores.chofer.kmAdicional | formatearValor" >
+                            <input  class="form-control edicion" type="text" [value]="objeto.valoresNuevos?.chofer?.kmAdicional | formatearValor" >
                           </div>
                         </div>
                         <div class="form-group mb-3">
                           <label for="total" class="fs-5">Total</label>
                           <div class="input-group">
                             <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                            <input  class="form-control edicion" type="text" [value]="objeto.valores.chofer.aPagar | formatearValor" >
+                            <input  class="form-control edicion" type="text" [value]="objeto.valoresNuevos?.chofer?.aPagar | formatearValor" >
                           </div>
                         </div>
                       </div>

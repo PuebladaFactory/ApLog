@@ -38,8 +38,8 @@ export interface Operacion {
   // (TC6: retirado el campo de datos de tarifa Personalizada — no tenía
   // lectores; la Personalizada se identifica por
   // tarifaAplicadaCliente/Chofer.nivel === 'personalizada'.)
-
-  valores: Valores;
+  // (TC10: retirado el espejo legacy de valores; la única fuente es
+  // valoresNuevos.)
 
   // Sistema de Tarifas. tarifaAplicada*: referencia elegida ANTES del alta
   // (operaciones-editor / generador, vía ResolucionTarifaOpService) y

@@ -311,8 +311,8 @@ export class InformeOpEditorComponent implements OnInit {
 
     // Valores de los InformeOp con el MISMO criterio que el cierre
     // (ValoresOpCliente/ChoferService: tarifaBase × multiplicador, total =
-    // suma de componentes). Además espejan valoresNuevos → op.valores de cada
-    // lado (operacionRecalculada es un clon: this.operacion no se toca).
+    // suma de componentes). No mutan la op (operacionRecalculada es un clon:
+    // this.operacion no se toca).
     const valoresCliente: ValoresInformeOp = {
       ...this.valoresOpCliente.calcularValoresCliente(operacionRecalculada),
       tarifaBaseManual: operacionRecalculada.tarifaBaseManualCliente ?? null,

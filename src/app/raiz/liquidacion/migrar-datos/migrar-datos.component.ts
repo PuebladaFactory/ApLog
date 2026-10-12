@@ -88,10 +88,14 @@ export class MigrarDatosComponent {
   informesLiqToogle:boolean = false;
   opToogle:boolean = false;
   docuNuevaColeccion: any[] = [];
-  operaciones: Operacion[] = [];
+  // TC10: `any` a propósito. Herramienta vieja SIN RUTA que compara el espejo
+  // legacy `valores` de documentos crudos de operaciones (ya fuera de la
+  // interfaz Operacion) contra el InformeOp viejo. Se retira con el resto de
+  // la Liquidación vieja.
+  operaciones: any[] = [];
   idsOp: string[] = [];
   infOpLiq: InformeOp[] = [];
-  opErrores: Operacion[] = [];
+  opErrores: any[] = [];
   infOpErrores: InformeOp[] = [];
   backupToogle:boolean = false;
   datosBackUp:any[] = []

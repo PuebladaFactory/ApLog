@@ -13,8 +13,8 @@ export class ValoresOpChoferService {
    *  ValoresTarifaService.calcularLado ya resolvió tarifaBase/adicionales
    *  del lado chofer según esProveedor, así que acá no hace falta
    *  distinguir (a diferencia del sistema viejo, que llamaba a este método
-   *  una vez por cada caso con idProveedor distinto). Muta op.valores.chofer
-   *  (mismo criterio que ValoresOpClienteService) y devuelve el
+   *  una vez por cada caso con idProveedor distinto). No muta la op (TC10,
+   *  mismo criterio que ValoresOpClienteService); devuelve el
    *  InformeOpNuevo.Valores del lado chofer/proveedor — la resolución de
    *  CUÁL entidad (chofer o proveedor) le corresponde a ese Valores la hace
    *  InformeOpFactoryService a partir de op.proveedor, no acá. */
@@ -25,11 +25,6 @@ export class ValoresOpChoferService {
     const kmMonto = v.kmAdicional;
     // Del motor (no de la entrada): respeta "multiplicador 0 anula el lado".
     const adExtra = v.adExtraValor ?? 0;
-
-    op.valores.chofer.tarifaBase = tarifaBase;
-    op.valores.chofer.acompValor = acompaniante;
-    op.valores.chofer.kmAdicional = kmMonto;
-    op.valores.chofer.aPagar = v.aPagar;
 
     return {
       tarifaBase,

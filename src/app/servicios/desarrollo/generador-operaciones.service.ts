@@ -355,9 +355,8 @@ export class GeneradorOperacionesService {
 
   /** Cierra una operación como el modal de cierre (ModalDetalleOpComponent):
    *  km; adicional extra en op.adExtra (entrada que lee el motor);
-   *  multiplicadores en 1 (vienen así del
-   *  alta) → ValoresTarifaService.calcularCierre → espejo a op.valores
-   *  (aCobrar/aPagar, igual que el modal) → OperacionService.cerrarOperacion. */
+   *  multiplicadores en 1 (vienen así del alta) →
+   *  ValoresTarifaService.calcularCierre → OperacionService.cerrarOperacion. */
   private async cerrar(o: OperacionPlaneada): Promise<ResultadoAccion<void>> {
     const op = o.creada.operacion;
     const decision = o.cierre!;
@@ -368,10 +367,6 @@ export class GeneradorOperacionesService {
       : null;
 
     this.valoresTarifa.calcularCierre(op);
-    if (op.valoresNuevos) {
-      op.valores.cliente.aCobrar = op.valoresNuevos.cliente.aCobrar;
-      op.valores.chofer.aPagar = op.valoresNuevos.chofer.aPagar;
-    }
 
     return this.operacionService.cerrarOperacion({ ...op, id: op.idOperacion });
   }

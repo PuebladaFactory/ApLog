@@ -500,49 +500,35 @@ export class ExcelService {
     // BUILD DATA ROWS
     // -----------------------------
 
+    // TC10: valores desde op.valoresNuevos (tarifa base × multiplicador, como
+    // en el InformeOp); estado, proveedor, patente y categoría desde los
+    // campos reales de Operacion (antes leía campos que ya no existen:
+    // estado.abierta, chofer.idProveedor, patenteChofer).
+    const etiquetaCiclo: Record<string, string> = {
+      abierta: "Abierta", cerrada: "Cerrada", liquidada: "Liquidada",
+    };
     const rows = operaciones.map((op) => {
-      const estado = op.estado?.abierta
-        ? "Abierta"
-        : op.estado?.cerrada
-          ? "Cerrada"
-          : op.estado?.facturada
-            ? "Facturada"
-            : op.estado?.facCliente
-              ? "Cliente Fac"
-              : op.estado?.facChofer
-                ? "Chofer Fac"
-                : "Sin Datos";
-
-      const proveedor =
-        op.chofer?.idProveedor === 0
-          ? "No"
-          : this.getProveedor(op.chofer?.idProveedor);
-
-      const categoria = this.getCategoria(
-        op.patenteChofer,
-        op.chofer?.idChofer,
-      );
-
+      const vn = op.valoresNuevos;
       return [
-        estado,
+        etiquetaCiclo[op.estado?.ciclo] ?? "Sin Datos",
         op.fecha,
-        op.idOperacion,
+        op.numeroOperacion,
         op.km,
 
         op.cliente?.razonSocial,
-        op.valores?.cliente?.tarifaBase,
-        op.valores?.cliente?.kmAdicional,
-        op.valores?.cliente?.acompValor,
-        op.valores?.cliente?.aCobrar,
+        vn ? vn.cliente.tarifaBase * (op.multiplicadorCliente ?? 0) : null,
+        vn?.cliente?.kmAdicional,
+        vn?.cliente?.acompValor,
+        vn?.cliente?.aCobrar,
 
         op.chofer?.apellido + " " + op.chofer?.nombre,
-        proveedor,
-        op.patenteChofer,
-        categoria,
-        op.valores?.chofer?.tarifaBase,
-        op.valores?.chofer?.kmAdicional,
-        op.valores?.chofer?.acompValor,
-        op.valores?.chofer?.aPagar,
+        op.proveedor?.razonSocial ?? "No",
+        op.vehiculo?.dominio,
+        op.vehiculo?.categoria?.nombre,
+        vn ? vn.chofer.tarifaBase * (op.multiplicadorChofer ?? 0) : null,
+        vn?.chofer?.kmAdicional,
+        vn?.chofer?.acompValor,
+        vn?.chofer?.aPagar,
 
         op.acompaniante ? "Sí" : "No",
         op.hojaRuta,
