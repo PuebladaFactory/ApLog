@@ -64,9 +64,9 @@ service cloud.firestore {
         // Frente grande de Tarifas — colecciones nuevas, módulo unificado
         // (a diferencia del viejo, general/personalizada comparten UNA colección
         // porque ahora una Tarifa trae aCobrar Y aPagar en la misma categoría).
+        // Sin colecciones de historial propias: el historial es el linaje de
+        // versiones append-only (versionAnteriorId) dentro de estas dos.
         'tarifas': 'tarifas', 'tarifasEspeciales': 'tarifas',
-        'historialTarifas': 'tarifasHistorial',
-        'historialTarifasEspeciales': 'tarifasHistorial',
 
         'resumenLiq': 'finanzas', 'proforma': 'finanzas',
         'informesOpClientes': 'finanzas', 'informesOpChoferes': 'finanzas',
