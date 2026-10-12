@@ -8,14 +8,11 @@ import { BtnEditarComponent } from './botones/btn-editar/btn-editar.component';
 import { BtnEliminarComponent } from './botones/btn-eliminar/btn-eliminar.component';
 import { BtnLeerComponent } from './botones/btn-leer/btn-leer.component';
 import { AccionGenericaComponent } from './botones/accion-generica/accion-generica.component';
-import { ConsolaTarifaComponent } from './consola-tarifa/consola-tarifa.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TableroCalendarioComponent } from './tablero-calendario/tablero-calendario.component';
 import { NgbDropdownModule, NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { NgbCalendar, NgbDate, NgbDatepickerModule } from '@ng-bootstrap/ng-bootstrap';
 
-import { HistorialTarifasGralComponent } from './modales/historial-tarifas-gral/historial-tarifas-gral.component';
-import { TarifasEventualesComponent } from './tarifas-eventuales/tarifas-eventuales.component';
 import { CarruselComponent, SafeUrlPipe } from './carrusel/carrusel.component';
 import { CuitFormatDirective } from './directives/cuit-format.directive';
 import { SoloNumerosDirective } from './directives/solo-numeros.directive';
@@ -26,7 +23,6 @@ import { ClaseNivelTarifaPipe } from './pipes/clase-nivel-tarifa.pipe';
 import { SoloLetrasDirective } from './directives/solo-letras.directive';
 
 
-import { TarigaGralEdicionComponent } from './modales/tariga-gral-edicion/tariga-gral-edicion.component';
 import { RoleDirective } from './directives/role.directive';
 import { PermisoDirective } from './directives/permiso.directive';
 
@@ -77,10 +73,7 @@ import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
     BtnEliminarComponent,
     BtnLeerComponent,
     AccionGenericaComponent,
-    ConsolaTarifaComponent,
     TableroCalendarioComponent,
-    HistorialTarifasGralComponent,
-    TarifasEventualesComponent,
     CarruselComponent,
     SafeUrlPipe,
     CuitFormatDirective,
@@ -91,7 +84,6 @@ import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
 
     SoloLetrasDirective,
 
-    TarigaGralEdicionComponent,
     RoleDirective, PermisoDirective, BajaObjetoComponent,
     ObjetoPapeleraComponent,
     FechaValidaDirective, 
@@ -146,10 +138,7 @@ import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
     BtnEliminarComponent,
     BtnLeerComponent,
     AccionGenericaComponent,
-    ConsolaTarifaComponent,
     TableroCalendarioComponent,
-    HistorialTarifasGralComponent, 
-    TarifasEventualesComponent,
     CarruselComponent,
     SafeUrlPipe,
     CuitFormatDirective,
@@ -160,7 +149,6 @@ import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
 
     SoloLetrasDirective,
 
-    TarigaGralEdicionComponent,
     RoleDirective,
     PermisoDirective,
     BajaObjetoComponent,

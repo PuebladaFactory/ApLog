@@ -4,9 +4,7 @@ import { DbFirestoreService } from '../database/db-firestore.service';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { Chofer } from 'src/app/interfaces/chofer';
-import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { LogService } from '../log/log.service';
-import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import * as _ from 'lodash';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { LogEntry } from 'src/app/interfaces/log-entry';
@@ -69,15 +67,6 @@ export class StorageService {
   private _consultasOpCerradas$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public consultasOpCerradas$ = this._consultasOpCerradas$.asObservable()
 
-  private _historialTarifas$ = new BehaviorSubject<any>(this.loadInfo('tarifasChofer') || []);
-  public historialTarifas$ = this._historialTarifas$.asObservable()
-
-  private _historialTarifasClientes$ = new BehaviorSubject<any>(this.loadInfo('tarifasCliente') || []);
-  public historialTarifasClientes$ = this._historialTarifasClientes$.asObservable()
-
-  private _historialTarifasProveedores$ = new BehaviorSubject<any>(this.loadInfo('tarifasProveedor') || []);
-  public historialTarifasProveedores$ = this._historialTarifasProveedores$.asObservable();
-
   private _legajos$ = new BehaviorSubject(this.loadInfo('legajos') || []);
   public legajos$ = this._legajos$.asObservable()
 
@@ -111,9 +100,6 @@ export class StorageService {
   private _consultasFacOpLiqProveedor$ = new BehaviorSubject<any>(this.loadInfo('consultasFacOpLiqProveedor') || []);
   public consultasFacOpLiqProveedor$ = this._consultasFacOpLiqProveedor$.asObservable();
 
-  private _erroresTarifas$ = new BehaviorSubject<any>(this.loadInfo('erroresTarifas') || []);
-  public erroresTarifas$ = this._erroresTarifas$.asObservable();
-
   private _facOpLiqChofer$ = new BehaviorSubject<any>(this.loadInfo('facOpLiqChofer') || []);
   public facOpLiqChofer$ = this._facOpLiqChofer$.asObservable();
 
@@ -123,39 +109,6 @@ export class StorageService {
   private _facOpLiqProveedor$ = new BehaviorSubject<any>(this.loadInfo('facOpLiqProveedor') || []);
   public facOpLiqProveedor$ = this._facOpLiqProveedor$.asObservable();
 
-  private _tarifaChoferHistorial$ = new BehaviorSubject<any>(this.loadInfo('tarifaChoferHistorial') || []);
-  public tarifaChoferHistorial$ = this._tarifaChoferHistorial$.asObservable();
-
-  private _tarifaClienteHistorial$ = new BehaviorSubject<any>(this.loadInfo('tarifaClienteHistorial') || []);
-  public tarifaClienteHistorial$ = this._tarifaClienteHistorial$.asObservable();
-
-  private _tarifaProveedorHistorial$ = new BehaviorSubject<any>(this.loadInfo('tarifaProveedorHistorial') || []);
-  public tarifaProveedorHistorial$ = this._tarifaProveedorHistorial$.asObservable();
-  
-  private _ultTarifaGralCliente$ = new BehaviorSubject<any>(this.loadInfo('ultTarifaGralCliente') || []);
-  public ultTarifaGralCliente$ = this._ultTarifaGralCliente$.asObservable();
-
-  private _ultTarifaEspCliente$ = new BehaviorSubject<any>(this.loadInfo('ultTarifaEspCliente') || []);
-  public ultTarifaEspCliente$ = this._ultTarifaEspCliente$.asObservable();
-
-  private _ultTarifaPersCliente$ = new BehaviorSubject<any>(this.loadInfo('ultTarifaPersCliente') || []);
-  public ultTarifaPersCliente$ = this._ultTarifaPersCliente$.asObservable();
-
-  private _ultTarifaGralChofer$ = new BehaviorSubject<any>(this.loadInfo('ultTarifaGralChofer') || []);
-  public ultTarifaGralChofer$ = this._ultTarifaGralChofer$.asObservable();
-
-  private _ultTarifaEspChofer$ = new BehaviorSubject<any>(this.loadInfo('ultTarifaEspChofer') || []);
-  public ultTarifaEspChofer$ = this._ultTarifaEspChofer$.asObservable();
-
-  private _ultTarifaPersChofer$ = new BehaviorSubject<any>(this.loadInfo('ultTarifaPersChofer') || []);
-  public ultTarifaPersChofer$ = this._ultTarifaPersChofer$.asObservable();
-
-  private _ultTarifaGralProveedor$ = new BehaviorSubject<any>(this.loadInfo('ultTarifaGralProveedor') || []);
-  public ultTarifaGralProveedor$ = this._ultTarifaGralProveedor$.asObservable();
-
-  private _ultTarifaEspProveedor$ = new BehaviorSubject<any>(this.loadInfo('ultTarifaEspProveedor') || []);
-  public ultTarifaEspProveedor$ = this._ultTarifaEspProveedor$.asObservable();
-
   private _clienteSeleccionado$ = new BehaviorSubject<any>(this.loadInfo('clienteSeleccionado') || []);
   public clienteSeleccionado$ = this._clienteSeleccionado$.asObservable();
 
@@ -164,21 +117,6 @@ export class StorageService {
 
   private _proveedorSeleccionado$ = new BehaviorSubject<any>(this.loadInfo('proveedorSeleccionado') || []);
   public proveedorSeleccionado$ = this._proveedorSeleccionado$.asObservable();
-  
-  private _tEspecialCliente$ = new BehaviorSubject<any>(this.loadInfo('tEspecialCliente') || []);
-  public tEspecialCliente$ = this._tEspecialCliente$.asObservable();
-
-  private _consolaTarifa$ = new BehaviorSubject<any>(this.loadInfo('consolaTarifa') || []);
-  public consolaTarifa$ = this._consolaTarifa$.asObservable();
-
-  private _modoTarifa$ = new BehaviorSubject<any>(this.loadInfo('modoTarifa') || []);
-  public modoTarifa$ = this._modoTarifa$.asObservable();
-
-  private _opTarEve$ = new BehaviorSubject<any>(this.loadInfo('opTarifaEventual') || []);
-  public opTarEve$ = this._opTarEve$.asObservable();
-
-  private _opTarPers$ = new BehaviorSubject<any>(this.loadInfo('opTarifaPersonalizada') || []);
-  public opTarPers$ = this._opTarPers$.asObservable();
   
   private _vehiculosChofer$ = new BehaviorSubject<any>(this.loadInfo('vehiculosChofer') || []);
   public vehiculosChofer$ = this._vehiculosChofer$.asObservable();
@@ -198,47 +136,8 @@ export class StorageService {
   private _facturaOpProveedor$ = new BehaviorSubject<any>(this.loadInfo('facturaOpProveedor') || []);
   public facturaOpProveedor$ = this._facturaOpProveedor$.asObservable();
 
-  private _historialTarifaGralCliente$ = new BehaviorSubject<any>(this.loadInfo('historialTarifaGralCliente') || []);
-  public historialTarifaGralCliente$ = this._historialTarifaGralCliente$.asObservable();
-
-  private _historialTarifaGralChofer$ = new BehaviorSubject<any>(this.loadInfo('historialTarifaGralChofer') || []);
-  public historialTarifaGralChofer$ = this._historialTarifaGralChofer$.asObservable();
-
-  private _historialTarifaGralProveedor$ = new BehaviorSubject<any>(this.loadInfo('historialTarifaGralProveedor') || []);
-  public historialTarifaGralProveedor$ = this._historialTarifaGralProveedor$.asObservable();
-
-  private _historialTarifaPersCliente$ = new BehaviorSubject<any>(this.loadInfo('historialTarifaPersCliente') || []);
-  public historialTarifaPersCliente$ = this._historialTarifaPersCliente$.asObservable();
-
-  private _tarifasEventuales$ = new BehaviorSubject<any>(this.loadInfo('tarifasEventuales') || []);
-  public tarifasEventuales$ = this._tarifasEventuales$.asObservable();
-  
-  private _tarifasGralCliente$ = new BehaviorSubject<any>(this.loadInfo('tarifasGralCliente') || []);
-  public tarifasGralCliente$ = this._tarifasGralCliente$.asObservable();
-
-  private _tarifasEspCliente$ = new BehaviorSubject<any>(this.loadInfo('tarifasEspCliente') || []);
-  public tarifasEspCliente$ = this._tarifasEspCliente$.asObservable();
-
-  private _tarifasPersCliente$ = new BehaviorSubject<any>(this.loadInfo('tarifasPersCliente') || []);
-  public tarifasPersCliente$ = this._tarifasPersCliente$.asObservable();
-  
-  private _tarifasGralChofer$ = new BehaviorSubject<any>(this.loadInfo('tarifasGralChofer') || []);
-  public tarifasGralChofer$ = this._tarifasGralChofer$.asObservable();
-  
-  private _tarifasEspChofer$ = new BehaviorSubject<any>(this.loadInfo('tarifasEspChofer') || []);
-  public tarifasEspChofer$ = this._tarifasEspChofer$.asObservable();
-
-  private _tarifasGralProveedor$ = new BehaviorSubject<any>(this.loadInfo('tarifasGralProveedor') || []);
-  public tarifasGralProveedor$ = this._tarifasGralProveedor$.asObservable();
-  
-  private _tarifasEspProveedor$ = new BehaviorSubject<any>(this.loadInfo('tarifasEspProveedor') || []);
-  public tarifasEspProveedor$ = this._tarifasEspProveedor$.asObservable();
-
   private _users$ = new BehaviorSubject<any>(this.loadInfo('users') || [] || null);
   public users$ = this._users$.asObservable();
-
-  private _todasTarifasEspCliente$ = new BehaviorSubject<any>(this.loadInfo('todasTarifasEspCliente') || []);
-  public todasTarifasEspCliente$ = this._todasTarifasEspCliente$.asObservable()
 
   private _ruta$ = new BehaviorSubject<any>(this.loadInfo('ruta') || []);
   public ruta$ = this._ruta$.asObservable();
@@ -325,21 +224,6 @@ export class StorageService {
         break;
       }
 
-      case "tarifasChofer": {
-        this._historialTarifas$.next(data)
-        break;
-      }
-
-      case "tarifasCliente": {
-        this._historialTarifasClientes$.next(data)
-        break;
-      }
-
-      case "tarifasProveedor": {
-        this._historialTarifasProveedores$.next(data)
-        break;
-      }
-
       case "legajos": {
         this._legajos$.next(data);
         break;
@@ -415,11 +299,6 @@ export class StorageService {
         break;
       }
 
-      case "erroresTarifas": {
-        this._erroresTarifas$.next(data)
-        break;
-      }
-
       case "facOpLiqChofer":{
         this._facOpLiqChofer$.next(data)
         break;
@@ -435,61 +314,6 @@ export class StorageService {
         break;
       }
 
-      case "tarifaChoferHistorial":{
-        this._tarifaChoferHistorial$.next(data)
-        break;
-      }
-
-      case "tarifaClienteHistorial":{
-        this._tarifaClienteHistorial$.next(data)
-        break;
-      }
-
-      case "tarifaProveedorHistorial":{
-        this._tarifaProveedorHistorial$.next(data)
-        break;
-      }
-
-      case "ultTarifaGralCliente":{
-        this._ultTarifaGralCliente$.next(data)
-        break;
-      }
-
-      case "ultTarifaEspCliente":{
-        this._ultTarifaEspCliente$.next(data)
-        break;
-      }
-
-      case "ultTarifaGralChofer":{
-        this._ultTarifaGralChofer$.next(data)
-        break;
-      }
-
-      case "ultTarifaEspChofer":{
-        this._ultTarifaEspChofer$.next(data)
-        break;
-      }
-
-      case "ultTarifaPersCliente":{
-        this._ultTarifaPersCliente$.next(data)
-        break;
-      }
-
-      case "ultTarifaPersChofer":{
-        this._ultTarifaPersChofer$.next(data)
-        break;
-      }
-
-      case "ultTarifaGralProveedor":{
-        this._ultTarifaGralProveedor$.next(data)
-        break;
-      }
-
-      case "ultTarifaEspProveedor":{
-        this._ultTarifaEspProveedor$.next(data)
-        break;
-      }
-      
       case "clienteSeleccionado":{
         this._clienteSeleccionado$.next(data)
         break;
@@ -503,31 +327,6 @@ export class StorageService {
       case "proveedorSeleccionado":{
         this._proveedorSeleccionado$.next(data)
         break;
-      }
-
-      case "tEspecialCliente": {
-        this._tEspecialCliente$.next(data)
-        break;
-      }
-
-      case "consolaTarifa": {
-        this._consolaTarifa$.next(data)
-        break;
-      }
-
-      case "modoTarifa": {
-        this._modoTarifa$.next(data)
-        break;
-      }
-
-      case "opTarifaEventual": {
-        this._opTarEve$.next(data);
-        break
-      }
-
-      case "opTarifaPersonalizada": {
-        this._opTarPers$.next(data);
-        break
       }
 
       case "vehiculosChofer":{
@@ -545,75 +344,10 @@ export class StorageService {
         break
       }
 
-      case "historialTarifaGralCliente":{
-        this._historialTarifaGralCliente$.next(data);
-        break
-      }
-
-      case "historialTarifaGralChofer":{
-        this._historialTarifaGralChofer$.next(data);
-        break
-      }
-
-      case "historialTarifaGralProveedor":{
-        this._historialTarifaGralProveedor$.next(data);
-        break
-      }
-      
-      case "historialTarifaPersCliente":{
-        this._historialTarifaPersCliente$.next(data);
-        break
-      }
-
-      case "tarifasEventuales":{
-        this._tarifasEventuales$.next(data);
-        break
-      }
-
-      case "tarifasGralCliente":{
-        this._tarifasGralCliente$.next(data);
-        break
-      }
-
-      case "tarifasEspCliente":{
-        this._tarifasEspCliente$.next(data);
-        break
-      }
-
-      case "tarifasPersCliente":{
-        this._tarifasPersCliente$.next(data);
-        break
-      }
-
-      case "tarifasGralChofer":{
-        this._tarifasGralChofer$.next(data);
-        break
-      }      
-      
-      case "tarifasEspChofer":{
-        this._tarifasEspChofer$.next(data);
-        break
-      }  
-
-      case "tarifasGralProveedor":{
-        this._tarifasGralProveedor$.next(data);
-        break
-      }      
-      
-      case "tarifasEspProveedor":{
-        this._tarifasEspProveedor$.next(data);
-        break
-      } 
-
       case "users":{
         this._users$.next(data);
         break
       } 
-
-      case "todasTarifasEspCliente":{
-        this._todasTarifasEspCliente$.next(data);
-        break
-      }
 
       case "facturaCliente":{
         this._facturaCliente$.next(data);
@@ -927,30 +661,12 @@ export class StorageService {
         return this._choferes$.asObservable();
       case 'proveedores':
         return this._proveedores$.asObservable();      
-      case 'tarifasGralCliente':
-        return this._tarifasGralCliente$.asObservable();      
-      case 'tarifasEspCliente':
-        return this._tarifasEspCliente$.asObservable();      
-      case 'tarifasPersCliente':
-        return this._tarifasPersCliente$.asObservable();  
-      case 'tarifasGralChofer':
-        return this._tarifasGralChofer$.asObservable();
-      case 'tarifasEspChofer':
-        return this._tarifasEspChofer$.asObservable();  
-      case 'tarifasGralProveedor':
-        return this._tarifasGralProveedor$.asObservable();
-      case 'tarifasEspProveedor':
-        return this._tarifasEspProveedor$.asObservable();            
       case 'users':
         return this._users$.asObservable(); 
       case 'operaciones':
         return this._operaciones$.asObservable(); 
-      case 'todasTarifasEspCliente':
-        return this._todasTarifasEspCliente$.asObservable(); 
       case 'ruta':
         return this._ruta$.asObservable(); 
-      case "tarifasEventuales":
-        return this._tarifasEventuales$.asObservable();      
       case "facturaOpCliente":
         return this._facturaOpCliente$.asObservable();
       case "facturaOpChofer":
