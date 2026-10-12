@@ -6,6 +6,7 @@ import { EntidadTipo, Tarifa } from 'src/app/interfaces/tarifa';
 import { TarifaEspecial } from 'src/app/interfaces/tarifa-especial';
 import { RegistroOpEventual, AnulacionRegistroOpEventual } from 'src/app/interfaces/registro-op-eventual';
 import { ConIdType } from 'src/app/interfaces/conId';
+import { vigentesEnFecha } from 'src/app/shared/utils/vigencia-tarifa.util';
 import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 import { toISODateString } from 'src/app/servicios/fechas/date-range.service';
@@ -96,9 +97,15 @@ export class TarifarioService implements OnDestroy {
   }
 
   /** La tarifa general es singleton — esta es LA forma de resolverla, nunca por id
-   *  cacheado en una entidad (RefTarifaHabilitada.general no lleva idTarifa). */
-  getTarifaGeneralVigente(): ConIdType<Tarifa> | undefined {
-    return this.getTarifasActuales().find(t => t.nivel === 'general' && t.activo);
+   *  cacheado en una entidad (RefTarifaHabilitada.general no lleva idTarifa).
+   *  Sin `fecha`: la versión activa hoy (pantallas de Tarifas, categorías de
+   *  vehículo). Con `fecha` ('YYYY-MM-DD'): la que regía en esa fecha
+   *  (vigencia-tarifa.util — operaciones, TC5); si hubiera más de una, la de
+   *  vigenciaDesde más reciente. */
+  getTarifaGeneralVigente(fecha?: string): ConIdType<Tarifa> | undefined {
+    const generales = this.getTarifasActuales().filter(t => t.nivel === 'general');
+    if (!fecha) return generales.find(t => t.activo);
+    return vigentesEnFecha(generales, fecha)[0];
   }
 
   getTarifasEspecialesActuales(): ConIdType<TarifaEspecial>[] {
@@ -112,20 +119,26 @@ export class TarifarioService implements OnDestroy {
   /** Tarifas personalizadas vigentes de una entidad — puede haber más de una
    *  simultánea (ej. una por categoría y otra por km). Reemplaza el patrón de
    *  idTarifa cacheado en RefTarifaHabilitada, que no podía representar esa
-   *  multiplicidad. */
-  getTarifasPersonalizadasVigentes(idEntidadDueño: string): ConIdType<Tarifa>[] {
-    return this.getTarifasActuales().filter(
-      t => t.nivel === 'personalizada' && t.idEntidadDueño === idEntidadDueño && t.activo,
+   *  multiplicidad. Sin `fecha`: las activas hoy; con `fecha`: las que regían
+   *  en esa fecha (ver getTarifaGeneralVigente). */
+  getTarifasPersonalizadasVigentes(idEntidadDueño: string, fecha?: string): ConIdType<Tarifa>[] {
+    const deLaEntidad = this.getTarifasActuales().filter(
+      t => t.nivel === 'personalizada' && t.idEntidadDueño === idEntidadDueño,
     );
+    if (!fecha) return deLaEntidad.filter(t => t.activo);
+    return vigentesEnFecha(deLaEntidad, fecha);
   }
 
   /** Tarifas especiales vigentes de una entidad — misma razón que arriba, con
    *  más motivo: el alcance ('entidad' vs 'entidadCliente') ya habilita
-   *  múltiples activas por diseño. */
-  getTarifasEspecialesVigentes(idEntidadDueño: string): ConIdType<TarifaEspecial>[] {
-    return this.getTarifasEspecialesActuales().filter(
-      t => t.idEntidadDueño === idEntidadDueño && t.activo,
+   *  múltiples activas por diseño. Sin `fecha`: las activas hoy; con `fecha`:
+   *  las que regían en esa fecha (ver getTarifaGeneralVigente). */
+  getTarifasEspecialesVigentes(idEntidadDueño: string, fecha?: string): ConIdType<TarifaEspecial>[] {
+    const deLaEntidad = this.getTarifasEspecialesActuales().filter(
+      t => t.idEntidadDueño === idEntidadDueño,
     );
+    if (!fecha) return deLaEntidad.filter(t => t.activo);
+    return vigentesEnFecha(deLaEntidad, fecha);
   }
 
   getRegistrosEventualesActuales(): ConIdType<RegistroOpEventual>[] {

@@ -185,7 +185,6 @@ export class GeneradorOperacionesService {
     if (clientes.length === 0 || vehiculos.length === 0) {
       throw new Error('No hay clientes activos o vehículos en memoria (¿se cargaron las entidades? Recargá la app).');
     }
-    const general = this.tarifario.getTarifaGeneralVigente() ?? null;
     const noDisponibles = (await this.db.obtenerTodosConId<NoDisponibilidadChofer>('noOperativo'))
       .map(n => n.data)
       .filter(n => n.activa);
@@ -205,6 +204,8 @@ export class GeneradorOperacionesService {
       const objetivo = Math.max(0, Math.round(p.cantidadTotal * (peso / sumaPesos) * (0.85 + 0.3 * azar.siguiente())));
       const noDispDia = this.choferesNoDisponibles(noDisponibles, fecha);
       const pool = this.poolDelDia(vehiculos, choferes, proveedores, noDispDia);
+      // General vigente A LA FECHA del día (TC5): base de los valores eventuales.
+      const general = this.tarifario.getTarifaGeneralVigente(fecha) ?? null;
 
       const usadosVehiculo = new Set<string>();
       const usadosChofer = new Set<string>();

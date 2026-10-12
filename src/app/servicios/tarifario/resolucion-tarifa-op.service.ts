@@ -116,7 +116,8 @@ export class ResolucionTarifaOpService {
       .some(h => h.nivel === 'eventual');
   }
 
-  /** Candidatos de tarifa de ambos lados (ValoresTarifaService.listarCandidatosLado).
+  /** Candidatos de tarifa de ambos lados (ValoresTarifaService.listarCandidatosLado),
+   *  con las versiones vigentes a op.fecha (TC5).
    *  El lado chofer se calcula SIEMPRE con su propia jerarquía (chofer directo
    *  o proveedor del chofer); quién lo gobierna al final (propio o espejo de
    *  Personalizada del cliente) lo decide el consumidor al aplicar la ref. */
@@ -136,9 +137,9 @@ export class ResolucionTarifaOpService {
     const habilitadasChofer = this.proveedorService.resolverTarifasHabilitadasChofer(chofer);
 
     const ladoCliente = this.valoresTarifa.listarCandidatosLado(
-      'cliente', cliente.id, cliente.tarifasHabilitadas, op.vehiculo.categoria, op.cliente.id);
+      'cliente', cliente.id, cliente.tarifasHabilitadas, op.vehiculo.categoria, op.cliente.id, op.fecha);
     const ladoChofer = this.valoresTarifa.listarCandidatosLado(
-      entidadTipoChofer, idEntidadChofer, habilitadasChofer, op.vehiculo.categoria, op.cliente.id);
+      entidadTipoChofer, idEntidadChofer, habilitadasChofer, op.vehiculo.categoria, op.cliente.id, op.fecha);
 
     return { estado: 'ok', cliente: ladoCliente, chofer: ladoChofer };
   }

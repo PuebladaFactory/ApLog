@@ -186,29 +186,34 @@ export class ValoresTarifaService {
    *  a ningún otro nivel — se reporta como motivo y listo, mismo criterio que ya
    *  regía para Personalizada. No hay más "General resuelve solo aunque no esté
    *  tildada": si ningún nivel habilitado tiene vigente, la operación queda sin
-   *  candidatos y motivoSinCandidatos junta los motivos de cada nivel habilitado. */
+   *  candidatos y motivoSinCandidatos junta los motivos de cada nivel habilitado.
+   *
+   *  Vigencia POR FECHA (TC5): `fecha` es la de la operación ('YYYY-MM-DD');
+   *  se toman las versiones que regían ese día (vigencia-tarifa.util), no las
+   *  activas hoy. */
   listarCandidatosLado(
     entidadTipo: EntidadTipo,
     idEntidad: string,
     habilitadas: RefTarifaHabilitada[],
     categoriaVehiculo: { catOrden: number; nombre: string },
     idClienteOp: string,
+    fecha: string,
   ): CandidatosLado {
     const niveles = new Set(habilitadas.map(h => h.nivel));
     const candidatos: CandidatoTarifa[] = [];
     const motivos: string[] = [];
 
     if (niveles.has('personalizada')) {
-      const candidatas = this.tarifario.getTarifasPersonalizadasVigentes(idEntidad);
+      const candidatas = this.tarifario.getTarifasPersonalizadasVigentes(idEntidad, fecha);
       if (candidatas.length > 0) {
         candidatos.push(...candidatas.map(t => this.aCandidato(t)));
       } else {
-        motivos.push(`personalizada de ${entidadTipo} ${idEntidad}: sin tarifa vigente`);
+        motivos.push(`personalizada de ${entidadTipo} ${idEntidad}: sin tarifa vigente al ${fecha}`);
       }
     }
 
     if (niveles.has('especial')) {
-      let candidatas = this.tarifario.getTarifasEspecialesVigentes(idEntidad)
+      let candidatas = this.tarifario.getTarifasEspecialesVigentes(idEntidad, fecha)
         .filter(t => t.entidadTipo === entidadTipo && t.modoTarifacion !== 'km');
       if (entidadTipo !== 'cliente') {
         const especificas = candidatas.filter(t => t.alcance.tipo === 'entidadCliente' && t.alcance.idCliente === idClienteOp);
@@ -221,16 +226,16 @@ export class ValoresTarifaService {
       if (candidatas.length > 0) {
         candidatos.push(...candidatas.map(t => this.aCandidato(t)));
       } else {
-        motivos.push(`especial de ${entidadTipo} ${idEntidad}: sin tarifa vigente que cubra la categoría`);
+        motivos.push(`especial de ${entidadTipo} ${idEntidad}: sin tarifa vigente al ${fecha} que cubra la categoría`);
       }
     }
 
     if (niveles.has('general')) {
-      const general = this.tarifario.getTarifaGeneralVigente();
+      const general = this.tarifario.getTarifaGeneralVigente(fecha);
       if (general && general.modoTarifacion !== 'km') {
         candidatos.push(this.aCandidato(general));
       } else {
-        motivos.push('no hay tarifa general vigente');
+        motivos.push(`no hay tarifa general vigente al ${fecha}`);
       }
     }
 
@@ -466,11 +471,12 @@ export class ValoresTarifaService {
 
   /** Eventual: no hay RefTarifaAplicada — el valor base sale directo de
    *  datosTarifaEventual (mismo criterio que el sistema viejo); el adicional
-   *  por acompañante se toma siempre de la General vigente (ídem sistema
-   *  viejo). Sin adicional por km: eventual no lo contempla. */
+   *  por acompañante se toma de la General vigente A LA FECHA de la operación
+   *  (TC5 — alta, cierre y restaurar dan lo mismo aunque la General cambie
+   *  después). Sin adicional por km: eventual no lo contempla. */
   private valoresEventual(op: Operacion): Valores | null {
     if (!op.datosTarifaEventual) return null;
-    const general = this.tarifario.getTarifaGeneralVigente();
+    const general = this.tarifario.getTarifaGeneralVigente(op.fecha);
 
     const chofer = this.choferServ.getChoferPorId(op.chofer.id);
     const esProveedor = chofer ? chofer.contratacion.tipo === 'proveedor' : op.proveedor !== null;
