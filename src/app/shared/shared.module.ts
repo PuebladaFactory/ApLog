@@ -8,11 +8,9 @@ import { BtnAgregarComponent } from './botones/btn-agregar/btn-agregar.component
 import { BtnEditarComponent } from './botones/btn-editar/btn-editar.component';
 import { BtnEliminarComponent } from './botones/btn-eliminar/btn-eliminar.component';
 import { BtnLeerComponent } from './botones/btn-leer/btn-leer.component';
-import { AccionGenericaComponent } from './botones/accion-generica/accion-generica.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { TableroCalendarioComponent } from './tablero-calendario/tablero-calendario.component';
 import { NgbDropdownModule, NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { NgbCalendar, NgbDate, NgbDatepickerModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbDatepickerModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { CarruselComponent, SafeUrlPipe } from './carrusel/carrusel.component';
 import { CuitFormatDirective } from './directives/cuit-format.directive';
@@ -24,12 +22,10 @@ import { ClaseNivelTarifaPipe } from './pipes/clase-nivel-tarifa.pipe';
 import { SoloLetrasDirective } from './directives/solo-letras.directive';
 
 
-import { RoleDirective } from './directives/role.directive';
 import { PermisoDirective } from './directives/permiso.directive';
 
 import { BajaObjetoComponent } from './modales/baja-objeto/baja-objeto.component';
 import { ObjetoPapeleraComponent } from './modales/objeto-papelera/objeto-papelera.component';
-import { FechaValidaDirective } from './directives/fecha-valida.directive';
 
 import { InformeLiqDetalleComponent } from './modales/informe-liq-detalle/informe-liq-detalle.component';
 
@@ -47,13 +43,11 @@ import { CompensacionesLiqComponent } from './modales/compensaciones-liq/compens
 import { BuscarPorChoferPipe } from './pipes/buscar-por-chofer.pipe';
 import { VisibilidadListadosComponent } from './modales/visibilidad-listados/visibilidad-listados.component';
 import { TableroFechasComponent } from './tablero-fechas/tablero-fechas.component';
-import { InformesAccionesCellComponent } from './tabla/informes-acciones-cell/informes-acciones-cell.component';
 
 import { DecimalInputDirective } from './directives/decimal-input.directive';
 
 
 import { MontoDirective } from './directives/monto.directive';
-import { SortableDirective } from './directives/sortable.directive';
 import { CalcularPorcentajeV2Pipe } from './pipes/calcular-porcentaje-v2.pipe';
 import { FiltroPeriodoComponent } from './filtro-periodo/filtro-periodo.component';
 import { TablaAccionesComponent } from './tabla/tabla-acciones/tabla-acciones.component';
@@ -70,8 +64,6 @@ import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
     BtnEditarComponent,
     BtnEliminarComponent,
     BtnLeerComponent,
-    AccionGenericaComponent,
-    TableroCalendarioComponent,
     CarruselComponent,
     SafeUrlPipe,
     CuitFormatDirective,
@@ -82,9 +74,8 @@ import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
 
     SoloLetrasDirective,
 
-    RoleDirective, PermisoDirective, BajaObjetoComponent,
+    PermisoDirective, BajaObjetoComponent,
     ObjetoPapeleraComponent,
-    FechaValidaDirective, 
     InformeLiqDetalleComponent, 
     ScrollToTopComponent, 
     CalcularPorcentajePipe, 
@@ -100,13 +91,11 @@ import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
     BuscarPorChoferPipe,
     VisibilidadListadosComponent,
     TableroFechasComponent,
-    InformesAccionesCellComponent,
     
     DecimalInputDirective,
     
     
     MontoDirective,
-    SortableDirective,
     CalcularPorcentajeV2Pipe,
     FiltroPeriodoComponent,
     TablaAccionesComponent,
@@ -133,8 +122,6 @@ import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
     BtnEditarComponent,
     BtnEliminarComponent,
     BtnLeerComponent,
-    AccionGenericaComponent,
-    TableroCalendarioComponent,
     CarruselComponent,
     SafeUrlPipe,
     CuitFormatDirective,
@@ -145,10 +132,8 @@ import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
 
     SoloLetrasDirective,
 
-    RoleDirective,
     PermisoDirective,
     BajaObjetoComponent,
-    FechaValidaDirective,
     InformeLiqDetalleComponent, 
     ScrollToTopComponent,
     CalcularPorcentajePipe,
@@ -158,13 +143,11 @@ import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
     BuscarPorChoferPipe,
     VisibilidadListadosComponent,
     TableroFechasComponent,
-    InformesAccionesCellComponent,
     
     DecimalInputDirective,
     
     
     MontoDirective,
-    SortableDirective,
     CalcularPorcentajeV2Pipe,
     FiltroPeriodoComponent,
     TablaAccionesComponent,

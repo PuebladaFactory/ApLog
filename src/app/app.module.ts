@@ -20,7 +20,6 @@ import { AuthService } from './servicios/autentificacion/auth.service';
 import { ForgotPasswordComponent } from './appLogin/forgot-password/forgot-password.component';
 import { LoginHeaderComponent } from './appLogin/login-header/login-header.component';
 import { LoginComponent } from './appLogin/login/login.component';
-import { LogoutComponent } from './appLogin/logout/logout.component';
 
 import { PagenotfoundComponent } from './pagenotfound/pagenotfound.component';
 
@@ -40,7 +39,6 @@ registerLocaleData(localeEs);
     AppComponent,
     LoginComponent,
     PagenotfoundComponent,
-    LogoutComponent,
     ForgotPasswordComponent,
     LoginHeaderComponent,
     CargaComponent,
