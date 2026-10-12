@@ -80,12 +80,9 @@ export class OperacionFactoryService {
       informeOpChofer:  '',
 
       tarifaTipo,
-      // Nacen con objeto en cero SOLO si la tarifa correspondiente aplica; sino null.
+      // Nace con objeto en cero SOLO si la op es eventual; sino null.
       datosTarifaEventual: tarifaTipo.eventual
         ? { chofer: { concepto: '', valor: 0 }, cliente: { concepto: '', valor: 0 } }
-        : null,
-      datosTarifaPersonalizada: tarifaTipo.personalizada
-        ? { seccion: 0, categoria: 0, nombre: '', aCobrar: 0, aPagar: 0 }
         : null,
 
       valores: {
@@ -158,16 +155,16 @@ export class OperacionFactoryService {
    * de datosTarifaX. Estado de UI de operaciones-editor.
    *
    *  - activar=true: pasa la op a eventual. Crea datosTarifaEventual en cero si
-   *    no existía y anula datosTarifaPersonalizada. (El tipo original lo guarda el
-   *    componente en su Map para poder volver atrás.)
-   *  - activar=false: restaura tarifaOriginal y reconstruye datosTarifaX según
-   *    corresponda (eventual→null, personalizada→objeto en cero, resto→ambos null).
+   *    no existía. (El tipo original lo guarda el componente en su Map para
+   *    poder volver atrás.)
+   *  - activar=false: restaura tarifaOriginal y reconstruye datosTarifaEventual
+   *    (en cero si la original era eventual; null si no).
    *
    * TODO: refactor Tarifas — la mutación de datosTarifaX migrará al sistema unificado.
    */
   /**
    * Aplica un tarifaTipo ya resuelto sobre una op, manteniendo el invariante de
-   * datosTarifaX (eventual ⟺ datosTarifaEventual; personalizada ⟺ datosTarifaPersonalizada).
+   * datosTarifaX (eventual ⟺ datosTarifaEventual).
    * Lo usa operaciones-editor al resolver el chofer de un proveedor (el tipo se
    * recalcula con recalcularTarifaTipo y se aplica acá). Muta la op in-place.
    * TODO: refactor Tarifas — la mutación de datosTarifaX migrará al sistema unificado.
@@ -178,10 +175,6 @@ export class OperacionFactoryService {
     op.datosTarifaEventual = tipo.eventual
       ? (op.datosTarifaEventual
          ?? { chofer: { concepto: '', valor: 0 }, cliente: { concepto: '', valor: 0 } })
-      : null;
-    op.datosTarifaPersonalizada = tipo.personalizada
-      ? (op.datosTarifaPersonalizada
-         ?? { seccion: 0, categoria: 0, nombre: '', aCobrar: 0, aPagar: 0 })
       : null;
   }
 
@@ -195,16 +188,11 @@ export class OperacionFactoryService {
       op.tarifaTipo = { general: false, especial: false, eventual: true, personalizada: false };
       op.datosTarifaEventual = op.datosTarifaEventual
         ?? { chofer: { concepto: '', valor: 0 }, cliente: { concepto: '', valor: 0 } };
-      op.datosTarifaPersonalizada = null;
     } else {
       op.tarifaTipo = { ...tarifaOriginal };
       op.datosTarifaEventual = tarifaOriginal.eventual
         ? (op.datosTarifaEventual
            ?? { chofer: { concepto: '', valor: 0 }, cliente: { concepto: '', valor: 0 } })
-        : null;
-      op.datosTarifaPersonalizada = tarifaOriginal.personalizada
-        ? (op.datosTarifaPersonalizada
-           ?? { seccion: 0, categoria: 0, nombre: '', aCobrar: 0, aPagar: 0 })
         : null;
     }
   }

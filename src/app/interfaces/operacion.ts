@@ -34,7 +34,9 @@ export interface Operacion {
 
   tarifaTipo: TarifaTipo;
   datosTarifaEventual: DatosTarifaEventual | null;
-  datosTarifaPersonalizada: DatosTarifaPersonalizada | null;
+  // (TC6: retirado el campo de datos de tarifa Personalizada — no tenía
+  // lectores; la Personalizada se identifica por
+  // tarifaAplicadaCliente/Chofer.nivel === 'personalizada'.)
 
   valores: Valores;
 
@@ -105,14 +107,6 @@ export interface RefProveedor {
 export interface DatosTarifaEventual {
   chofer: { concepto: string; valor: number };
   cliente: { concepto: string; valor: number };
-}
-
-export interface DatosTarifaPersonalizada {
-  seccion: number;
-  categoria: number;
-  nombre: string;
-  aCobrar: number;
-  aPagar: number;
 }
 
 export interface EstadoOp {
