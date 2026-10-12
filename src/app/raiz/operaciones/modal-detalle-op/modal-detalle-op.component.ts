@@ -4,7 +4,7 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, takeUntil } from 'rxjs';
 import Swal from 'sweetalert2';
 import { ConId } from 'src/app/interfaces/conId';
-import { DocumentoOperacion, Operacion } from 'src/app/interfaces/operacion';
+import { DocumentoOperacion, Operacion, armarAdExtra } from 'src/app/interfaces/operacion';
 import { ValoresTarifaService, CandidatoTarifa } from 'src/app/servicios/tarifario/valores-tarifa.service';
 import { OperacionService } from 'src/app/servicios/operaciones/operacion.service';
 import { StorageArchivosService } from 'src/app/servicios/storage-archivos/storage-archivos.service';
@@ -69,9 +69,6 @@ export class ModalDetalleOpComponent implements OnInit, OnDestroy {
     console.log("op: ", this.opOriginal);    
     this.op = structuredClone(this.opOriginal);
     this.op.acompanianteCant = this.op.acompanianteCant ?? 0;
-    this.op.adExtraConcepto = this.op.adExtraConcepto ?? '';
-    this.op.valores.cliente.adExtraValor = this.op.valores.cliente.adExtraValor ?? 0;
-    this.op.valores.chofer.adExtraValor = this.op.valores.chofer.adExtraValor ?? 0;
     // Defensivo — ops viejas (previas a este frente) tienen '' o null en Firestore en
     // vez de un array. OperacionMigrationService.normalizarDocumentacion lo corrige en
     // la base; esto es solo para no romper la ventana entre deployar este código y
@@ -101,9 +98,9 @@ export class ModalDetalleOpComponent implements OnInit, OnDestroy {
         observaciones: [this.op.observaciones],
         km: [this.op.km, this.modo === 'cerrar' ? [Validators.required] : []],
       }, { validators: acompanianteValido() }),
-      adExtraConcepto: [this.op.adExtraConcepto],
-      valorCliente: this.fb.group({ adExtraValor: [this.op.valores.cliente.adExtraValor] }),
-      valorChofer: this.fb.group({ adExtraValor: [this.op.valores.chofer.adExtraValor] }),
+      adExtraConcepto: [this.op.adExtra?.concepto ?? ''],
+      valorCliente: this.fb.group({ adExtraValor: [this.op.adExtra?.valorCliente ?? 0] }),
+      valorChofer: this.fb.group({ adExtraValor: [this.op.adExtra?.valorChofer ?? 0] }),
       totales: this.fb.group({
         // Validators.required — un multiplicador vacío NO es lo mismo que 0:
         // 0 es una decisión de negocio válida (anula todo ese lado a propósito),
@@ -158,9 +155,7 @@ export class ModalDetalleOpComponent implements OnInit, OnDestroy {
     this.op.hojaRuta = v.detalleGeneral.hojaRuta;
     this.op.observaciones = v.detalleGeneral.observaciones;
     this.op.km = v.detalleGeneral.km;
-    this.op.adExtraConcepto = v.adExtraConcepto;
-    this.op.valores.cliente.adExtraValor = v.valorCliente.adExtraValor;
-    this.op.valores.chofer.adExtraValor = v.valorChofer.adExtraValor;
+    this.op.adExtra = armarAdExtra(v.adExtraConcepto, v.valorCliente.adExtraValor, v.valorChofer.adExtraValor);
     this.op.multiplicadorCliente = v.totales.multiplicadorCliente;
     this.op.multiplicadorChofer = v.totales.multiplicadorChofer;
   }

@@ -2,7 +2,7 @@ import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import Swal from 'sweetalert2';
 import { ConId } from 'src/app/interfaces/conId';
-import { Operacion } from 'src/app/interfaces/operacion';
+import { Operacion, armarAdExtra } from 'src/app/interfaces/operacion';
 import { InformeOpNuevo, Valores as ValoresInformeOp } from 'src/app/interfaces/informe-op-nuevo';
 import { OperacionService } from 'src/app/servicios/operaciones/operacion.service';
 import { InformeOpService } from 'src/app/servicios/informes-op/informe-op.service';
@@ -185,7 +185,7 @@ export class InformeOpEditorComponent implements OnInit {
     this.acompanianteCant = operacion.acompanianteCant ?? 0;
     this.observaciones = operacion.observaciones;
     this.hojaRuta = operacion.hojaRuta;
-    this.adExtraConcepto = operacion.adExtraConcepto ?? '';
+    this.adExtraConcepto = operacion.adExtra?.concepto ?? '';
     // A diferencia de los campos de arriba, este vive en el propio
     // InformeOpNuevo (no en Operacion) — "nota propia del informe, no
     // ligada a la operación".
@@ -196,13 +196,13 @@ export class InformeOpEditorComponent implements OnInit {
       this.usarTarifaManual = operacion.tarifaBaseManualCliente != null;
       this.tarifaBaseManualValor = operacion.tarifaBaseManualCliente ?? null;
       this.tarifaBaseResuelta = operacion.valoresNuevos?.cliente.tarifaBase ?? 0;
-      this.adExtraValor = operacion.valores.cliente.adExtraValor ?? 0;
+      this.adExtraValor = operacion.adExtra?.valorCliente ?? 0;
     } else {
       this.multiplicador = operacion.multiplicadorChofer;
       this.usarTarifaManual = operacion.tarifaBaseManualChofer != null;
       this.tarifaBaseManualValor = operacion.tarifaBaseManualChofer ?? null;
       this.tarifaBaseResuelta = operacion.valoresNuevos?.chofer.tarifaBase ?? 0;
-      this.adExtraValor = operacion.valores.chofer.adExtraValor ?? 0;
+      this.adExtraValor = operacion.adExtra?.valorChofer ?? 0;
     }
 
     this.notificarEstadoContraparte();
@@ -255,16 +255,20 @@ export class InformeOpEditorComponent implements OnInit {
     operacionEditada.acompanianteCant = this.acompaniante ? this.acompanianteCant : 0;
     operacionEditada.observaciones = this.observaciones;
     operacionEditada.hojaRuta = this.hojaRuta;
-    operacionEditada.adExtraConcepto = this.adExtraConcepto;
+    // Este modal edita UN lado: el valor del otro lado se conserva tal cual.
+    const previo = operacionEditada.adExtra;
+    operacionEditada.adExtra = armarAdExtra(
+      this.adExtraConcepto,
+      this.esLadoCliente ? this.adExtraValor : (previo?.valorCliente ?? 0),
+      this.esLadoCliente ? (previo?.valorChofer ?? 0) : this.adExtraValor,
+    );
 
     if (this.esLadoCliente) {
       operacionEditada.multiplicadorCliente = this.multiplicador;
       operacionEditada.tarifaBaseManualCliente = this.usarTarifaManual ? this.tarifaBaseManualValor : null;
-      operacionEditada.valores.cliente.adExtraValor = this.adExtraValor;
     } else {
       operacionEditada.multiplicadorChofer = this.multiplicador;
       operacionEditada.tarifaBaseManualChofer = this.usarTarifaManual ? this.tarifaBaseManualValor : null;
-      operacionEditada.valores.chofer.adExtraValor = this.adExtraValor;
     }
     return operacionEditada;
   }

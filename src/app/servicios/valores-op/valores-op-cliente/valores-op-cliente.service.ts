@@ -23,7 +23,8 @@ export class ValoresOpClienteService {
     const tarifaBase = v.tarifaBase * op.multiplicadorCliente;
     const acompaniante = v.acompValor;
     const kmMonto = v.kmAdicional;
-    const adExtra = op.valores.cliente.adExtraValor ?? 0;
+    // Del motor (no de la entrada): respeta "multiplicador 0 anula el lado".
+    const adExtra = v.adExtraValor ?? 0;
 
     op.valores.cliente.tarifaBase = tarifaBase;
     op.valores.cliente.acompValor = acompaniante;

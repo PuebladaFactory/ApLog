@@ -23,7 +23,8 @@ export class ValoresOpChoferService {
     const tarifaBase = v.tarifaBase * op.multiplicadorChofer;
     const acompaniante = v.acompValor;
     const kmMonto = v.kmAdicional;
-    const adExtra = op.valores.chofer.adExtraValor ?? 0;
+    // Del motor (no de la entrada): respeta "multiplicador 0 anula el lado".
+    const adExtra = v.adExtraValor ?? 0;
 
     op.valores.chofer.tarifaBase = tarifaBase;
     op.valores.chofer.acompValor = acompaniante;

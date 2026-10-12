@@ -54,7 +54,11 @@ export interface Operacion {
 
   multiplicadorCliente: number;
   multiplicadorChofer: number;
-  adExtraConcepto?: string;
+  // Adicional extra cargado a mano al editar/cerrar (ENTRADA, TC9): un
+  // concepto y un valor por lado. El resultado por lado lo calcula el motor
+  // en valoresNuevos.<lado>.adExtraValor (0 si el multiplicador del lado es
+  // 0). null = sin adicional. Normalizar con armarAdExtra().
+  adExtra: AdicionalExtraOp | null;
 
   // Override manual de tarifa base (Chunk 3 — edición de InformeOp): un
   // número presente congela ese lado a ese valor exacto en vez de derivarlo
@@ -103,6 +107,27 @@ export interface RefProveedor {
   id: string;
   razonSocial: string;
   cuit: number;
+}
+
+/** Adicional extra de una operación (entrada): concepto y valor por lado. */
+export interface AdicionalExtraOp {
+  concepto: string;
+  valorCliente: number;
+  valorChofer: number;
+}
+
+/** Normaliza lo cargado en un form: concepto recortado; valores null/undefined
+ *  → 0. Sin concepto y con ambos valores en 0 → null (sin adicional). */
+export function armarAdExtra(
+  concepto: string | null | undefined,
+  valorCliente: number | null | undefined,
+  valorChofer: number | null | undefined,
+): AdicionalExtraOp | null {
+  const c = (concepto ?? '').trim();
+  const vc = valorCliente ?? 0;
+  const vch = valorChofer ?? 0;
+  if (!c && vc === 0 && vch === 0) return null;
+  return { concepto: c, valorCliente: vc, valorChofer: vch };
 }
 
 export interface DatosTarifaEventual {

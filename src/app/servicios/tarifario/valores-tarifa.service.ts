@@ -376,8 +376,8 @@ export class ValoresTarifaService {
           acompValor: cliente.acompValor,
           kmAdicional: cliente.kmAdicional,
           tarifaBase: tarifaBaseCliente,
-          aCobrar: tarifaBaseCliente * op.multiplicadorCliente + cliente.kmAdicional + cliente.acompValor + (op.valores.cliente.adExtraValor ?? 0),
-          adExtraValor: op.valores.cliente.adExtraValor ?? 0,
+          aCobrar: tarifaBaseCliente * op.multiplicadorCliente + cliente.kmAdicional + cliente.acompValor + (op.adExtra?.valorCliente ?? 0),
+          adExtraValor: op.adExtra?.valorCliente ?? 0,
         };
 
     const ladoChofer = (op.multiplicadorChofer ?? 0) === 0
@@ -386,8 +386,8 @@ export class ValoresTarifaService {
           acompValor: chofer.acompValor,
           kmAdicional: chofer.kmAdicional,
           tarifaBase: tarifaBaseChofer,
-          aPagar: tarifaBaseChofer * op.multiplicadorChofer + chofer.kmAdicional + chofer.acompValor + (op.valores.chofer.adExtraValor ?? 0),
-          adExtraValor: op.valores.chofer.adExtraValor ?? 0,
+          aPagar: tarifaBaseChofer * op.multiplicadorChofer + chofer.kmAdicional + chofer.acompValor + (op.adExtra?.valorChofer ?? 0),
+          adExtraValor: op.adExtra?.valorChofer ?? 0,
         };
 
     return { cliente: ladoCliente, chofer: ladoChofer };
@@ -499,8 +499,8 @@ export class ValoresTarifaService {
           acompValor: acompValorCliente,
           kmAdicional: 0,
           tarifaBase: tarifaBaseCliente,
-          aCobrar: tarifaBaseCliente * op.multiplicadorCliente + acompValorCliente + (op.valores.cliente.adExtraValor ?? 0),
-          adExtraValor: op.valores.cliente.adExtraValor ?? 0,
+          aCobrar: tarifaBaseCliente * op.multiplicadorCliente + acompValorCliente + (op.adExtra?.valorCliente ?? 0),
+          adExtraValor: op.adExtra?.valorCliente ?? 0,
         };
 
     const ladoChofer = (op.multiplicadorChofer ?? 0) === 0
@@ -509,8 +509,8 @@ export class ValoresTarifaService {
           acompValor: acompValorChofer,
           kmAdicional: 0,
           tarifaBase: tarifaBaseChofer,
-          aPagar: tarifaBaseChofer * op.multiplicadorChofer + acompValorChofer + (op.valores.chofer.adExtraValor ?? 0),
-          adExtraValor: op.valores.chofer.adExtraValor ?? 0,
+          aPagar: tarifaBaseChofer * op.multiplicadorChofer + acompValorChofer + (op.adExtra?.valorChofer ?? 0),
+          adExtraValor: op.adExtra?.valorChofer ?? 0,
         };
 
     return { cliente: ladoCliente, chofer: ladoChofer };

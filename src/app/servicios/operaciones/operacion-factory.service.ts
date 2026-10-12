@@ -94,6 +94,7 @@ export class OperacionFactoryService {
 
       multiplicadorCliente: 1,
       multiplicadorChofer:  1,
+      adExtra:              null,
 
       estado: this.estadoInicial(),
     };

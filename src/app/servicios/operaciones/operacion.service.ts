@@ -638,7 +638,7 @@ export class OperacionService implements OnDestroy {
     op.multiplicadorChofer = 1;
     op.tarifaBaseManualCliente = null;
     op.tarifaBaseManualChofer = null;
-    delete op.adExtraConcepto;
+    op.adExtra = null;
     op.valores = {
       cliente: { acompValor: 0, kmAdicional: 0, tarifaBase: 0, aCobrar: 0 },
       chofer:  { acompValor: 0, kmAdicional: 0, tarifaBase: 0, aPagar:  0 },

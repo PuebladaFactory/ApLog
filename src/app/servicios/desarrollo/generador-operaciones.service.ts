@@ -5,7 +5,7 @@ import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { ConIdType } from 'src/app/interfaces/conId';
 import { NoDisponibilidadChofer } from 'src/app/interfaces/no-disponibilidad-chofer';
-import { DatosTarifaEventual, Operacion } from 'src/app/interfaces/operacion';
+import { DatosTarifaEventual, Operacion, armarAdExtra } from 'src/app/interfaces/operacion';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { Resultado as ResultadoAccion } from 'src/app/interfaces/resultado';
 import { RefTarifaAplicada } from 'src/app/interfaces/ref-tarifa-aplicada';
@@ -15,7 +15,6 @@ import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { LimpiezaDemoService } from 'src/app/servicios/desarrollo/limpieza-demo.service';
 import { toISODateString } from 'src/app/servicios/fechas/date-range.service';
-import { OperacionFactoryService } from 'src/app/servicios/operaciones/operacion-factory.service';
 import { OperacionCreada, OperacionService } from 'src/app/servicios/operaciones/operacion.service';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
 import { ResolucionTarifaOpService } from 'src/app/servicios/tarifario/resolucion-tarifa-op.service';
@@ -155,7 +154,6 @@ export class GeneradorOperacionesService {
   private choferService = inject(ChoferService);
   private proveedorService = inject(ProveedorService);
   private operacionService = inject(OperacionService);
-  private operacionFactory = inject(OperacionFactoryService);
   private resolucionTarifa = inject(ResolucionTarifaOpService);
   private valoresTarifa = inject(ValoresTarifaService);
   private tarifario = inject(TarifarioService);
@@ -356,8 +354,8 @@ export class GeneradorOperacionesService {
   }
 
   /** Cierra una operación como el modal de cierre (ModalDetalleOpComponent):
-   *  km; adicional extra en op.valores.<lado>.adExtraValor + adExtraConcepto
-   *  (el motor nuevo lo lee de ahí); multiplicadores en 1 (vienen así del
+   *  km; adicional extra en op.adExtra (entrada que lee el motor);
+   *  multiplicadores en 1 (vienen así del
    *  alta) → ValoresTarifaService.calcularCierre → espejo a op.valores
    *  (aCobrar/aPagar, igual que el modal) → OperacionService.cerrarOperacion. */
   private async cerrar(o: OperacionPlaneada): Promise<ResultadoAccion<void>> {
@@ -365,11 +363,9 @@ export class GeneradorOperacionesService {
     const decision = o.cierre!;
 
     op.km = decision.km;
-    if (decision.adicional) {
-      op.adExtraConcepto = decision.adicional.concepto;
-      op.valores.cliente.adExtraValor = decision.adicional.valorCliente;
-      op.valores.chofer.adExtraValor = decision.adicional.valorChofer;
-    }
+    op.adExtra = decision.adicional
+      ? armarAdExtra(decision.adicional.concepto, decision.adicional.valorCliente, decision.adicional.valorChofer)
+      : null;
 
     this.valoresTarifa.calcularCierre(op);
     if (op.valoresNuevos) {
