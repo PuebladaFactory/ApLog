@@ -13,7 +13,6 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { ResumenOpLiquidadasComponent } from './modales/resumen-op-liquidadas/resumen-op-liquidadas.component';
 import { ProformaComponent } from './proforma/proforma.component';
-import { FilterPipeModule } from 'ngx-filter-pipe';
 import { LiquidacionesOpComponent } from './liquidaciones-op/liquidaciones-op.component';
 import { MigrarDatosComponent } from './migrar-datos/migrar-datos.component';
 import { DateRangeService } from 'src/app/servicios/fechas/date-range.service';
@@ -50,7 +49,6 @@ import { InformeOpAnuladosComponent } from './informe-op-anulados/informe-op-anu
     FormsModule,
     ReactiveFormsModule,
     SharedModule,
-    FilterPipeModule,
   ],
    exports:[
       MigrarDatosComponent,

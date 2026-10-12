@@ -10,7 +10,6 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 
 import { ModalVehiculoComponent } from './modal-vehiculo/modal-vehiculo.component';
-import { FilterPipeModule } from 'ngx-filter-pipe';
 import { ChoferesListadoComponent } from './choferes-listado/choferes-listado.component';
 
 
@@ -30,7 +29,6 @@ import { ChoferesListadoComponent } from './choferes-listado/choferes-listado.co
     FormsModule,
     ReactiveFormsModule,
     SharedModule,
-    FilterPipeModule,
     
   ]
 })

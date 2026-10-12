@@ -5,7 +5,6 @@ import { NuevaFacturacionRoutingModule } from './nueva-facturacion-routing.modul
 import { ControlComponent } from './control/control.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
-import { FilterPipeModule } from 'ngx-filter-pipe';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { FacturacionEmitidosComponent } from './emitidos/facturacion-emitidos.component';
 import { FacturacionRevertidosComponent } from './revertidos/facturacion-revertidos.component';
@@ -27,7 +26,6 @@ import { VincularFacturaLiqComponent } from './vincular-factura-liq/vincular-fac
     FormsModule,
     ReactiveFormsModule,
     SharedModule,
-    FilterPipeModule,
     NgbModule,
   ]
 })

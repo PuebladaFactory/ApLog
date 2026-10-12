@@ -9,7 +9,6 @@ import { SharedModule } from 'src/app/shared/shared.module';
 
 import { ProveedoresControlComponent } from './proveedores-control/proveedores-control.component';
 import { ModalContactoProveedoresComponent } from './modal-contacto-proveedores/modal-contacto-proveedores.component';
-import { FilterPipeModule } from 'ngx-filter-pipe';
 import { ProveedoresListadoComponent } from './proveedores-listado/proveedores-listado.component';
 
 
@@ -26,7 +25,6 @@ import { ProveedoresListadoComponent } from './proveedores-listado/proveedores-l
     ReactiveFormsModule,
     ProveedoresRoutingModule,
     SharedModule,
-    FilterPipeModule,
     
   ]
 })

@@ -7,7 +7,6 @@ import { ClienteAltaComponent } from './cliente-alta/cliente-alta.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { ModalContactoComponent } from './modal-contacto/modal-contacto.component';
-import { FilterPipeModule } from 'ngx-filter-pipe';
 import { ClientesListadoComponent } from './clientes-listado/clientes-listado.component';
 
 
@@ -31,7 +30,6 @@ import { ClientesListadoComponent } from './clientes-listado/clientes-listado.co
     FormsModule,
     ReactiveFormsModule,
     SharedModule,
-    FilterPipeModule,
     
   ]
 })

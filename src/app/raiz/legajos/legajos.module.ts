@@ -13,7 +13,6 @@ import { SharedModule } from 'src/app/shared/shared.module';
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
-import { FilterPipeModule } from 'ngx-filter-pipe';
 
 
 @NgModule({
@@ -32,7 +31,6 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
     FormsModule,
     ReactiveFormsModule,
     SharedModule,
-    FilterPipeModule,
     NgbModule,    
   ]
 })

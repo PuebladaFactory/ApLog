@@ -1,7 +1,8 @@
 import { NgModule } from '@angular/core';
 import { CommonModule, JsonPipe, TitleCasePipe } from '@angular/common';
-
-import { SharedRoutingModule } from './shared-routing.module';
+// RouterModule directo (antes llegaba vía SharedRoutingModule, vacío):
+// routerLink/queryParams en componentes de Shared (ej. tabla-listado).
+import { RouterModule } from '@angular/router';
 
 import { BtnAgregarComponent } from './botones/btn-agregar/btn-agregar.component';
 import { BtnEditarComponent } from './botones/btn-editar/btn-editar.component';
@@ -117,7 +118,7 @@ import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
   ],
   imports: [
     CommonModule,
-    SharedRoutingModule,
+    RouterModule,
     FormsModule,
     ReactiveFormsModule,
     NgbDropdownModule,

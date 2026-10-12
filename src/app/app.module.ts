@@ -2,7 +2,6 @@ import { LOCALE_ID, NgModule, isDevMode } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { AppComponent } from './app.component';
 
-import { RouterModule, Routes } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
@@ -16,12 +15,6 @@ import { provideStorage, getStorage } from '@angular/fire/storage';
 
 // LOGIN
 import { AuthService } from './servicios/autentificacion/auth.service';
-import {
-  AuthGuard,
-  canActivate,
-  redirectLoggedInTo,
-  redirectUnauthorizedTo,
-} from '@angular/fire/auth-guard';
 
 
 import { ForgotPasswordComponent } from './appLogin/forgot-password/forgot-password.component';
@@ -31,15 +24,10 @@ import { LogoutComponent } from './appLogin/logout/logout.component';
 
 import { PagenotfoundComponent } from './pagenotfound/pagenotfound.component';
 
-import { SharedModule } from './shared/shared.module';
-
 
 import { CargaComponent } from './carga/carga.component';
-import { CloudinaryModule } from '@cloudinary/ng';
 import { LimboComponent } from './limbo/limbo.component';
-import { FilterPipeModule } from 'ngx-filter-pipe';
 import { AppRoutingModule } from './app-routing.module';
-import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { registerLocaleData } from '@angular/common';
 import localeEs from '@angular/common/locales/es'; // Importa los datos en español
@@ -64,10 +52,6 @@ registerLocaleData(localeEs);
     AppRoutingModule,
     NgbModule,
     ReactiveFormsModule,
-    CloudinaryModule,
-    SharedModule,
-    FilterPipeModule,
-    DragDropModule,
     ServiceWorkerModule.register('ngsw-worker.js', {
         enabled: !isDevMode(),
         // Register the ServiceWorker as soon as the application is stable

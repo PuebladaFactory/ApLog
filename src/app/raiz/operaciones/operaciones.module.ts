@@ -12,7 +12,6 @@ import { SharedModule } from 'src/app/shared/shared.module';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 
-import { FilterPipeModule } from 'ngx-filter-pipe';
 
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ModalObjetosActivosComponent } from './modal-objetos-activos/modal-objetos-activos.component';
@@ -27,7 +26,6 @@ import { OperacionDetalleGeneralComponent } from './operacion-detalle-general/op
 import { OperacionTotalesComponent } from './operacion-totales/operacion-totales.component';
 import { OperacionValorLadoComponent } from './operacion-valor-lado/operacion-valor-lado.component';
 import { ModalDetalleOpComponent } from './modal-detalle-op/modal-detalle-op.component';
-import { ɵɵDir } from "@angular/cdk/scrolling";
 
 
 
@@ -53,10 +51,8 @@ import { ɵɵDir } from "@angular/cdk/scrolling";
     FormsModule,
     ReactiveFormsModule,
     SharedModule,
-    FilterPipeModule,
     NgbModule,
     DragDropModule,
-    ɵɵDir
 ],
   providers: [DateRangeService]
 })

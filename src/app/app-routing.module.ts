@@ -1,11 +1,9 @@
 import { NgModule } from '@angular/core';
-import { redirectUnauthorizedTo, redirectLoggedInTo, canActivate } from '@angular/fire/auth-guard';
 import { RouterModule, Routes } from '@angular/router';
 import { ForgotPasswordComponent } from './appLogin/forgot-password/forgot-password.component';
 import { LoginComponent } from './appLogin/login/login.component';
 import { CargaComponent } from './carga/carga.component';
 import { PagenotfoundComponent } from './pagenotfound/pagenotfound.component';
-import { RoleGuard } from './guards/role.guard';
 import { LimboComponent } from './limbo/limbo.component';
 
 
