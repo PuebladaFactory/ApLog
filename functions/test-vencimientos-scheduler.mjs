@@ -44,9 +44,14 @@ function reportar(nombre, ok, detalle) {
   }
 }
 
+// FE2 (lazy-fechas): "hoy" en Argentina (como la función), sumando días sobre
+// las partes en UTC. Antes usaba toISOString: después de las 21:00 daba mañana.
 function iso(diasDesdeHoy) {
-  const d = new Date();
-  d.setDate(d.getDate() + diasDesdeHoy);
+  const p = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Argentina/Buenos_Aires", year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(new Date());
+  const v = (t) => Number(p.find((x) => x.type === t).value);
+  const d = new Date(Date.UTC(v("year"), v("month") - 1, v("day")) + diasDesdeHoy * 86400000);
   return d.toISOString().slice(0, 10);
 }
 
@@ -71,6 +76,11 @@ async function sembrarDatosDePrueba() {
       { idCategoria: "cat2", titulo: "VTV", fechaVto: iso(10), estado: "porVencer", imagenes: [] },
       { idCategoria: "cat3", titulo: "Seguro", fechaVto: iso(90), estado: "enFecha", imagenes: [] },
       { idCategoria: "cat4", titulo: "Otro", fechaVto: null, estado: "sinVto", imagenes: [] },
+      // FE2 (regla D1): vence HOY → vigente todo el día ("porVencer"), no "vencido".
+      { idCategoria: "cat5", titulo: "VenceHoy", fechaVto: iso(0), estado: "vencido", imagenes: [] },
+      // Bordes del umbral de 45 días.
+      { idCategoria: "cat6", titulo: "En45", fechaVto: iso(45), estado: "enFecha", imagenes: [] },
+      { idCategoria: "cat7", titulo: "En46", fechaVto: iso(46), estado: "porVencer", imagenes: [] },
     ],
   });
 
@@ -114,11 +124,22 @@ async function main() {
   const estadoCat4 = legajo1a.documentacion.find((d) => d.idCategoria === "cat4").estado;
   reportar("cat4 sigue 'sinVto'", estadoCat4 === "sinVto", `estado=${estadoCat4}`);
 
+  const estadoCat5 = legajo1a.documentacion.find((d) => d.idCategoria === "cat5").estado;
+  reportar("cat5 (vence hoy) queda 'porVencer', no 'vencido' (D1)", estadoCat5 === "porVencer", `estado=${estadoCat5}`);
+
+  const estadoCat6 = legajo1a.documentacion.find((d) => d.idCategoria === "cat6").estado;
+  reportar("cat6 (faltan 45 días) queda 'porVencer'", estadoCat6 === "porVencer", `estado=${estadoCat6}`);
+
+  const estadoCat7 = legajo1a.documentacion.find((d) => d.idCategoria === "cat7").estado;
+  reportar("cat7 (faltan 46 días) queda 'enFecha'", estadoCat7 === "enFecha", `estado=${estadoCat7}`);
+
   reportar("legajo-2 (todo en fecha) no se modifica", legajo2a.documentacion[0].estado === "enFecha");
 
   reportar(
-    "vencimientos generados: exactamente cat1 (vencido) + cat2 (porVencer)",
-    vencimientosA.size === 2 &&
+    "vencimientos generados: exactamente cat1 (vencido) + cat2, cat5 y cat6 (porVencer)",
+    vencimientosA.size === 4 &&
+    vencimientosA.docs.some((d) => d.data().idCategoria === "cat5" && d.data().estado === "porVencer") &&
+    vencimientosA.docs.some((d) => d.data().idCategoria === "cat6" && d.data().estado === "porVencer") &&
     vencimientosA.docs.some((d) => d.data().idCategoria === "cat1" && d.data().estado === "vencido") &&
     vencimientosA.docs.some((d) => d.data().idCategoria === "cat2" && d.data().estado === "porVencer"),
     `size=${vencimientosA.size}`
@@ -134,7 +155,7 @@ async function main() {
 
   reportar(
     "vencimientos se reconstruye igual (mismo contenido)",
-    vencimientosB.size === 2 &&
+    vencimientosB.size === 4 &&
     vencimientosB.docs.some((d) => d.data().idCategoria === "cat1" && d.data().estado === "vencido") &&
     vencimientosB.docs.some((d) => d.data().idCategoria === "cat2" && d.data().estado === "porVencer"),
     `size=${vencimientosB.size}`

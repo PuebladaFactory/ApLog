@@ -13,18 +13,55 @@ import { logger } from 'firebase-functions';
  */
 type EstadoDocumentacion = 'enFecha' | 'porVencer' | 'vencido' | 'sinVto';
 
-function calcularEstadoDocumentacion(fechaVto: string | null): EstadoDocumentacion {
+// Frente lazy-fechas (FE2): copia mínima de src/app/shared/utils/fecha.util.ts
+// (hoyNegocio, esFechaNegocio, diasEntre). Mismo criterio: "hoy" en el huso
+// de Argentina vía Intl, y fechas de negocio operadas sobre sus partes en UTC.
+const ZONA_NEGOCIO = 'America/Argentina/Buenos_Aires';
+const RE_FECHA = /^(\d{4})-(\d{2})-(\d{2})$/;
+const MS_DIA = 86400000;
+
+function hoyNegocio(ahora: Date = new Date()): string {
+  const partes = new Intl.DateTimeFormat('en-US', {
+    timeZone: ZONA_NEGOCIO,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(ahora);
+  const valor = (tipo: string) => partes.find((p) => p.type === tipo)?.value ?? '';
+  return `${valor('year')}-${valor('month')}-${valor('day')}`;
+}
+
+/** Milisegundos UTC de una fecha 'YYYY-MM-DD' válida; null si no lo es. */
+function msFecha(fecha: string): number | null {
+  const m = RE_FECHA.exec(fecha);
+  if (!m) {
+    return null;
+  }
+  const anio = Number(m[1]);
+  const mes = Number(m[2]);
+  const dia = Number(m[3]);
+  if (mes < 1 || mes > 12 || dia < 1 || dia > new Date(Date.UTC(anio, mes, 0)).getUTCDate()) {
+    return null;
+  }
+  return Date.UTC(anio, mes - 1, dia);
+}
+
+/** Regla D1: vigente todo el día D, vencido desde D+1; "por vencer" de 0 a
+ *  45 días hasta D. Fecha inválida → 'sinVto' (igual que en el cliente). */
+function calcularEstadoDocumentacion(fechaVto: string | null, hoy: string): EstadoDocumentacion {
   if (!fechaVto) {
     return 'sinVto';
   }
-  const hoy = new Date();
-  const vto = new Date(fechaVto);
-  const MILIS_DIA = 1000 * 60 * 60 * 24;
-  const diffDias = Math.floor((vto.getTime() - hoy.getTime()) / MILIS_DIA);
+  const msVto = msFecha(fechaVto);
+  const msHoy = msFecha(hoy);
+  if (msVto === null || msHoy === null) {
+    return 'sinVto';
+  }
+  const dias = Math.round((msVto - msHoy) / MS_DIA);
 
-  if (diffDias < 0) {
+  if (dias < 0) {
     return 'vencido';
-  } else if (diffDias <= 45) {
+  } else if (dias <= 45) {
     return 'porVencer';
   } else {
     return 'enFecha';
@@ -65,6 +102,8 @@ export const verificarVencimientosDocumentacion = onSchedule(
   },
   async () => {
     const db = getFirestore();
+    const hoy = hoyNegocio();
+    let fechasInvalidas = 0;
     const legajosRef = db.collection('Vantruck/datos/legajos');
     const vencimientosRef = db.collection('Vantruck/datos/vencimientos');
 
@@ -85,7 +124,13 @@ export const verificarVencimientosDocumentacion = onSchedule(
       let cambio = false;
 
       const documentacionActualizada = legajo.documentacion.map((d) => {
-        const estadoRecalculado = calcularEstadoDocumentacion(d.fechaVto);
+        if (d.fechaVto && msFecha(d.fechaVto) === null) {
+          fechasInvalidas++;
+          logger.warn(
+            `Legajo ${doc.id}: fechaVto inválida '${d.fechaVto}' (${d.titulo}); se toma como sin vencimiento.`,
+          );
+        }
+        const estadoRecalculado = calcularEstadoDocumentacion(d.fechaVto, hoy);
         if (estadoRecalculado !== d.estado) {
           cambio = true;
         }
@@ -115,8 +160,9 @@ export const verificarVencimientosDocumentacion = onSchedule(
     }
 
     logger.info(
-      `Verificación de vencimientos: ${legajosSnap.size} legajos revisados, ` +
-      `${legajosActualizados} actualizados, ${vencimientosGenerados} vencimientos vigentes.`
+      `Verificación de vencimientos (hoy ${hoy}): ${legajosSnap.size} legajos revisados, ` +
+      `${legajosActualizados} actualizados, ${vencimientosGenerados} vencimientos vigentes` +
+      (fechasInvalidas > 0 ? `, ${fechasInvalidas} fechas inválidas.` : '.'),
     );
   }
 );

@@ -1,3 +1,5 @@
+import { FechaNegocio, diasEntre, esFechaNegocio, hoyNegocio } from 'src/app/shared/utils/fecha.util';
+
 export type EstadoDocumentacion = 'enFecha' | 'porVencer' | 'vencido' | 'sinVto';
 
 export interface CategoriaDocumentacion {
@@ -52,21 +54,28 @@ export interface Vencimiento {
  * verificación periódica) — mantener ambas copias sincronizadas ante
  * cualquier cambio en este cálculo.
  *
- * @param fechaVto ISO yyyy-MM-dd, o null si el documento no tiene vencimiento
- * @returns 'sinVto' si fechaVto es null; si no, 'vencido' | 'porVencer' (<=45 días) | 'enFecha'
+ * Regla (frente lazy-fechas, FE2 / decisión D1): un documento con fechaVto = D
+ * está vigente TODO el día D y vencido desde D+1. "Por vencer": faltan de 0 a
+ * 45 días de calendario hasta D (inclusive). "Hoy" es el día de Argentina
+ * (fecha.util), igual en cualquier navegador y en la Cloud Function. Se opera
+ * sobre los strings 'YYYY-MM-DD', sin construir un Date con la fecha.
+ *
+ * @param fechaVto 'YYYY-MM-DD', o null si el documento no tiene vencimiento
+ * @param hoy 'YYYY-MM-DD' de referencia; por defecto, hoy en Argentina (se pasa en pruebas)
+ * @returns 'sinVto' si fechaVto es null o no es una fecha válida; si no,
+ *   'vencido' | 'porVencer' (0 a 45 días) | 'enFecha'
  */
-export function calcularEstadoDocumentacion(fechaVto: string | null): EstadoDocumentacion {
-  if (!fechaVto) {
+export function calcularEstadoDocumentacion(
+  fechaVto: string | null,
+  hoy: FechaNegocio = hoyNegocio(),
+): EstadoDocumentacion {
+  if (!fechaVto || !esFechaNegocio(fechaVto)) {
     return 'sinVto';
   }
-  const hoy = new Date();
-  const vto = new Date(fechaVto);
-  const MILIS_DIA = 1000 * 60 * 60 * 24;
-  const diffDias = Math.floor((vto.getTime() - hoy.getTime()) / MILIS_DIA);
-
-  if (diffDias < 0) {
+  const dias = diasEntre(hoy, fechaVto);
+  if (dias < 0) {
     return 'vencido';
-  } else if (diffDias <= 45) {
+  } else if (dias <= 45) {
     return 'porVencer';
   } else {
     return 'enFecha';
