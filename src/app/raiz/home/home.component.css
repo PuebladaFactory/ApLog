@@ -6,6 +6,13 @@
 /* FIX sidebar: antes `body`; matcheaba el <body id="content"> anidado del
    template, que pasó a <main id="content">. */
 #content {
+    /* Lo que antes aplicaba Bootstrap al <body> anidado: corta lo que hereda
+       del <h1> sin cerrar de index.html (24 px / 500). */
+    font-size: var(--bs-body-font-size);
+    font-weight: var(--bs-body-font-weight);
+    line-height: var(--bs-body-line-height);
+    color: var(--bs-body-color);
+    text-align: var(--bs-body-text-align);
     font-family: 'Poppins', sans-serif;
     /* background-color: #a3a3a3; */
     background-color: #eaf4f8f6;
