@@ -11,8 +11,9 @@ import { MovimientoFinService } from 'src/app/servicios/finanzas-nueva/movimient
 import { InformeLiqFactoryService } from 'src/app/servicios/informes-liq/informe-liq-factory.service';
 import { fechaBaseAntiguedad } from 'src/app/shared/utils/cuentas-finanzas.util';
 import { fechaComprobanteLegible } from 'src/app/shared/utils/factura-electronica.util';
+import { diasEntreONulo } from 'src/app/shared/utils/fecha.util';
 import {
-  diasEntre, distribuirFifo, esCero, normalizarValoresFinancieros, redondear2, TOLERANCIA_IMPORTE,
+  distribuirFifo, esCero, normalizarValoresFinancieros, redondear2, TOLERANCIA_IMPORTE,
 } from 'src/app/shared/utils/finanzas.util';
 import {
   ETIQUETA_CONCEPTO, ETIQUETA_TIPO_MOVIMIENTO, ImputacionSolicitada, normalizarSolicitudes, validarImputacionSaldo,
@@ -181,8 +182,7 @@ export class ImputarSaldoComponent implements OnInit {
   private armarFila(liq: ConId<InformeLiqNuevo>): FilaComprobante {
     const vf = normalizarValoresFinancieros(liq.valoresFinancieros, liq.valores.total);
     const base = fechaBaseAntiguedad(liq);
-    let dias: number | null = null;
-    try { dias = diasEntre(base, this.hoy); } catch { dias = null; }
+    const dias = diasEntreONulo(base, this.hoy);
     return {
       liq,
       periodo: this.factory.textoPeriodo(liq.periodo),

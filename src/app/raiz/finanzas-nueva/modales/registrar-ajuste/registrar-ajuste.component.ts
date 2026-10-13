@@ -9,8 +9,9 @@ import { MovimientoFinService } from 'src/app/servicios/finanzas-nueva/movimient
 import { InformeLiqFactoryService } from 'src/app/servicios/informes-liq/informe-liq-factory.service';
 import { fechaBaseAntiguedad } from 'src/app/shared/utils/cuentas-finanzas.util';
 import { fechaComprobanteLegible } from 'src/app/shared/utils/factura-electronica.util';
+import { diasEntreONulo } from 'src/app/shared/utils/fecha.util';
 import {
-  TOLERANCIA_IMPORTE, diasEntre, normalizarValoresFinancieros, redondear2,
+  TOLERANCIA_IMPORTE, normalizarValoresFinancieros, redondear2,
 } from 'src/app/shared/utils/finanzas.util';
 import {
   AYUDA_MOTIVO_AJUSTE, DatosAjusteFin, ETIQUETA_MOTIVO_AJUSTE, MotivoAjusteElegible, UMBRAL_CERRAR_DIFERENCIA,
@@ -185,8 +186,7 @@ export class RegistrarAjusteComponent implements OnInit {
   private armarFila(liq: ConId<InformeLiqNuevo>): FilaAjuste {
     const vf = normalizarValoresFinancieros(liq.valoresFinancieros, liq.valores.total);
     const base = fechaBaseAntiguedad(liq);
-    let dias: number | null = null;
-    try { dias = diasEntre(base, this.hoy); } catch { dias = null; }
+    const dias = diasEntreONulo(base, this.hoy);
     return {
       liq,
       periodo: this.factory.textoPeriodo(liq.periodo),

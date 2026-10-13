@@ -111,11 +111,6 @@ export function distribuirFifo(monto: number, saldos: number[]): number[] {
 // Fechas y antigüedad
 // ---------------------------------------------------------------------------
 
-// FE1 (frente lazy-fechas): el cálculo de días entre fechas vive en
-// fecha.util. Este re-export es temporal para no tocar a quienes lo importan
-// desde acá; FE5 los apunta a fecha.util y lo saca.
-export { diasEntre } from 'src/app/shared/utils/fecha.util';
-
 export type TramoAntiguedad = '0-30' | '31-60' | '61-90' | '90+';
 
 export const TRAMOS_ANTIGUEDAD: readonly TramoAntiguedad[] = ['0-30', '31-60', '61-90', '90+'];

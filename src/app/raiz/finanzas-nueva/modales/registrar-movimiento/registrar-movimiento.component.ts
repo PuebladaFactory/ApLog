@@ -16,8 +16,9 @@ import { InformeLiqFactoryService } from 'src/app/servicios/informes-liq/informe
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
 import { CuentaEntidadFin, LadoCuenta, fechaBaseAntiguedad } from 'src/app/shared/utils/cuentas-finanzas.util';
 import { fechaComprobanteLegible } from 'src/app/shared/utils/factura-electronica.util';
+import { diasEntreONulo } from 'src/app/shared/utils/fecha.util';
 import {
-  diasEntre, distribuirFifo, esCero, normalizarValoresFinancieros, redondear2, TOLERANCIA_IMPORTE,
+  distribuirFifo, esCero, normalizarValoresFinancieros, redondear2, TOLERANCIA_IMPORTE,
 } from 'src/app/shared/utils/finanzas.util';
 import {
   DatosMovimientoFin, ETIQUETA_MEDIO, normalizarDatosMovimiento, tipoMovimientoPara, validarDatosMovimiento,
@@ -260,8 +261,7 @@ export class RegistrarMovimientoComponent implements OnInit {
   private armarFila(liq: ConId<InformeLiqNuevo>): FilaComprobante {
     const vf = normalizarValoresFinancieros(liq.valoresFinancieros, liq.valores.total);
     const base = fechaBaseAntiguedad(liq);
-    let dias: number | null = null;
-    try { dias = diasEntre(base, this.hoy); } catch { dias = null; }
+    const dias = diasEntreONulo(base, this.hoy);
     return {
       liq,
       periodo: this.factory.textoPeriodo(liq.periodo),

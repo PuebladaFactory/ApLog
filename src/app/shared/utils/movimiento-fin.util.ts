@@ -4,8 +4,9 @@ import {
   MedioMovimientoFin, MotivoAjusteFin, MovimientoFin, OrigenImputacionFin, TipoDocumentoImputable, TipoEntidadFin,
   TipoMedioFin, TipoMovimientoFin,
 } from 'src/app/interfaces/movimiento-fin';
+import { diasEntre, esFechaNegocio } from 'src/app/shared/utils/fecha.util';
 import {
-  AcumuladoFinanciero, diasEntre, esCero, importesIguales, redondear2, totalMedios, TOLERANCIA_IMPORTE,
+  AcumuladoFinanciero, esCero, importesIguales, redondear2, totalMedios, TOLERANCIA_IMPORTE,
 } from 'src/app/shared/utils/finanzas.util';
 
 /** Armado y validación PUROS de movimientos de Finanzas (sin Firestore ni
@@ -38,8 +39,6 @@ export const ETIQUETA_MEDIO: Readonly<Record<TipoMedioFin, string>> = {
   retencion: 'Retención',
   otro: 'Otro',
 };
-
-const FORMATO_FECHA = /^\d{4}-\d{2}-\d{2}$/;
 
 /** Cliente → cobro (plata que entra); chofer/proveedor → pago. */
 export function tipoMovimientoPara(tipoEntidad: TipoEntidadFin): 'cobro' | 'pago' {
@@ -91,7 +90,7 @@ export function validarDatosMovimiento(d: DatosMovimientoFin, hoy: string): stri
   }
   if (!d.entidad.id) return 'Falta la entidad.';
   if (d.concepto === 'prestamo' && d.tipo !== 'pago') return 'Un préstamo solo se registra como pago.';
-  if (!FORMATO_FECHA.test(d.fecha)) return 'Fecha inválida.';
+  if (!esFechaNegocio(d.fecha)) return 'Fecha inválida.';
   if (d.fecha > hoy) return 'La fecha no puede ser futura (un cheque diferido lleva su fecha de cobro en el medio).';
 
   if (d.medios.length === 0) return 'Agregá al menos un medio de cobro/pago.';
@@ -101,7 +100,7 @@ export function validarDatosMovimiento(d: DatosMovimientoFin, hoy: string): stri
       if (!m.retencion) return 'A la retención le falta el impuesto.';
       if (!m.retencion.certificado) return 'A la retención le falta el número de certificado.';
     }
-    if (m.fechaCobro !== null && !FORMATO_FECHA.test(m.fechaCobro)) return 'Fecha de cobro del cheque inválida.';
+    if (m.fechaCobro !== null && !esFechaNegocio(m.fechaCobro)) return 'Fecha de cobro del cheque inválida.';
   }
 
   const ids = d.imputaciones.map(i => i.idInfLiq);
@@ -268,7 +267,7 @@ export function rangoInicialMovimientos(hoy: string): { desde: string; hasta: st
 
 /** Mensaje de error del rango, o null si es válido. */
 export function validarRangoMovimientos(desde: string, hasta: string): string | null {
-  if (!FORMATO_FECHA.test(desde ?? '') || !FORMATO_FECHA.test(hasta ?? '')) return 'Elegí las dos fechas del rango.';
+  if (!esFechaNegocio(desde) || !esFechaNegocio(hasta)) return 'Elegí las dos fechas del rango.';
   if (desde > hasta) return 'La fecha "desde" es posterior a la fecha "hasta".';
   if (diasEntre(desde, hasta) > MAX_DIAS_RANGO_MOVIMIENTOS) {
     return `El rango no puede superar ${MAX_DIAS_RANGO_MOVIMIENTOS} días.`;
@@ -512,7 +511,7 @@ export function validarDatosAjuste(d: DatosAjusteFin, hoy: string): string | nul
       ? 'Incobrable es solo para clientes (lo que nos deben).'
       : 'Motivo de ajuste inválido.';
   }
-  if (!FORMATO_FECHA.test(d.fecha)) return 'Fecha inválida.';
+  if (!esFechaNegocio(d.fecha)) return 'Fecha inválida.';
   if (d.fecha > hoy) return 'La fecha no puede ser futura.';
   if (d.imputaciones.length === 0) return 'Elegí al menos un comprobante a ajustar.';
   const ids = d.imputaciones.map(i => i.idInfLiq);
@@ -646,7 +645,7 @@ function validarSaldoDisponible(mov: MovimientoConSaldo, importe: number, fecha:
   if (mov.tipo === 'ajuste') return 'Un ajuste no tiene saldo sin imputar.';
   if (esDevolucion(mov)) return `${mov.numero} es una devolución: no tiene saldo propio.`;
   if (!(mov.sinImputar > 0)) return `El movimiento ${mov.numero} no tiene saldo sin imputar.`;
-  if (!FORMATO_FECHA.test(fecha)) return 'Fecha inválida.';
+  if (!esFechaNegocio(fecha)) return 'Fecha inválida.';
   if (fecha > hoy) return 'La fecha no puede ser futura.';
   if (fecha < mov.fecha) return `La fecha no puede ser anterior a la del movimiento ${mov.numero}.`;
   if (!(importe > 0)) return 'El importe tiene que ser mayor a cero.';
@@ -684,7 +683,7 @@ export function validarDevolucion(mov: MovimientoConSaldo, d: DatosDevolucion, h
   const error = validarSaldoDisponible(mov, d.medio.importe, d.fecha, hoy);
   if (error) return error;
   if (d.medio.tipo === 'retencion') return 'Una devolución no lleva retenciones.';
-  if (d.medio.fechaCobro !== null && !FORMATO_FECHA.test(d.medio.fechaCobro)) return 'Fecha de cobro del cheque inválida.';
+  if (d.medio.fechaCobro !== null && !esFechaNegocio(d.medio.fechaCobro)) return 'Fecha de cobro del cheque inválida.';
   return null;
 }
 

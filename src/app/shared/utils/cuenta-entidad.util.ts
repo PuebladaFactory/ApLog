@@ -2,8 +2,9 @@ import { EstadoFinancieroLiq, InformeLiqNuevo } from 'src/app/interfaces/informe
 import { MovimientoFin, TipoEntidadFin } from 'src/app/interfaces/movimiento-fin';
 import { fechaBaseAntiguedad } from 'src/app/shared/utils/cuentas-finanzas.util';
 import { esDevolucion, esSobreSaldo, movimientoOrigenDe } from 'src/app/shared/utils/movimiento-fin.util';
+import { diasEntreONulo } from 'src/app/shared/utils/fecha.util';
 import {
-  TRAMOS_ANTIGUEDAD, TramoAntiguedad, diasEntre, esCero, normalizarValoresFinancieros, redondear2, tramoAntiguedad,
+  TRAMOS_ANTIGUEDAD, TramoAntiguedad, esCero, normalizarValoresFinancieros, redondear2, tramoAntiguedad,
 } from 'src/app/shared/utils/finanzas.util';
 
 /** Cuenta de UNA entidad (Frente Finanzas, F5) — utils PUROS sobre todos sus
@@ -44,15 +45,6 @@ export interface FilaComprobanteCuenta<L extends InformeLiqNuevo = InformeLiqNue
   estadoFinanciero: EstadoFinancieroLiq;
 }
 
-function diasDesde(fecha: string | null | undefined, hoy: string): number | null {
-  if (!fecha) return null;
-  try {
-    return diasEntre(fecha, hoy);
-  } catch {
-    return null;
-  }
-}
-
 /** Filas de Comprobantes: todos los InformeLiq de la entidad salvo los
  *  borradores (emitidos, facturados, revertidos, anulados). Los revertidos y
  *  anulados no están abiertos. Orden: emisión más reciente primero. */
@@ -73,7 +65,7 @@ export function armarComprobantesCuenta<L extends InformeLiqNuevo>(informes: L[]
         cobrado: vf.totalCobrado,
         ajustado: vf.totalAjustado,
         saldo: vigente ? vf.saldo : 0,
-        dias: liq.estado === 'facturado' && !esCero(vf.saldo) ? diasDesde(fechaBaseAntiguedad(liq), hoy) : null,
+        dias: liq.estado === 'facturado' && !esCero(vf.saldo) ? diasEntreONulo(fechaBaseAntiguedad(liq), hoy) : null,
         abierto,
         estadoFinanciero: liq.estadoFinanciero,
       };
@@ -105,7 +97,7 @@ export function resumirCuentaEntidad(
     }
     r.saldoFacturado = redondear2(r.saldoFacturado + saldo);
     r.cantidadFacturados++;
-    const dias = diasDesde(fechaBaseAntiguedad(liq), hoy);
+    const dias = diasEntreONulo(fechaBaseAntiguedad(liq), hoy);
     const tramo = tramoAntiguedad(dias ?? 0);
     r.tramos[tramo] = redondear2(r.tramos[tramo] + saldo);
     if (dias !== null) r.diasMasAntiguo = r.diasMasAntiguo === null ? dias : Math.max(r.diasMasAntiguo, dias);

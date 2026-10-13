@@ -28,6 +28,7 @@ import {
   solicitudesDe, totalCompensacionesDe,
 } from 'src/app/shared/utils/compensacion.util';
 import { estadoFinancieroDe, redondear2 } from 'src/app/shared/utils/finanzas.util';
+import { esFechaNegocio } from 'src/app/shared/utils/fecha.util';
 import { ResultadoEdicionInformeOp } from 'src/app/shared/modales/informe-op-editor/informe-op-editor.component';
 import { InformeLiqFactoryService } from './informe-liq-factory.service';
 
@@ -950,10 +951,7 @@ export class InformeLiqService {
   private validarFechaEmision(d: DatosLiquidacion, hoy: string): string | null {
     if (d.fechaEmision === undefined) return null;
     const f = d.fechaEmision;
-    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(f ?? '');
-    const valida = !!m &&
-      new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).toISOString().slice(0, 10) === f;
-    if (!valida) return `Fecha de emisión inválida: '${f}' (se espera YYYY-MM-DD).`;
+    if (!esFechaNegocio(f)) return `Fecha de emisión inválida: '${f}' (se espera YYYY-MM-DD).`;
     const fin = this.factory.ventanaPeriodo(d.periodo).hasta;
     if (f < fin) return `La fecha de emisión (${f}) no puede ser anterior al fin del período (${fin}).`;
     if (f > hoy) return `La fecha de emisión (${f}) no puede ser posterior a hoy (${hoy}).`;

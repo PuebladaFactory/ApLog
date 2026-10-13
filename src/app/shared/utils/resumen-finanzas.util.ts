@@ -3,7 +3,8 @@ import { MovimientoFin } from 'src/app/interfaces/movimiento-fin';
 import { CuentaEntidadFin, ladoDe } from 'src/app/shared/utils/cuentas-finanzas.util';
 import { esDevolucion } from 'src/app/shared/utils/movimiento-fin.util';
 import { nombreEntidadRef } from 'src/app/shared/utils/entidad-informe.util';
-import { diasEntre, esCero, normalizarValoresFinancieros, redondear2 } from 'src/app/shared/utils/finanzas.util';
+import { diasEntreONulo } from 'src/app/shared/utils/fecha.util';
+import { esCero, normalizarValoresFinancieros, redondear2 } from 'src/app/shared/utils/finanzas.util';
 
 /** Resumen de Finanzas (F6b) — utils PUROS. Flujo de un mes, evolución de
  *  los últimos meses y alertas. Calculado al consultar (sin agregados).
@@ -280,7 +281,7 @@ export function armarAlertas(
   const anticipos = new Map<string, ItemAlerta>();
   for (const m of movimientos) {
     if (m.estado !== 'vigente' || m.tipo !== 'pago' || m.concepto === 'normal' || esCero(m.sinImputar)) continue;
-    const dias = diasSeguros(m.fecha, hoy);
+    const dias = diasEntreONulo(m.fecha, hoy);
     if (dias === null || dias <= DIAS_ALERTA_ANTICIPO) continue;
     const clave = `${m.entidad.tipo}_${m.entidad.id}`;
     const item = anticipos.get(clave) ?? {
@@ -298,7 +299,7 @@ export function armarAlertas(
   const sinFacturar = new Map<string, ItemAlerta>();
   for (const liq of informes) {
     if (liq.estado !== 'emitido') continue;
-    const dias = diasSeguros(liq.fechaEmision ?? liq.fechaCreacion, hoy);
+    const dias = diasEntreONulo(liq.fechaEmision ?? liq.fechaCreacion, hoy);
     if (dias === null || dias <= DIAS_ALERTA_SIN_FACTURAR) continue;
     const saldo = normalizarValoresFinancieros(liq.valoresFinancieros, liq.valores.total).saldo;
     const clave = `${liq.tipo}_${liq.entidad.id}`;
@@ -321,13 +322,4 @@ export function armarAlertas(
 /** "$ 1.234,50" (es-AR) — para textos armados en el util. */
 function pesos(v: number): string {
   return `$ ${v.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
-function diasSeguros(fecha: string | null | undefined, hoy: string): number | null {
-  if (!fecha) return null;
-  try {
-    return diasEntre(fecha, hoy);
-  } catch {
-    return null;
-  }
 }

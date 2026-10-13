@@ -1,8 +1,9 @@
 import { InformeLiqNuevo } from 'src/app/interfaces/informe-liq-nuevo';
 import { MovimientoFin, TipoEntidadFin } from 'src/app/interfaces/movimiento-fin';
 import { nombreEntidadRef } from 'src/app/shared/utils/entidad-informe.util';
+import { diasEntreONulo } from 'src/app/shared/utils/fecha.util';
 import {
-  TRAMOS_ANTIGUEDAD, TramoAntiguedad, diasEntre, esCero, normalizarValoresFinancieros, redondear2, tramoAntiguedad,
+  TRAMOS_ANTIGUEDAD, TramoAntiguedad, esCero, normalizarValoresFinancieros, redondear2, tramoAntiguedad,
 } from 'src/app/shared/utils/finanzas.util';
 
 /** Cuentas por entidad del Frente Finanzas — cuenta corriente CALCULADA al
@@ -83,17 +84,6 @@ export function fechaBaseAntiguedad(liq: InformeLiqNuevo): string {
   return liq.factura?.fecha ?? liq.fechaEmision ?? liq.fechaCreacion;
 }
 
-/** Días desde `fecha` hasta `hoy`; null si la fecha no tiene formato
- *  'YYYY-MM-DD' (no corta el armado de toda la tabla por un dato roto). */
-function diasDesde(fecha: string | null | undefined, hoy: string): number | null {
-  if (!fecha) return null;
-  try {
-    return diasEntre(fecha, hoy);
-  } catch {
-    return null;
-  }
-}
-
 /** Arma una fila por entidad a partir de:
  *  - `informes`: InformeLiq 'emitido' (→ sinFacturar) y 'facturado' con
  *    saldo (→ saldoFacturado). Los de otros estados o con saldo 0 se
@@ -134,7 +124,7 @@ export function armarCuentas(
     if (liq.estado === 'facturado') {
       c.saldoFacturado = redondear2(c.saldoFacturado + saldo);
       c.cantidadFacturados++;
-      const dias = diasDesde(fechaBaseAntiguedad(liq), hoy);
+      const dias = diasEntreONulo(fechaBaseAntiguedad(liq), hoy);
       const tramo = tramoAntiguedad(dias ?? 0);   // fecha rota → 0-30 (como resumirCuentaEntidad)
       c.tramos[tramo] = redondear2(c.tramos[tramo] + saldo);
       if (dias !== null) {

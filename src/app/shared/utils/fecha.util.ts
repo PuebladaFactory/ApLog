@@ -93,6 +93,17 @@ export function diasEntre(desde: FechaNegocio, hasta: FechaNegocio): number {
   return Math.round((msB - msA) / MS_DIA);
 }
 
+/** Como diasEntre, pero devuelve null (sin lanzar) si falta alguna de las
+ *  dos fechas o no es válida. Para tablas y alertas: un dato roto no corta
+ *  el armado de toda la lista (FE5). */
+export function diasEntreONulo(
+  desde: string | null | undefined,
+  hasta: string | null | undefined,
+): number | null {
+  if (!esFechaNegocio(desde) || !esFechaNegocio(hasta)) return null;
+  return diasEntre(desde, hasta);
+}
+
 /** 'YYYY-MM-DD' → 'DD/MM/AAAA', sin pasar por Date. Vacío o nulo → `vacio`.
  *  Cualquier otro string se devuelve tal cual (no se esconde el dato). */
 export function fechaLegible(f: string | null | undefined, vacio: string = '—'): string {
