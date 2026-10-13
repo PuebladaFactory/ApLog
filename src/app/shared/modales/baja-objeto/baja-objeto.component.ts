@@ -6,6 +6,7 @@ import { Operacion } from 'src/app/interfaces/operacion';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
+import { hoyNegocio } from 'src/app/shared/utils/fecha.util';
 
 @Component({
     selector: 'app-modal-baja',
@@ -21,7 +22,7 @@ export class BajaObjetoComponent implements OnInit {
   cliente!: Cliente;
   chofer!: Chofer;
   proveedor!: Proveedor;
-  fecha = new Date().toISOString().split('T')[0];;
+  fecha = hoyNegocio(); // FE4: hoy de Argentina (antes, desde las 21:00 mostraba mañana)
   motivoBaja: string = "";
   factura!: any;
   id:number = 0;

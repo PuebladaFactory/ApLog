@@ -6,6 +6,7 @@ import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import Swal from 'sweetalert2';
 
 import { ModalObjetosActivosComponent } from 'src/app/raiz/operaciones/modal-objetos-activos/modal-objetos-activos.component';
+import { sumarDias } from 'src/app/shared/utils/fecha.util';
 
 import { Asignacion, AsignacionItem, AsignacionRef, EstadoAsignacion, SujetoAsignacion } from 'src/app/interfaces/asignacion';
 import { Categoria, Vehiculo, Chofer } from 'src/app/interfaces/chofer';
@@ -201,9 +202,9 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
 
   cambiarDia(direccion: number): void {
     if (!this.fechaSeleccionada) return;
-    const d = new Date(this.fechaSeleccionada);
-    d.setDate(d.getDate() + direccion);
-    this.fechaSeleccionada = d.toISOString().split('T')[0];
+    // FE4 (lazy-fechas): suma sobre el string 'YYYY-MM-DD', sin depender del
+    // huso (antes se compensaban dos corrimientos UTC: daba bien, pero frágil).
+    this.fechaSeleccionada = sumarDias(this.fechaSeleccionada, direccion);
     this.onFechaSeleccionadaChange();
   }
 

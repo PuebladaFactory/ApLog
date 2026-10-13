@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { hoyNegocio, sumarDias } from 'src/app/shared/utils/fecha.util';
 import { DocumentData, QueryDocumentSnapshot } from '@angular/fire/firestore';
 import Swal from 'sweetalert2';
 import { ConId } from 'src/app/interfaces/conId';
@@ -63,11 +64,11 @@ export class RegistroLogComponent implements OnInit {
 
   /** Default: última semana. */
   private calcularRangoDefault(): void {
-    const hoy = new Date();
-    const haceUnaSemana = new Date(hoy);
-    haceUnaSemana.setDate(hoy.getDate() - 7);
-    this.fechaHasta = hoy.toISOString().split('T')[0];
-    this.fechaDesde = haceUnaSemana.toISOString().split('T')[0];
+    // FE4 (lazy-fechas): hoy de Argentina. Con toISOString, desde las 21:00
+    // "hasta" quedaba en mañana y "desde" perdía un día.
+    const hoy = hoyNegocio();
+    this.fechaHasta = hoy;
+    this.fechaDesde = sumarDias(hoy, -7);
   }
 
   async buscar(): Promise<void> {

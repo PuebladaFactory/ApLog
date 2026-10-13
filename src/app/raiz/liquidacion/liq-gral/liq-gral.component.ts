@@ -28,9 +28,6 @@ export class LiqGralComponent implements OnInit {
     fechaHasta: 0,
   }; */
   $facturasOpCliente: any;
-  date:any = new Date();
-  primerDia: any = new Date(this.date.getFullYear(), this.date.getMonth() , 1).toISOString().split('T')[0];
-  ultimoDia:any = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0).toISOString().split('T')[0];  
   //datosTabla: any[] = [];
   //mostrarTabla: boolean[] = [];
   //tablaDetalle: any[] = [];

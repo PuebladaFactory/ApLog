@@ -119,3 +119,14 @@ export function instanteLegible(iso: string | null | undefined, conHora: boolean
   const fecha = `${v('day')}/${v('month')}/${v('year')}`;
   return conHora ? `${fecha} ${v('hour')}:${v('minute')}` : fecha;
 }
+
+/** Año de una fecha que puede venir como 'YYYY-MM-DD…' (se toma del string,
+ *  sin pasar por Date) o como Date (año local). Cualquier otra cosa → null.
+ *  Para datos viejos donde `fecha` es `Date | string` (FE4). */
+export function anioDe(fecha: string | Date | null | undefined): number | null {
+  if (fecha instanceof Date) {
+    return isNaN(fecha.getTime()) ? null : fecha.getFullYear();
+  }
+  const m = /^(\d{4})-\d{2}-\d{2}/.exec(fecha ?? '');
+  return m ? Number(m[1]) : null;
+}

@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { hoyNegocio, sumarDias } from 'src/app/shared/utils/fecha.util';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DocumentData, QueryDocumentSnapshot } from '@angular/fire/firestore';
 import Swal from 'sweetalert2';
@@ -69,14 +70,14 @@ export class PapeleraComponent implements OnInit {
     }
   }
 
-  /** Default: último mes — rango más amplio que Registro Log porque una baja
-   *  suele consultarse bastante después del hecho. */
+  /** Default: últimos 30 días — rango más amplio que Registro Log porque una
+   *  baja suele consultarse bastante después del hecho. FE4 (lazy-fechas): hoy
+   *  de Argentina y resta en días (antes, toISOString corría el rango desde las
+   *  21:00 y setMonth desbordaba los días 31). */
   private calcularRangoDefault(): void {
-    const hoy = new Date();
-    const haceUnMes = new Date(hoy);
-    haceUnMes.setMonth(hoy.getMonth() - 1);
-    this.fechaHasta = hoy.toISOString().split('T')[0];
-    this.fechaDesde = haceUnMes.toISOString().split('T')[0];
+    const hoy = hoyNegocio();
+    this.fechaHasta = hoy;
+    this.fechaDesde = sumarDias(hoy, -30);
   }
 
   async buscar(): Promise<void> {

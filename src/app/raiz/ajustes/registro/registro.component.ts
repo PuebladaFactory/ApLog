@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { NgbCalendar, NgbDate, NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
 import { distinctUntilChanged, Subject, takeUntil } from 'rxjs';
 import { LogEntry } from 'src/app/interfaces/log-entry';
+import { fechaNegocioDe, hoyNegocio, sumarDias } from 'src/app/shared/utils/fecha.util';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
@@ -68,8 +69,12 @@ export class RegistroComponent implements OnInit {
   }
 
   consultarRegistro(){
-    let desde = new Date(this.fechasConsulta.fechaDesde).getTime();
-    let hasta = new Date(this.fechasConsulta.fechaHasta).getTime();
+    // FE4 (lazy-fechas): los logs viejos guardan `timestamp` en ms. El rango va
+    // de las 00:00 (hora local) de "desde" a las 00:00 del día siguiente a
+    // "hasta", así incluye completo el último día. Antes se parseaba el string
+    // solo-fecha, que da las 00:00 UTC (21:00 del día anterior en Argentina).
+    let desde = new Date(this.fechasConsulta.fechaDesde + 'T00:00:00').getTime();
+    let hasta = new Date(sumarDias(this.fechasConsulta.fechaHasta, 1) + 'T00:00:00').getTime();
     this.dbFirebase.getAllColectionRangeLimit<LogEntry>('logs', desde, hasta, this.limite)
     .pipe(
       takeUntil(this.destroy$),
@@ -87,13 +92,11 @@ export class RegistroComponent implements OnInit {
   }
 
   calcularDiaActual() {
-    const today = new Date();
-    this.fechasConsulta.fechaDesde = today.toISOString().split('T')[0];
-    const tomorrow = new Date(today);
-    // Incrementar un día al objeto "tomorrow"
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    this.fechasConsulta.fechaHasta = tomorrow.toISOString().split('T')[0];
+    // FE4: hoy de Argentina. "hasta" es hoy: la consulta ya incluye el día
+    // completo (antes se ponía mañana para compensar).
+    const hoy = hoyNegocio();
+    this.fechasConsulta.fechaDesde = hoy;
+    this.fechasConsulta.fechaHasta = hoy;
     
     this.actualizarFechasString();
     //this.consultarRegistro()
@@ -136,9 +139,9 @@ export class RegistroComponent implements OnInit {
     console.log("this.fromDate", this.fromDate);
 
     
-    this.fechasConsulta.fechaDesde = new Date(this.fromDate.year, this.fromDate.month - 1, this.fromDate.day).toISOString().split('T')[0];
+    this.fechasConsulta.fechaDesde = fechaNegocioDe(new Date(this.fromDate.year, this.fromDate.month - 1, this.fromDate.day));
     if(this.toDate !== null) {
-      this.fechasConsulta.fechaHasta = new Date(this.toDate.year, this.toDate.month - 1, this.toDate.day).toISOString().split('T')[0];
+      this.fechasConsulta.fechaHasta = fechaNegocioDe(new Date(this.toDate.year, this.toDate.month - 1, this.toDate.day));
     }
     console.log("this.fechasConsulta", this.fechasConsulta);
     

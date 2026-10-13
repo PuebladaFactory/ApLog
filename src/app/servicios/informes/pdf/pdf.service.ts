@@ -10,6 +10,7 @@ import autoTable from "jspdf-autotable";
 import * as pdfMake from "pdfmake/build/pdfmake";
 import * as pdfFonts from "pdfmake/build/vfs_fonts";
 import { InformeLiq } from "src/app/interfaces/informe-liq";
+import { anioDe } from "src/app/shared/utils/fecha.util";
 
 (pdfMake as any).vfs = (pdfFonts as any).vfs;
 
@@ -73,9 +74,10 @@ export class PdfService {
     // Subtítulo
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
-    const fechaFactura = new Date(informeLiq.fecha);
     const periodo = informeLiq.periodo;
-    const anio = fechaFactura.getFullYear();
+    // FE4 (lazy-fechas): año tomado del string 'YYYY-MM-DD' (antes, el 1/1
+    // daba el año anterior por el corrimiento UTC).
+    const anio = anioDe(informeLiq.fecha) ?? '';
     doc.text(
       `Año: ${anio}  Mes: ${informeLiq.mes}  Periodo Liquidado: ${periodo}`,
       10,

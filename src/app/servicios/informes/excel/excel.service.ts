@@ -11,6 +11,7 @@ import { StorageService } from "../../storage/storage.service";
 import { ConId } from "src/app/interfaces/conId";
 
 import { InformeLiq } from "src/app/interfaces/informe-liq";
+import { anioDe } from "src/app/shared/utils/fecha.util";
 
 @Injectable({
   providedIn: "root",
@@ -84,7 +85,7 @@ export class ExcelService {
     // Subtítulo
     worksheet.mergeCells("A6:F6");
     const subTitleCell = worksheet.getCell("A6");
-    subTitleCell.value = `Año: ${new Date(informeLiq.fecha).getFullYear()} Mes: ${informeLiq.mes} - Periodo Liquidado: ${periodo}`;
+    subTitleCell.value = `Año: ${anioDe(informeLiq.fecha) ?? ''} Mes: ${informeLiq.mes} - Periodo Liquidado: ${periodo}`;
     subTitleCell.font = { size: 12, bold: true };
 
     // Subtítulo adicional
