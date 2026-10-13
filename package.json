@@ -45,7 +45,6 @@
     "jsqr": "^1.4.0",
     "jszip": "^3.10.1",
     "lodash": "^4.17.21",
-    "ngx-filter-pipe": "^3.0.1",
     "pdfjs-dist": "^5.4.54",
     "pdfmake": "^0.2.20",
     "rxjs": "7.8.2",

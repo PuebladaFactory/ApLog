@@ -27,12 +27,10 @@ import { PermisoDirective } from './directives/permiso.directive';
 import { BajaObjetoComponent } from './modales/baja-objeto/baja-objeto.component';
 import { ObjetoPapeleraComponent } from './modales/objeto-papelera/objeto-papelera.component';
 
-import { InformeLiqDetalleComponent } from './modales/informe-liq-detalle/informe-liq-detalle.component';
 
 import { ScrollToTopComponent } from './scroll-to-top/scroll-to-top.component';
 import { CalcularPorcentajePipe } from './pipes/calcular-porcentaje.pipe';
 import { SpinnerComponent } from './spinner/spinner.component';
-import { FilterPipeModule } from 'ngx-filter-pipe';
 import { GlobalFilterPipe } from './pipes/global-filter.pipe';
 import { InformeOpDetalleComponent } from './modales/informe-op-detalle/informe-op-detalle.component';
 import { InformeOpEditorComponent } from './modales/informe-op-editor/informe-op-editor.component';
@@ -76,7 +74,6 @@ import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
 
     PermisoDirective, BajaObjetoComponent,
     ObjetoPapeleraComponent,
-    InformeLiqDetalleComponent, 
     ScrollToTopComponent, 
     CalcularPorcentajePipe, 
     SpinnerComponent, 
@@ -114,7 +111,6 @@ import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
     JsonPipe,
     NgbDatepickerModule,
     NgbModule,
-    FilterPipeModule,
     TitleCasePipe
   ],
   exports:[
@@ -134,7 +130,6 @@ import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
 
     PermisoDirective,
     BajaObjetoComponent,
-    InformeLiqDetalleComponent, 
     ScrollToTopComponent,
     CalcularPorcentajePipe,
     SpinnerComponent,

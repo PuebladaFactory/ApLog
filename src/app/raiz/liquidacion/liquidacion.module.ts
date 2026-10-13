@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 
 import { LiquidacionRoutingModule } from './liquidacion-routing.module';
 
@@ -11,12 +11,7 @@ import { SharedModule } from 'src/app/shared/shared.module';
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
-import { ResumenOpLiquidadasComponent } from './modales/resumen-op-liquidadas/resumen-op-liquidadas.component';
-import { ProformaComponent } from './proforma/proforma.component';
-import { LiquidacionesOpComponent } from './liquidaciones-op/liquidaciones-op.component';
-import { MigrarDatosComponent } from './migrar-datos/migrar-datos.component';
 import { DateRangeService } from 'src/app/servicios/fechas/date-range.service';
-import { PeriodoModalComponent } from './modales/periodo-modal/periodo-modal.component';
 import { InformeOpListadoComponent } from './informe-op-listado/informe-op-listado.component';
 import { LiquidacionNuevaComponent } from './modales/liquidacion-nueva/liquidacion-nueva.component';
 import { BorradoresLiqComponent } from './borradores-liq/borradores-liq.component';
@@ -30,12 +25,6 @@ import { InformeOpAnuladosComponent } from './informe-op-anulados/informe-op-anu
 
 
     LiqGralComponent,
-
-    LiquidacionesOpComponent,
-    MigrarDatosComponent,
-    ResumenOpLiquidadasComponent,
-    ProformaComponent,
-    PeriodoModalComponent,
     InformeOpListadoComponent,
     LiquidacionNuevaComponent,
     BorradoresLiqComponent,
@@ -50,12 +39,7 @@ import { InformeOpAnuladosComponent } from './informe-op-anulados/informe-op-anu
     ReactiveFormsModule,
     SharedModule,
   ],
-   exports:[
-      MigrarDatosComponent,
-    ],
-
   providers: [
-    DatePipe, 
     DateRangeService
   ] 
 })
