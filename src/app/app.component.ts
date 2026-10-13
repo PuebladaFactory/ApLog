@@ -1,13 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { AuthService } from './servicios/autentificacion/auth.service';
 import { SwUpdate } from '@angular/service-worker';
 import Swal from 'sweetalert2';
+// Este import parece sin uso, pero mete version.ts en la compilación: lo
+// necesitan los require() de versión (acá, home y sidebar). No borrar.
 import { appVersion } from 'src/environments/version';
-import { StorageService } from './servicios/storage/storage.service';
-import { Cliente } from './interfaces/cliente';
-import { Chofer } from './interfaces/chofer';
-import { Proveedor } from './interfaces/proveedor';
 
 let version = 'v0.0.0'; // fallback por defecto
 
@@ -29,7 +25,7 @@ export class AppComponent implements OnInit {
   appVersion = version;
 
 
-  constructor(private swUpdate: SwUpdate, private storageService: StorageService) {
+  constructor(private swUpdate: SwUpdate) {
     if (this.swUpdate.isEnabled) {
       this.swUpdate.versionUpdates.subscribe((event) => {
         if (event.type === 'VERSION_READY') {

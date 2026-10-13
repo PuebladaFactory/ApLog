@@ -1,15 +1,13 @@
 import { Component, Input, OnInit } from "@angular/core";
 import { FormBuilder, Validators } from "@angular/forms";
-import { Router } from "@angular/router";
 import { NgbActiveModal, NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { Categoria, Chofer, Vehiculo } from "src/app/interfaces/chofer";
 import { Proveedor } from "src/app/interfaces/proveedor";
 import { CategoriaTarifa } from "src/app/interfaces/tarifa-gral-cliente";
-import { StorageService } from "src/app/servicios/storage/storage.service";
 import Swal from "sweetalert2";
 import { ModalVehiculoComponent } from "../modal-vehiculo/modal-vehiculo.component";
 import { ValidarService } from "src/app/servicios/validar/validar.service";
-import { ConId, ConIdType } from "src/app/interfaces/conId";
+import { ConIdType } from "src/app/interfaces/conId";
 import { Subject, takeUntil } from "rxjs";
 import { DomicilioService } from "src/app/servicios/domicilio/domicilio.service";
 import {
@@ -354,8 +352,6 @@ export class ChoferesAltaComponent implements OnInit {
   }
 
   addItem(): void {
-    const apellido = this.form.value.apellido;
-    const nombre = this.form.value.nombre;
     const data = this.armarDatosChofer();
 
     if (this.fromParent.modo === "edicion") {

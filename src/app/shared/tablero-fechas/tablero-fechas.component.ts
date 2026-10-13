@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { NgbDateStruct, NgbDate, NgbCalendar } from '@ng-bootstrap/ng-bootstrap';
+import { NgbDateStruct, NgbDate } from '@ng-bootstrap/ng-bootstrap';
 import { DateRange, DateRangeService, PeriodoTipo } from 'src/app/servicios/fechas/date-range.service';
 
 @Component({
@@ -24,7 +24,6 @@ export class TableroFechasComponent implements OnInit {
 
   constructor(
     private dateRangeService: DateRangeService,
-    private calendar: NgbCalendar
   ) {}
 
   ngOnInit(): void {

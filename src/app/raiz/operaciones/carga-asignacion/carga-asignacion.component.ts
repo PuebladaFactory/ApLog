@@ -417,6 +417,6 @@ export class CargaAsignacionComponent implements OnInit, OnDestroy {
   
     openModalNoOperativos(): void {
       // TODO: migrar ModalChoferesNoDisponiblesComponent al modelo nuevo (frente aparte).
-      const modalRef = this.modal.open(ModalChoferesNoDisponiblesComponent, { centered: true, size: 'lg', });
+      this.modal.open(ModalChoferesNoDisponiblesComponent, { centered: true, size: 'lg', });
     }
 }

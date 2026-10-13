@@ -1,7 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, takeUntil } from 'rxjs';
 import { AsignacionVehiculo, Categoria, Vehiculo } from 'src/app/interfaces/chofer';
 import { ConIdType } from 'src/app/interfaces/conId';
@@ -48,7 +47,7 @@ export class ModalVehiculoComponent implements OnInit {
   edicion:boolean = false;
   private destroy$ = new Subject<void>();
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router, public activeModal: NgbActiveModal, private modalService: NgbModal, private vehiculoFactoryService: VehiculoFactoryService, private tarifarioService: TarifarioService){
+  constructor(private fb: FormBuilder, private storageService: StorageService, public activeModal: NgbActiveModal, private vehiculoFactoryService: VehiculoFactoryService, private tarifarioService: TarifarioService){
     this.vehiculoForm = this.fb.group({
       dominio: ["", [Validators.required, Validators.minLength(6), Validators.maxLength(8), ValidarService.validarDominio]],
       marca:["",[Validators.required, Validators.maxLength(50)]],

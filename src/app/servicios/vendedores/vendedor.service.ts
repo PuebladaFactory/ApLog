@@ -1,8 +1,7 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { Cliente } from 'src/app/interfaces/cliente';
-import { ConId, ConIdType } from 'src/app/interfaces/conId';
+import { ConId } from 'src/app/interfaces/conId';
 import { AsignacionVenta, DatosPersonalesVendedor, VendedorNuevo } from 'src/app/interfaces/vendedor-nuevo';
 import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';

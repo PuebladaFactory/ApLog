@@ -245,10 +245,7 @@ export class PdfService {
     ////console.log("fecha: ", fecha);
 
     // Dividir el string de la fecha en año, mes y día
-    const [year, month, day] = fecha.split("-").map(Number);
-
-    // Crear la fecha asegurando que tome la zona horaria local
-    const date = new Date(year, month - 1, day); // mes - 1 porque los meses en JavaScript son 0-indexed
+    const [, , day] = fecha.split("-").map(Number);
 
     // Determinar si está en la primera o segunda quincena
     return day <= 15 ? "Primera" : "Segunda";

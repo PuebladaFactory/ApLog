@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { Legajo, estadoGeneralDeLegajo } from 'src/app/interfaces/legajo';
 import { ConIdType } from 'src/app/interfaces/conId';

@@ -2,10 +2,8 @@ import { Component, OnDestroy, OnInit } from "@angular/core";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { Subject, takeUntil } from "rxjs";
 import { Chofer, Vehiculo } from "src/app/interfaces/chofer";
-import { Cliente } from "src/app/interfaces/cliente";
-import { ConId, ConIdType } from "src/app/interfaces/conId";
+import { ConIdType } from "src/app/interfaces/conId";
 import { Proveedor } from "src/app/interfaces/proveedor";
-import { StorageService } from "src/app/servicios/storage/storage.service";
 import { ColumnaTablaGenerica, AccionTablaGenerica } from "src/app/interfaces/tabla-generica";
 import Swal from "sweetalert2";
 import { ChoferesAltaComponent } from "../choferes-alta/choferes-alta.component";
@@ -41,7 +39,6 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
   accionesTabla: AccionTablaGenerica[] = [];
 
   constructor(
-    private storageService: StorageService,
     private modalService: NgbModal,
     private dbFirebase: DbFirestoreService,
     private excelServ: ExcelService,
@@ -329,16 +326,6 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
     const start = new Date(1960, 0, 1).getTime();
     const end = new Date(2005, 11, 31).getTime();
     return new Date(start + Math.random() * (end - start));
-  }
-
-  private randomDominio(): string {
-    const letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    const numeros = "0123456789";
-
-    const l = () => letras.charAt(Math.floor(Math.random() * letras.length));
-    const n = () => numeros.charAt(Math.floor(Math.random() * numeros.length));
-
-    return `${l()}${l()}${l()}${n()}${n()}${n()}`;
   }
 
   async actualizarActivos() {

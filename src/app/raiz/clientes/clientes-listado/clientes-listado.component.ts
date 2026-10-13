@@ -4,12 +4,10 @@ import { Subject, takeUntil } from 'rxjs';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { ColumnaTablaGenerica, AccionTablaGenerica } from 'src/app/interfaces/tabla-generica';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
 import Swal from 'sweetalert2';
 import { ClienteAltaComponent } from '../cliente-alta/cliente-alta.component';
 import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { VisibilidadListadosComponent } from 'src/app/shared/modales/visibilidad-listados/visibilidad-listados.component';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
@@ -34,9 +32,7 @@ export class ClientesListadoComponent implements OnInit, OnDestroy {
   filtroEstado: 'visibles' | 'todos' = 'visibles';
 
   constructor(
-    private storageService: StorageService,
     private modalService: NgbModal,
-    private dbFirestore: DbFirestoreService,
     private excelServ: ExcelService,
     private clienteService: ClienteService,
     public usuarioSesion: UsuarioSesionService,

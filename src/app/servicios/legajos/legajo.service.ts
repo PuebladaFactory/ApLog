@@ -5,7 +5,6 @@ import { Documentacion, DocumentacionHistorial, Legajo } from 'src/app/interface
 import { ConIdType } from 'src/app/interfaces/conId';
 import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
-import { StorageArchivosService } from 'src/app/servicios/storage-archivos/storage-archivos.service';
 import { LegajoFactoryService } from 'src/app/servicios/legajos/legajo-factory.service';
 
 @Injectable({ providedIn: 'root' })
@@ -19,7 +18,6 @@ export class LegajoService implements OnDestroy {
   constructor(
     private db: DbFirestoreService,
     private logRegistro: LogRegistroService,
-    private storageArchivosService: StorageArchivosService, // sin uso todavía en este bloque — ver nota en guardarDocumentacion
     private legajoFactoryService: LegajoFactoryService,
   ) {}
 

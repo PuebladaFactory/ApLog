@@ -2,7 +2,6 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Contacto } from 'src/app/interfaces/proveedor';
-import { ValidarService } from 'src/app/servicios/validar/validar.service';
 import Swal from 'sweetalert2';
 
 @Component({

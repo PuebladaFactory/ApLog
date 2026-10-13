@@ -2,7 +2,6 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { filter, Subject, takeUntil } from 'rxjs';
 import { ConId } from 'src/app/interfaces/conId';
 import { EstadoOp, Operacion } from 'src/app/interfaces/operacion';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { DateRange, DateRangeService, toISODateString } from 'src/app/servicios/fechas/date-range.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ModalDetalleOpComponent } from '../modal-detalle-op/modal-detalle-op.component';
@@ -126,7 +125,6 @@ private resizeStartX = 0;
 private resizeStartWidth = 0;
 
   constructor(
-    private storage: StorageService,
     private dateRange: DateRangeService,
     private modalService: NgbModal,
     private operacionService: OperacionService,

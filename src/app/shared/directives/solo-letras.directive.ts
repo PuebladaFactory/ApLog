@@ -5,7 +5,6 @@ import { Directive, HostListener, ElementRef, Renderer2 } from '@angular/core';
     standalone: false
 })
 export class SoloLetrasDirective {
-  private valorAnterior: string = ''; // Guardar el último valor válido
 
   constructor(private el: ElementRef, private renderer: Renderer2) {}
 
@@ -23,9 +22,6 @@ export class SoloLetrasDirective {
     // Restaurar el placeholder si había un mensaje de error
     this.renderer.setProperty(input, 'placeholder', '');
     this.renderer.removeStyle(this.el.nativeElement, 'border');
-
-    // Guardar el último valor válido
-    this.valorAnterior = valor;
   }
 
   @HostListener('keydown', ['$event'])

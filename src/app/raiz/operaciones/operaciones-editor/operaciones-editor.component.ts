@@ -1,7 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Operacion } from 'src/app/interfaces/operacion';
-import { AsignacionItem } from 'src/app/interfaces/asignacion';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { ConIdType } from 'src/app/interfaces/conId';
 import { NivelHabilitado, nivelesHabilitados } from 'src/app/interfaces/tarifa-habilitada';

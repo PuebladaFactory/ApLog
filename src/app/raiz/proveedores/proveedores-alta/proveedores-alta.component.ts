@@ -1,13 +1,11 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Contacto, Proveedor } from 'src/app/interfaces/proveedor';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { ModalContactoProveedoresComponent } from '../modal-contacto-proveedores/modal-contacto-proveedores.component';
 import { ValidarService } from 'src/app/servicios/validar/validar.service';
-import { ConId, ConIdType } from 'src/app/interfaces/conId';
+import { ConIdType } from 'src/app/interfaces/conId';
 import { DomicilioService } from 'src/app/servicios/domicilio/domicilio.service';
 import { ProveedorFormData } from 'src/app/servicios/proveedores/proveedor-factory.service';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
@@ -47,7 +45,7 @@ export class ProveedoresAltaComponent implements OnInit {
   direccionOperativaCompleta = {provincia:"", municipio: "", localidad: "", domicilio: ""};
   cargando: boolean = false;
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router, public activeModal: NgbActiveModal, private modalService: NgbModal, private domicilioServ: DomicilioService, private proveedorService: ProveedorService) {
+  constructor(private fb: FormBuilder, public activeModal: NgbActiveModal, private modalService: NgbModal, private domicilioServ: DomicilioService, private proveedorService: ProveedorService) {
     this.form = this.fb.group({
       razonSocial: ["",[Validators.required, Validators.maxLength(30)]],
       cuit: [

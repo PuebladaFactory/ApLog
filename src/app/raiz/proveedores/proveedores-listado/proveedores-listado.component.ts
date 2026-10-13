@@ -1,16 +1,14 @@
 import { Component, OnDestroy, OnInit, ViewChild } from "@angular/core";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
-import { Subject, take, takeUntil } from "rxjs";
+import { Subject, takeUntil } from "rxjs";
 import {
   AsignacionVehiculo,
   Chofer,
-  ContratacionChofer,
   Vehiculo,
 } from "src/app/interfaces/chofer";
 import { ConId, ConIdType } from "src/app/interfaces/conId";
 import { Proveedor } from "src/app/interfaces/proveedor";
 import { ColumnaTablaGenerica, AccionTablaGenerica } from "src/app/interfaces/tabla-generica";
-import { StorageService } from "src/app/servicios/storage/storage.service";
 import Swal from "sweetalert2";
 import { ProveedoresAltaComponent } from "../proveedores-alta/proveedores-alta.component";
 import { BajaObjetoComponent } from "src/app/shared/modales/baja-objeto/baja-objeto.component";
@@ -49,7 +47,6 @@ export class ProveedoresListadoComponent implements OnInit, OnDestroy {
   contratacion!: AsignacionVehiculo;
 
   constructor(
-    private storageService: StorageService,
     private modalService: NgbModal,
     private excelServ: ExcelService,
     private dbFirestore: DbFirestoreService,

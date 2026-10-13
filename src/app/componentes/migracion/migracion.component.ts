@@ -3,7 +3,7 @@ import { ChoferMigrationService } from 'src/app/servicios/migracion/chofer-migra
 import { ProveedorMigrationService } from 'src/app/servicios/migracion/proveedor-migration.service';
 import { ClienteMigrationService } from 'src/app/servicios/migracion/cliente-migration.service';
 import { LegajoMigrationService } from 'src/app/servicios/migracion/legajo-migracion.service';
-import { TarifaMigrationService, ItemPreviewEventual, ItemHistorialGeneral } from 'src/app/servicios/migracion/tarifa-migration.service';
+import { TarifaMigrationService, ItemPreviewEventual } from 'src/app/servicios/migracion/tarifa-migration.service';
 import { OperacionMigrationService, PlanLimpiezaOp, ConflictoLimpiezaOp } from 'src/app/servicios/migracion/operacion-migration.service';
 import Swal from 'sweetalert2';
 

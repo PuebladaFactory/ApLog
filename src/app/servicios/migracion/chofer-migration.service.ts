@@ -6,7 +6,7 @@ import {
   doc,
   setDoc,
 } from '@angular/fire/firestore';
-import { ContratacionChofer, Vehiculo, AsignacionVehiculo } from 'src/app/interfaces/chofer';
+import { ContratacionChofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { MigrationBackupService } from './migration-backup.service';
 import { habilitadasDesdeTarifaTipoMigracion } from './tarifa-habilitada-migracion.util';
 
@@ -182,11 +182,6 @@ export class ChoferMigrationService {
 
   async verificarCuitsUnicos(): Promise<{ ok: boolean; duplicados: { cuit: number; choferes: string[] }[] }> {
     console.log('--- Verificando unicidad de CUITs en backup de choferes ---');
-
-    // Buscar la colección de backup más reciente
-    // El nombre sigue el patrón _backup_choferes_YYYYMMDD
-    // Leemos directamente con el nombre que el usuario indique via parámetro
-    const backupRef = collection(this.firestore, '/Vantruck/datos/_backup_choferes');
 
     // Como no sabemos la fecha exacta, leemos desde los choferes actuales
     // que tienen el CUIT en datosPersonales

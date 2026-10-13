@@ -174,7 +174,6 @@ export class RegistroComponent implements OnInit {
     
     this.idObjConsulta = Number(this.idObjConsulta)
     console.log(this.idObjConsulta);
-    let respuesta
     this.dbFirebase.getObjIdg<any>("logs", "idObjet", this.idObjConsulta).subscribe((data)=>{
       console.log(data);
       if(data){

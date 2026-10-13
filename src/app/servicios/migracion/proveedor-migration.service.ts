@@ -6,7 +6,6 @@ import {
   doc,
   setDoc,
 } from '@angular/fire/firestore';
-import { Proveedor } from 'src/app/interfaces/proveedor';
 import { MigrationBackupService } from './migration-backup.service';
 import { habilitadasDesdeTarifaTipoMigracion } from './tarifa-habilitada-migracion.util';
 

@@ -1,7 +1,6 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { Router } from '@angular/router';
 import { DateRangeService } from 'src/app/servicios/fechas/date-range.service';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { tabActivaDesdeUrl } from 'src/app/shared/utils/tabs-url.util';
 
 @Component({
@@ -53,7 +52,7 @@ export class LiqGralComponent implements OnInit {
     return this.selectedTab === 'tab7';
   }
 
-  constructor(private storageService: StorageService, private router: Router){
+  constructor(private router: Router){
   }
 
   ngOnInit(): void {

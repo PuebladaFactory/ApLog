@@ -16,7 +16,6 @@ import { AsignacionService } from 'src/app/servicios/operaciones/asignacion.serv
 import { ValoresOpService } from 'src/app/servicios/valores-op/valores-op/valores-op.service';
 import { ValoresTarifaService } from 'src/app/servicios/tarifario/valores-tarifa.service';
 import { TarifarioService } from 'src/app/servicios/tarifario/tarifario.service';
-import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { NumeradorService } from 'src/app/servicios/numerador/numerador.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 import { PapeleraService } from 'src/app/servicios/papelera/papelera.service';
@@ -60,7 +59,6 @@ export class OperacionService implements OnDestroy {
     private operacionFactory: OperacionFactoryService,
     private valoresServ:      ValoresOpService,
     private valoresTarifaServ: ValoresTarifaService,
-    private formNumServ:      FormatoNumericoService,
     private numeradorService: NumeradorService,
     private asignacionService: AsignacionService,
     private logRegistro:      LogRegistroService,

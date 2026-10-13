@@ -1,6 +1,5 @@
 import { Component, HostListener, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject } from 'rxjs';
 import { NoDisponibilidadChofer } from 'src/app/interfaces/no-disponibilidad-chofer';
 import { CategoriaDocumentacionService } from 'src/app/servicios/categoria-documentacion/categoria-documentacion.service';
 import { LegajoService } from 'src/app/servicios/legajos/legajo.service';
@@ -31,7 +30,7 @@ export class HomeComponent implements OnInit {
   activo!:boolean;
   private destroy$ = new Subject<void>();
 
-  constructor(private storageService: StorageService, private categoriaDocumentacionService: CategoriaDocumentacionService, private legajoService: LegajoService, private router: Router, private choferService: ChoferService, private proveedorService: ProveedorService, private clienteService: ClienteService, private tarifarioService: TarifarioService) { }
+  constructor(private storageService: StorageService, private categoriaDocumentacionService: CategoriaDocumentacionService, private legajoService: LegajoService, private choferService: ChoferService, private proveedorService: ProveedorService, private clienteService: ClienteService, private tarifarioService: TarifarioService) { }
 
   ngOnInit(): void {
     this.choferService.init();

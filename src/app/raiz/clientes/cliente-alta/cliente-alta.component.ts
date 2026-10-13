@@ -2,7 +2,6 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Cliente, Contacto  } from 'src/app/interfaces/cliente';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { ModalContactoComponent } from '../modal-contacto/modal-contacto.component';
 import { ValidarService } from 'src/app/servicios/validar/validar.service';
@@ -49,7 +48,7 @@ export class ClienteAltaComponent implements OnInit {
   direccionOperativaCompleta = {provincia:"", municipio: "", localidad: "", domicilio: ""};
   cargando: boolean = false;
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal, public activeModal: NgbActiveModal, private domicilioServ: DomicilioService, private clienteService: ClienteService) {
+  constructor(private fb: FormBuilder, private modalService: NgbModal, public activeModal: NgbActiveModal, private domicilioServ: DomicilioService, private clienteService: ClienteService) {
     this.form = this.fb.group({
       razonSocial: ["",[Validators.required, Validators.maxLength(30)]],
       cuit: [

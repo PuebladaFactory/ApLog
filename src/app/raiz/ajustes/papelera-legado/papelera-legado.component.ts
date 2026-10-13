@@ -255,7 +255,6 @@ export class PapeleraLegadoComponent implements OnInit {
   consultarId() {
     this.idObjConsulta = Number(this.idObjConsulta);
     console.log(this.idObjConsulta);
-    let respuesta;
     this.dbFirebase
       .getObjIdg<any>("papelera", "logEntry.idObjet", this.idObjConsulta)
       .subscribe((data) => {

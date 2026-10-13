@@ -8,7 +8,7 @@ import Swal from 'sweetalert2';
 import { ModalObjetosActivosComponent } from 'src/app/raiz/operaciones/modal-objetos-activos/modal-objetos-activos.component';
 import { sumarDias } from 'src/app/shared/utils/fecha.util';
 
-import { Asignacion, AsignacionItem, AsignacionRef, EstadoAsignacion, SujetoAsignacion } from 'src/app/interfaces/asignacion';
+import { Asignacion, AsignacionItem, AsignacionRef, SujetoAsignacion } from 'src/app/interfaces/asignacion';
 import { Categoria, Vehiculo, Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { ConIdType } from 'src/app/interfaces/conId';
@@ -801,6 +801,6 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
 
   openModalNoOperativos(): void {
     // TODO: migrar ModalChoferesNoDisponiblesComponent al modelo nuevo (frente aparte).
-    const modalRef = this.modal.open(ModalChoferesNoDisponiblesComponent, { centered: true, size: 'lg', });
+    this.modal.open(ModalChoferesNoDisponiblesComponent, { centered: true, size: 'lg', });
   }
 }
