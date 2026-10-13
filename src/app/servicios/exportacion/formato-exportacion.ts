@@ -1,4 +1,5 @@
 import { TipoCeldaDoc, ValorCeldaDoc } from 'src/app/interfaces/documento-tabular';
+import { fechaLegible } from 'src/app/shared/utils/fecha.util';
 
 /** Formatos compartidos por los renderers de exportación. Puros. */
 
@@ -9,11 +10,10 @@ export function formatearMoneda(valor: number): string {
   return `$ ${(valor ?? 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-/** 'YYYY-MM-DD' → 'DD/MM/AAAA', sin pasar por Date (evita el corrimiento de
- *  un día por huso horario). Si no tiene ese formato, lo devuelve igual. */
+/** 'YYYY-MM-DD' → 'DD/MM/AAAA', sin pasar por Date. Si no tiene ese
+ *  formato, lo devuelve igual (vacía → ''). Delega en fechaLegible (FE5b). */
 export function formatearFechaIso(fecha: string): string {
-  const m = FECHA_ISO.exec(fecha ?? '');
-  return m ? `${m[3]}/${m[2]}/${m[1]}` : (fecha ?? '');
+  return fechaLegible(fecha, '');
 }
 
 /** 'YYYY-MM-DD' → Date en UTC medianoche, o null. exceljs convierte las Date

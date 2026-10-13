@@ -8,8 +8,9 @@ const semver = packageJson.version;
 // Obtenemos commit corto
 const gitCommit = execSync('git rev-parse --short HEAD').toString().trim();
 
-// Fecha de build
-const buildDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+// Fecha de build en hora de Argentina (FE5b; antes, desde las 21:00 daba el
+// día siguiente). El formato 'en-CA' es YYYY-MM-DD.
+const buildDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' }).format(new Date());
 
 // Contenido del archivo version.ts
 const fileContents = `

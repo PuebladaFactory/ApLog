@@ -1,5 +1,6 @@
 import { EstadoLiquidacionVenta, LiquidacionVenta } from 'src/app/interfaces/liquidacion-venta';
 import { periodoDeFecha } from 'src/app/shared/utils/periodo.util';
+import { fechaLegible } from 'src/app/shared/utils/fecha.util';
 
 /** Helpers de presentación de liquidaciones de comisiones de venta
  *  (Historial, detalle y, en V7, exportación). Puros, sin dependencias de
@@ -18,10 +19,10 @@ export function mesCorteLiquidacion(l: Pick<LiquidacionVenta, 'anio' | 'mes'>): 
   return `${MESES[l.mes - 1] ?? l.mes} ${l.anio}`;
 }
 
-/** 'YYYY-MM-DD' → 'DD/MM/YYYY' ('—' si no hay fecha válida). */
+/** 'YYYY-MM-DD' → 'DD/MM/AAAA' ('—' si está vacía). Delega en fechaLegible
+ *  (FE5b); el nombre se conserva por sus llamadas. */
 export function fechaDMY(fecha: string | null | undefined): string {
-  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(fecha ?? '');
-  return m ? `${m[3]}/${m[2]}/${m[1]}` : '—';
+  return fechaLegible(fecha);
 }
 
 /** CUIT con guiones (20-12345678-9); si no tiene 11 dígitos, tal cual. */

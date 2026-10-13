@@ -23,7 +23,7 @@ export class TableroService {
    *  el item del tablero (no crea uno nuevo).
    *  TODO: fachada provisoria → migrará a OperacionService.restaurarOperacion (atómico). */
   async altaOperacionYActualizarTablero(op: Operacion): Promise<void> {
-    const fecha = this.normalizarFecha(op.fecha);
+    const fecha = op.fecha;
 
     // Reiniciar estado y km (la op pudo estar en cualquier ciclo al ser eliminada).
     // EstadoOp SIEMPRE desde el factory, nunca inline.
@@ -42,11 +42,5 @@ export class TableroService {
 
     // Reactivar el item del tablero (estaba marcado anulado, no se borró).
     await this.asignacionService.reactivarItem(fecha, idOperacion);
-  }
-
-  // ---- Helpers privados ----
-
-  private normalizarFecha(fecha: string): string {
-    return typeof fecha === 'string' ? fecha : new Date(fecha).toISOString().split('T')[0];
   }
 }

@@ -3,7 +3,7 @@ import { MovimientoFin } from 'src/app/interfaces/movimiento-fin';
 import { CuentaEntidadFin, ladoDe } from 'src/app/shared/utils/cuentas-finanzas.util';
 import { esDevolucion } from 'src/app/shared/utils/movimiento-fin.util';
 import { nombreEntidadRef } from 'src/app/shared/utils/entidad-informe.util';
-import { diasEntreONulo } from 'src/app/shared/utils/fecha.util';
+import { diasEntreONulo, finDeMes } from 'src/app/shared/utils/fecha.util';
 import { esCero, normalizarValoresFinancieros, redondear2 } from 'src/app/shared/utils/finanzas.util';
 
 /** Resumen de Finanzas (F6b) — utils PUROS. Flujo de un mes, evolución de
@@ -56,9 +56,7 @@ export function mesesHasta(mes: string, n: number): string[] {
 
 /** Primer y último día de un rango de meses ('YYYY-MM-DD'). */
 export function rangoDeMeses(desde: string, hasta: string): { desde: string; hasta: string } {
-  const p = partes(hasta);
-  const ultimo = new Date(Date.UTC(p.anio, p.mes, 0)).getUTCDate();   // día 0 del mes siguiente
-  return { desde: `${desde}-01`, hasta: `${hasta}-${String(ultimo).padStart(2, '0')}` };
+  return { desde: `${desde}-01`, hasta: finDeMes(hasta) };
 }
 
 /** "Octubre 2026". */

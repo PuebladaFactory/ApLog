@@ -8,6 +8,7 @@ import { ConfiguracionEmpresaService } from 'src/app/servicios/configuracion/con
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { LimpiezaDemoService } from 'src/app/servicios/desarrollo/limpieza-demo.service';
 import { toISODateString } from 'src/app/servicios/fechas/date-range.service';
+import { finDeMes, sumarDias } from 'src/app/shared/utils/fecha.util';
 import { InformeLiqFactoryService } from 'src/app/servicios/informes-liq/informe-liq-factory.service';
 import { DatosLiquidacion, InformeLiqService } from 'src/app/servicios/informes-liq/informe-liq.service';
 import { FinanzasConsultaService } from 'src/app/servicios/finanzas-nueva/finanzas-consulta.service';
@@ -181,7 +182,7 @@ export class GeneradorCircuitoService {
     const azar = new Azar(p.semilla);
     const hoy = toISODateString(new Date());
     const desde = `${p.desde}-01`;
-    const hasta = `${p.hasta}-${String(this.ultimoDia(p.hasta)).padStart(2, '0')}`;
+    const hasta = finDeMes(p.hasta);
 
     const todos = (await this.db.consultarPorRango<InformeOpNuevo>('informesOp', 'fecha', desde, hasta))
       .map(i => ({ ...i, idInfOp: i.id }));
@@ -219,7 +220,7 @@ export class GeneradorCircuitoService {
       const partes = this.partir(lista, anio, mes);
       for (const parte of partes) {
         const fin = this.factory.ventanaPeriodo(parte.periodo).hasta;
-        const fechaEmision = this.sumarDias(fin, azar.entero(this.DIAS_EMISION.min, this.DIAS_EMISION.max));
+        const fechaEmision = sumarDias(fin, azar.entero(this.DIAS_EMISION.min, this.DIAS_EMISION.max));
         if (fechaEmision > hoy) {
           pendientesPorFecha++;
           continue;
@@ -228,7 +229,7 @@ export class GeneradorCircuitoService {
         let facturar = modo === 'emitido' && azar.chance(p.pctFacturar);
         let fechaFactura: string | null = null;
         if (facturar) {
-          const candidata = this.sumarDias(fechaEmision, azar.entero(this.DIAS_FACTURA.min, this.DIAS_FACTURA.max));
+          const candidata = sumarDias(fechaEmision, azar.entero(this.DIAS_FACTURA.min, this.DIAS_FACTURA.max));
           if (candidata > hoy) {
             facturar = false;
             sinFacturaPorFecha++;
@@ -576,18 +577,6 @@ export class GeneradorCircuitoService {
       partidas: liquidaciones.filter(l => l.partida).length,
       porTipo,
     };
-  }
-
-  /** Último día del mes 'YYYY-MM' (sin depender del huso horario). */
-  private ultimoDia(mesClave: string): number {
-    const [a, m] = mesClave.split('-').map(Number);
-    return new Date(Date.UTC(a, m, 0)).getUTCDate();
-  }
-
-  /** 'YYYY-MM-DD' + n días, en UTC sobre las partes del string. */
-  private sumarDias(fecha: string, dias: number): string {
-    const [a, m, d] = fecha.split('-').map(Number);
-    return new Date(Date.UTC(a, m - 1, d + dias)).toISOString().slice(0, 10);
   }
 
   private validarParametros(p: ParametrosCircuito): void {

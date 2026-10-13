@@ -30,7 +30,7 @@ export class InformeOpFactoryService {
       idOperacion: op.idOperacion,
       tipo,
       entidad,
-      fecha: this.normalizarFecha(op.fecha),
+      fecha: op.fecha,
       valores,
       datosOperacion: {
         km: op.km,
@@ -64,9 +64,5 @@ export class InformeOpFactoryService {
       );
     }
     return op.proveedor;
-  }
-
-  private normalizarFecha(fecha: string | Date): string {
-    return typeof fecha === 'string' ? fecha : fecha.toISOString().slice(0, 10);
   }
 }

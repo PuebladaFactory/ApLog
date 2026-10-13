@@ -1,5 +1,5 @@
 import { PeriodoFiltro } from 'src/app/interfaces/periodo-filtro';
-import { hoyNegocio, partesFecha } from 'src/app/shared/utils/fecha.util';
+import { diasDelMes, hoyNegocio, partesFecha } from 'src/app/shared/utils/fecha.util';
 
 /** Período mensual de negocio. `periodo` = anio*100 + mes (ej. 202608),
  *  apto para filtros por rango en Firestore. */
@@ -58,7 +58,7 @@ export function diasOperativos(anio: number, mes: number, hoy: Date = new Date()
   const actual = h.anio * 100 + h.mes;
   const periodo = anio * 100 + mes;
   if (periodo > actual) return 0;
-  const ultimoDia = periodo === actual ? h.dia : new Date(anio, mes, 0).getDate();
+  const ultimoDia = periodo === actual ? h.dia : diasDelMes(anio, mes);
   let dias = 0;
   for (let d = 1; d <= ultimoDia; d++) {
     if (new Date(anio, mes - 1, d).getDay() !== 0) dias++;

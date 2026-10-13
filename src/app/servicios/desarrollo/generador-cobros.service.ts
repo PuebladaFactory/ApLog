@@ -7,6 +7,7 @@ import { EntidadMovimientoFin, MedioMovimientoFin } from 'src/app/interfaces/mov
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { LimpiezaDemoService } from 'src/app/servicios/desarrollo/limpieza-demo.service';
 import { toISODateString } from 'src/app/servicios/fechas/date-range.service';
+import { finDeMes, sumarDias } from 'src/app/shared/utils/fecha.util';
 import { FinanzasConsultaService } from 'src/app/servicios/finanzas-nueva/finanzas-consulta.service';
 import { MovimientoFinService } from 'src/app/servicios/finanzas-nueva/movimiento-fin.service';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
@@ -169,7 +170,7 @@ export class GeneradorCobrosService {
           continue;
         }
         const dias = sorteo < p.pctMorosos + p.pctAtrasados ? azar.entero(61, 120) : azar.entero(30, 60);
-        const fecha = this.sumarDias(fechaFactura, dias);
+        const fecha = sumarDias(fechaFactura, dias);
         if (fecha > hoy) {
           r.quedanAbiertosCliente++;
           continue;
@@ -180,7 +181,7 @@ export class GeneradorCobrosService {
           const primera = redondear2(saldo * azar.entero(40, 80) / 100);
           movimientos.push(this.cobro(entidad, fecha, primera, [{ idInfLiq: liq.idInfLiq, importe: primera }], azar, p, r,
             `Cobro parcial ${nro}`));
-          const fecha2 = this.sumarDias(fecha, azar.entero(20, 40));
+          const fecha2 = sumarDias(fecha, azar.entero(20, 40));
           if (fecha2 > hoy) {
             r.quedanAbiertosCliente++;
             continue;
@@ -204,7 +205,7 @@ export class GeneradorCobrosService {
           r.quedanAbiertosPago++;
           continue;
         }
-        const fecha = this.sumarDias(fechaFactura, azar.entero(2, 10));
+        const fecha = sumarDias(fechaFactura, azar.entero(2, 10));
         if (fecha > hoy) {
           r.quedanAbiertosPago++;
           continue;
@@ -231,7 +232,7 @@ export class GeneradorCobrosService {
    *  id, mes). */
   private async planificarAnticipos(p: ParametrosCobros, azar: Azar, hoy: string): Promise<PlanCobros> {
     const desde = `${p.desde}-01`;
-    const hasta = `${p.hasta}-${String(this.ultimoDia(p.hasta)).padStart(2, '0')}`;
+    const hasta = finDeMes(p.hasta);
     const informes = (await this.db.consultarPorRango<InformeOpNuevo>('informesOp', 'fecha', desde, hasta))
       .filter(i => i.tipo !== 'cliente' && i.estado !== 'anulado');
 
@@ -419,7 +420,7 @@ export class GeneradorCobrosService {
     } else {
       medios.push({
         tipo: 'echeq', importe: principal, referencia: String(azar.entero(10000000, 99999999)),
-        banco, fechaCobro: this.sumarDias(fecha, azar.entero(15, 45)), retencion: null,
+        banco, fechaCobro: sumarDias(fecha, azar.entero(15, 45)), retencion: null,
       });
     }
     if (conRetencion) {
@@ -455,18 +456,6 @@ export class GeneradorCobrosService {
       razonSocial: nombreEntidadRef(doc.entidad),
       cuit: Number(doc.entidad.cuit) || 0,
     };
-  }
-
-  /** Último día del mes 'YYYY-MM' (sin depender del huso horario). */
-  private ultimoDia(mesClave: string): number {
-    const [a, m] = mesClave.split('-').map(Number);
-    return new Date(Date.UTC(a, m, 0)).getUTCDate();
-  }
-
-  /** 'YYYY-MM-DD' + n días, en UTC sobre las partes del string. */
-  private sumarDias(fecha: string, dias: number): string {
-    const [a, m, d] = fecha.split('-').map(Number);
-    return new Date(Date.UTC(a, m - 1, d + dias)).toISOString().slice(0, 10);
   }
 
   private validarParametros(p: ParametrosCobros): void {

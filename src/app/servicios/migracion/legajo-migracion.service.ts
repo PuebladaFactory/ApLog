@@ -8,6 +8,7 @@ import {
 } from '@angular/fire/firestore';
 import { Documentacion, EstadoDocumentacion, calcularEstadoDocumentacion } from 'src/app/interfaces/legajo';
 import { MigrationBackupService } from './migration-backup.service';
+import { hoyNegocio } from 'src/app/shared/utils/fecha.util';
 
 const TITULOS_LEGACY = [
   'DNI',
@@ -203,7 +204,7 @@ export class LegajoMigrationService {
    *   correcto si se corre en la misma sesión que backupLegajos().
    */
   async verificarCantidad(fechaBackupYYYYMMDD?: string): Promise<{ antes: number; despues: number; coinciden: boolean }> {
-    const fecha = fechaBackupYYYYMMDD ?? new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const fecha = fechaBackupYYYYMMDD ?? hoyNegocio().replace(/-/g, ''); // mismo sufijo que backupColeccion (FE5b)
     const antes = await this.backupService.contarDocumentos(`_backup_legajos_${fecha}`);
     const despues = await this.backupService.contarDocumentos('legajos');
     const coinciden = antes === despues;

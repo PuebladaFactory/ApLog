@@ -11,7 +11,7 @@ import { StorageService } from "../../storage/storage.service";
 import { ConId } from "src/app/interfaces/conId";
 
 import { InformeLiq } from "src/app/interfaces/informe-liq";
-import { anioDe } from "src/app/shared/utils/fecha.util";
+import { anioDe, hoyNegocio } from "src/app/shared/utils/fecha.util";
 
 @Injectable({
   providedIn: "root",
@@ -704,7 +704,7 @@ export class ExcelService {
     FileSaver.saveAs(
       new Blob([buffer]),
 
-      `${modo}_${new Date().toISOString().slice(0, 10)}.xlsx`,
+      `${modo}_${hoyNegocio()}.xlsx`,
     );
   }
 
@@ -841,7 +841,7 @@ export class ExcelService {
     const buffer = await workbook.xlsx.writeBuffer();
     FileSaver.saveAs(
       new Blob([buffer]),
-      `Choferes_${new Date().toISOString().slice(0, 10)}.xlsx`,
+      `Choferes_${hoyNegocio()}.xlsx`,
     );
   }
 

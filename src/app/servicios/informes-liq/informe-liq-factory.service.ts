@@ -3,6 +3,7 @@ import { ConId } from 'src/app/interfaces/conId';
 import { InformeOpNuevo } from 'src/app/interfaces/informe-op-nuevo';
 import { RefCliente, RefChofer, RefProveedor } from 'src/app/interfaces/operacion';
 import { aplicarImporte, estadoFinancieroDe, normalizarValoresFinancieros, redondear2 } from 'src/app/shared/utils/finanzas.util';
+import { diasDelMes } from 'src/app/shared/utils/fecha.util';
 import {
   CompensacionLiq,
   DescuentoLiq,
@@ -152,7 +153,7 @@ export class InformeLiqFactoryService {
    *  InformeLiqService (validación) y la UI de liquidación (preselección, B2). */
   ventanaPeriodo(periodo: PeriodoLiq): { desde: string; hasta: string } {
     const mm = String(periodo.mes).padStart(2, '0');
-    const ultimoDia = new Date(periodo.anio, periodo.mes, 0).getDate();
+    const ultimoDia = diasDelMes(periodo.anio, periodo.mes);
     const diaDesde = periodo.tramo === '2q' ? 16 : 1;
     const diaHasta = periodo.tramo === '1q' ? 15 : ultimoDia;
     return {

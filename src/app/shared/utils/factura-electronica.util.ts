@@ -1,6 +1,7 @@
 import { FacturaElectronicaLiq, InformeLiqNuevo } from 'src/app/interfaces/informe-liq-nuevo';
 import { TIPOS_COMPROBANTE } from 'src/app/constantes/tipos-comprobante';
 import { netoDe } from './compensacion.util';
+import { fechaLegible } from './fecha.util';
 
 /** Contenido del QR de AFIP (RG 4291): JSON en base64 dentro del parámetro
  *  `p` de https://www.afip.gob.ar/fe/qr/?p=… — `cuit` es el EMISOR y
@@ -138,11 +139,11 @@ export function numeroComprobante(f: Pick<FacturaElectronicaLiq, 'puntoVenta' | 
   return `${String(f.puntoVenta).padStart(4, '0')}-${String(f.numero).padStart(8, '0')}`;
 }
 
-/** Fecha del comprobante 'YYYY-MM-DD' → 'DD/MM/YYYY'. Sin pasar por Date ni
- *  por el pipe date (que toma ese formato como UTC y corre un día). Pura. */
+/** Fecha del comprobante 'YYYY-MM-DD' → 'DD/MM/AAAA' (vacía → ''). Delega
+ *  en fechaLegible (FE5b): se opera sobre el string, sin pasar por Date. El
+ *  nombre se conserva por sus llamadas. Pura. */
 export function fechaComprobanteLegible(fecha: string): string {
-  const [a, m, d] = (fecha ?? '').split('-');
-  return a && m && d ? `${d}/${m}/${a}` : (fecha ?? '');
+  return fechaLegible(fecha, '');
 }
 
 /** Campos en los que la factura no coincide con el informe: 'importe',

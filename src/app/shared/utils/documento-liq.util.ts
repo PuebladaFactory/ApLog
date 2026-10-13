@@ -5,6 +5,7 @@ import { etiquetaColumna, tipoColumna, valorCrudoColumna } from './columnas-liqu
 import { nombreEntidadRef } from './entidad-informe.util';
 import { descripcionTipoComprobante, fechaComprobanteLegible, numeroComprobante } from './factura-electronica.util';
 import { ETIQUETA_CONCEPTO_COMPENSACION, compensacionesDe, netoDe } from './compensacion.util';
+import { instanteLegible } from './fecha.util';
 
 /** Cómo se presenta un InformeLiqNuevo en Excel/PDF. Se deriva del estado,
  *  salvo la vista previa, que se indica explícitamente. */
@@ -130,11 +131,11 @@ function leyenda(liq: InformeLiqNuevo, variante: VarianteDocumentoLiq): string |
       return LEYENDA_PRELIMINAR;
     case 'revertido':
       return liq.reversion
-        ? `Revertido el ${fechaLocal(liq.reversion.fecha)}. Motivo: ${liq.reversion.motivo}`
+        ? `Revertido el ${instanteLegible(liq.reversion.fecha, false)}. Motivo: ${liq.reversion.motivo}`
         : null;
     case 'anulado':
       return liq.anulacion
-        ? `Anulado el ${fechaLocal(liq.anulacion.fecha)}. Motivo: ${liq.anulacion.motivo}`
+        ? `Anulado el ${instanteLegible(liq.anulacion.fecha, false)}. Motivo: ${liq.anulacion.motivo}`
         : null;
     default:
       return null;
@@ -209,13 +210,4 @@ function sanearNombreArchivo(texto: string): string {
     .replace(/[^A-Za-z0-9._-]+/g, '_')
     .replace(/_+/g, '_')
     .replace(/^_|_$/g, '');
-}
-
-/** Timestamp ISO completo (con hora, en UTC) → 'DD/MM/AAAA' en hora LOCAL.
- *  Para fechas 'YYYY-MM-DD' sin hora NO usar esto (ver
- *  fechaComprobanteLegible). */
-function fechaLocal(iso: string): string {
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return iso;
-  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
 }

@@ -6,6 +6,7 @@ import {
   doc,
   setDoc,
 } from '@angular/fire/firestore';
+import { hoyNegocio } from 'src/app/shared/utils/fecha.util';
 
 @Injectable({ providedIn: 'root' })
 export class MigrationBackupService {
@@ -13,7 +14,9 @@ export class MigrationBackupService {
   constructor(private firestore: Firestore) {}
 
   async backupColeccion(nombre: string): Promise<void> {
-    const fecha = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    // FE5b (lazy-fechas): sufijo con el hoy de Argentina (antes, desde las
+    // 21:00 daba mañana). legajo-migracion.verificarCantidad usa el mismo.
+    const fecha = hoyNegocio().replace(/-/g, '');
     const origenRef = collection(this.firestore, `/Vantruck/datos/${nombre}`);
     const backupRef = collection(this.firestore, `/Vantruck/datos/_backup_${nombre}_${fecha}`);
 

@@ -41,8 +41,7 @@ export function esFechaNegocio(s: unknown): s is FechaNegocio {
   const mes = Number(m[2]);
   const dia = Number(m[3]);
   if (mes < 1 || mes > 12 || dia < 1) return false;
-  const ultimo = new Date(Date.UTC(anio, mes, 0)).getUTCDate();
-  return dia <= ultimo;
+  return dia <= diasDelMes(anio, mes);
 }
 
 /** Partes numéricas de una fecha de negocio (mes 1..12). Lanza si el string
@@ -102,6 +101,23 @@ export function diasEntreONulo(
 ): number | null {
   if (!esFechaNegocio(desde) || !esFechaNegocio(hasta)) return null;
   return diasEntre(desde, hasta);
+}
+
+/** Cantidad de días del mes (mes 1..12): de 28 a 31. No depende del huso. */
+export function diasDelMes(anio: number, mes: number): number {
+  return new Date(Date.UTC(anio, mes, 0)).getUTCDate();
+}
+
+/** Último día de un mes 'YYYY-MM' como fecha de negocio ('2026-02' →
+ *  '2026-02-28'). Lanza si `mes` no es un 'YYYY-MM' válido (FE5b). */
+export function finDeMes(mes: string): FechaNegocio {
+  const m = /^(\d{4})-(\d{2})$/.exec(mes ?? '');
+  const anio = Number(m?.[1]);
+  const numMes = Number(m?.[2]);
+  if (!m || numMes < 1 || numMes > 12) {
+    throw new Error(`Mes inválido (YYYY-MM): '${mes}'.`);
+  }
+  return formatear(anio, numMes, diasDelMes(anio, numMes));
 }
 
 /** 'YYYY-MM-DD' → 'DD/MM/AAAA', sin pasar por Date. Vacío o nulo → `vacio`.
