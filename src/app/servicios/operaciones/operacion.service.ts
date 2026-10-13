@@ -91,10 +91,6 @@ export class OperacionService implements OnDestroy {
       });
   }
 
-  getOperacionesActuales(): ConId<Operacion>[] {
-    return this._operaciones$.getValue();
-  }
-
   /** Consulta puntual por id — un solo get, no live. Simétrico a
    *  InformeOpService.obtenerPorId(); usado para cargar la Operación
    *  asociada a un InformeOp antes de recalcular valores (modal de

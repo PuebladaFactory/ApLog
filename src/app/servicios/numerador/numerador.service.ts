@@ -11,47 +11,11 @@ import { PREFIJO_MOVIMIENTO_FIN, TipoMovimientoFin } from 'src/app/interfaces/mo
 export class NumeradorService {
   private firestore = inject(Firestore); // 🧨 Usamos inject() para romper ciclos
 
-  async generarNumeroInterno(tipo: 'cliente' | 'chofer' | 'proveedor'): Promise<string> {
-    const prefixMap: Record<string, string> = {
-      cliente: 'LQCL',
-      chofer: 'LQCH',
-      proveedor: 'LQPR'
-    };
-
-    const prefijo = prefixMap[tipo];
-    const docRef: DocumentReference = doc(this.firestore, `Vantruck/datos/numeradores/${prefijo}`);
-
-    try {
-      const numeroInterno = await runTransaction(this.firestore, async (transaction) => {
-        const docSnap = await transaction.get(docRef);
-        let nuevoNumero = 1;
-
-        if (docSnap.exists()) {
-          const data = docSnap.data() as { ultimoNumero: number };
-          nuevoNumero = data.ultimoNumero + 1;
-          transaction.update(docRef, { ultimoNumero: nuevoNumero });
-        } else {
-          transaction.set(docRef, { ultimoNumero: nuevoNumero });
-        }
-
-        const numeroFormateado = `${prefijo}-${nuevoNumero.toString().padStart(4, '0')}`;
-        return numeroFormateado;
-      });
-
-      return numeroInterno;
-    } catch (error) {
-      console.error("Error en transacción para generar número interno:", error);
-      throw new Error("No se pudo generar el número interno");
-    }
-  }
-
   /** Lee el próximo número interno de liquidación DENTRO de una transacción
    *  y devuelve la escritura del contador para que el caller la sume a su
-   *  EscrituraBatch[] (commitEnTransaccion). Misma serie y formato que
-   *  generarNumeroInterno (LQCL/LQCH/LQPR-0000), pero sin transacción propia:
-   *  el número solo se consume si commitea la transacción completa del
-   *  caller, así que no quedan huecos por fallos posteriores. Mismo patrón
-   *  que leerProximoNumeroMovimiento. */
+   *  EscrituraBatch[] (commitEnTransaccion). Serie LQCL/LQCH/LQPR-0000, sin
+   *  transacción propia: el número solo se consume si commitea la transacción
+   *  completa del caller, así que no quedan huecos por fallos posteriores. */
   async leerProximoNumeroInterno(
     tx: Transaction,
     tipo: 'cliente' | 'chofer' | 'proveedor',
@@ -108,8 +72,8 @@ export class NumeradorService {
    *  que el caller la sume a su EscrituraBatch[] (commitEnTransaccion): el
    *  número solo se consume si commitea la transacción completa. Mismo patrón
    *  que leerProximoNumeroInterno / leerProximoNumeroLiquidacionVenta.
-   *  No confundir con leerProximoNumeroMovimiento (módulo viejo: 'RC'/'OP',
-   *  sin escritura); el contador 'RC' es el mismo documento para los dos. */
+   *  El contador 'RC' es el mismo documento que usaba el módulo viejo de
+   *  Finanzas. */
   async leerProximoNumeroMovimientoFin(
     tx: Transaction,
     tipo: TipoMovimientoFin,
@@ -163,29 +127,5 @@ export class NumeradorService {
       throw new Error('No se pudo reservar el rango de números de operación');
     }
   }
-
-  async leerProximoNumeroMovimiento(
-    tx: Transaction,
-    tipo: 'cobro' | 'pago'
-  ): Promise<{ prefijo: string; numero: number }> {
-
-    const prefijo = tipo === 'cobro' ? 'RC' : 'OP';
-
-    const docRef = doc(
-      this.firestore,
-      `Vantruck/datos/numeradores/${prefijo}`
-    );
-
-    const snap = await tx.get(docRef);
-
-    let numero = 1;
-
-    if (snap.exists()) {
-      numero = (snap.data()['ultimoNumero'] ?? 0) + 1;
-    }
-
-    return { prefijo, numero };
-  }
-
 
 }

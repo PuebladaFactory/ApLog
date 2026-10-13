@@ -53,13 +53,6 @@ function mapaSucesoras<T extends VersionConVigencia>(versiones: T[]): Map<string
   return sucesoras;
 }
 
-/** Fin exclusivo ('YYYY-MM-DD') del intervalo de vigencia de `version`, o
- *  null si está abierto. `versiones`: todas las versiones conocidas (de
- *  cualquier linaje), incluidas las inactivas. */
-export function finVigencia<T extends VersionConVigencia>(version: T, versiones: T[]): string | null {
-  return finConSucesoras(version, mapaSucesoras(versiones));
-}
-
 function finConSucesoras<T extends VersionConVigencia>(version: T, sucesoras: Map<string, T>): string | null {
   const sucesora = sucesoras.get(version.idTarifa);
   if (sucesora) return dia(sucesora.vigenciaDesde);

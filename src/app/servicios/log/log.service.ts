@@ -1,7 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { Firestore, collection, doc, setDoc } from '@angular/fire/firestore';
 import { LogEntry } from 'src/app/interfaces/log-entry';
-import { LogDoc } from 'src/app/interfaces/log-doc';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 
 @Injectable({
@@ -57,34 +56,4 @@ export class LogService {
     };
   }
 
-  /**
-   * Registra un evento y un objeto completo (como "papelera") en Firestore.
-   */
-  async logEventDoc(
-    accion: string,
-    coleccion: string,
-    detalle: string,
-    idObjeto: string | number,
-    objeto: any,
-    resultado: boolean,
-    motivo: string
-  ): Promise<void> {
-    try {
-      const logId = doc(collection(this.firestore, '/Vantruck/datos/logs')).id;
-      const logDocId = doc(collection(this.firestore, '/Vantruck/datos/papelera')).id;
-      const logEntry = this.createLogEntry(accion, coleccion, detalle, idObjeto, resultado, 0);
-
-      const logDoc: LogDoc = {
-        idDoc: logEntry.timestamp,
-        logEntry: logEntry,
-        objeto: objeto,
-        motivoBaja: motivo,
-      };
-
-      await setDoc(doc(this.firestore, '/Vantruck/datos/logs', logId), logEntry);
-      await setDoc(doc(this.firestore, '/Vantruck/datos/papelera', logDocId), logDoc);
-    } catch (error) {
-      console.error('Error al registrar el log y el logDoc:', error);
-    }
-  }
 }

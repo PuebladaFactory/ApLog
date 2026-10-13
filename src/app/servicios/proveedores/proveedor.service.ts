@@ -160,15 +160,6 @@ export class ProveedorService implements OnDestroy {
     await this.guardarProveedor(proveedorEditado, 'edicion');
   }
 
-  getVehiculosPorProveedor(idProveedor: string): Observable<ConIdType<Vehiculo>[]> {
-    return this.choferService.vehiculos$.pipe(
-      map(vs => vs.filter(v =>
-        v.asignadoA.tipo === 'proveedor' &&
-        v.asignadoA.idProveedor === idProveedor
-      ))
-    );
-  }
-
   async guardarProveedorConVehiculos(
     proveedor: ConIdType<Proveedor>,
     vehiculos: ConIdType<Vehiculo>[],

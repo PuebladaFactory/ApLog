@@ -129,13 +129,6 @@ export class ChoferService implements OnDestroy {
     );
   }
 
-  esOperable(chofer: ConIdType<Chofer>, vehiculos: ConIdType<Vehiculo>[]): boolean {
-    if (chofer.contratacion.tipo === 'proveedor') return true;
-    return vehiculos.some(v =>
-      v.asignadoA.tipo === 'chofer' && v.asignadoA.idChofer === chofer.id
-    );
-  }
-
   vehiculoToFirestore(vehiculo: ConIdType<Vehiculo>): Omit<Vehiculo, 'idVehiculo'> {
     // Excluimos id y type (metadata de ConIdType) e idVehiculo
     // (se almacena solo como ID del documento, no como campo)

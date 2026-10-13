@@ -4,7 +4,6 @@ import { LogService } from '../log/log.service';
 import { AsignacionService } from '../operaciones/asignacion.service';
 import { OperacionFactoryService } from '../operaciones/operacion-factory.service';
 import { Operacion } from 'src/app/interfaces/operacion';
-import { ConId } from 'src/app/interfaces/conId';
 
 @Injectable({
   providedIn: 'root'
@@ -19,15 +18,6 @@ export class TableroService {
   ) {}
 
   // ---- Fachada hacia el modelo nuevo (AsignacionService) ----
-
-  /** Actualiza observacion/hojaDeRuta de la asignación en el tablero.
-   *  TODO: fachada provisoria → migrará a OperacionService.editarOperacion (atómico). */
-  async actualizarAsignacionDesdeOperacion(op: ConId<Operacion>): Promise<void> {
-    const fecha = this.normalizarFecha(op.fecha);
-    await this.asignacionService.actualizarItem(
-      fecha, op.idOperacion, op.observaciones ?? '', op.hojaRuta ?? '',
-    );
-  }
 
   /** Restaurar op desde papelera: reinicia estado + km, re-guarda la op, reactiva
    *  el item del tablero (no crea uno nuevo).

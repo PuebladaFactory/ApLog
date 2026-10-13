@@ -1,11 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom, Observable } from 'rxjs';
-import { QueryDocumentSnapshot, DocumentData, Transaction } from '@angular/fire/firestore';
+import { Transaction } from '@angular/fire/firestore';
 import { ConId } from 'src/app/interfaces/conId';
 import { Resultado } from 'src/app/interfaces/resultado';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { InformeOpNuevo, Valores, AnulacionInformeOp } from 'src/app/interfaces/informe-op-nuevo';
-import { DbFirestoreService, EscrituraBatch, PaginaResultado } from 'src/app/servicios/database/db-firestore.service';
+import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 import { InformeOpFactoryService } from 'src/app/servicios/informes-op/informe-op-factory.service';
 import { OperacionFactoryService } from 'src/app/servicios/operaciones/operacion-factory.service';
@@ -110,17 +110,6 @@ export class InformeOpService {
     );
     // idInfOp = id del documento (patrón ConId) — no viene en el body.
     return informes.map(inf => ({ ...inf, idInfOp: inf.id }));
-  }
-
-  async obtenerPorPeriodo(
-    desde: string,
-    hasta: string,
-    tipo: 'cliente' | 'chofer' | 'proveedor',
-    estado: 'activo' | 'proforma' | 'liquidado' | 'anulado' | undefined,
-    pageSize: number,
-    cursor: QueryDocumentSnapshot<DocumentData> | null,
-  ): Promise<PaginaResultado<InformeOpNuevo>> {
-    return this.db.getInformesOpPorPeriodo(this.COLECCION, desde, hasta, tipo, estado, pageSize, cursor);
   }
 
   /** InformeOp que componen un InformeLiqNuevo — link inverso

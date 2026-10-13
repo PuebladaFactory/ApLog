@@ -39,18 +39,6 @@ export class DateRangeService {
     return this.subject.value;
   }
 
-  private buildSemanaActual(): DateRange {
-    const now = new Date();
-    const day = now.getDay();
-    const monday = new Date(now);
-    monday.setDate(now.getDate() - day + (day === 0 ? -6 : 1));
-
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-
-    return { desde: monday, hasta: sunday, tipo: 'semana' };
-  }
-
 
 
 }

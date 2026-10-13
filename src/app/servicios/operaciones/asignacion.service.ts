@@ -35,10 +35,6 @@ export class AsignacionService implements OnDestroy {
 
   // ---- Lectura / estado ----
 
-  getAsignacionActual(): Asignacion | null {
-    return this._asignacion$.getValue();
-  }
-
   /** Abre listener vivo sobre el documento de la fecha. Cancela el listener anterior. */
   cargarFecha(fecha: string): void {
     this.cancelarFecha$.next();
@@ -106,28 +102,6 @@ export class AsignacionService implements OnDestroy {
     }
   }
 
-  /** Agrega un item a un tablero existente; si no existe, lo crea. Log: EDITAR. */
-  async agregarItem(fecha: string, item: AsignacionItem): Promise<void> {
-    const actual = await this.getTableroPorFecha(fecha);
-    const asignacion: Asignacion = actual
-      ? { ...actual, items: [...actual.items, item], timestamp: Date.now() }
-      : { idAsignacion: fecha, fecha, asignado: true, timestamp: Date.now(), items: [item] };
-    const escrituras: EscrituraBatch[] = [
-      { coleccion: this.COLECCION, id: fecha, data: this.toFirestore(asignacion), modo: 'reemplazar' },
-    ];
-    await this.logRegistro.agregarAlBatch(
-      escrituras, 'EDITAR', this.COLECCION, fecha, `Item agregado al tablero ${fecha}`,
-    );
-    try {
-      await this.db.commitBatch(escrituras);
-    } catch (e: any) {
-      await this.logRegistro.registrarError(
-        'EDITAR', this.COLECCION, fecha, `Error al agregar item al tablero ${fecha}: ${e?.message ?? e}`,
-      );
-      throw e;
-    }
-  }
-
   /** Puro: devuelve items con el idOperacion dado marcado como anulado. Sin efectos de red. */
   anularItemEnLista(items: AsignacionItem[], idOperacion: string, motivo: string): AsignacionItem[] {
     return items.map(it =>
@@ -186,9 +160,9 @@ export class AsignacionService implements OnDestroy {
 
   /** Arma (sin comitear) la escritura de actualización de observacion/hojaDeRuta
    *  de un item por idOperacion + su propio log EDITAR, y los agrega a
-   *  `escrituras`. Extraído de actualizarItem() para que un caller externo (ej.
+   *  `escrituras`, para que un caller externo (ej.
    *  OperacionService.editarOperacion) pueda incluir esta escritura en SU PROPIO
-   *  batch atómico — ver TODO en TableroService.actualizarAsignacionDesdeOperacion. */
+   *  batch atómico. */
   async agregarEscrituraActualizarItem(
     escrituras: EscrituraBatch[], fecha: string, idOperacion: string,
     observacion: string, hojaDeRuta: string,
@@ -206,22 +180,6 @@ export class AsignacionService implements OnDestroy {
     await this.logRegistro.agregarAlBatch(
       escrituras, 'EDITAR', this.COLECCION, fecha, `Item actualizado (op ${idOperacion}) en tablero ${fecha}`,
     );
-  }
-
-  /** Actualiza observacion/hojaDeRuta de un item por idOperacion. Log: EDITAR.
-   *  Wrapper de agregarEscrituraActualizarItem + commit, para callers que solo
-   *  tocan el tablero (sin una operación atómica más amplia alrededor). */
-  async actualizarItem(fecha: string, idOperacion: string, observacion: string, hojaDeRuta: string): Promise<void> {
-    const escrituras: EscrituraBatch[] = [];
-    await this.agregarEscrituraActualizarItem(escrituras, fecha, idOperacion, observacion, hojaDeRuta);
-    try {
-      await this.db.commitBatch(escrituras);
-    } catch (e: any) {
-      await this.logRegistro.registrarError(
-        'EDITAR', this.COLECCION, fecha, `Error al actualizar item en tablero ${fecha}: ${e?.message ?? e}`,
-      );
-      throw e;
-    }
   }
 
   /** Borra un borrador. SOLO si asignado===false. Log: BAJA. */

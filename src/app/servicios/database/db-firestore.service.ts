@@ -586,47 +586,7 @@ export class DbFirestoreService {
     };
   }
 
-  /** Paginado de informesOp por período + tipo (obligatorio, la UI es por tab) +
-   *  estado (opcional). Requiere índice compuesto (tipo, estado, fecha) — o
-   *  (tipo, fecha) cuando no se pasa estado — ver firestore.indexes.json. */
-  async getInformesOpPorPeriodo(
-    coleccion: string,
-    desde: string,
-    hasta: string,
-    tipo: 'cliente' | 'chofer' | 'proveedor',
-    estado: 'activo' | 'proforma' | 'liquidado' | 'anulado' | undefined,
-    pageSize: number,
-    cursor: QueryDocumentSnapshot<DocumentData> | null,
-  ): Promise<PaginaResultado<InformeOpNuevo>> {
-    const colRef = collection(this.firestore, `/Vantruck/datos/${coleccion}`);
-    const constraints: QueryConstraint[] = [
-      where('tipo', '==', tipo),
-      orderBy('fecha', 'desc'),
-      where('fecha', '>=', desde),
-      where('fecha', '<=', hasta),
-    ];
-    if (estado) constraints.push(where('estado', '==', estado));
-    if (cursor) constraints.push(startAfter(cursor));
-    constraints.push(limit(pageSize + 1));
-
-    const snap = await getDocs(query(colRef, ...constraints));
-    const docsPagina = snap.docs.slice(0, pageSize);
-    // idInfOp se agrega a mano (patrón ConId) — NO viene en el body del
-    // documento (informe-op-nuevo.ts lo dice explícitamente). Sin esto
-    // queda undefined y cualquier escritura que lo use como id de
-    // documento (InformeOpService.agregarEscrituraInformeOpCompleto)
-    // termina en un documento fantasma "informesOp/undefined" en vez de
-    // actualizar el real — bug detectado en producción, ver conversación.
-    const items = docsPagina.map(d => ({ id: d.id, ...(d.data() as InformeOpNuevo), idInfOp: d.id }));
-
-    return {
-      items,
-      cursor: docsPagina.length > 0 ? docsPagina[docsPagina.length - 1] : null,
-      hayMas: snap.docs.length > pageSize,
-    };
-  }
-
-  /** Hermano en vivo de getInformesOpPorPeriodo — sin paginar, con estados
+  /** InformeOp de un período en vivo, sin paginar, con estados
    *  múltiples (in). Usado por InformeOpService.observarPorPeriodo. */
   observarInformesOpPorPeriodo(
     coleccion: string,
@@ -644,8 +604,7 @@ export class DbFirestoreService {
       where('fecha', '>=', desde),
       where('fecha', '<=', hasta),
     );
-    // Mismo problema y mismo fix que getInformesOpPorPeriodo: collectionData
-    // con idField solo agrega 'id', no 'idInfOp'. Sin este map, todo lo que
+    // collectionData con idField solo agrega 'id', no 'idInfOp'. Sin este map, todo lo que
     // sale de acá (InformeOpListadoComponent.informesOp, la fuente de
     // InformeOpEditorComponent.@Input() informeOp en cada "editar" del
     // listado) queda con idInfOp undefined.
