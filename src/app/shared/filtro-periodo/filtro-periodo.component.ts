@@ -1,5 +1,7 @@
 import { Component, EventEmitter, OnInit, Output } from "@angular/core";
 import { PeriodoFiltro } from "src/app/interfaces/periodo-filtro";
+import { hoyNegocio, partesFecha } from "src/app/shared/utils/fecha.util";
+import { ultimos12Meses } from "src/app/shared/utils/periodo.util";
 
 @Component({
   selector: "app-filtro-periodo",
@@ -12,12 +14,15 @@ export class FiltroPeriodoComponent implements OnInit {
 
   tipo: "ultimos-12" | "anio" | "rango" = "ultimos-12";
 
-  anio = new Date().getFullYear();
+  // Año y mes actuales según el "hoy" de Argentina (frente lazy-fechas, FE3).
+  private readonly actual = partesFecha(hoyNegocio());
+
+  anio = this.actual.anio;
 
   desdeMes = 1;
   desdeAnio = this.anio;
 
-  hastaMes = new Date().getMonth() + 1;
+  hastaMes = this.actual.mes;
   hastaAnio = this.anio;
 
   meses = [
@@ -41,20 +46,13 @@ export class FiltroPeriodoComponent implements OnInit {
     let desde, hasta;
 
     if (this.tipo === "ultimos-12") {
-      const hoy = new Date();
-
-      hasta = {
-        anio: hoy.getFullYear(),
-        mes: hoy.getMonth() + 1,
-      };
-
-      const desdeDate = new Date(hoy);
-      desdeDate.setMonth(desdeDate.getMonth() - 11);
-
-      desde = {
-        anio: desdeDate.getFullYear(),
-        mes: desdeDate.getMonth() + 1,
-      };
+      // Misma cuenta que el período por defecto de Reportes (ultimos12Meses).
+      // Antes se restaban 11 meses con setMonth sobre la fecha de hoy: un 31
+      // (o un 29/30 hacia febrero) desbordaba al mes siguiente y "desde"
+      // quedaba un mes corrido.
+      const periodo = ultimos12Meses();
+      desde = periodo.desde;
+      hasta = periodo.hasta;
     } else if (this.tipo === "anio") {
       desde = { anio: this.anio, mes: 1 };
       hasta = { anio: this.anio, mes: 12 };

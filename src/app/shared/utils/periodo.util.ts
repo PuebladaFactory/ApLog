@@ -1,4 +1,5 @@
 import { PeriodoFiltro } from 'src/app/interfaces/periodo-filtro';
+import { hoyNegocio, partesFecha } from 'src/app/shared/utils/fecha.util';
 
 /** Período mensual de negocio. `periodo` = anio*100 + mes (ej. 202608),
  *  apto para filtros por rango en Firestore. */
@@ -50,13 +51,14 @@ export function mesesDelRango(
 
 /** Días operativos de un mes para el promedio de ops por día: días del mes
  *  sin domingos (sin calendario de feriados). Mes en curso: solo hasta hoy
- *  inclusive. Mes futuro: 0. Fechas locales construidas con números (sin
- *  parsear strings). */
+ *  inclusive, con el "hoy" de Argentina (frente lazy-fechas, FE3). Mes
+ *  futuro: 0. Fechas locales construidas con números (sin parsear strings). */
 export function diasOperativos(anio: number, mes: number, hoy: Date = new Date()): number {
-  const actual = hoy.getFullYear() * 100 + (hoy.getMonth() + 1);
+  const h = partesFecha(hoyNegocio(hoy));
+  const actual = h.anio * 100 + h.mes;
   const periodo = anio * 100 + mes;
   if (periodo > actual) return 0;
-  const ultimoDia = periodo === actual ? hoy.getDate() : new Date(anio, mes, 0).getDate();
+  const ultimoDia = periodo === actual ? h.dia : new Date(anio, mes, 0).getDate();
   let dias = 0;
   for (let d = 1; d <= ultimoDia; d++) {
     if (new Date(anio, mes - 1, d).getDay() !== 0) dias++;
@@ -64,9 +66,12 @@ export function diasOperativos(anio: number, mes: number, hoy: Date = new Date()
   return dias;
 }
 
-/** Período "últimos 12 meses" (incluye el mes actual). */
+/** Período "últimos 12 meses" (incluye el mes actual). El mes actual sale del
+ *  "hoy" de Argentina (frente lazy-fechas, FE3); `hoy` es el instante de
+ *  referencia (por defecto, ahora). */
 export function ultimos12Meses(hoy: Date = new Date()): PeriodoFiltro {
-  const hasta = { anio: hoy.getFullYear(), mes: hoy.getMonth() + 1 };
+  const actual = partesFecha(hoyNegocio(hoy));
+  const hasta = { anio: actual.anio, mes: actual.mes };
   let anio = hasta.anio;
   let mes = hasta.mes - 11;
   if (mes < 1) { mes += 12; anio--; }
