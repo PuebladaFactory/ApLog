@@ -1,19 +1,10 @@
-import { Injectable, Input } from '@angular/core';
+import { Injectable } from '@angular/core';
 
 import {
   AbstractControl,
-  FormBuilder,
   ValidationErrors,
-  Validator,
-  ValidatorFn,
   Validators,
 } from '@angular/forms';
-import { Chofer } from 'src/app/interfaces/chofer';
-import { Cliente } from 'src/app/interfaces/cliente';
-import { Legajo } from 'src/app/interfaces/legajo';
-import { Proveedor } from 'src/app/interfaces/proveedor';
-import { Router } from '@angular/router';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Injectable({
   providedIn: 'root',
@@ -21,60 +12,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 export class ValidarService implements Validators {
   
 
-  constructor(private fb: FormBuilder) {}
   
-    nombreV = this.fb.group({                             
-      nombre: ["", [Validators.required, Validators.maxLength(30)]],
-    });
-    
-    apellidoV= this.fb.group({                             
-      apellido: ["", [Validators.required, Validators.maxLength(30)]],
-    });
-
-    cuitV= this.fb.group({                             
-      cuit: ["", [Validators.required, Validators.minLength(11), Validators.maxLength(11)]],
-    });
-
-    fechaNacV= this.fb.group({                             
-      fechaNac: ["", [Validators.required]],
-    });
-
-    emailV= this.fb.group({
-      email: ["", [Validators.required]],
-    });
-
-    celulcarContactoV= this.fb.group({
-      celulcarContacto: ["", [Validators.required, Validators.minLength(10), Validators.maxLength(10)]],
-    });
-
-    celularEmergenciaV= this.fb.group({
-      celularEmergencia: ["", [Validators.required, Validators.minLength(10), Validators.maxLength(10)]],
-    });
-
-    domicilioV= this.fb.group({                             
-      domicilio: ["", [Validators.required, Validators.maxLength(50)]],
-    });
-
-    dominioV= this.fb.group({                             
-      dominio: ["", [Validators.required, Validators.minLength(6), Validators.maxLength(8)]],
-    });
-
-    marcaV= this.fb.group({                             
-      marca: ["", [Validators.required, Validators.maxLength(30)]],
-    });
-
-    modeloV= this.fb.group({                             
-      modelo: ["", [Validators.required, Validators.maxLength(30)]],
-    });
-    
-    proveedorV= this.fb.group({                             
-      proveedor: ["", [Validators.required, Validators.maxLength(30)]],
-    });
-
-    marcaGpsV= this.fb.group({                             
-      marcaGps: ["", [Validators.required, Validators.maxLength(30)]],
-    });
-
      // Validador para solo permitir caracteres alfabéticos y especiales
   static soloLetras(control: AbstractControl): ValidationErrors | null {
     const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\-']*$/;
