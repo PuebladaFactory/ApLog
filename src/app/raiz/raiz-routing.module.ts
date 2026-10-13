@@ -2,7 +2,6 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { HomeComponent } from './home/home.component';
 import { RoleGuard } from '../guards/role.guard';
-import { MigracionComponent } from '../componentes/migracion/migracion.component';
 
 
 const routes: Routes = [
@@ -85,8 +84,9 @@ const routes: Routes = [
       data: { roles: ['dev','admin', 'demo'] }, // 
     },
     {
+      // LZ6: herramientas de desarrollo en un módulo lazy propio.
       path: 'migracion',
-      component: MigracionComponent,
+      loadChildren: () => import('../componentes/desarrollo.module').then(m => m.DesarrolloModule),
       canActivate: [RoleGuard],
       data: { roles: ['dev'] },
     },
