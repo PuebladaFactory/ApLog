@@ -2260,10 +2260,8 @@ Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
 - Specs de Karma: 7 no compilan (`npm test` no corre).
 - Estilo global `.col-numero` (hoy repetido en Vendedores y
   `tabla-listado`).
-- Sidebar: no se cierra solo al navegar en pantallas < 1600 px; revisar
-  apertura/cierre por tamaño de pantalla (modo superpuesto en angostas,
-  cerrar al navegar, reaccionar solo al cruzar el breakpoint) y el listener
-  de resize duplicado que tira error en consola.
+- ~~Sidebar: cierre al navegar y modos por tamaño de pantalla~~ — RESUELTO
+  (SB1): superpuesto y cerrado al navegar por debajo de 1600 px.
 
 **Migración a Vantruck (al final)**
 - Migración de datos (entidades, tarifas, operaciones, liquidaciones y

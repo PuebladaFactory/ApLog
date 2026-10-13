@@ -1,5 +1,6 @@
-import { Component, HostListener, OnInit } from '@angular/core';
-import { Subject } from 'rxjs';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { NavigationEnd, Router } from '@angular/router';
+import { Subject, filter, takeUntil } from 'rxjs';
 import { NoDisponibilidadChofer } from 'src/app/interfaces/no-disponibilidad-chofer';
 import { CategoriaDocumentacionService } from 'src/app/servicios/categoria-documentacion/categoria-documentacion.service';
 import { LegajoService } from 'src/app/servicios/legajos/legajo.service';
@@ -17,6 +18,9 @@ try {
   console.warn('⚠️ version.ts no encontrado, usando versión por defecto.');
 }
 
+/** Ancho desde el que el sidebar va fijo al lado del contenido. Por debajo,
+ *  se superpone al contenido y se cierra al navegar. */
+const BREAKPOINT_SIDEBAR = '(min-width: 1600px)';
 
 @Component({
     selector: 'app-home',
@@ -24,13 +28,25 @@ try {
     styleUrls: ['./home.component.css'],
     standalone: false
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
 
   appVersion = version;
-  activo!:boolean;
+
+  /** Sidebar — dos modos según el ancho (BREAKPOINT_SIDEBAR):
+   *  - ancho: fijo al lado del contenido (lo empuja), abierto por defecto;
+   *  - angosto: superpuesto con fondo oscuro, cerrado por defecto; se cierra
+   *    al navegar, con Esc o tocando el fondo.
+   *  El modo se recalcula solo al CRUZAR el breakpoint (matchMedia), así se
+   *  respeta lo que el usuario eligió con el botón mientras el ancho no cambia
+   *  de lado. */
+  esAncho = false;
+  sidebarAbierto = false;
+
+  private consultaAncho = window.matchMedia(BREAKPOINT_SIDEBAR);
+  private alCambiarAncho = (e: MediaQueryListEvent) => this.aplicarModo(e.matches);
   private destroy$ = new Subject<void>();
 
-  constructor(private storageService: StorageService, private categoriaDocumentacionService: CategoriaDocumentacionService, private legajoService: LegajoService, private choferService: ChoferService, private proveedorService: ProveedorService, private clienteService: ClienteService, private tarifarioService: TarifarioService) { }
+  constructor(private storageService: StorageService, private categoriaDocumentacionService: CategoriaDocumentacionService, private legajoService: LegajoService, private choferService: ChoferService, private proveedorService: ProveedorService, private clienteService: ClienteService, private tarifarioService: TarifarioService, private router: Router) { }
 
   ngOnInit(): void {
     this.choferService.init();
@@ -39,36 +55,45 @@ export class HomeComponent implements OnInit {
     this.tarifarioService.init();
     this.categoriaDocumentacionService.init();
     this.legajoService.init();
-    this.setInitialSidebarState();
-    window.addEventListener('resize', this.onResize);
-      // TC-R3: fuera los listeners de las 7 colecciones de tarifas viejas
-      // (tarifasGral/Esp/PersCliente, tarifasGral/EspChofer,
-      // tarifasGral/EspProveedor) — sin lectores desde TC-R1/TC-R2. Las
-      // tarifas se cargan con tarifarioService.init().
-      this.storageService.listenForChangesField<NoDisponibilidadChofer>("noOperativo", "activa", true);
-      
+    // TC-R3: fuera los listeners de las 7 colecciones de tarifas viejas
+    // (tarifasGral/Esp/PersCliente, tarifasGral/EspChofer,
+    // tarifasGral/EspProveedor) — sin lectores desde TC-R1/TC-R2. Las
+    // tarifas se cargan con tarifarioService.init().
+    this.storageService.listenForChangesField<NoDisponibilidadChofer>("noOperativo", "activa", true);
 
+    this.aplicarModo(this.consultaAncho.matches);
+    this.consultaAncho.addEventListener('change', this.alCambiarAncho);
+
+    this.router.events
+      .pipe(filter(e => e instanceof NavigationEnd), takeUntil(this.destroy$))
+      .subscribe(() => {
+        if (!this.esAncho) this.sidebarAbierto = false;
+      });
   }
 
   ngOnDestroy(): void {
-    window.removeEventListener('resize', this.onResize);
+    this.consultaAncho.removeEventListener('change', this.alCambiarAncho);
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  setInitialSidebarState(): void {
-    this.activo = window.innerWidth >= 1600;
+  /** Al entrar o al cruzar el breakpoint: ancho → abierto; angosto → cerrado. */
+  private aplicarModo(esAncho: boolean): void {
+    this.esAncho = esAncho;
+    this.sidebarAbierto = esAncho;
   }
 
-  @HostListener('window:resize', ['$event'])
-  onResize(event:any): void {
-    this.setInitialSidebarState();
+  toggleSidebar(): void {
+    this.sidebarAbierto = !this.sidebarAbierto;
   }
 
-  toogleSidebar(): void {
-    this.activo = !this.activo;   
+  cerrarSidebar(): void {
+    this.sidebarAbierto = false;
   }
 
-
+  @HostListener('document:keydown.escape')
+  alPresionarEsc(): void {
+    if (!this.esAncho && this.sidebarAbierto) this.sidebarAbierto = false;
+  }
 
 }

@@ -1,17 +1,22 @@
-<div class="wrapper">
-    <!-- Sidebar  -->
-    <nav id="sidebar" [ngClass]="{'active': !activo}" class="layout-global no-print">
+<div class="wrapper" [class.superpuesto]="!esAncho">
+    <!-- Sidebar: fijo en pantallas anchas; superpuesto en angostas (ver HomeComponent) -->
+    <nav id="sidebar" [class.cerrado]="!sidebarAbierto" class="layout-global no-print">
         <app-sidebar></app-sidebar>
     </nav>
 
+    <!-- Fondo del sidebar superpuesto: tocarlo lo cierra -->
+    @if (!esAncho && sidebarAbierto) {
+        <div class="fondo-sidebar no-print" (click)="cerrarSidebar()"></div>
+    }
+
     <!-- Page Content  -->
-    <body id="content">
-        <button (click)="toogleSidebar()" class="btn layout-global no-print">
+    <main id="content">
+        <button (click)="toggleSidebar()" class="btn layout-global no-print" aria-label="Mostrar u ocultar el menú">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
                 <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"/>
             </svg>
-        </button>                
+        </button>
         <router-outlet></router-outlet>
         <app-scroll-to-top></app-scroll-to-top>
-    </body>   
+    </main>
 </div>

@@ -3939,7 +3939,12 @@ a cachear si hubiera cientos de clientes. Hoy trivial.
 
 **Item con cliente borrado** (papelera) sin columna: `// TODO: refactor Papelera`.
 
-### Pendiente — sidebar: apertura/cierre según tamaño de pantalla y navegación
+### ~~Pendiente — sidebar: apertura/cierre según tamaño de pantalla y navegación~~ — RESUELTO (SB1, Octubre 2026)
+`HomeComponent`: dos modos con breakpoint 1600 px (`matchMedia`, se recalcula solo al
+cruzar). Ancho: fijo, empuja el contenido, abierto por defecto. Angosto: superpuesto con
+fondo (z-index 1045/1040, debajo de los modales), cerrado por defecto, se cierra al navegar
+(`NavigationEnd`), con Esc o tocando el fondo. Fuera los listeners de resize (uno tiraba
+`TypeError`), `sidebarAbierto` / clase `cerrado`, `<main id="content">`. Texto original:
 
 **Síntoma (Nico, Octubre 2026):** el sidebar "ya no se cierra de forma
 automática"; revisar su comportamiento con distintos tamaños de pantalla y

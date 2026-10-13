@@ -3,7 +3,9 @@
 */
 
 @import "https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700";
-body {
+/* FIX sidebar: antes `body`; matcheaba el <body id="content"> anidado del
+   template, que pasó a <main id="content">. */
+#content {
     font-family: 'Poppins', sans-serif;
     /* background-color: #a3a3a3; */
     background-color: #eaf4f8f6;
@@ -87,8 +89,31 @@ a:focus {
     transition: all 0.3s;
 }
 
-#sidebar.active {
+#sidebar.cerrado {
     margin-left: -200px;
+}
+
+/* Pantallas angostas (HomeComponent.esAncho = false): el sidebar se
+   superpone al contenido en vez de empujarlo. Por debajo de los modales de
+   ng-bootstrap (z-index 1050/1055). */
+.wrapper.superpuesto #sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1045;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+}
+
+.wrapper.superpuesto #sidebar.cerrado {
+    margin-left: -232px;
+}
+
+.fondo-sidebar {
+    position: fixed;
+    inset: 0;
+    z-index: 1040;
+    background-color: rgba(0, 0, 0, 0.35);
 }
 /* 
 #sidebar .sidebar-header {
