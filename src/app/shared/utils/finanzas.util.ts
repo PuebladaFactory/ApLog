@@ -111,20 +111,10 @@ export function distribuirFifo(monto: number, saldos: number[]): number[] {
 // Fechas y antigüedad
 // ---------------------------------------------------------------------------
 
-const FORMATO_FECHA = /^\d{4}-\d{2}-\d{2}$/;
-
-function msUtc(fecha: string): number {
-  if (!FORMATO_FECHA.test(fecha)) throw new Error(`Fecha inválida (YYYY-MM-DD): '${fecha}'.`);
-  const [a, m, d] = fecha.split('-').map(Number);
-  return Date.UTC(a, m - 1, d);
-}
-
-/** Días de calendario de `desde` a `hasta` (ambas 'YYYY-MM-DD'); negativo
- *  si hasta < desde. Opera en UTC sobre las partes del string: no depende
- *  del huso horario. */
-export function diasEntre(desde: string, hasta: string): number {
-  return Math.round((msUtc(hasta) - msUtc(desde)) / 86400000);
-}
+// FE1 (frente lazy-fechas): el cálculo de días entre fechas vive en
+// fecha.util. Este re-export es temporal para no tocar a quienes lo importan
+// desde acá; FE5 los apunta a fecha.util y lo saca.
+export { diasEntre } from 'src/app/shared/utils/fecha.util';
 
 export type TramoAntiguedad = '0-30' | '31-60' | '61-90' | '90+';
 
