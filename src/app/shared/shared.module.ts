@@ -34,7 +34,6 @@ import { SpinnerComponent } from './spinner/spinner.component';
 import { GlobalFilterPipe } from './pipes/global-filter.pipe';
 import { InformeOpDetalleComponent } from './modales/informe-op-detalle/informe-op-detalle.component';
 import { InformeOpEditorComponent } from './modales/informe-op-editor/informe-op-editor.component';
-import { DescuentosComponent } from './modales/descuentos/descuentos.component';
 import { AjustesLiqComponent } from './modales/ajustes-liq/ajustes-liq.component';
 import { InformeLiqNuevoDetalleComponent } from './modales/informe-liq-nuevo-detalle/informe-liq-nuevo-detalle.component';
 import { CompensacionesLiqComponent } from './modales/compensaciones-liq/compensaciones-liq.component';
@@ -46,7 +45,6 @@ import { DecimalInputDirective } from './directives/decimal-input.directive';
 
 
 import { MontoDirective } from './directives/monto.directive';
-import { CalcularPorcentajeV2Pipe } from './pipes/calcular-porcentaje-v2.pipe';
 import { FiltroPeriodoComponent } from './filtro-periodo/filtro-periodo.component';
 import { TablaAccionesComponent } from './tabla/tabla-acciones/tabla-acciones.component';
 import { TablaGenericaComponent } from './tabla/tabla-generica/tabla-generica.component';
@@ -81,7 +79,6 @@ import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
 
     InformeOpDetalleComponent,
     InformeOpEditorComponent,
-    DescuentosComponent,
     AjustesLiqComponent,              // modal (NgbModal.open), no se exporta
     InformeLiqNuevoDetalleComponent,  // modal (NgbModal.open), no se exporta
     CompensacionesLiqComponent,       // modal (NgbModal.open), no se exporta
@@ -93,7 +90,6 @@ import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
     
     
     MontoDirective,
-    CalcularPorcentajeV2Pipe,
     FiltroPeriodoComponent,
     TablaAccionesComponent,
     TablaGenericaComponent,
@@ -134,7 +130,6 @@ import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
     CalcularPorcentajePipe,
     SpinnerComponent,
     GlobalFilterPipe,
-    DescuentosComponent,
     BuscarPorChoferPipe,
     VisibilidadListadosComponent,
     TableroFechasComponent,
@@ -143,7 +138,6 @@ import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
     
     
     MontoDirective,
-    CalcularPorcentajeV2Pipe,
     FiltroPeriodoComponent,
     TablaAccionesComponent,
     TablaGenericaComponent,

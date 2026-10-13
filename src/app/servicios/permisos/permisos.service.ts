@@ -231,8 +231,7 @@ export class PermisosService {
     editar: 'editar',
     eliminar: 'eliminar',
     // Anular un InformeLiq es una actualización de estado del documento, no
-    // un delete — ver LiquidacionService.anularLiquidacion / el flujo de
-    // baja en facturacion-listado.
+    // un delete: el documento se conserva con otro estado.
     anular: 'editar',
     // Actualiza el documento con la URL de la factura vinculada.
     vincularFactura: 'editar',

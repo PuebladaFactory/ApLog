@@ -68,7 +68,8 @@ export class InformeOpService {
     return { informeCliente, informeOtro };
   }
 
-  /** Listener en vivo por periodo/tipo — usado por LiquidacionesOpComponent.
+  /** Listener en vivo por periodo/tipo — usado por InformeOpListadoComponent
+   *  y LiquidacionNuevaComponent.
    *  Trae 'activo' y 'proforma' (lo liquidado/anulado desaparece del
    *  listado). Requiere el índice compuesto tipo+estado+fecha en
    *  firestore.indexes.json. */
@@ -122,23 +123,6 @@ export class InformeOpService {
     return this.db.getInformesOpPorPeriodo(this.COLECCION, desde, hasta, tipo, estado, pageSize, cursor);
   }
 
-  /** Consulta por lista de idsOperacion — usado por las pantallas de lectura
-   *  (Proforma, FacturacionListado, FacturacionHistorico, LiquidacionesOp)
-   *  para traer los InformeOp de una liquidación/proforma ya armada. Wrapper
-   *  tipado sobre el método genérico de DbFirestoreService, hardcodea la
-   *  colección única. */
-  async obtenerPorIdsOperacion(
-    idsOperacion: string[],
-  ): Promise<{ encontrados: ConId<InformeOpNuevo>[]; idsFaltantes: string[] }> {
-    const r = await this.db.obtenerDocsPorIdsOperacion(this.COLECCION, idsOperacion);
-    // idInfOp = id del documento (patrón ConId) — obtenerDocsPorIdsOperacion
-    // es genérico y solo agrega `id`.
-    return {
-      encontrados: r.encontrados.map((d: any) => ({ ...d, idInfOp: d.id })),
-      idsFaltantes: r.idsFaltantes,
-    };
-  }
-
   /** InformeOp que componen un InformeLiqNuevo — link inverso
    *  InformeOpNuevo.idInfLiq. Trae solo el lado de ese informe (la
    *  contraparte tiene otro idInfLiq o null). Válido mientras el InformeLiq
@@ -155,8 +139,9 @@ export class InformeOpService {
       .sort((a, b) => a.fecha.localeCompare(b.fecha));
   }
 
-  /** Consulta puntual por id — usado para resolver la contraparte on-demand
-   *  (InformeLiqDetalleComponent) vía contraParte.idInfOp. */
+  /** Consulta puntual por id (patrón ConId). Lo usan OperacionService,
+   *  InformeLiqService e InformeOpEditorComponent (p. ej. para resolver la
+   *  contraparte vía contraParte.idInfOp). */
   async obtenerPorId(idInfOp: string): Promise<ConId<InformeOpNuevo> | null> {
     const informe = await this.db.getById<InformeOpNuevo>(this.COLECCION, idInfOp);
     if (!informe) return null;

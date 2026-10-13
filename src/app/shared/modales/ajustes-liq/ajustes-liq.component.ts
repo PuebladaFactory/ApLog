@@ -11,11 +11,9 @@ import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/forma
     standalone: false
 })
 /** Modal de ajustes (descuentos/recargos, +/-) de un InformeLiqNuevo — lo
- *  usan LiquidacionNuevaComponent, InformeLiqNuevoDetalleComponent y
- *  ResumenOpLiquidadasComponent (camino viejo). Muta el array que recibe en
- *  fromParent.descuentos (los callers pasan una copia). Devuelve
- *  {descuentos, total}. No confundir con shared/modales/descuentos
- *  (DescuentosComponent), que usa el InformeLiqDetalleComponent viejo. */
+ *  usan LiquidacionNuevaComponent e InformeLiqNuevoDetalleComponent. Muta el
+ *  array que recibe en fromParent.descuentos (los callers pasan una copia).
+ *  Devuelve {descuentos, total}. */
 export class AjustesLiqComponent implements OnInit{
   
   @Input() fromParent: any;

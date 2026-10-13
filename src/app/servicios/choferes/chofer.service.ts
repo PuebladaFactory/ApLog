@@ -1,7 +1,7 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
-import { Chofer, ContratacionChofer, Vehiculo } from 'src/app/interfaces/chofer';
+import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Legajo } from 'src/app/interfaces/legajo';
 import { ConIdType } from 'src/app/interfaces/conId';
 import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
@@ -406,11 +406,6 @@ export class ChoferService implements OnDestroy {
   /** Resuelve la contratación del chofer por id. undefined si el chofer no está en memoria. */
   getTipoContratacion(idChofer: string): 'directo' | 'proveedor' | undefined {
     return this.getChoferPorId(idChofer)?.contratacion.tipo;
-  }
-
-  /** Devuelve la contratación viva del chofer por id, o undefined si no está (p. ej. en papelera). */
-  getContratacionChofer(idChofer: string): ContratacionChofer | undefined {
-    return this.getChoferPorId(idChofer)?.contratacion;
   }
 
   /** Devuelve los choferes de un proveedor desde memoria (síncrono).

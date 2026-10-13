@@ -1041,59 +1041,6 @@ export class DbFirestoreService {
     return deleteDoc(estacionamiento1DocumentReference);
   }
 
-  async guardarMultiple(
-    objetos: any[],
-    componenteAlta: string,
-    idObjetoNombre: string,
-    tipo: string,
-  ): Promise<{ exito: boolean; mensaje: string }> {
-    const batch = writeBatch(this.firestore);
-    const colRef = collection(
-      this.firestore,
-      `/Vantruck/datos/${componenteAlta}`,
-    );
-
-    try {
-      // Verificar que NINGUNO de los objetos exista ya en la colección
-      for (const obj of objetos) {
-        const idValor: number =
-          tipo === "operaciones" ? obj.idOperacion : obj.timestamp;
-
-        const q = query(colRef, where(idObjetoNombre, "==", idValor));
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-          // Encontró un objeto ya existente => no continúa
-          return {
-            exito: false,
-            mensaje: `Ya existe un documento con ${idObjetoNombre}: ${idValor}`,
-          };
-        }
-      }
-
-      // Ninguno existe => agregar todos al batch
-      for (const obj of objetos) {
-        const docRef = doc(colRef); // genera un id automático
-        //let {id, type, ...objEdit} = obj
-        batch.set(docRef, obj);
-      }
-
-      // Ejecutar el batch
-      await batch.commit();
-
-      return {
-        exito: true,
-        mensaje: "Todos los objetos fueron guardados correctamente.",
-      };
-    } catch (error: any) {
-      console.error(error);
-      return {
-        exito: false,
-        mensaje: `Error al guardar: ${error.message || error}`,
-      };
-    }
-  }
-
   async guardarMultipleGeneral(
     objetos: any[],
     componenteAlta: string,
@@ -1231,95 +1178,6 @@ export class DbFirestoreService {
       return {
         exito: false,
         mensaje: `Error al actualizar: ${error.message || error}`,
-      };
-    }
-  }
-
-  async eliminarMultiple(
-    objetos: ConIdType<any>[],
-    coleccion: string,
-  ): Promise<{ exito: boolean; mensaje: string }> {
-    const batch = writeBatch(this.firestore);
-
-    try {
-      for (const obj of objetos) {
-        const docRef = doc(
-          this.firestore,
-          `/Vantruck/datos/${coleccion}/${obj.id}`,
-        );
-        const docSnap = await getDoc(docRef);
-
-        if (!docSnap.exists()) {
-          return {
-            exito: false,
-            mensaje: `No existe la operación con id: ${obj.id}`,
-          };
-        }
-
-        // Si existe, la agregamos al batch para actualizar
-        let { id, type, ...objEdit } = obj;
-        batch.delete(docRef);
-      }
-
-      // Ejecutar el batch si todas las operaciones existen
-      await batch.commit();
-      return {
-        exito: true,
-        mensaje: "Las objetos fueron eliminados correctamente.",
-      };
-    } catch (error: any) {
-      console.error(error);
-      return {
-        exito: false,
-        mensaje: `Error al actualizar: ${error.message || error}`,
-      };
-    }
-  }
-
-  async guardarMultipleOtraColeccion(
-    objetos: any[],
-    coleccionAlta: string,
-  ): Promise<{ exito: boolean; mensaje: string }> {
-    try {
-      // Dividir el array en chunks de máximo 500 elementos
-      const chunkSize = 500;
-      const chunks = [];
-
-      for (let i = 0; i < objetos.length; i += chunkSize) {
-        chunks.push(objetos.slice(i, i + chunkSize));
-      }
-
-      // Procesar cada chunk por separado
-      for (const chunk of chunks) {
-        const batch = writeBatch(this.firestore);
-        const colRef = collection(
-          this.firestore,
-          `/Vantruck/datos/${coleccionAlta}`,
-        );
-
-        // Agregar todos los documentos del chunk al batch
-        for (const obj of chunk) {
-          const docRef = doc(colRef); // genera un id automático
-          let { id, type, ...objEdit } = obj;
-          batch.set(docRef, objEdit);
-        }
-
-        // Ejecutar el batch para este chunk
-        await batch.commit();
-
-        // Pequeña pausa entre chunks para evitar sobrecarga
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
-
-      return {
-        exito: true,
-        mensaje: `Todos los objetos (${objetos.length}) fueron guardados correctamente en ${chunks.length} lotes.`,
-      };
-    } catch (error: any) {
-      console.error(error);
-      return {
-        exito: false,
-        mensaje: `Error al guardar: ${error.message || error}`,
       };
     }
   }
@@ -1478,45 +1336,6 @@ export class DbFirestoreService {
   async deleteItem(coleccion: string, id: string): Promise<void> {
     const docRef = doc(this.firestore, `Vantruck/datos/${coleccion}/${id}`);
     await deleteDoc(docRef);
-  }
-
-  async obtenerDocsPorIdsOperacion(coleccion: string, idsOperacion: string[]) {
-    const resultados: any[] = [];
-    const encontrados: string[] = [];
-
-    const grupos = this.dividirEnGrupos(idsOperacion, 10);
-
-    for (const grupo of grupos) {
-      const colRef = collection(this.firestore, `/Vantruck/datos/${coleccion}`);
-      const q = query(colRef, where("idOperacion", "in", grupo));
-      const snapshot = await getDocs(q);
-
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        resultados.push({ id: doc.id, ...data });
-        if (data["idOperacion"] !== undefined) {
-          encontrados.push(data["idOperacion"]);
-        }
-      });
-    }
-
-    const noEncontrados = idsOperacion.filter(
-      (id) => !encontrados.includes(id),
-    );
-
-    return {
-      encontrados: resultados,
-      idsFaltantes: noEncontrados,
-    };
-  }
-
-  // Función auxiliar
-  dividirEnGrupos(array: any[], tamaño: number): any[][] {
-    const grupos = [];
-    for (let i = 0; i < array.length; i += tamaño) {
-      grupos.push(array.slice(i, i + tamaño));
-    }
-    return grupos;
   }
 
   getInformesLiqPorTipoYFechas(

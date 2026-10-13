@@ -2,12 +2,9 @@ import { ConId } from 'src/app/interfaces/conId';
 import { InformeOpNuevo } from 'src/app/interfaces/informe-op-nuevo';
 import { RefCliente, RefChofer, RefProveedor } from 'src/app/interfaces/operacion';
 
-/** Nombre para mostrar de la entidad de un InformeOp — mismo criterio que
- *  ya usan LiquidacionesOpComponent.nombreEntidad e
- *  InformeLiqDetalleComponent.nombreEntidad (duplicado ahí, no unificado
- *  todavía). Se centraliza acá para no sumar una tercera copia; unificar
- *  los otros dos call sites queda pendiente, fuera del alcance de este
- *  chunk. */
+/** Nombre para mostrar de la entidad de un InformeOp. Única implementación:
+ *  las copias del camino viejo (LiquidacionesOp / InformeLiqDetalle) se
+ *  retiraron en LR1 (frente lazy-fechas). */
 export function nombreEntidadInforme(informe: ConId<InformeOpNuevo> | InformeOpNuevo): string {
   if (informe.tipo === 'chofer') {
     const ref = informe.entidad as RefChofer;

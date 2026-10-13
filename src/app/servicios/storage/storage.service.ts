@@ -7,7 +7,6 @@ import { Chofer } from 'src/app/interfaces/chofer';
 import { LogService } from '../log/log.service';
 import * as _ from 'lodash';
 import { Operacion } from 'src/app/interfaces/operacion';
-import { LogEntry } from 'src/app/interfaces/log-entry';
 import { NoDisponibilidadChofer } from 'src/app/interfaces/no-disponibilidad-chofer';
 import { UsuarioSesionService } from '../usuario-sesion/usuario-sesion.service';
 
@@ -583,41 +582,6 @@ export class StorageService {
     });
   }
 
-  listenForChanges<T>(componente: string): void {
-    //console.log("admin: ", componente);    
-    this.dbFirebase.getAllStateChanges<T>(componente)
-      .subscribe(changes => {
-        if (changes.length > 0) {
-          //console.log(`${componente}: Cambios detectados`, changes);
-          let currentData = this.loadInfo(componente) || [];          
-          changes.forEach(change => {
-            if (change.type === 'added') {
-              ////console.log("change", change);
-              const existe = currentData.some(obj => obj.id === change.id);
-
-              if (!existe) {
-                ////console.log("El id no está en el array");
-                currentData.push(change);
-              } else {
-                //console.log("sin cambios en el componente: ", componente);
-              }
-              
-              
-            } else if (change.type === 'modified') {
-              //console.log("editar!!!!");
-              currentData = currentData.map(item => item.id === change.id ? change : item);
-            } else if (change.type === 'removed') {
-              //console.log("DAAALEEE LOOOOCOOO!!!!");
-              
-              currentData = currentData.filter(item => item.id !== change.id);
-            }
-          });
-  
-          this.setInfo(componente, currentData); // Actualiza caché          
-        }
-      });
-  }
-
     listenForChangesField<T>(componente: string, campo:string, valor:any): void {
       //console.log("admin: ", componente);    
       this.dbFirebase.getAllStateChangesByField<T>(componente, campo, valor)
@@ -844,57 +808,6 @@ export class StorageService {
         });
       }
 
-      guardadoMultiple(
-        objetos: any[], 
-        componenteAlta: string, 
-        idObjetoNombre: string, 
-        tipo: string,
-      ){       ///metodo para guardar multiples objetos en una misma coleccón
-        this.dbFirebase.guardarMultiple(objetos, componenteAlta, idObjetoNombre, tipo)
-      }
-
-      logMultiplesOp(
-        idOperaciones: string[],
-        accion: string,
-        coleccion: string,
-        detalle: string,
-        resultado: boolean
-      ){        ///metodo para crear multiples LogEntry
-        let arryLog: LogEntry[] = [];
-        //let accion: string = "BAJA";
-        if (!this.usuarioSesion.esRol('dev')) {
-          let incremento = 0
-
-          idOperaciones.forEach((idOp: string)=>{
-          let logEntry: LogEntry = this.logService.createLogEntry(accion, coleccion, detalle, idOp, resultado, incremento);
-          incremento++
-          arryLog.push(logEntry)
-        })
-        //console.log("Storage Service: arraLog: ", arryLog);        
-        this.guardadoMultiple(arryLog, "logs", "timestamp", "logs")
-        }
-        
-        
-        
-      }
-
-      logSimple(
-        idObjeto: any,
-        accion: string,
-        coleccion: string,
-        detalle: string,        
-        resultado: boolean
-      ){ ///metodo para guardar multiples LogEntry
-        let arryLog: LogEntry[] = [];
-        //let accion: string = "BAJA";
-        if (!this.usuarioSesion.esRol('dev')) {
-          let logEntry: LogEntry = this.logService.createLogEntry(accion, coleccion, detalle, idObjeto, resultado,0);
-          arryLog.push(logEntry)
-        console.log("Storage Service: arraLog: ", arryLog);        
-        this.guardadoMultiple(arryLog, "logs", "timestamp", "logs")
-      }
-    }
-    
       private controlLog(componente: string, accion:string) {
         switch(componente){
           case "clientes":
