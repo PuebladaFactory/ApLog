@@ -29,7 +29,6 @@
     "@babel/runtime": "^7.27.4",
     "@ng-bootstrap/ng-bootstrap": "^15.1.2",
     "@popperjs/core": "^2.11.8",
-    "@supabase/supabase-js": "^2.56.0",
     "@types/pdfmake": "^0.2.9",
     "@zxing/library": "^0.21.3",
     "@zxing/ngx-scanner": "^20.0.0",
