@@ -5,7 +5,6 @@ import {
   addDoc,
   collection,
   collectionData,
-  CollectionReference,
   deleteDoc,
   doc,
   docData,
@@ -14,7 +13,6 @@ import {
   getCountFromServer,
   getDoc,
   getDocs,
-  increment,
   limit,
   onSnapshot,
   orderBy,
@@ -25,33 +23,22 @@ import {
   updateDoc,
   where,
   writeBatch,
-  WriteBatch,
   Transaction,
   QueryConstraint,
   QueryDocumentSnapshot,
   SetOptions,
 } from "@angular/fire/firestore";
-import { firstValueFrom, from, Observable } from "rxjs";
+import { from, Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { ConId, ConIdType } from "src/app/interfaces/conId";
 
-import { Operacion } from "src/app/interfaces/operacion";
-import Swal from "sweetalert2";
 import { Firestore } from "@angular/fire/firestore";
 import { inject } from "@angular/core";
 import { InformeOpNuevo } from "src/app/interfaces/informe-op-nuevo";
-import { InformeLiq, ValoresFinancieros } from "src/app/interfaces/informe-liq";
-import { NumeradorService } from "../numerador/numerador.service";
 
 export interface Resultado {
   exito: boolean;
   mensaje: string;
-}
-
-export interface ResultadoConObjeto {
-  exito: boolean;
-  mensaje: string;
-  objeto: any;
 }
 
 export type ModoEscritura = 'crear' | 'reemplazar' | 'eliminar' | 'actualizar' | 'fusionar';
@@ -90,30 +77,14 @@ export interface PaginaResultado<T> {
   hayMas: boolean;
 }
 
-export interface ResultadoEliminacion {
-  success: boolean;
-  mensaje: string;
-  faltantes: {
-    operacion: boolean;
-    informe1: boolean;
-    informe2: boolean;
-  };
-  eliminados: string[]; // paths eliminados efectivamente
-  omitidos: string[]; // paths que no se eliminaron (porque no existían o se canceló)
-}
-
 @Injectable({
   providedIn: "root",
 })
 export class DbFirestoreService {
   coleccion: string = "";
-  componente: string = "";
   private firestore = inject(Firestore);
-  basePath: string = `/Vantruck/datos`;
 
-  constructor(
-    private numeradorService: NumeradorService,
-  ) {}
+  constructor() {}
 
   /*   getAll(componente:string) {
     let dataCollection = collection(this.firestore, `/Vantruck/datos/${componente}`);
@@ -233,32 +204,6 @@ export class DbFirestoreService {
         }); 
       
     } */
-
-  //BUSCAR ELEMENTOS PARA VERIFICAR SI ESTAN DUPLICADOS
-  getMostRecentId<T>(
-    componente: string,
-    field: string,
-    campo: string,
-    id: number,
-  ): Observable<ConId<T>[]> {
-    const dataCollectionPath = `/Vantruck/datos/${componente}`;
-    const colRef = collection(this.firestore, dataCollectionPath);
-    const q = query(
-      colRef,
-      orderBy(field, "desc"),
-      limit(1), // Ordenar por id descendente y limitar a 1
-      where(campo, "==", id),
-    );
-
-    return from(getDocs(q)).pipe(
-      map((snapshot) =>
-        snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...(doc.data() as T),
-        })),
-      ),
-    );
-  }
 
   getMostRecentLimit<T>(
     componente: string,
@@ -420,39 +365,6 @@ export class DbFirestoreService {
  */
   }
 
-  buscarColeccionRangoFechaIdCampo<T>(
-    componente: string,
-    value1: any,
-    value2: any,
-    idCampo: string,
-    idValue: number,
-    campo: string,
-    campoValue: any,
-  ) {
-    // devuelve los docs  de la coleccion que tengan un campo con un valor determinado
-    // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
-
-    const dataCollectionPath = `/Vantruck/datos/${componente}`;
-    const colRef = collection(this.firestore, dataCollectionPath);
-    const q = query(
-      colRef,
-      orderBy("fecha", "desc"),
-      where("fecha", ">=", value1),
-      where("fecha", "<=", value2),
-      where(idCampo, "==", idValue),
-      where(campo, "==", campoValue),
-    );
-
-    return from(getDocs(q)).pipe(
-      map((snapshot) =>
-        snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...(doc.data() as T),
-        })),
-      ),
-    );
-  }
-
   getAllColectionRangeIdValue<T>(
     componente: string,
     range1: any,
@@ -596,40 +508,6 @@ export class DbFirestoreService {
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  getAllSortedIdLimit<T>(
-    componente: string,
-    campo: string,
-    id: number,
-    campo2: string,
-    orden: any,
-    limite: number,
-  ): Observable<ConId<T>[]> {
-    // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
-    // orden solo asc o desc
-
-    const dataCollectionPath = `/Vantruck/datos/${componente}`;
-    const colRef = collection(this.firestore, dataCollectionPath);
-
-    const q = query(
-      colRef,
-      where(campo, "==", id),
-      orderBy(campo2, orden),
-      limit(limite),
-    );
-
-    return from(getDocs(q)).pipe(
-      map((snapshot) =>
-        snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...(doc.data() as T),
-        })),
-      ),
-    );
-  }
-
-  // this.firestore.collection('Employees', ref => ref.orderBy('name', 'desc'))
-  // this.firestore.collection('Employees', ref => ref.orderBy('name', 'desc'))
-
   getByFieldValue<T>(
     componente: string,
     campo: string,
@@ -651,99 +529,6 @@ export class DbFirestoreService {
           ...(doc.data() as T),
         })),
       ),
-    );
-  }
-
-  getByDateValue<T>(
-    componente: string,
-    campo: string,
-    value1: any,
-    value2: any,
-  ): Observable<ConIdType<T>[]> {
-    // devuelve los docs  de la coleccion que tengan un campo con un valor determinado
-    // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
-    // orden solo asc o desc
-
-    const dataCollectionPath = `/Vantruck/datos/${componente}`;
-    const colRef = collection(this.firestore, dataCollectionPath);
-
-    const q = query(
-      colRef,
-      where(campo, ">=", value1),
-      where(campo, "<=", value2),
-    );
-
-    return new Observable<ConIdType<T>[]>((observer) => {
-      const unsubscribe = onSnapshot(
-        q,
-        (snapshot) => {
-          const changes: ConIdType<T>[] = snapshot
-            .docChanges()
-            .map((change) => ({
-              id: change.doc.id,
-              ...(change.doc.data() as T),
-              type: change.type, // 'added', 'modified', 'removed'
-            }));
-          observer.next(changes);
-        },
-        (error) => observer.error(error),
-      );
-
-      // Cleanup
-      return { unsubscribe };
-    });
-  }
-
-  // Método para obtener una tarifa específica
-  obtenerTarifaIdTarifa(
-    componente: string,
-    id: number | string,
-    campo: string,
-  ): Observable<any | null> {
-    const dataCollectionPath = `/Vantruck/datos/${componente}`;
-    const colRef = collection(this.firestore, dataCollectionPath);
-    const q = query(colRef, where(campo, "==", id));
-
-    return from(getDocs(q)).pipe(
-      map((snapshot) => {
-        if (snapshot.empty) {
-          return null;
-        } else {
-          const doc = snapshot.docs[0];
-          const data = doc.data() as any;
-          data.id = doc.id;
-          return data;
-        }
-      }),
-    );
-  }
-
-  obtenerTarifaMasReciente(
-    componente: string,
-    id: number,
-    campo: string,
-    orden: string,
-  ): Observable<any | null> {
-    const dataCollectionPath = `/Vantruck/datos/${componente}`;
-    const colRef = collection(this.firestore, dataCollectionPath);
-    const q = query(
-      colRef,
-      where(campo, "==", id),
-      orderBy(orden, "desc"),
-      limit(1),
-    );
-
-    return from(getDocs(q)).pipe(
-      map((snapshot) => {
-        if (snapshot.empty) {
-          return null;
-        } else {
-          const doc = snapshot.docs[0];
-          const data = doc.data() as any;
-          data.id = doc.id;
-          return data;
-        }
-      }),
     );
   }
 
@@ -966,14 +751,6 @@ export class DbFirestoreService {
     return snap.docs.map(d => ({ id: d.id, ...(d.data() as T) }));
   }
 
-  get(id: string) {
-    const estacionamiento1DocumentReference = doc(
-      this.firestore,
-      `/Vantruck/datos/${id}`,
-    );
-    return docData(estacionamiento1DocumentReference, { idField: "id" });
-  }
-
   create(componente: string, item: any) {
     console.log("db.service, metodo create: ", this.coleccion);
 
@@ -1021,124 +798,6 @@ export class DbFirestoreService {
     return deleteDoc(estacionamiento1DocumentReference).then(() =>
       console.log("Delete. borrado en la base de datos en: ", componente),
     );
-  }
-
-  updateUser(item: any) {
-    //this.dataCollection = collection(this.firestore, `/estacionamiento/datos/${componente}`);
-    const estacionamiento1DocumentReference = doc(
-      this.firestore,
-      `/users/${item.id}`,
-    );
-    return updateDoc(estacionamiento1DocumentReference, { ...item });
-  }
-
-  deleteUser(id: string) {
-    //this.dataCollection = collection(this.firestore, `/estacionamiento/datos/${componente}`);
-    const estacionamiento1DocumentReference = doc(
-      this.firestore,
-      `/users/${id}`,
-    );
-    return deleteDoc(estacionamiento1DocumentReference);
-  }
-
-  async guardarMultipleGeneral(
-    objetos: any[],
-    componenteAlta: string,
-    propiedadConsulta: string,
-    campoConsulta: number,
-  ): Promise<{ exito: boolean; mensaje: string }> {
-    const batch = writeBatch(this.firestore);
-    const colRef = collection(
-      this.firestore,
-      `/Vantruck/datos/${componenteAlta}`,
-    );
-
-    try {
-      // Verificar que NINGUNO de los objetos exista ya en la colección
-      for (const obj of objetos) {
-        const q = query(colRef, where(propiedadConsulta, "==", campoConsulta));
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-          // Encontró un objeto ya existente => no continúa
-          return {
-            exito: false,
-            mensaje: `Ya existe un documento con ${propiedadConsulta}: ${campoConsulta}`,
-          };
-        }
-      }
-
-      // Ninguno existe => agregar todos al batch
-      for (const obj of objetos) {
-        const docRef = doc(colRef); // genera un id automático
-        //let {id, type, ...objEdit} = obj
-        batch.set(docRef, obj);
-      }
-
-      // Ejecutar el batch
-      await batch.commit();
-
-      return {
-        exito: true,
-        mensaje: "Todos los objetos fueron guardados correctamente.",
-      };
-    } catch (error: any) {
-      console.error(error);
-      return {
-        exito: false,
-        mensaje: `Error al guardar: ${error.message || error}`,
-      };
-    }
-  }
-
-  mensajesError(msj: string, resultado: string) {
-    Swal.fire({
-      icon: resultado === "error" ? "error" : "success",
-      //title: "Oops...",
-      text: `${msj}`,
-      //footer: `${msj}`
-    });
-  }
-
-  async actualizarOperacionesBatch(
-    operaciones: ConId<any>[],
-    componente: string,
-  ): Promise<{ exito: boolean; mensaje: string }> {
-    const batch = writeBatch(this.firestore);
-
-    try {
-      for (const operacion of operaciones) {
-        const docRef = doc(
-          this.firestore,
-          `/Vantruck/datos/${componente}/${operacion.id}`,
-        );
-        const docSnap = await getDoc(docRef);
-
-        if (!docSnap.exists()) {
-          return {
-            exito: false,
-            mensaje: `No existe la operación con id: ${operacion.id}`,
-          };
-        }
-
-        // Si existe, la agregamos al batch para actualizar
-        let { id, ...op } = operacion;
-        batch.update(docRef, op);
-      }
-
-      // Ejecutar el batch si todas las operaciones existen
-      await batch.commit();
-      return {
-        exito: true,
-        mensaje: "Las operaciones fueron actualizadas correctamente.",
-      };
-    } catch (error: any) {
-      console.error(error);
-      return {
-        exito: false,
-        mensaje: `Error al actualizar: ${error.message || error}`,
-      };
-    }
   }
 
   async actualizarMultiple(
@@ -1301,137 +960,6 @@ export class DbFirestoreService {
     return await setDoc(docRef, data);
   }
 
-  // 🔹 Guarda o reemplaza el tablero diario
-  async setItem<T extends { [key: string]: any }>(
-    coleccion: string,
-    id: string,
-    data: T,
-  ): Promise<void> {
-    console.log("📝 setItem() llamado para:", id, data);
-    const docRef = doc(this.firestore, `Vantruck/datos/${coleccion}/${id}`);
-    const cleanData = { ...data, id }; // fuerza que el id del objeto coincida con el del doc
-    return await setDoc(docRef, cleanData);
-  }
-
-  async getItemByField<T>(
-    coleccion: string,
-    campo: string,
-    valor: any,
-  ): Promise<ConId<T> | null> {
-    const colRef = collection(this.firestore, `Vantruck/datos/${coleccion}`);
-    const q = query(colRef, where(campo, "==", valor));
-    const querySnapshot = await getDocs(q);
-
-    if (querySnapshot.empty) return null;
-
-    const docSnap = querySnapshot.docs[0];
-    const data = docSnap.data() as T;
-
-    return {
-      ...data,
-      id: docSnap.id,
-    };
-  }
-
-  async deleteItem(coleccion: string, id: string): Promise<void> {
-    const docRef = doc(this.firestore, `Vantruck/datos/${coleccion}/${id}`);
-    await deleteDoc(docRef);
-  }
-
-  getInformesLiqPorTipoYFechas(
-    tipo: "cliente" | "chofer" | "proveedor" | "todos",
-    desde: string,
-    hasta: string,
-    estado: string,
-  ): Promise<ConId<InformeLiq>[]> {
-    const tipos =
-      tipo === "todos" ? ["cliente", "chofer", "proveedor"] : [tipo];
-    const colRef = collection(this.firestore, "/Vantruck/datos/resumenLiq");
-
-    const q = query(
-      colRef,
-      where("estado", "==", estado),
-      where("fecha", ">=", desde),
-      where("fecha", "<=", hasta),
-      where("tipo", "in", tipos),
-      orderBy("fecha", "asc"),
-    );
-
-    return getDocs(q).then((snap) =>
-      snap.docs.map((doc) => ({ id: doc.id, ...(doc.data() as InformeLiq) })),
-    );
-  }
-
-  getInformesLiqPorPeriodo(
-    tipo: "cliente" | "chofer" | "proveedor" | "todos",
-    periodo: { mes: string; anio: number },
-    estado: string,
-  ): Promise<ConId<InformeLiq>[]> {
-    const tipos =
-      tipo === "todos" ? ["cliente", "chofer", "proveedor"] : [tipo];
-    const colRef = collection(this.firestore, "/Vantruck/datos/resumenLiq");
-
-    const q = query(
-      colRef,
-      where("estado", "==", estado),
-      where("mes", "==", periodo.mes),
-      where("anio", "==", periodo.anio),
-      where("tipo", "in", tipos),
-      orderBy("fecha", "asc"),
-    );
-
-    return getDocs(q).then((snap) =>
-      snap.docs.map((doc) => ({ id: doc.id, ...(doc.data() as InformeLiq) })),
-    );
-  }
-
-  async asignarNumerosInternosFaltantes(): Promise<void> {
-    const colRef = collection(this.firestore, "/Vantruck/datos/resumenLiq");
-    const q = query(colRef, orderBy("fecha"));
-    const snapshot = await getDocs(q);
-
-    const docs = snapshot.docs;
-
-    for (const docSnap of docs) {
-      const data = docSnap.data() as InformeLiq;
-
-      // Saltar si ya tiene un número interno
-      if (data.numeroInterno && data.numeroInterno !== "") continue;
-
-      try {
-        const nuevoNumero = await this.numeradorService.generarNumeroInterno(
-          data.tipo,
-        );
-        const ref = doc(
-          this.firestore,
-          `/Vantruck/datos/resumenLiq/${docSnap.id}`,
-        );
-        await updateDoc(ref, { numeroInterno: nuevoNumero });
-        console.log(
-          `✅ Documento ${docSnap.id} actualizado con: ${nuevoNumero}`,
-        );
-      } catch (error) {
-        console.error(`❌ Error actualizando ${docSnap.id}:`, error);
-      }
-    }
-
-    console.log("🏁 Asignación de números internos finalizada.");
-  }
-
-  async existeCuit(coleccion: string, cuit: string): Promise<boolean> {
-    try {
-      const colRef = collection(this.firestore, `/Vantruck/datos/${coleccion}`);
-      const q = query(colRef, where("datosPersonales.cuit", "==", cuit));
-      const snap = await getDocs(q);
-
-      // Si encuentra al menos un documento, devuelve true
-      return !snap.empty;
-    } catch (error) {
-      console.error("Error verificando CUIT:", error);
-      throw error;
-    }
-  }
-
   getObjIdg<T>(
     componente: string,
     campo: string,
@@ -1517,18 +1045,6 @@ export class DbFirestoreService {
   generarId(coleccion: string): string {
     const colRef = collection(this.firestore, `/Vantruck/datos/${coleccion}`);
     return doc(colRef).id;
-  }
-
-  createAndGetId(componente: string, item: any): Promise<string> {
-    const dataCollection = collection(
-      this.firestore,
-      `/Vantruck/datos/${componente}`
-    );
-    const docRef = doc(dataCollection);
-    return setDoc(docRef, item).then(() => {
-      console.log('CreateAndGetId. Escritura en: ', componente, ' id: ', docRef.id);
-      return docRef.id;
-    });
   }
 
   async getByField<T>(
