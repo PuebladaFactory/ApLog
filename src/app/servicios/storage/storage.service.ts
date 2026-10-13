@@ -1,13 +1,7 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, distinctUntilChanged, Observable, Subject, take, takeUntil } from 'rxjs';
+import { BehaviorSubject, distinctUntilChanged, Observable } from 'rxjs';
 import { DbFirestoreService } from '../database/db-firestore.service';
-import { Cliente } from 'src/app/interfaces/cliente';
-import { Proveedor } from 'src/app/interfaces/proveedor';
-import { Chofer } from 'src/app/interfaces/chofer';
 import { LogService } from '../log/log.service';
-import * as _ from 'lodash';
-import { Operacion } from 'src/app/interfaces/operacion';
-import { NoDisponibilidadChofer } from 'src/app/interfaces/no-disponibilidad-chofer';
 import { UsuarioSesionService } from '../usuario-sesion/usuario-sesion.service';
 
 
@@ -17,10 +11,6 @@ import { UsuarioSesionService } from '../usuario-sesion/usuario-sesion.service';
 })
 export class StorageService {
 
-  date:any = new Date();
-  primerDia: any = new Date(this.date.getFullYear(), this.date.getMonth() , 1).toISOString().split('T')[0];
-  ultimoDia:any = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0).toISOString().split('T')[0];  
-  logControl!: boolean;
   // los componentes trabajan solo con el storage
   // el storage hace las operaciones crud solo cuando hagan falta 
   // los observables mantienen la info sincronizada entre comp y storage.
@@ -32,7 +22,6 @@ export class StorageService {
     private usuarioSesion: UsuarioSesionService,
   ) { }
 
-  private destroy$ = new Subject<void>();
 
   // Observables //
 
@@ -45,388 +34,39 @@ export class StorageService {
   private _proveedores$ = new BehaviorSubject<any>(this.loadInfo('proveedores') || []);
   public proveedores$ = this._proveedores$.asObservable();
 
-  private _operaciones$ = new BehaviorSubject<any>(this.loadInfo('operaciones') || []);
-  public operaciones$ = this._operaciones$.asObservable()
-
-  private _opActivas$ = new BehaviorSubject<any>(this.loadInfo('operacionesActivas') || []);
-  public opActivas$ = this._opActivas$.asObservable()
-
-  private _opCerradas$ = new BehaviorSubject<any>(null)   //aca va interface my data
-  public opCerradas$ = this._opCerradas$.asObservable()
-
-  private _jornadas$ = new BehaviorSubject<any>(null)   //aca va interface my data
-  public jornadas$ = this._jornadas$.asObservable()
-
-  private _consultasOp$ = new BehaviorSubject<any>(this.loadInfo('consultasOp') || []);
-  public consultasOp$ = this._consultasOp$.asObservable()
-
-  private _consultasOpActivas$ = new BehaviorSubject<any>(this.loadInfo('consultasOpActivas') || []);
-  public consultasOpActivas$ = this._consultasOpActivas$.asObservable()
-
-  private _consultasOpCerradas$ = new BehaviorSubject<any>(null)   //aca va interface my data
-  public consultasOpCerradas$ = this._consultasOpCerradas$.asObservable()
-
-  private _legajos$ = new BehaviorSubject(this.loadInfo('legajos') || []);
-  public legajos$ = this._legajos$.asObservable()
-
-  private _perfilChofer$ = new BehaviorSubject<any>(this.loadInfo('perfilChofer') || []);
-  public perfilChofer$ = this._perfilChofer$.asObservable();
-
-  private _consultasFacOpCliente$ = new BehaviorSubject<any>(this.loadInfo('consultasFacOpCliente') || []);
-  public consultasFacOpCliente$ = this._consultasFacOpCliente$.asObservable();
-
-  private _consultasFacOpChofer$ = new BehaviorSubject<any>(this.loadInfo('consultasFacOpChofer') || []);
-  public consultasFacOpChofer$ = this._consultasFacOpChofer$.asObservable();
-
-  private _consultasFacOpProveedor$ = new BehaviorSubject<any>(this.loadInfo('consultasFacOpProveedor') || []);
-  public consultasFacOpProveedor$ = this._consultasFacOpProveedor$.asObservable();
-
-  private _consultasFacCliente$ = new BehaviorSubject<any>(this.loadInfo('consultasFacCliente') || []);
-  public consultasFacCliente$ = this._consultasFacCliente$.asObservable();
-
-  private _consultasFacChofer$ = new BehaviorSubject<any>(this.loadInfo('consultasFacChofer') || []);
-  public consultasFacChofer$ = this._consultasFacChofer$.asObservable();
-
-  private _consultasFacProveedor$ = new BehaviorSubject<any>(this.loadInfo('consultasFacProveedor') || []);
-  public consultasFacProveedor$ = this._consultasFacProveedor$.asObservable();
-  
-  private _consultasFacOpLiqChofer$ = new BehaviorSubject<any>(this.loadInfo('consultasFacOpLiqChofer') || []);
-  public consultasFacOpLiqChofer$ = this._consultasFacOpLiqChofer$.asObservable();
-  
-  private _consultasFacOpLiqCliente$ = new BehaviorSubject<any>(this.loadInfo('consultasFacOpLiqCliente') || []);
-  public consultasFacOpLiqCliente$ = this._consultasFacOpLiqCliente$.asObservable();
-
-  private _consultasFacOpLiqProveedor$ = new BehaviorSubject<any>(this.loadInfo('consultasFacOpLiqProveedor') || []);
-  public consultasFacOpLiqProveedor$ = this._consultasFacOpLiqProveedor$.asObservable();
-
-  private _facOpLiqChofer$ = new BehaviorSubject<any>(this.loadInfo('facOpLiqChofer') || []);
-  public facOpLiqChofer$ = this._facOpLiqChofer$.asObservable();
-
-  private _facOpLiqCliente$ = new BehaviorSubject<any>(this.loadInfo('facOpLiqCliente') || []);
-  public facOpLiqCliente$ = this._facOpLiqCliente$.asObservable();
-
-  private _facOpLiqProveedor$ = new BehaviorSubject<any>(this.loadInfo('facOpLiqProveedor') || []);
-  public facOpLiqProveedor$ = this._facOpLiqProveedor$.asObservable();
-
-  private _clienteSeleccionado$ = new BehaviorSubject<any>(this.loadInfo('clienteSeleccionado') || []);
-  public clienteSeleccionado$ = this._clienteSeleccionado$.asObservable();
-
-  private _choferSeleccionado$ = new BehaviorSubject<any>(this.loadInfo('choferSeleccionado') || []);
-  public choferSeleccionado$ = this._choferSeleccionado$.asObservable();
-
-  private _proveedorSeleccionado$ = new BehaviorSubject<any>(this.loadInfo('proveedorSeleccionado') || []);
-  public proveedorSeleccionado$ = this._proveedorSeleccionado$.asObservable();
-  
-  private _vehiculosChofer$ = new BehaviorSubject<any>(this.loadInfo('vehiculosChofer') || []);
-  public vehiculosChofer$ = this._vehiculosChofer$.asObservable();
-  
-  private _fechasConsulta$ = new BehaviorSubject<any>(this.loadInfo('fechasConsulta') || []);
-  public fechasConsulta$ = this._fechasConsulta$.asObservable();
-
-  private _respuestaOp$ = new BehaviorSubject<any>(this.loadInfo('respuestaOp') || []);
-  public respuestaOp$ = this._respuestaOp$.asObservable();
-
-  private _facturaOpCliente$ = new BehaviorSubject<any>(this.loadInfo('facturaOpCliente') || []);
-  public facturaOpCliente$ = this._facturaOpCliente$.asObservable();
-
-  private _facturaOpChofer$ = new BehaviorSubject<any>(this.loadInfo('facturaOpChofer') || []);
-  public facturaOpChofer$ = this._facturaOpChofer$.asObservable();
-
-  private _facturaOpProveedor$ = new BehaviorSubject<any>(this.loadInfo('facturaOpProveedor') || []);
-  public facturaOpProveedor$ = this._facturaOpProveedor$.asObservable();
-
   private _users$ = new BehaviorSubject<any>(this.loadInfo('users') || [] || null);
   public users$ = this._users$.asObservable();
 
-  private _ruta$ = new BehaviorSubject<any>(this.loadInfo('ruta') || []);
-  public ruta$ = this._ruta$.asObservable();
-
-  private _facturaCliente$ = new BehaviorSubject<any>(this.loadInfo('facturaCliente') || []);
-  public facturaCliente$ = this._facturaCliente$.asObservable();
-
-  private _facturaChofer$ = new BehaviorSubject<any>(this.loadInfo('facturaChofer') || []);
-  public facturaChofer$ = this._facturaChofer$.asObservable();
-
-  private _facturaProveedor$ = new BehaviorSubject<any>(this.loadInfo('facturaProveedor') || []);
-  public facturaProveedor$ = this._facturaProveedor$.asObservable();
-
-  private _proforma$ = new BehaviorSubject<any>(this.loadInfo('proforma') || []);
-  public proforma$ = this._proforma$.asObservable();
-
-  private _informesOpClientes$ = new BehaviorSubject<any>(this.loadInfo('informesOpClientes') || []);
-  public informesOpClientes$ = this._informesOpClientes$.asObservable();
-
-  private _informesOpChoferes$ = new BehaviorSubject<any>(this.loadInfo('informesOpChoferes') || []);
-  public informesOpChoferes$ = this._informesOpChoferes$.asObservable();
-
-  private _informesOpProveedores$ = new BehaviorSubject<any>(this.loadInfo('informesOpProveedores') || []);
-  public informesOpProveedores$ = this._informesOpProveedores$.asObservable();
-
-  private _resumenLiqClientes$ = new BehaviorSubject<any>(this.loadInfo('resumenLiqClientes') || []);
-  public resumenLiqClientes$ = this._resumenLiqClientes$.asObservable();
-
-  private _resumenLiqChoferes$ = new BehaviorSubject<any>(this.loadInfo('resumenLiqChoferes') || []);
-  public resumenLiqChoferes$ = this._resumenLiqChoferes$.asObservable();
-
-  private _resumenLiqProveedores$ = new BehaviorSubject<any>(this.loadInfo('resumenLiqProveedores') || []);
-  public resumenLiqProveedores$ = this._resumenLiqProveedores$.asObservable();
-
-  private _resumenLiq$ = new BehaviorSubject<any>(this.loadInfo('resumenLiq') || []);
-  public resumenLiq$ = this._resumenLiq$.asObservable();
-  
-  private _noOperativo$ = new BehaviorSubject<any>(this.loadInfo('noOperativo') || []);
-  public noOperativo$ = this._noOperativo$.asObservable();
-
+  // LR2a (frente lazy-fechas): solo quedan los observables que tienen
+  // suscriptores. El resto de las claves solo se guarda en localStorage.
   updateObservable(componente: any, data: any) {
     switch (componente) {
       case "clientes": {
-        this._clientes$.next(data)
+        this._clientes$.next(data);
         break;
       }
       case "choferes": {
-        this._choferes$.next(data)
+        this._choferes$.next(data);
         break;
       }
-      case "operaciones": {
-        this._operaciones$.next(data)
-        break;
-      }
-
-      case "operacionesActivas": {
-        this._opActivas$.next(data)
-        break;
-      }
-
-
-      case "operacionesCerradas": {
-        this._opCerradas$.next(data)
-        break;
-      }
-
-      case "jornadas": {
-        this._jornadas$.next(data)
-        break;
-      }
-
-      case "consultasOp": {
-        this._consultasOp$.next(data)
-        break;
-      }
-
-      case "consultasOpActivas": {
-        this._consultasOpActivas$.next(data)
-        break;
-      }
-
-      case "consultasOpCerradas": {
-        this._consultasOpCerradas$.next(data)
-        break;
-      }
-
-      case "legajos": {
-        this._legajos$.next(data);
-        break;
-      }
-
-      case "perfilChofer":{
-        this._perfilChofer$.next(data);
-        break
-      }
-
-      case "proveedores":{
+      case "proveedores": {
         this._proveedores$.next(data);
-        break
-      }
-
-      case "facturaOpCliente":{
-        this._facturaOpCliente$.next(data);
-        break
-      }
-
-      case "facturaOpChofer":{
-        this._facturaOpChofer$.next(data);
-        break
-      }
-
-      case "facturaOpProveedor":{
-        this._facturaOpProveedor$.next(data);
-        break
-      }
-
-      case "consultasFacOpCliente": {
-        this._consultasFacOpCliente$.next(data)
         break;
       }
-
-      case "consultasFacOpChofer": {
-        this._consultasFacOpChofer$.next(data)
-        break;
-      }
-
-      case "consultasFacOpProveedor": {
-        this._consultasFacOpProveedor$.next(data)
-        break;
-      }
-
-      case "consultasFacCliente": {
-        this._consultasFacCliente$.next(data)
-        break;
-      }
-
-      case "consultasFacChofer": {
-        this._consultasFacChofer$.next(data)
-        break;
-      }
-
-      case "consultasFacProveedor": {
-        this._consultasFacProveedor$.next(data)
-        break;
-      }
-
-      case "consultasFacOpLiqChofer": {
-        this._consultasFacOpLiqChofer$.next(data)
-        break;
-      }
-      
-      case "consultasFacOpLiqCliente": {
-        this._consultasFacOpLiqCliente$.next(data)
-        break;
-      }
-
-      case "consultasFacOpLiqProveedor": {
-        this._consultasFacOpLiqProveedor$.next(data)
-        break;
-      }
-
-      case "facOpLiqChofer":{
-        this._facOpLiqChofer$.next(data)
-        break;
-      }
-
-      case "facOpLiqCliente":{
-        this._facOpLiqCliente$.next(data)
-        break;
-      }
-
-      case "facOpLiqProveedor":{
-        this._facOpLiqProveedor$.next(data)
-        break;
-      }
-
-      case "clienteSeleccionado":{
-        this._clienteSeleccionado$.next(data)
-        break;
-      }
-
-      case "choferSeleccionado":{
-        this._choferSeleccionado$.next(data)
-        break;
-      }
-
-      case "proveedorSeleccionado":{
-        this._proveedorSeleccionado$.next(data)
-        break;
-      }
-
-      case "vehiculosChofer":{
-        this._vehiculosChofer$.next(data);
-        break
-      }
-
-      case "fechasConsulta":{
-        this._fechasConsulta$.next(data);
-        break
-      }
-
-      case "respuestaOp":{
-        this._respuestaOp$.next(data);
-        break
-      }
-
-      case "users":{
+      case "users": {
         this._users$.next(data);
-        break
-      } 
-
-      case "facturaCliente":{
-        this._facturaCliente$.next(data);
-        break
-      }
-
-      case "facturaChofer":{
-        this._facturaChofer$.next(data);
-        break
-      }
-
-      case "facturasProveedor":{
-        this._facturaProveedor$.next(data);
-        break
-      }
-
-      case "ruta":{
-        this._ruta$.next(data);
-        break
-      }
-
-      case "proforma":{
-        this._proforma$.next(data);
-        break
-      }
-
-      case "informesOpClientes":{
-        this._informesOpClientes$.next(data);
-        break
-      }
-      case "informesOpChoferes":{
-        this._informesOpChoferes$.next(data);
-        break
-      }
-      case "informesOpProveedores":{
-        this._informesOpProveedores$.next(data);
-        break
-      }
-      case "resumenLiqClientes":{
-        this._resumenLiqClientes$.next(data);
-        break
-      }
-      case "resumenLiqChoferes":{
-        this._resumenLiqChoferes$.next(data);
-        break
-      }
-      case "resumenLiqProveedores":{
-        this._resumenLiqProveedores$.next(data);
-        break
-      }
-      case "resumenLiq":{
-        this._resumenLiq$.next(data);
-        break
-      }
-      case "noOperativo":{
-        this._noOperativo$.next(data);
-        break
+        break;
       }
       default: {
-        //statements; 
         break;
       }
     }
-
   }
-
-
-
-
 
   // metodos del storage
 
   public setInfo(componente: string, data: any[]) {
     ////console.log(`Guardando datos en ${componente}:`, data);
-    const jsonData = JSON.stringify(data);
-    localStorage.setItem(componente, jsonData);
-    this.updateObservable(componente, data);
-  }
-
-  public setInfoOne(componente: string, data: any) {
     const jsonData = JSON.stringify(data);
     localStorage.setItem(componente, jsonData);
     this.updateObservable(componente, data);
@@ -443,11 +83,6 @@ export class StorageService {
       }
     }
     return [];
-  }
-
-  public clearInfo(componente: string) {
-    localStorage.removeItem(componente);
-    this.updateObservable(componente, []);
   }
 
   public clearAllLocalStorage() {
@@ -497,72 +132,6 @@ export class StorageService {
     return this.getObservable(componente); // Devuelve el observable
   }
 
-
-  getMostRecentItemId<T>(componente: string, id:string, campo:string, value:number): void {
-    this.dbFirebase.getMostRecentId<T>(componente, id, campo, value)
-    .pipe(distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)))
-    .subscribe(item => {
-      //const cachedData = this.loadInfo(componente);
-      ////////console.log(`Datos cargados desde el caché para ${componente}`, cachedData);
-      //////console.log(`Elemento más reciente de ${componente} cuyo ${campo} es igual a ${value} es:`, item[0]);
-      if (item) {
-        ////////console.log(`Elemento más reciente de ${componente} cuyo ${campo} es igual a ${value} es:`, item);
-        this.setInfo(componente, [item[0]]); // Actualiza el caché
-        this.updateObservable(componente, item[0]); // Actualiza el observable con el objeto más reciente
-      }
-    });
-  }
-
-
-
-/*   syncChangesByOneElemId<T>(componente: string, id:string, campo:string, value:number): void {
-    this.dbFirebase.getMostRecentId<T>(componente, id, campo, value)
-    .pipe(distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)))
-    .subscribe((data:any) => {
-      const currentData = this.loadInfo(componente);
-      if (!currentData || JSON.stringify(currentData[0]) !== JSON.stringify(data[0])) {
-        //////console.log(`Elemento más reciente de ${componente} cuyo ${campo} es igual a ${value} es:`, data);
-        this.setInfo(componente, [data[0]]); // Actualiza el caché
-        this.updateObservable(componente, data[0]); // Actualiza el observable
-      } else {
-        //////console.log(`Datos no modificados para ${componente}, no se actualiza.`);
-      }      
-    });
-  } */
-
-  async syncChangesDateValue<T>(componente:string, campo:string, value1:any, value2:any, orden:string){
-    //console.log(" storage syncChangesDateValue ", componente)
-    await this.dbFirebase.getAllByDateValue<T>(componente, campo, value1, value2, orden).subscribe(data => {
-      //console.log("syncChangesDateValue/componente: ", componente, " data: ", data);
-      
-      const currentData = this.loadInfo(componente);
-      if (!currentData || JSON.stringify(currentData) !== JSON.stringify(data)) {
-        //console.log(`Datos sincronizados para ${componente}`, data);
-        this.setInfo(componente, data); // Actualiza el caché
-        this.updateObservable(componente, data); // Actualiza el observable
-      } else {
-        //console.log(`Datos no modificados para ${componente}, no se actualiza.`);
-      }      
-    })
-    }
-
-  syncChangesUsers<T>(componente: string): void {    
-    this.dbFirebase.getAllColectionUsers(componente)
-    .pipe(distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)))
-    .subscribe(data => {
-      const currentData = this.loadInfo(componente);
-      ////////console.log("currentData", currentData);
-      ////////console.log("data", data);
-      if (!currentData || JSON.stringify(currentData) !== JSON.stringify(data)) {
-        //////console.log(`Datos sincronizados para ${componente}`, data);
-        this.setInfo(componente, data); // Actualiza el caché
-        this.updateObservable(componente, data); // Actualiza el observable
-      } else {
-        //////console.log(`Datos no modificados para ${componente}, no se actualiza.`);
-      }
-      
-    });
-  }
 
   syncChangesLimit<T>(componente: string, field:string, limit: number): void {    
     this.dbFirebase.getMostRecentLimit<T>(componente, field, limit)
@@ -624,93 +193,14 @@ export class StorageService {
       case 'choferes':
         return this._choferes$.asObservable();
       case 'proveedores':
-        return this._proveedores$.asObservable();      
+        return this._proveedores$.asObservable();
       case 'users':
-        return this._users$.asObservable(); 
-      case 'operaciones':
-        return this._operaciones$.asObservable(); 
-      case 'ruta':
-        return this._ruta$.asObservable(); 
-      case "facturaOpCliente":
-        return this._facturaOpCliente$.asObservable();
-      case "facturaOpChofer":
-        return this._facturaOpChofer$.asObservable();
-      case "facturaOpProveedor":
-        return this._facturaOpProveedor$.asObservable();
-      case "facturaCliente":
-        return this._facturaCliente$.asObservable();
-      case "facturaChofer":
-        return this._facturaChofer$.asObservable();
-      case "facturaProveedor":
-        return this._facturaProveedor$.asObservable();
-      case "legajos":
-        return this._legajos$.asObservable();
-      case "proforma":
-        return this._proforma$.asObservable();
-      case "informesOpClientes":
-        return this._informesOpClientes$.asObservable();
-      case "informesOpChoferes":
-        return this._informesOpChoferes$.asObservable();
-      case "informesOpProveedores":
-        return this._informesOpProveedores$.asObservable();
-      case "resumenLiqClientes":
-        return this._resumenLiqClientes$.asObservable();
-      case "resumenLiqChoferes":
-        return this._resumenLiqChoferes$.asObservable();
-      case "resumenLiqProveedores":
-        return this._resumenLiqProveedores$.asObservable();  
-      case "resumenLiq":
-        return this._resumenLiq$.asObservable();
-      case "fechasConsulta":
-        return this._fechasConsulta$.asObservable();
-      case "noOperativo":
-        return this._noOperativo$.asObservable();
+        return this._users$.asObservable();
       default:
         throw new Error(`Componente no reconocido: ${componente}`);
     }
   }
 
-
-  getAllSortedIdLimit<T>(componente: any, campo: any, id:number, campo2: any, orden: any, limite: number, titulo: string) {
-    //////console.log(` storage getAllSortedLimit ${componente}`, componente, campo, orden, limite)
-    // pasar campo y orden (asc o desc)
-    this.dbFirebase
-      .getAllSortedIdLimit<T>(componente, campo, id, campo2, orden, limite)
-      .subscribe(data => {
-
-        this.setInfo(titulo, data)
-        this.updateObservable(componente, data)
-        ////////console.log("storage initializer ", componente, data);
-      });
-      
-  }
-  
-  getByFieldValue<T>(componente: any, campo:any, value:any){
-    //////console.log(" storage getByFieldValue ", componente, campo, value)
-    this.dbFirebase
-      .getByFieldValue<T>(componente, campo, value)
-      .subscribe(data => {
-        this.setInfo(componente, data)
-      })
-  }
-
-
-
-
-  getByDateValue<T>(componente:string, campo:string, value1:any, value2:any, titulo:string){
-    ////console.log(" storage getByDateValue ", componente, titulo)
-    this.dbFirebase
-    .getByDateValue<T>(componente, campo, value1, value2)
-    .pipe(distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)))
-    .subscribe(data => {
-      this.setInfo(titulo , data)
-    })
-    }
-
-
-
-
-     
       public addItem(componente: string, item: any, idItem:any, accion:string, msj: string): void {
         //let accion: string = "ALTA";
         let regLog:boolean = this.controlLog(componente, accion);
@@ -740,28 +230,6 @@ export class StorageService {
           console.log(e.message)});
       }
 
-      public deleteItemPapelera(componente: string, item: any,  idItem:any, accion:string, msj:string, motivo:string): void {
-        let regLog:boolean = this.controlLog(componente, accion);
-        this.dbFirebase.delete(componente, item.id).then(() => {
-          if (!this.usuarioSesion.esRol('dev') && regLog) {
-            this.logService.logEventDoc(accion, componente, msj, idItem, item, true, motivo);
-          }
-        }).catch((e) => {
-          if (!this.usuarioSesion.esRol('dev') && regLog){
-            this.logService.logEvent(accion, componente, msj, idItem, false);
-          }
-          console.log(e.message)});
-      }
-
-      async addSimpleLogPapelera(componente: string, item: any,  idItem:number|string, accion:string, msj:string, motivo:string){
-        let regLog:boolean = this.controlLog(componente, accion);
-        if (!this.usuarioSesion.esRol('dev') && regLog){
-          console.log("aca?");
-          this.logService.logEventDoc(accion, componente, msj, idItem, item,  true, motivo);
-        }
-
-      }
-
       public updateItem(componente: string, item: any, idItem:any, accion:string, msj: string, uid:any): void {
         //////console.log("storage update item", componente, item);
         let regLog:boolean = this.controlLog(componente, accion);
@@ -776,36 +244,6 @@ export class StorageService {
             this.logService.logEvent(accion, componente, msj, idItem, false);
           }
           console.log(e.message)});
-      }
-
-      public updateUser(componente: string, item: any, accion:string): void {
-        //////console.log("storage update item", componente, item);
-        let regLog:boolean = this.controlLog(componente, accion);
-        this.dbFirebase.updateUser(item).then(() => {
-          if (!this.usuarioSesion.esRol('dev') && regLog) {
-            this.logService.logEvent(accion, componente, `Edición de Usuario ${item.email}`, item.uid, true);
-          }
-        }).catch((e) => {
-          if (!this.usuarioSesion.esRol('dev') && regLog) {
-            this.logService.logEvent(accion, componente, `Edición de Usuario ${item.email}`, item.uid, false);
-          }
-          //console.log(e.message)
-        });
-      }
-
-      public deleteUser(componente: string, item: any, accion: string): void {
-        //////console.log("storage delete item", componente, item);
-        let regLog:boolean = this.controlLog(componente, accion);
-        this.dbFirebase.deleteUser(item.id).then(() => {
-          if (!this.usuarioSesion.esRol('dev') && regLog) {
-            this.logService.logEvent(accion, componente, `Baja de Usuario ${item.email}`, item.uid, true);
-          }
-        }).catch((e) => {
-          if (!this.usuarioSesion.esRol('dev') && regLog) {
-            this.logService.logEvent(accion, componente, `Baja de Usuario ${item.email}`, item.uid, false);
-          }
-          //console.log(e.message)
-        });
       }
 
       private controlLog(componente: string, accion:string) {
@@ -897,152 +335,4 @@ export class StorageService {
         
       }
     
-  getChoferesHabilitados(
-    choferes: Chofer[],
-    noDisponibilidades: NoDisponibilidadChofer[],
-    fecha: string
-  ): Chofer[] {
-
-    if (!fecha || !choferes?.length) {
-      return [];
-    }
-
-    const fechaMs = new Date(fecha + 'T00:00:00').getTime();
-
-    // 1️⃣ Armar set de choferes NO disponibles para esa fecha
-    const noDisponiblesSet = new Set<string>();
-
-    for (const nd of noDisponibilidades || []) {
-      if (!nd.activa) continue;
-
-      const desdeMs = new Date(nd.desde + 'T00:00:00').getTime();
-      const hastaMs = new Date(nd.hasta + 'T23:59:59').getTime();
-
-      if (fechaMs >= desdeMs && fechaMs <= hastaMs) {
-        noDisponiblesSet.add(nd.idChofer);
-      }
-    }
-
-    // 2️⃣ Filtrar choferes habilitados
-    return choferes.filter(chofer =>
-      chofer.activo === true &&
-      !noDisponiblesSet.has(chofer.idChofer)
-    );
-  }
-
-  public addItemAndGetId(
-    componente: string,
-    item: any,
-    accion: string,
-    msj: string
-  ): Promise<string> {
-    let regLog = this.controlLog(componente, accion);
-    return this.dbFirebase.createAndGetId(componente, item)
-      .then((id) => {
-        if (!this.usuarioSesion.esRol('dev') && regLog) {
-          this.logService.logEvent(accion, componente, msj, id, true);
-        }
-        return id;
-      })
-      .catch((e) => {
-        if (!this.usuarioSesion.esRol('dev') && regLog) {
-          this.logService.logEvent(accion, componente, msj, '', false);
-        }
-        console.log(e.message);
-        throw e;
-      });
-  }
-
-  public async updateItemAsync(
-    componente: string,
-    item: any,
-    idItem: string,
-    accion: string,
-    msj: string,
-  ): Promise<void> {
-    let regLog = this.controlLog(componente, accion);
-    try {
-      await this.dbFirebase.update(componente, item, idItem);
-      if (!this.usuarioSesion.esRol('dev') && regLog) {
-        this.logService.logEvent(accion, componente, msj, idItem, true);
-      }
-    } catch (e: any) {
-      if (!this.usuarioSesion.esRol('dev') && regLog) {
-        this.logService.logEvent(accion, componente, msj, idItem, false);
-      }
-      console.log(e.message);
-      throw e;
-    }
-  }
-
-  public async deleteItemPapeleraAsync(
-    componente: string,
-    item: any,
-    idItem: string,
-    accion: string,
-    msj: string,
-    motivo: string,
-  ): Promise<void> {
-    let regLog = this.controlLog(componente, accion);
-    try {
-      await this.dbFirebase.delete(componente, item.id);
-      if (!this.usuarioSesion.esRol('dev') && regLog) {
-        await this.logService.logEventDoc(accion, componente, msj, idItem, item, true, motivo);
-      }
-    } catch (e: any) {
-      if (!this.usuarioSesion.esRol('dev') && regLog) {
-        this.logService.logEvent(accion, componente, msj, idItem, false);
-      }
-      console.log(e.message);
-      throw e;
-    }
-  }
-
-  public async deleteItemAsync(
-    componente: string,
-    id: string,
-    idItem: string,
-    accion: string,
-    msj: string,
-  ): Promise<void> {
-    let regLog = this.controlLog(componente, accion);
-    try {
-      await this.dbFirebase.delete(componente, id);
-      if (!this.usuarioSesion.esRol('dev') && regLog) {
-        this.logService.logEvent(accion, componente, msj, idItem, true);
-      }
-    } catch (e: any) {
-      if (!this.usuarioSesion.esRol('dev') && regLog) {
-        this.logService.logEvent(accion, componente, msj, idItem, false);
-      }
-      console.log(e.message);
-      throw e;
-    }
-  }
-
-  public async deleteItemPapeleraCompuestoAsync(
-    componente: string,
-    itemId: string,
-    objetoPapelera: any,
-    accion: string,
-    msj: string,
-    motivo: string,
-  ): Promise<void> {
-    let regLog = this.controlLog(componente, accion);
-    try {
-      await this.dbFirebase.delete(componente, itemId);
-      if (!this.usuarioSesion.esRol('dev') && regLog) {
-        await this.logService.logEventDoc(
-          accion, componente, msj, itemId, objetoPapelera, true, motivo
-        );
-      }
-    } catch (e: any) {
-      if (!this.usuarioSesion.esRol('dev') && regLog) {
-        this.logService.logEvent(accion, componente, msj, itemId, false);
-      }
-      console.log(e.message);
-      throw e;
-    }
-  }
-
 }
