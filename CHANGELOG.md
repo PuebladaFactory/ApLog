@@ -2194,6 +2194,52 @@ pruebas manuales en demo.
 
 ---
 
+## Frente Lazy loading + fechas (Octubre 2026)
+
+- **Lazy loading:**
+  - `AppModule` sin `RaizModule`; `''` lazy al final de `app-routing`, con
+    compatibilidad `/raiz` y `'**'` → página no encontrada;
+  - `RaizModule` sin imports de feature: cada módulo es su chunk, y
+    `/migracion` va en `DesarrolloModule`;
+  - `RoleGuard` con `canMatch`;
+  - QR de facturas con `import()`;
+  - budget del inicial en `demo` (2 / 3 MB);
+  - bundle inicial 8,49 → 1,53 MB.
+- **Fuera:**
+  - dependencias: AG Grid, jquery, DataTables, Cloudinary,
+    `ngx-filter-pipe` y `@supabase/supabase-js`;
+  - los CDN de `index.html` y el Bootstrap duplicado;
+  - la Liquidación vieja sin ruta (Proforma, LiquidacionesOp, MigrarDatos,
+    `LiquidacionService`, `LiquidacionBuilderService` y sus modales);
+  - los miembros, imports, inyecciones y archivos sin uso (StorageService
+    1047 → 337 líneas; DbFirestoreService 1547 → 1063).
+- **Fechas** (util único `shared/utils/fecha.util.ts`, "hoy" con huso fijo
+  de Argentina):
+  - Legajos: vigente todo el día del vencimiento y vencido desde el
+    siguiente, igual en el cliente y en la Cloud Function (deployada en
+    demo);
+  - "Últimos 12 meses" de Reportes (los días 31 daba 11 meses);
+  - "hoy" por defecto en Registro, Papelera (últimos 30 días) y baja: antes
+    daba mañana desde las 21:00;
+  - flechas de día del tablero de asignaciones;
+  - rango del Registro viejo y año del InformeLiq viejo;
+  - consolidación de los helpers duplicados (días, formato DD/MM/AAAA, fin
+    de mes);
+  - nombres de archivo con la fecha de Argentina.
+- **`deploy:demo` / `deploy:vantruck`** regeneran `version.ts`
+  (`set-version.js`).
+
+Detalle en `CLAUDE.md` → "Frente Lazy loading + fechas"; deudas en "Deuda —
+tras el frente Lazy loading + fechas"; pasos para Vantruck en "Checklist —
+migración a Vantruck: frente Lazy loading + fechas".
+
+**Verificación:** `ng build --configuration=demo` limpio en cada bloque
+(mismas 9 advertencias), pruebas del util en Node bajo varios husos y
+pruebas manuales en demo. Diseño y avance: `claude/diseno-lazy-fechas.md`
+(Project).
+
+---
+
 ### Pendiente
 
 Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
@@ -2202,14 +2248,16 @@ Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
 - Finanzas (frentes aparte): cartera de cheques, pago de liquidaciones de
   vendedores como movimiento, plazo de pago por entidad.
 - Ajustes: retirar el `LogService` viejo (colección `logs`) y la Papelera
-  legado.
+  legado (con `objeto-papelera`, `exportToExcelInforme` / `exportToPdfInforme`
+  y PDFMake).
+- UX: el `<h1>` sin cerrar de `index.html` envuelve toda la app (ver "Deuda —
+  tras el frente Lazy loading + fechas").
 
 **Transversales**
-- Auditoría de fechas 'YYYY-MM-DD' vs huso horario en toda la app.
 - Excel/PDF de los demás informes sobre `DocumentoTabular` + los renderers
-  de `servicios/exportacion/`.
-- RaizModule: imports eager de los módulos de feature (lazy loading, bundle
-  inicial).
+  de `servicios/exportacion/` (incluye el Excel de choferes, D6, y saca
+  `exceljs` del chunk de `/op`).
+- Specs de Karma: 7 no compilan (`npm test` no corre).
 - Estilo global `.col-numero` (hoy repetido en Vendedores y
   `tabla-listado`).
 - Sidebar: no se cierra solo al navegar en pantallas < 1600 px; revisar
@@ -2232,6 +2280,7 @@ Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
   apertura de Finanzas (fecha de corte, saldos reales, importador),
   liquidaciones históricas con su `fechaEmision` real, borrado de
   `resumenOpMensual` / `informesVenta` / `resumenVenta` / `movimientos` /
-  `resumenFinanzas` y de las colecciones viejas de tarifas, y retiro del
-  camino viejo (LiquidacionesOp, Proforma, exportaciones viejas de
-  liquidación).
+  `resumenFinanzas` y de las colecciones viejas de tarifas. Del frente Lazy
+  loading + fechas: "Checklist — migración a Vantruck: frente Lazy loading +
+  fechas" (deploy de la Function de vencimientos, budget de `vantruck`,
+  eventuales D7, legajos FL4).

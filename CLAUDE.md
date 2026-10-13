@@ -16,11 +16,12 @@ no por limitación de la plataforma.
 ## Stack técnico
 
 - **Frontend:** Angular 20, TypeScript 5.8 (strict mode), RxJS 7
-- **UI:** Bootstrap 5 + ng-bootstrap. Tablas de datos: `TablaGenericaComponent` propio
-  (reemplazó a AG Grid en los módulos refactorizados; AG Grid puede subsistir en módulos
-  aún no migrados)
-- **Backend/DB:** Firebase (Firestore + Auth + Hosting), Cloudinary (imágenes)
-- **Exports:** ExcelJS, jsPDF, PDFMake
+- **UI:** Bootstrap 5 (`bootstrap.min.css` local, sin CDN) + ng-bootstrap; íconos
+  `bootstrap-icons` locales. Tablas de datos: `TablaGenericaComponent` propio (AG Grid,
+  jquery y DataTables se retiraron en el frente Lazy loading + fechas)
+- **Backend/DB:** Firebase (Firestore + Auth + Hosting + Storage + Cloud Functions)
+- **Exports:** ExcelJS, jsPDF (+ autotable), PDFMake (solo la Papelera legado)
+- **Fechas:** `shared/utils/fecha.util.ts`, sin librerías (ver "Convenciones")
 - **Editor:** VSCode
 
 ## Comandos
@@ -31,9 +32,14 @@ npm test                    # Tests con Karma
 npm run build               # Build de producción
 npm run build:demo          # Build para entorno demo
 npm run build:vantruck      # Build para entorno Vantruck (producción)
-npm run deploy:demo         # Build + firebase deploy (demo)
-npm run deploy:vantruck     # Build + firebase deploy (vantruck)
+npm run deploy:demo         # set-version + build + firebase deploy (demo)
+npm run deploy:vantruck     # set-version + build + firebase deploy (vantruck)
 ```
+
+`npm install` / `npm uninstall` necesitan `--legacy-peer-deps` (`@angular/fire` 19 con
+Angular 20: ERESOLVE preexistente). `deploy:*` regeneran `src/environments/version.ts`
+(`set-version.js`): commitearlo después de deployar. `build:*` no lo regeneran a propósito
+(cada build de verificación dejaría el archivo modificado).
 
 ## Arquitectura
 
@@ -42,7 +48,8 @@ npm run deploy:vantruck     # Build + firebase deploy (vantruck)
 ```
 src/app/
 ├── appLogin/          # Rutas sin autenticación (login, registro, reset)
-├── raiz/              # App principal (lazy-loaded, protegida por RoleGuard)
+├── componentes/       # Herramientas de /migracion (DesarrolloModule lazy, solo rol dev)
+├── raiz/              # Shell (Home, Sidebar) lazy en '' + un módulo lazy por feature
 │   ├── operaciones/   # Operaciones diarias (tablero, alta/baja/cierre)
 │   ├── clientes/      # CRUD + tarifas
 │   ├── choferes/      # CRUD + tarifas + documentación
@@ -58,10 +65,20 @@ src/app/
 ├── servicios/         # 22 servicios especializados
 ├── interfaces/        # 32+ interfaces TypeScript de dominio
 ├── guards/            # RoleGuard (control de acceso por rol)
-└── constants/         # Constantes de negocio
+└── constantes/        # Constantes de negocio
 ```
 
-Todos los módulos bajo `raiz/` son lazy-loaded.
+Ruteo (frente Lazy loading + fechas):
+- `AppModule` no importa `RaizModule` ni ningún módulo de feature. `app-routing`: rutas
+  sin autenticación, compatibilidad `/raiz` → `/op` y `/raiz/x` → `/x`,
+  `''` → `loadChildren(RaizModule)` al final y `'**'` → `PagenotfoundComponent`. Las URLs
+  no llevan `/raiz`.
+- `RaizModule` declara solo el shell; cada feature es un chunk lazy desde `raiz-routing`
+  (y `/migracion`, `DesarrolloModule`).
+- `RoleGuard`: `canMatch` en las rutas de `raiz-routing` (un rol sin acceso no descarga
+  el chunk) y `canActivate` en las rutas internas de cada módulo. Los dos devuelven
+  `true | UrlTree`; nunca `false` en `canMatch` (el router seguiría buscando y caería en
+  `'**'`).
 
 ### Autenticación y roles
 
@@ -236,8 +253,10 @@ estado.proforma: { cliente: boolean; chofer: boolean }    // congelamiento por p
 - El ciclo de vida del estado de la op termina al crear el `InformeLiq`. Liquidar
   (incluir un InformeOp en un InformeLiq) NO es lo mismo que facturar (factura electrónica
   real, externa a la app): por eso el modelo dice `liquidacion`, no "factura".
-- Toda transición de estado vive en `LiquidacionService` (`servicios/liquidaciones/`).
-  El `EstadoOp` debería construirse siempre desde el factory de Operaciones, nunca con
+- Las transiciones de estado viven en `OperacionFactoryService.estadoInicial`,
+  `OperacionService` (cierre) e `InformeLiqService` (liquidar / revertir). El
+  `LiquidacionService` viejo se retiró en el frente Lazy loading + fechas (LR1). El
+  `EstadoOp` debería construirse siempre desde el factory de Operaciones, nunca con
   literales inline.
 
 **Regla de bloqueo de proformas (negocio, no obvia).** La proforma de CHOFER es dominante:
@@ -260,10 +279,9 @@ Por eso `Proforma CH` tiene mayor prioridad visual que `Proforma CL` en el badge
 | `papelera/` | `PapeleraService` (preparación de escrituras de baja/restauración por referencia, dentro del batch atómico de negocio) + `PapeleraConsultaService` (lectura/paginación, para `PapeleraComponent`) sobre `papeleraEventos`/`objetosEliminados` — ver "Frente Papelera — mecanismo de referencia" |
 | `visualizador-objeto/` | `VisualizadorObjetoService` — dispatcher `coleccion -> modal de vista real`, usado por `RegistroLogComponent` y (desde el Frente Papelera) por `PapeleraComponent` vía el parámetro `snapshot` de `verObjeto` |
 | `tarifario/` | Tarifario nuevo: `TarifarioService` (estado y escritura de `tarifas` / `tarifasEspeciales` / `registrosOpEventuales`), factories, `TarifaGuardadoService`, motor `ValoresTarifaService` y `ResolucionTarifaOpService` — ver "Frente Tarifas — tarifario nuevo" |
-| `liquidaciones/` | Cálculo de liquidaciones y transiciones de estado de operación (proformas, InformeLiq) — camino VIEJO (InformeLiq/resumenLiq/proforma), reemplazado por `informes-liq/`; sin tocar hasta retirar el camino viejo (desde el Frente Finanzas ya no escribe `resumenFinanzas`) |
 | `informes-op/` | `InformeOpService` (+ Factory) — `InformeOpNuevo` en la colección única `informesOp` (un doc por lado de cada operación, con `contraParte`). `armarEscriturasEdicion` (armado sin commit) + `editar` (armado + commit) |
 | `informes-liq/` | `InformeLiqService` + `InformeLiqFactoryService` — `InformeLiqNuevo` en `informesLiq`: borradores, emisión, edición. Ver "Frente Liquidación — InformeLiqNuevo" |
-| `informes/` | Generación de reportes Excel y PDF — camino VIEJO (`ExcelService`/`PdfService`); los documentos de InformeLiqNuevo salen de `exportacion/` + `LiquidacionExportService` |
+| `informes/` | Generación de reportes Excel y PDF — camino VIEJO (`ExcelService`/`PdfService`): hoy solo los listados (operaciones, clientes, choferes, proveedores) y la Papelera legado; los documentos de InformeLiqNuevo salen de `exportacion/` + `LiquidacionExportService` |
 | `exportacion/` | Renderers GENÉRICOS de `DocumentoTabular` (`generar`) y `LibroTabular` (`generarLibro`, varias hojas con varias tablas) — no saben de qué informe se trata: `PdfTabularService` (jsPDF + autotable), `ExcelTabularService` (exceljs), formatos y logo compartidos. Librerías con import dinámico — ver "Frente Excel/PDF — InformeLiqNuevo" y "Frente Reportes" |
 | `reportes/resumenes-op/` | Resúmenes mensuales de operaciones (`resumenesOp`): `ResumenOpFactoryService` (pura: aporte de una op, claves, escrituras de cierre/edición/baja, agregados del Recálculo), `ResumenOpConsultaService` (solo lectura, pantallas), `TablaResumenConfigService` (columnas y fórmulas por modo), `ResumenOpExportService` (Excel/PDF) — ver "Frente Reportes" |
 | `vendedores/` | Vendedores y comisiones de venta: `VendedorService` (listener en memoria; alta/edición/asignación, desactivar/reactivar), `ComisionVentaFactoryService` (pura: escrituras de cierre/edición/baja sobre `comisionesVenta`), `ComisionVentaConsultaService` (solo lectura: mes, pendientes, tablero), `LiquidacionVentaService` (emitir/pagar/revertir/anular en transacción), `ComisionesExportService` (Excel/PDF) — ver "Frente Vendedores" |
@@ -272,7 +290,7 @@ Por eso `Proforma CH` tiene mayor prioridad visual que `Proforma CL` en el badge
 | `numerador/` | Generación de IDs secuenciales (operaciones, facturas) |
 | `validar/` | Validación de reglas de negocio |
 | `formato-numerico/` | Formateo de números/moneda estilo Argentina |
-| `fechas/` | Utilidades de fecha |
+| `fechas/` | `DateRangeService` (rango del tablero) y `toISODateString` (delega en `fechaNegocioDe`). El util único de fechas es `shared/utils/fecha.util.ts` — ver "Frente Lazy loading + fechas" |
 | `desarrollo/` | Herramientas de `/migracion`. SOLO demo (guarda projectId `demoapplog` + rol dev): `LimpiezaDemoService`, `GeneradorOperacionesService` — ver "Herramientas de desarrollo (solo demo)"; `GeneradorCircuitoService`, `GeneradorCobrosService` — ver "Frente Finanzas". En cualquier proyecto (rol dev + confirmación escrita del id de proyecto; se usa en la migración de Vantruck): `RecalculoResumenesService` — ver "Frente Reportes"; `RecalculoComisionesService` — ver "Frente Vendedores" |
 
 ### Entornos de build
@@ -291,6 +309,10 @@ esta tabla; detalle en `CHANGELOG.md`).
 interruptor manual existente para debug local contra el proyecto de producción real
 (descomentar temporalmente, nunca commitear activo). No es un entorno de build separado
 ni un tercer proyecto, es una práctica ya establecida sobre el mismo `development`.
+
+Budget del bundle inicial: `demo` aviso 2 MB / error 3 MB (hoy 1,53 MB); `production`
+6 / 7 MB; `vantruck` sin budget hasta la migración (ver "Checklist — migración a
+Vantruck: frente Lazy loading + fechas").
 
 ### Cloud Functions
 
@@ -437,6 +459,7 @@ Categorías especiales:
 - **Logging:** toda mutación de datos debe quedar registrada con acción (`ALTA`, `EDITAR`, `BAJA`, `RESTAURAR`), nombre de colección e ID del registro. El rol `dev` queda excluido del log. Dos mecanismos conviven: el nuevo `LogRegistroService` (colección `registroLog`, log como escritura dentro del mismo batch atómico de negocio — usar este para código nuevo en los módulos ya migrados) y el viejo `LogService` (colección `logs`, log como llamada separada después del write — sigue vigente para lo no migrado). Ver "Frente Log — mecanismo unificado" para el detalle de qué está migrado y qué no.
 - **IDs secuenciales:** usar `NumeradorService` al crear operaciones o facturas — nunca generar IDs manualmente.
 - **Locale argentino:** fechas en `dd/MM/yyyy`, miles con `.` y decimales con `,`. Hay servicios de formateo para ambos.
+- **Fechas:** todo pasa por `shared/utils/fecha.util.ts`. Fecha de negocio = string 'YYYY-MM-DD', operada como string o por partes; nunca `new Date('YYYY-MM-DD')` (medianoche UTC = 21:00 del día anterior en Argentina) ni `toISOString()` para obtenerla (desde las 21:00 da mañana). "Hoy" = `hoyNegocio()` (huso fijo de Argentina, igual en el cliente y en las Cloud Functions). Instantes = ISO UTC completo (`new Date().toISOString()`), mostrados con `instanteLegible`. Detalle en "Frente Lazy loading + fechas → Fechas".
 - **Formularios:** Reactive Forms (`FormBuilder`). Directivas propias manejan CUIT, solo-letras, solo-números y fechas.
 - **Modales:** `ng-bootstrap NgbModal`. Modales reutilizables en `shared/modales/`, específicos dentro del módulo feature.
 - **Estilo de código:** respetar el estilo existente en cada archivo que se modifique — nombres de variables, indentación, estructura — sin imponer patrones nuevos salvo que se indique explícitamente.
@@ -1436,6 +1459,14 @@ vencimientos (detectar que un documento pasó de "por vencer" a "vencido" sin qu
 lo haya vuelto a cargar) lo resuelve la Cloud Function `verificarVencimientosDocumentacion`
 — ver más abajo.
 
+**Regla (decisión D1 del frente Lazy loading + fechas, Octubre 2026):** con `fechaVto = D`,
+el documento está vigente todo el día D y vencido desde D+1; `'porVencer'` = de 0 a 45 días
+de calendario hasta D. Se calcula sobre los strings, contra `hoyNegocio()`:
+`calcularEstadoDocumentacion(fechaVto, hoy = hoyNegocio())` con `diasEntre(hoy, fechaVto)`.
+Una `fechaVto` que no es 'YYYY-MM-DD' válida da `'sinVto'` (la Function además deja un
+`logger.warn`). Antes se comparaba `new Date(fechaVto)` contra el instante actual: vencía a
+las 21:00 del día anterior y cambiaba según la hora y el lado (cliente o servidor).
+
 ### Verificación periódica de vencimientos (Cloud Scheduler)
 
 `functions/src/verificarVencimientosDocumentacion.ts` — primera función PROGRAMADA
@@ -1450,7 +1481,7 @@ reabriera y volviera a guardar ese legajo).
   negocio explícita, no un default técnico — 30 días quedaba corto para cubrir el ciclo
   real de renovación de un documento (sacar turno + trámite + emisión + cargarlo de
   nuevo en el legajo); 45 confirmado con el desarrollador. Vive en un solo lugar por
-  copia (el `if diffDias <= 45` de cada una de las dos copias de
+  copia (el `dias <= 45` de cada una de las dos copias de
   `calcularEstadoDocumentacion()`) — sin tabla de configuración ni override por
   categoría, un solo número para todo el proyecto.
 - **`calcularEstadoDocumentacion()` DUPLICADA manualmente**, no importada. Cloud
@@ -1459,7 +1490,8 @@ reabriera y volviera a guardar ese legajo).
   armar un mecanismo de código compartido entre los dos `tsconfig` para una función
   pura de 15 líneas. Mantener AMBAS copias sincronizadas ante cualquier cambio en este
   cálculo (comentario espejo en las dos puntas: `interfaces/legajo.ts` y el archivo de
-  la función).
+  la función). La copia de la Function trae su propio `hoyNegocio` (Intl, mismo huso) y
+  sus helpers de fechas; la prueba en Node es `functions/test-vencimientos-scheduler.mjs`.
 - **Recalcula TODOS los `Documentacion[]` de TODOS los `legajos`** en cada corrida, y
   solo reescribe (`batch.update`) los legajos cuyo estado cambió — evita escrituras
   innecesarias en los que ya estaban al día.
@@ -2642,11 +2674,15 @@ proyecto `claude/diseno-facturacion-nueva.md`; instrucciones por bloque:
 - `abrirUrlEnPestana` (`shared/utils/abrir-url.util.ts`): abre la pestaña
   ANTES del await (si se abre después, el bloqueador de ventanas emergentes
   la frena). Se llama sin awaits previos desde el click.
-- Las fechas 'YYYY-MM-DD' no van por el pipe `date` (las toma como UTC y en
-  Argentina muestra el día anterior): `fechaComprobanteLegible`.
+- Las fechas 'YYYY-MM-DD' se muestran con `fechaComprobanteLegible` (desde el
+  frente Lazy loading + fechas delega en `fechaLegible`). Corrección: el pipe
+  `date` de Angular toma 'YYYY-MM-DD' como fecha LOCAL, no como UTC; igual se
+  prefiere el util para no depender de Date.
 - Bundle: el modal nuevo vuelve a traer pdfjs + jsQR (`FacturaQrService`),
   +~0,5 MB al bundle inicial (8,02 → 8,54 MB) porque RaizModule importa los
-  módulos de feature en forma eager (ver Deuda).
+  módulos de feature en forma eager (ver Deuda). RESUELTO en el frente Lazy
+  loading + fechas: Facturación es lazy y pdfjs + jsQR se cargan con `import()`
+  recién al leer una factura.
 
 ### Limpieza y fixes durante el frente
 - F0: eliminado `raiz/facturacion/` (módulo muerto: rutas inexistentes,
@@ -3187,7 +3223,8 @@ revertir y desvincular exigen `totalCobrado === 0` y `totalAjustado === 0`
   por `factura.fecha`, compensables; filtros de cada pestaña recordados en
   la sesión. Índice compuesto `informesLiq (estado, estadoFinanciero)`.
 - Utils puros en `shared/utils/`: `finanzas.util` (redondeo con tolerancia,
-  `estadoFinancieroDe`, FIFO, `diasEntre`, tramos), `movimiento-fin.util`
+  `estadoFinancieroDe`, FIFO, tramos; los días van con `diasEntre` /
+  `diasEntreONulo` de `fecha.util`), `movimiento-fin.util`
   (validar/armar movimientos, ajustes, cierres, devoluciones, totales),
   `cuentas-finanzas.util` (`armarCuentas`: facturado, +60, sin facturar, a
   favor, tramos, días promedio ponderados por saldo, estado),
@@ -3391,7 +3428,9 @@ avance: `claude/diseno-tarifas-cierre.md` (Project).
   no eventual, es un error del aporte.
 - Reglas: fuera `historialTarifas` / `historialTarifasEspeciales` (nunca se usaron).
 - Se queda `interfaces/tarifa-gral-cliente.ts` (tipos viejos): lo usan `InformeOp`
-  viejo, `migrar-datos` y `choferes-alta`; se va con la Liquidación vieja.
+  viejo y `choferes-alta`; se va con la Liquidación vieja (`migrar-datos` y las
+  interfaces `TarifaGralCliente` / `AdicionalTarifa` se retiraron en el frente Lazy
+  loading + fechas).
 
 ### Herramientas de `/migracion`
 - `TarifaMigrationService` (lee las colecciones viejas directo de Firestore, como
@@ -3406,6 +3445,130 @@ avance: `claude/diseno-tarifas-cierre.md` (Project).
   `aplicarLimpiezaCamposTarifas`): traduce el adicional viejo a `adExtra` y borra con
   `deleteField()` los campos retirados de `Operacion`. Hace falta porque
   `opToFirestore` reescribe lo que se leyó (spread).
+
+## Frente Lazy loading + fechas (Octubre 2026)
+
+Tres partes:
+- lazy loading real de los módulos;
+- retiro del camino viejo de Liquidación y del código sin uso;
+- un util único de fechas, con los bugs de huso horario corregidos.
+
+Bloques LZ1–LZ7, LR1–LR2d, FE1–FE5b y CI1–CI2. Diseño, decisiones (L1–L11, D1–D10) y
+avance: `claude/diseno-lazy-fechas.md` (Project). Todo se probó en demo; nada se deployó a
+Vantruck (ver "Checklist — migración a Vantruck: frente Lazy loading + fechas").
+
+### Lazy loading
+- Ruteo nuevo: ver "Estructura de módulos" (`''` lazy al final de `app-routing`,
+  compatibilidad `/raiz`, `'**'`, `canMatch`).
+- `RaizModule` sin imports de feature: cada feature es su propio chunk. `/migracion` y
+  sus herramientas en `DesarrolloModule` (`componentes/desarrollo.module.ts`), lazy, solo
+  rol dev.
+- `RoleGuard` con `canMatch` y `canActivate` devolviendo `UrlTree`; se retiró `canLoad`
+  (deprecado).
+- Retirados: AG Grid (registro, módulos, CSS, 2 renderers, dependencias), jquery y
+  DataTables (`scripts` y dependencias), los CDN de `index.html`, el `bootstrap.scss`
+  duplicado (queda `bootstrap.min.css`, el que ganaba en la cascada), Cloudinary,
+  `ngx-filter-pipe`, `SharedRoutingModule` y `LogoutComponent`, más declaraciones muertas
+  de Shared (`AccionGenerica`, `TableroCalendario`, `Role`, `FechaValida`, `Sortable`,
+  `InformesAccionesCell`).
+- `FacturaQrService` carga `pdfjs-dist` y `jsqr` con `import()`. El chunk de Facturación
+  baja de 523 a 36 kB.
+- Budget del inicial en la configuración `demo`: aviso 2 MB, error 3 MB.
+- Resultado: bundle inicial 8,49 → 1,53 MB.
+- Trampas:
+  - `SharedModule` importa `RouterModule` directo: `tabla-listado` usa `routerLink`, y
+    antes lo traía `SharedRoutingModule`;
+  - `@types/lodash` es devDependency explícita: antes llegaba solo por Cloudinary.
+
+### Retiro del camino viejo y código sin uso
+- **LR1 / LR1b, Liquidación vieja sin ruta:**
+  - componentes: `Proforma`, `LiquidacionesOp`, `MigrarDatos` (+ `FilterByPipe`),
+    `ResumenOpLiquidadas`, `PeriodoModal`, `InformeLiqDetalle` y `Descuentos`;
+  - `CalcularPorcentajeV2Pipe`;
+  - `LiquidacionService` y `LiquidacionBuilderService`, con los miembros que quedaron
+    huérfanos.
+- **LR2a–LR2d:** los miembros sin uso de servicios vivos, iterando la cascada hasta cero.
+  StorageService pasó de 1047 a 337 líneas y DbFirestoreService de 1547 a 1063 (conserva
+  el bloque comentado "NO BORRAARRR"); además ValidarService, ExcelService, PdfService y
+  otros.
+- **CI1:** imports, inyecciones `private` y variables locales sin uso
+  (`tsc --noUnusedLocals`: 58 → 1).
+- **CI2:** archivos que nadie importaba (`constants/` duplicada, `FacturaReal`,
+  interfaces de `informes-tabla`, `SupabaseStorageService`) y `@supabase/supabase-js`.
+- **Se quedan** (decisión D5; retirarlos es decisión de producto del frente Ajustes):
+  - Registro viejo (`logs`) y `LogService`;
+  - Papelera legado + `ObjetoPapelera`;
+  - `exportToExcelInforme` / `exportToPdfInforme`.
+- **Excepción a no borrar:** el import de `appVersion` en `app.component.ts`. Parece sin
+  uso, pero mete `version.ts` en la compilación: los `require()` de versión (app, home,
+  sidebar) no los ve tsc, y sin ese import el build falla.
+- **Método para buscar código sin uso:**
+  1. `findReferences` del LanguageService de TypeScript sobre exports y miembros;
+  2. uso en templates, por selector y por nombre de pipe;
+  3. `tsc --noUnusedLocals`;
+  4. archivos que no entran en la compilación (`.ts` de `src` contra
+     `tsc -p tsconfig.app.json --listFiles`).
+  Falsos positivos conocidos: `RoleGuard.canMatch` / `canActivate` (los usa el router) y
+  `resetearPassword` / `puedeVer` (templates).
+
+### Fechas — `shared/utils/fecha.util.ts`
+Criterio (está también en el encabezado del util):
+1. **Fecha de negocio:** string 'YYYY-MM-DD' (fecha de una operación, vencimiento de un
+   documento, fecha de un movimiento). Se opera como string o por sus partes.
+2. **Instante:** ISO UTC completo (alta, registro, anulación, log). Se muestra con
+   `instanteLegible`, en hora de Argentina.
+3. **"Hoy de negocio":** solo `hoyNegocio()`, con huso fijo
+   `America/Argentina/Buenos_Aires` vía `Intl` (D2). Da lo mismo en cualquier navegador y
+   en las Cloud Functions.
+4. **Date → fecha de negocio:** `fechaNegocioDe` (fecha local). `toISODateString` se
+   conserva y delega en él (D3).
+
+| Función | Qué hace |
+|---|---|
+| `FechaNegocio`, `ZONA_NEGOCIO` | Alias de string 'YYYY-MM-DD'; huso del negocio |
+| `esFechaNegocio(s)` | Formato y fecha de calendario real (rechaza '2026-02-30') |
+| `partesFecha(f)` | `{ anio, mes, dia }`; lanza si es inválida |
+| `hoyNegocio(ahora?)` | Hoy en Argentina |
+| `fechaNegocioDe(d)` | Date → 'YYYY-MM-DD' con la fecha local |
+| `sumarDias(f, n)` | Suma o resta días, sin depender del huso |
+| `diasEntre(desde, hasta)` / `diasEntreONulo` | Días de calendario; la segunda devuelve null en vez de lanzar |
+| `diasDelMes(anio, mes)` / `finDeMes('YYYY-MM')` | Último día del mes |
+| `fechaLegible(f, vacio?)` | 'YYYY-MM-DD' → 'DD/MM/AAAA'; otro string, tal cual |
+| `instanteLegible(iso, conHora?)` | ISO → 'DD/MM/AAAA HH:mm' en hora de Argentina |
+| `anioDe(fecha)` | Año de un 'YYYY-MM-DD…' o de un Date (datos viejos) |
+
+`fechaDMY`, `fechaComprobanteLegible` y `formatearFechaIso` conservan el nombre y delegan
+en `fechaLegible`.
+
+**Correcciones:**
+- **Legajos (D1):** ver "Módulo Legajos → Cálculo de estado". Cliente y Function con la
+  misma regla y el mismo "hoy".
+- **Reportes:** "Últimos 12 meses" restaba meses con `setMonth`, y los días 31 daba 11
+  meses; ahora usa `ultimos12Meses()`. El año y el mes por defecto, y `diasOperativos`,
+  usan `hoyNegocio`.
+- **"Hoy" por defecto** con `hoyNegocio` / `sumarDias`: registro-log, papelera (pasa a
+  "últimos 30 días"), baja-objeto y `cambiarDia` del tablero de asignaciones.
+- **Registro viejo:** el rango va de las 00:00 locales de "desde" a las 00:00 del día
+  siguiente a "hasta".
+- **Año del InformeLiq viejo** en Excel/PDF: `anioDe`.
+- **Consolidación (D4):**
+  - Finanzas usa `diasEntre` / `diasEntreONulo` (fuera `diasDesde` / `diasSeguros`);
+  - `esFechaNegocio` en las validaciones de movimientos y de fecha de emisión;
+  - `diasDelMes` / `finDeMes` en lugar de 5 cálculos;
+  - generadores con `sumarDias`;
+  - fuera `normalizarFecha` (rama muerta) y `fechaLocal`.
+- **Fechas en nombres de archivo** con el hoy de Argentina: Excel de listados, sufijo de
+  los backups de migración (`migration-backup` y `legajo-migracion` tienen que coincidir)
+  y `buildDate` de `set-version.js`.
+- **Pruebas:** cada bloque probó el util en Node bajo varios husos.
+  - Compilar con `tsc … --skipLibCheck`.
+  - En Windows, fijar `process.env.TZ` dentro del proceso: `TZ=` por entorno no toma
+    efecto.
+
+### Versión al deployar
+`deploy:demo` y `deploy:vantruck` corren `node set-version.js` antes del build. Regenera
+`version.ts` con la versión de package.json, el commit y la fecha. La app muestra solo
+`appVersion` (sidebar).
 
 ## Deuda conocida
 
@@ -3907,9 +4070,9 @@ resto de los `*appRole`/`esRol()` puntuales sigue sin migrar, ver "Pendiente" ah
   en Firestore (inertes; las ediciones con merge no los borran).
 - Papelera: una op sin `valoresNuevos` muestra $0 en "Tarifa Base" (solo ops de
   Vantruck dadas de baja antes de migrar).
-- `interfaces/tarifa-gral-cliente.ts` sobrevive por `InformeOp` viejo, `migrar-datos`
-  (sus arrays de operaciones son `any[]`) y `choferes-alta`; se va con la Liquidación
-  vieja.
+- `interfaces/tarifa-gral-cliente.ts` sobrevive por `InformeOp` viejo y `choferes-alta`;
+  se va con la Liquidación vieja (`migrar-datos` se borró en el frente Lazy loading +
+  fechas).
 - Demo: las ops con adicional viejo editadas o cerradas entre TC9 y TC-L quedaron con
   `adExtra: null` (el adicional viejo se perdió; datos de prueba).
 - Cosmético: los campos de TC-L en `MigracionComponent` quedaron entre los de
@@ -3932,7 +4095,11 @@ Después del backup completo y de deployar este código en `pf-logistics`:
 4. Tarifas, a mano con los forms (rol dev, `vigenciaDesde` retroactiva): General (el
    linaje se arma con el volcado histórico), Especiales y Personalizadas, en orden
    cronológico real (la vigencia por fecha depende de eso).
-5. Eventual: previsualizar y confirmar → `registrosOpEventuales`.
+5. Eventual: previsualizar y confirmar → `registrosOpEventuales`. ANTES, corregir el
+   parseo de `fecha` en `TarifaMigrationService` (decisión D7 del frente Lazy loading +
+   fechas): en `tarifasEventuales` de Vantruck `fecha` es un string 'YYYY-MM-DD' y el
+   código actual lo pasa por `Date` y lo deja un día antes; tomar el string tal cual.
+   Revisar contra la fecha de su operación los 214 registros ya migrados en demo.
 6. Operaciones: método de migración propio (por diseñar), con entidades, vehículos y
    tarifas nuevos ya cargados: cada op vieja → `tarifaAplicada*` /
    `datosTarifaEventual` / `valoresNuevos` / `adExtra`, sin `valores`, `tarifaTipo`,
@@ -3975,6 +4142,11 @@ encare, pero el orden de dependencia ya es claro):
 4. `vehiculos` tiene la misma dependencia (se resuelve contra el chofer/proveedor ya
    migrado), y probablemente conviene resolverse en el mismo proceso.
 
+**Fechas de vencimiento (FL4, frente Lazy loading + fechas):** `LegajoMigracionService`
+convierte una `fechaVto` vieja en milisegundos con `toISOString()` (fecha UTC). Es correcto
+solo si el valor era medianoche de Argentina; revisarlo contra los datos reales de Vantruck
+antes de migrar (el Legajos viejo guardaba `new Date(fecha).getTime()`, 00:00 UTC).
+
 **No es deuda del modelo de datos de Legajos en sí** (ese frente ya resuelve el modelo
 correcto hacia adelante) — es deuda del PROCESO de migración de datos legacy de
 producción, que corre aparte y más adelante, cuando se aborde el traspaso completo a
@@ -3992,17 +4164,19 @@ Vantruck. Registrado acá para que no se pierda de vista al planificar ese proce
   editar un emitido respeta neto ≥ 0 con compensaciones).
 - ~~Reportes: ids NaN en los resúmenes por entidad~~ — RESUELTO en el Frente
   Reportes (`resumenesOp`).
-- `revertirInformeLiq` (camino viejo) no restaura `bloqueadoPorContraparte`.
-- Retirar el camino viejo (LiquidacionesOp, Proforma, LiquidacionService,
+- ~~`revertirInformeLiq` (camino viejo) no restaura `bloqueadoPorContraparte`~~ y
+  ~~retirar el camino viejo (LiquidacionesOp, Proforma, LiquidacionService,
   LiquidacionBuilderService, rutas comentadas en liquidacion-routing y
-  LiqGral) una vez migrado Vantruck.
+  LiqGral)~~ — RESUELTO en el frente Lazy loading + fechas (LR1): no tenía ruta
+  ni consumidores vivos. Se quedan el Registro viejo y la Papelera legado
+  (frente Ajustes).
 - ~~InformeVenta (comisiones) quedan huérfanos al dar de baja una operación
   cerrada~~ — RESUELTO en el Frente Vendedores (`comisionesVenta`).
 - ~~Resúmenes: mes corrido por huso horario~~ — RESUELTO en el Frente
   Reportes (`periodoDeFecha`).
-- Pantallas viejas que leen por `InformeOpService.obtenerPorIdsOperacion`
-  (proforma; la facturación vieja se borró en el Frente Finanzas) no filtran
-  InformeOp 'anulado'. Se retiran con el camino viejo.
+- ~~Pantallas viejas que leen por `InformeOpService.obtenerPorIdsOperacion`~~
+  — RESUELTO: el método y `proforma` se borraron en el frente Lazy loading +
+  fechas (LR1 / LR1b).
 
 ### Deuda — Facturación (camino InformeLiqNuevo)
 - ~~Excel/PDF en Emitidos/Facturados/Revertidos + vistas previas~~ —
@@ -4017,17 +4191,18 @@ Vantruck. Registrado acá para que no se pierda de vista al planificar ese proce
 - Prueba con una factura REAL que coincida en importe y CUIT con un emitido
   de demo (camino "todo coincide"): pendiente por falta de un PDF adecuado.
   El camino con discrepancias, unicidad, ver PDF y desvincular sí se probaron.
-- `FacturaQrService`: deja un `console.log` con el texto del QR; carga pdfjs
-  + jsQR en el bundle inicial. Pasarlo a import dinámico cuando se resuelva
-  la deuda de RaizModule.
+- `FacturaQrService`: deja un `console.log` con el texto del QR. ~~Carga pdfjs
+  + jsQR en el bundle inicial~~ — RESUELTO en el frente Lazy loading + fechas
+  (import dinámico).
 - Estilos `col-numero`/`col-moneda` definidos por componente (tabla-listado;
   `informes-tabla` se borró en el Frente Finanzas): consolidar en un estilo
   global.
-- Camino viejo de Facturación (se retira con la migración de Vantruck):
-  Supabase con anon key hardcodeada y toggle demo/Vantruck comentando
-  código (las facturas históricas viven ahí: decidir en la migración si se
-  copian a Storage); `anularLiquidacion` en chunks no atómicos y sin guarda
-  de cobros (desde el Frente Finanzas ya no escribe `resumenFinanzas`).
+- Camino viejo de Facturación: las facturas históricas viven en Supabase;
+  decidir en la migración si se copian a Storage (con una herramienta nueva
+  de `/migracion`). ~~`SupabaseStorageService` con anon key hardcodeada~~ y
+  ~~`anularLiquidacion` en chunks no atómicos~~ — borrados en el frente Lazy
+  loading + fechas (CI2 y LR1). Las anon keys siguen en el historial de git:
+  rotarlas en Supabase.
   ~~`updateItem` de documento entero en vincular y en el detalle viejo;
   métodos de migración/debug en los componentes viejos~~ — los componentes
   viejos de Facturación (`facturacion-listado` / `-historico`,
@@ -4043,7 +4218,9 @@ Vantruck. Registrado acá para que no se pierda de vista al planificar ese proce
 - ~~Finales de línea mezclados~~ — RESUELTO: `.gitattributes` +
   `.editorconfig`, todo el repo en LF (ver "Convenciones").
 
-### Deuda — RaizModule importa los módulos de feature en forma eager
+### ~~Deuda — RaizModule importa los módulos de feature en forma eager~~ — RESUELTO (frente Lazy loading + fechas, Octubre 2026)
+Ver "Frente Lazy loading + fechas → Lazy loading" (bundle inicial 8,49 → 1,53 MB). Texto
+original:
 `RaizModule` importa en forma EAGER casi todos los módulos de feature
 (Ajustes, Choferes, Legajos, Proveedores, Liquidacion, Vendedores,
 NuevaFacturacion, Reportes; Finanzas salió en el Frente Finanzas), que además se cargan lazy desde
@@ -4121,9 +4298,9 @@ eager uno por uno. Detectado en el frente Facturación (F0).
   movimiento de Finanzas: V-a, frente aparte; ver "Deuda — Finanzas").
 - `.col-numero` está repetida en el tablero, el historial y el detalle de
   liquidación (y en `tabla-listado`) → consolidar en un estilo global.
-- Sin uso, no tocados: `storageService` inyectado en `PdfService`; caso
-  `"vendedores"` de la lista de logueables de `StorageService`; modo
-  `"vendedores"` de `tablero-calendario`. El caso `'vendedores'` de
+- Sin uso, no tocados: caso `"vendedores"` de la lista de logueables de
+  `StorageService` (~~`storageService` inyectado en `PdfService`~~ y
+  ~~`tablero-calendario`~~: retirados en el frente Lazy loading + fechas). El caso `'vendedores'` de
   `papelera-legado` se conserva a propósito (vendedores viejos de Vantruck;
   `VendedorService` normaliza el formato).
 
@@ -4164,7 +4341,9 @@ eager uno por uno. Detectado en el frente Facturación (F0).
 - Generadores de demo no idempotentes: para rehacer, Limpieza y regenerar
   en el orden de "Frente Finanzas → Generadores de demo".
 
-### Pendiente — auditar fechas 'YYYY-MM-DD' vs huso horario en toda la app
+### ~~Pendiente — auditar fechas 'YYYY-MM-DD' vs huso horario en toda la app~~ — RESUELTO (frente Lazy loading + fechas, Octubre 2026)
+Ver "Frente Lazy loading + fechas → Fechas" y "Convenciones". Lo que quedó afuera está en
+"Deuda — tras el frente Lazy loading + fechas". Texto original:
 Averiguar si la inconsistencia de `getPeriodo` se repite en otros lugares.
 Relevamiento preliminar por patrón (sin verificar caso por caso):
 - `new Date('YYYY-MM-DD').getFullYear()/getMonth()/getDate()` → día
@@ -4246,5 +4425,57 @@ método de migración (ver "Checklist — migración de Tarifas a Vantruck").
   inicial (ver también "Deuda — RaizModule").
 - Logo: la copia única está en `exportacion/logo-empresa.ts`; los servicios
   viejos conservan la suya hasta que se retiren.
-- Los servicios viejos usan `new Date('YYYY-MM-DD').getFullYear()` (ver
-  "Pendiente — auditar fechas").
+- ~~Los servicios viejos usan `new Date('YYYY-MM-DD').getFullYear()`~~ — RESUELTO
+  en el frente Lazy loading + fechas (`anioDe`).
+- Excel de choferes (decisión D6 del frente Lazy loading + fechas):
+  `ExcelService.formatearFecha` muestra `fechaNac` un día antes (`new Date` sobre
+  un string 'YYYY-MM-DD'), y `Chofer.datosPersonales.fechaNac` está tipado `Date`
+  aunque se guarda como string. Se corrige al reescribir esa exportación sobre
+  `DocumentoTabular` (`fechaLegible`).
+- `exceljs` (~0,95 MB) se descarga al entrar a `/op` porque `tablero-op` inyecta
+  `ExcelService` (import estático). Se resuelve con la misma reescritura
+  (`ExcelTabularService` ya lo carga con `import()`).
+
+### Deuda — tras el frente Lazy loading + fechas
+- **UX:** el `<h1>` sin cerrar de `src/index.html` envuelve TODA la app
+  (`app-root.parentElement` es el `H1`). Todo texto sin tamaño propio hereda 24 px,
+  peso 500 y `line-height` 1,2. Sacarlo cambia la tipografía global: hace falta
+  revisión visual pantalla por pantalla.
+- **Ajustes / Papelera legado:** `clientes$`, `choferes$` y `proveedores$` de
+  `StorageService` siempre emiten `[]`: nadie escribe esas claves de `localStorage` y
+  `clearAllLocalStorage()` las borra en cada login. Afecta al Excel/PDF de documentos
+  viejos en `objeto-papelera` (listas vacías). `modal-vehiculo` asigna `$proveedores`
+  sin usarlo. Se va con la Papelera legado.
+- **Bundle:**
+  - `pdfmake` (~2,5 MB) queda en el chunk de Ajustes, solo por `papelera-legado`; se va
+    con la Papelera legado;
+  - `exceljs` en `/op`: ver "Deuda — Excel/PDF".
+- **Specs de Karma:** 7 no compilan (`npm test` no corre). Son nombres de clase que ya
+  no existen (`clientes-control`, `valores-op`) y directivas instanciadas sin
+  argumentos (5 specs). Preexistente.
+- **Versión:**
+  - `app.component`, `home` y `sidebar` leen la versión con `require()`; se podría
+    pasar a un import estático y retirar el fallback `v0.0.0`;
+  - `buildMeta` (commit y fecha) no se muestra en ninguna pantalla.
+- **Prueba opcional de FE2:** correr la Function de vencimientos en el emulador, y
+  probar después de las 21:00 que un documento que vence hoy sigue vigente.
+
+### Checklist — migración a Vantruck: frente Lazy loading + fechas
+Después del backup completo y de deployar este código en `pf-logistics`:
+1. **Cloud Functions:** deployar `verificarVencimientosDocumentacion` con la regla
+   nueva (D1) y forzar una corrida. Recalcula el estado de todos los legajos y la
+   colección `vencimientos`.
+2. **Budget:** agregar a la configuración `vantruck` de `angular.json` el budget del
+   inicial (aviso 2 MB, error 3 MB), y actualizar o quitar el de `production`
+   (6 / 7 MB).
+3. **Eventuales (D7):** ver "Checklist — migración de Tarifas a Vantruck", paso 5.
+4. **Legajos (FL4):** ver "Deuda — migración a Vantruck: Choferes/Vehículos/Legajos"
+   → fechas de vencimiento.
+5. **Producción hoy (`main`, D10; revisado sin tocar):**
+   - FV1: el Legajos viejo vence a las 21:00 del día anterior (estado calculado en el
+     cliente con `new Date(fechaVto)`, umbral de 30 días);
+   - FV2: "Últimos 12 meses" de Reportes da 11 meses los días 31.
+   Los dos se corrigen solos con la migración (Vantruck pasa a correr este código). Al
+   migrar, avisar al usuario que "por vencer" pasa de 30 a 45 días.
+6. **Supabase:** decidir qué hacer con las facturas históricas (ver "Deuda —
+   Facturación") y rotar las anon keys.
