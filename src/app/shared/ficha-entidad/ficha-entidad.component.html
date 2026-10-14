@@ -34,18 +34,31 @@
   @switch (tipo) {
     @case ('chofer') {
       @if (chofer; as ch) {
-        <ul ngbNav #nav="ngbNav" [(activeId)]="pestana" class="nav-tabs flex-nowrap overflow-auto">
-          <li ngbNavItem="datos">
-            <button type="button" ngbNavLink>Datos personales</button>
-            <ng-template ngbNavContent>
-              <app-ficha-chofer-datos [chofer]="ch"></app-ficha-chofer-datos>
-            </ng-template>
+        <!-- Pestañas con las clases de Bootstrap, sin ngbNav: ng-bootstrap 15 (hecho
+             para Angular 16) aplica NgbNavLinkBase dos veces en button/a[ngbNavLink] y
+             Angular 20 lo rechaza (NG0309). -->
+        <ul class="nav nav-tabs flex-nowrap overflow-auto" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button type="button" class="nav-link" role="tab" [class.active]="pestana === 'datos'"
+              [attr.aria-selected]="pestana === 'datos'" (click)="pestana = 'datos'">Datos personales</button>
           </li>
-          <li ngbNavItem="vehiculos">
-            <button type="button" ngbNavLink>
+          <li class="nav-item" role="presentation">
+            <button type="button" class="nav-link" role="tab" [class.active]="pestana === 'vehiculos'"
+              [attr.aria-selected]="pestana === 'vehiculos'" (click)="pestana = 'vehiculos'">
               Vehículos <span class="badge rounded-pill bg-secondary">{{ cantidadVehiculos }}</span>
             </button>
-            <ng-template ngbNavContent>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button type="button" class="nav-link" role="tab" [class.active]="pestana === 'legajo'"
+              [attr.aria-selected]="pestana === 'legajo'" (click)="pestana = 'legajo'">Legajo</button>
+          </li>
+        </ul>
+        <div class="mt-3" role="tabpanel">
+          @switch (pestana) {
+            @case ('datos') {
+              <app-ficha-chofer-datos [chofer]="ch"></app-ficha-chofer-datos>
+            }
+            @case ('vehiculos') {
               @if (!esChoferDeProveedor || vehiculosPropios.length > 0) {
                 <app-ficha-vehiculos
                   [vehiculos]="vehiculosPropios"
@@ -59,16 +72,12 @@
                   mensajeVacio="El proveedor no tiene vehículos cargados.">
                 </app-ficha-vehiculos>
               }
-            </ng-template>
-          </li>
-          <li ngbNavItem="legajo">
-            <button type="button" ngbNavLink>Legajo</button>
-            <ng-template ngbNavContent>
+            }
+            @case ('legajo') {
               <app-ficha-legajo [legajo]="legajo" [categoriasActivas]="categoriasActivas"></app-ficha-legajo>
-            </ng-template>
-          </li>
-        </ul>
-        <div [ngbNavOutlet]="nav" class="mt-3"></div>
+            }
+          }
+        </div>
       } @else if (cargado) {
         <div class="alert alert-secondary mb-0">
           El chofer ya no existe: se dio de baja. Su información está en Ajustes → Papelera.
