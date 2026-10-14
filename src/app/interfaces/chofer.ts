@@ -20,7 +20,7 @@ export interface DatosPersonales {
     nombre: string;
     apellido: string;
     cuit: number;
-    fechaNac: Date;
+    fechaNac: string; // 'YYYY-MM-DD' del input de fecha (fecha de negocio, ver fecha.util)
     email: string;
     celularContacto: number;
     celularEmergencia: number;

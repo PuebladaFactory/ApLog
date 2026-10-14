@@ -37,7 +37,10 @@
             @for (legajo of legajosFiltrados | buscarPorChofer: searchText : choferes; track legajo.idLegajo) {
                 @if (legajo.visible) {
                     <tr>
-                        <td class="">{{ getChofer(legajo.idChofer) }}</td>
+                        <td class="">
+                          <a class="enlace-ficha" role="link" tabindex="0" title="Ver ficha del chofer"
+                            (click)="abrirFicha(legajo.idChofer)" (keydown.enter)="abrirFicha(legajo.idChofer)">{{ getChofer(legajo.idChofer) }}</a>
+                        </td>
                         <td class="text-center"
                           [ngClass]="{
                             rojo: estadoGeneralDeLegajo(legajo) === 'vencido',

@@ -1,0 +1,34 @@
+@if (vehiculos.length === 0) {
+  <p class="text-muted">{{ mensajeVacio }}</p>
+} @else {
+  <div class="table-responsive">
+    <table class="table table-sm table-striped align-middle">
+      <thead>
+        <tr>
+          <th>Dominio</th>
+          <th>Marca y modelo</th>
+          <th>Categoría</th>
+          <th>Combustible</th>
+          <th class="text-center">Tarjeta comb.</th>
+          <th class="text-center">Publicidad</th>
+          <th class="text-center">Refrigeración</th>
+          <th>Seguimiento satelital</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (v of vehiculos; track v.idVehiculo) {
+          <tr>
+            <td class="text-nowrap">{{ v.dominio }}</td>
+            <td>{{ v.marca }} {{ v.modelo }}</td>
+            <td>{{ v.categoria.nombre || '—' }}</td>
+            <td>{{ combustible(v) }}</td>
+            <td class="text-center">{{ siNo(v.tarjetaCombustible) }}</td>
+            <td class="text-center">{{ siNo(v.publicidad) }}</td>
+            <td class="text-center">{{ siNo(v.refrigeracion) }}</td>
+            <td>{{ satelital(v) }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

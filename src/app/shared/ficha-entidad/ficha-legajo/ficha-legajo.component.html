@@ -1,0 +1,50 @@
+@if (!legajo) {
+  <p class="text-muted">El chofer no tiene legajo.</p>
+} @else {
+  @if (estadoGeneral) {
+    <p>
+      Estado general:
+      <span class="badge" [ngClass]="claseEstado[estadoGeneral]">{{ etiquetaEstado[estadoGeneral] }}</span>
+    </p>
+  }
+  @if (renglones.length === 0) {
+    <p class="text-muted">No hay documentos cargados ni categorías activas.</p>
+  } @else {
+    <div class="table-responsive">
+      <table class="table table-sm table-striped align-middle">
+        <thead>
+          <tr>
+            <th>Documento</th>
+            <th>Vencimiento</th>
+            <th>Estado</th>
+            <th class="text-center">Archivos</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of renglones; track r.idCategoria) {
+            <tr>
+              <td>{{ r.titulo }}</td>
+              <td class="text-nowrap">{{ fechaLegible(r.documento?.fechaVto) }}</td>
+              <td>
+                <span class="badge" [ngClass]="claseEstado[estadoDe(r)]">{{ etiquetaEstado[estadoDe(r)] }}</span>
+              </td>
+              <td class="text-center">
+                @if (r.documento) {
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary"
+                    [disabled]="r.documento.imagenes.length === 0"
+                    (click)="verArchivos(r)">
+                    Ver ({{ r.documento.imagenes.length }})
+                  </button>
+                } @else {
+                  —
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+}

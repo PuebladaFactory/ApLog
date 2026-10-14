@@ -51,6 +51,10 @@ import { TablaGenericaComponent } from './tabla/tabla-generica/tabla-generica.co
 import { TablaListadoComponent } from './tabla/tabla-listado/tabla-listado.component';
 import { IconoArchivoPipe } from './pipes/icono-archivo.pipe';
 import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
+import { FichaEntidadComponent } from './ficha-entidad/ficha-entidad.component';
+import { FichaChoferDatosComponent } from './ficha-entidad/ficha-chofer-datos/ficha-chofer-datos.component';
+import { FichaVehiculosComponent } from './ficha-entidad/ficha-vehiculos/ficha-vehiculos.component';
+import { FichaLegajoComponent } from './ficha-entidad/ficha-legajo/ficha-legajo.component';
 
 
 
@@ -96,6 +100,10 @@ import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
     TablaListadoComponent,
     IconoArchivoPipe,
     AcortarNombreArchivoPipe,
+    FichaEntidadComponent,      // modal (FichaEntidadService.abrir), no se exporta
+    FichaChoferDatosComponent,  // pestañas de la ficha, solo las usa FichaEntidadComponent
+    FichaVehiculosComponent,
+    FichaLegajoComponent,
 
   ],
   imports: [

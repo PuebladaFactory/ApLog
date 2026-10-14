@@ -155,3 +155,15 @@ th {
 .btn-group.dropup .dropdown-menu {
   z-index: 1030;
 }
+
+// Ficha de entidad (FI1): el nombre del chofer abre su ficha, sin el estilo de
+// link clásico (mismo criterio que .enlace-entidad de Finanzas).
+.enlace-ficha {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.enlace-ficha:hover {
+  text-decoration: underline;
+}

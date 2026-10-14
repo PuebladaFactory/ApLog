@@ -1,0 +1,86 @@
+<div class="modal-header">
+  <div>
+    @if (chofer; as ch) {
+      <h4 class="modal-title">{{ ch.datosPersonales.apellido }} {{ ch.datosPersonales.nombre }}</h4>
+      <div class="text-muted">
+        CUIT {{ cuitLegible(ch.datosPersonales.cuit) }}
+        @if (ch.condFiscal) {
+          · {{ ch.condFiscal }}
+        }
+      </div>
+      <div class="d-flex flex-wrap gap-1 mt-1">
+        @if (esChoferDeProveedor) {
+          <span class="badge bg-secondary">
+            Chofer de proveedor: {{ proveedor ? proveedor.razonSocial : 'proveedor dado de baja' }}
+          </span>
+        } @else {
+          <span class="badge bg-secondary">Chofer directo</span>
+        }
+        @if (ch.visible === false) {
+          <span class="badge bg-light text-dark border">Oculto en listados</span>
+        }
+        @if (estadoLegajo) {
+          <span class="badge" [ngClass]="claseEstado[estadoLegajo]">Legajo: {{ etiquetaEstado[estadoLegajo] }}</span>
+        }
+      </div>
+    } @else {
+      <h4 class="modal-title">Ficha de {{ tipo }}</h4>
+    }
+  </div>
+  <button type="button" class="btn-close" aria-label="Cerrar" (click)="cerrar()"></button>
+</div>
+
+<div class="modal-body">
+  @switch (tipo) {
+    @case ('chofer') {
+      @if (chofer; as ch) {
+        <ul ngbNav #nav="ngbNav" [(activeId)]="pestana" class="nav-tabs flex-nowrap overflow-auto">
+          <li ngbNavItem="datos">
+            <button type="button" ngbNavLink>Datos personales</button>
+            <ng-template ngbNavContent>
+              <app-ficha-chofer-datos [chofer]="ch"></app-ficha-chofer-datos>
+            </ng-template>
+          </li>
+          <li ngbNavItem="vehiculos">
+            <button type="button" ngbNavLink>
+              Vehículos <span class="badge rounded-pill bg-secondary">{{ cantidadVehiculos }}</span>
+            </button>
+            <ng-template ngbNavContent>
+              @if (!esChoferDeProveedor || vehiculosPropios.length > 0) {
+                <app-ficha-vehiculos
+                  [vehiculos]="vehiculosPropios"
+                  mensajeVacio="El chofer no tiene vehículos asignados.">
+                </app-ficha-vehiculos>
+              }
+              @if (esChoferDeProveedor) {
+                <h6 class="mt-2">Vehículos del proveedor {{ proveedor?.razonSocial ?? '' }}</h6>
+                <app-ficha-vehiculos
+                  [vehiculos]="vehiculosProveedor"
+                  mensajeVacio="El proveedor no tiene vehículos cargados.">
+                </app-ficha-vehiculos>
+              }
+            </ng-template>
+          </li>
+          <li ngbNavItem="legajo">
+            <button type="button" ngbNavLink>Legajo</button>
+            <ng-template ngbNavContent>
+              <app-ficha-legajo [legajo]="legajo" [categoriasActivas]="categoriasActivas"></app-ficha-legajo>
+            </ng-template>
+          </li>
+        </ul>
+        <div [ngbNavOutlet]="nav" class="mt-3"></div>
+      } @else if (cargado) {
+        <div class="alert alert-secondary mb-0">
+          El chofer ya no existe: se dio de baja. Su información está en Ajustes → Papelera.
+        </div>
+      }
+    }
+    @default {
+      <div class="alert alert-secondary mb-0">La ficha de {{ tipo }} todavía no está disponible.</div>
+    }
+  }
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-secondary" (click)="cerrar()">Cerrar</button>
+</div>

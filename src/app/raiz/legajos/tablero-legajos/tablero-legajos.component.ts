@@ -12,6 +12,7 @@ import { CategoriaDocumentacionService } from 'src/app/servicios/categoria-docum
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 import { VisibilidadListadosComponent } from 'src/app/shared/modales/visibilidad-listados/visibilidad-listados.component';
 import { GestionCategoriasDocumentacionComponent } from 'src/app/raiz/legajos/gestion-categorias-documentacion/gestion-categorias-documentacion.component';
+import { FichaEntidadService } from 'src/app/servicios/ficha-entidad/ficha-entidad.service';
 
 @Component({
     selector: 'app-tablero-legajos',
@@ -43,6 +44,7 @@ export class TableroLegajosComponent implements OnInit, OnDestroy {
     private categoriaDocumentacionService: CategoriaDocumentacionService,
     private modalService: NgbModal,
     public usuarioSesion: UsuarioSesionService,
+    private fichaEntidad: FichaEntidadService,
   ) {}
 
   ngOnInit(): void {
@@ -132,6 +134,11 @@ export class TableroLegajosComponent implements OnInit, OnDestroy {
     modalRef.result.then(() => {
       // modal cancelado → no hacemos nada
     });
+  }
+
+  /** Abre la ficha (solo lectura) del chofer del legajo. */
+  abrirFicha(idChofer: string): void {
+    this.fichaEntidad.abrir('chofer', idChofer);
   }
 
   abrirGestionCategorias(): void {

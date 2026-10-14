@@ -11,7 +11,7 @@ import { StorageService } from "../../storage/storage.service";
 import { ConId } from "src/app/interfaces/conId";
 
 import { InformeLiq } from "src/app/interfaces/informe-liq";
-import { anioDe, hoyNegocio } from "src/app/shared/utils/fecha.util";
+import { anioDe, fechaLegible, hoyNegocio } from "src/app/shared/utils/fecha.util";
 
 @Injectable({
   providedIn: "root",
@@ -842,10 +842,10 @@ export class ExcelService {
     );
   }
 
-  private formatearFecha(fecha: Date): string {
-    if (!fecha) return "";
-    const d = new Date(fecha);
-    return d.toLocaleDateString("es-AR");
+  /** 'YYYY-MM-DD' → 'DD/MM/AAAA' sin construir un objeto fecha: antes salía
+   *  un día antes (D6 del frente Lazy loading + fechas; corregido en FI1). */
+  private formatearFecha(fecha: string): string {
+    return fechaLegible(fecha, "");
   }
 
   private formatearVehiculosRich(vehiculos: Vehiculo[]) {

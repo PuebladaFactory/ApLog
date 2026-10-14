@@ -1,0 +1,14 @@
+:host {
+  font-size: 1.3rem;
+}
+
+// Bootstrap fija estas clases en rem (relativo a la raíz del documento, no
+// al :host): sin este override no escalan con el font-size de arriba.
+.btn,
+.nav-link {
+  font-size: 1em;
+}
+
+.nav-link {
+  white-space: nowrap;
+}

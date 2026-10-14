@@ -10,7 +10,7 @@ export interface ChoferFormData {
   nombre: string;
   apellido: string;
   cuit: string;
-  fechaNac: Date;
+  fechaNac: string; // 'YYYY-MM-DD' del input de fecha
   email: string;
   celularContacto: number;
   celularEmergencia: number;
