@@ -1,6 +1,7 @@
 import { Component, Input, OnChanges } from '@angular/core';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { fechaLegible } from 'src/app/shared/utils/fecha.util';
+import { normalizarFechaNacimiento } from 'src/app/shared/utils/fecha-nacimiento.util';
 import { cuitLegible, direccionLegible } from '../ficha-entidad.util';
 
 interface DatoFicha {
@@ -31,7 +32,7 @@ export class FichaChoferDatosComponent implements OnChanges {
     this.datos = [
       { etiqueta: 'Apellido y nombre', valor: `${d.apellido} ${d.nombre}` },
       { etiqueta: 'CUIT', valor: cuitLegible(d.cuit) },
-      { etiqueta: 'Fecha de nacimiento', valor: fechaLegible(d.fechaNac) },
+      { etiqueta: 'Fecha de nacimiento', valor: fechaLegible(normalizarFechaNacimiento(d.fechaNac).fecha) },
       { etiqueta: 'Condición fiscal', valor: texto(this.chofer.condFiscal) },
       { etiqueta: 'Email', valor: texto(d.email) },
       { etiqueta: 'Celular', valor: texto(d.celularContacto) },

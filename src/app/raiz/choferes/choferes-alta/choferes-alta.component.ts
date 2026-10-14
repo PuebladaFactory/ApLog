@@ -20,6 +20,8 @@ import {
 } from "src/app/interfaces/chofer";
 import { ProveedorService } from "src/app/servicios/proveedores/proveedor.service";
 import { RefTarifaHabilitada, nivelesHabilitados } from "src/app/interfaces/tarifa-habilitada";
+import { FECHA_NAC_MINIMA, normalizarFechaNacimiento } from "src/app/shared/utils/fecha-nacimiento.util";
+import { hoyNegocio } from "src/app/shared/utils/fecha.util";
 
 @Component({
   selector: "app-choferes-alta",
@@ -94,7 +96,7 @@ export class ChoferesAltaComponent implements OnInit {
           ValidarService.cuitValido,
         ],
       ],
-      fechaNac: ["", Validators.required],
+      fechaNac: ["", [Validators.required, ValidarService.fechaNacimientoValida]],
       email: ["", [Validators.email]],
       celularContacto: [
         "",
@@ -241,7 +243,9 @@ export class ChoferesAltaComponent implements OnInit {
       nombre: this.chofer.datosPersonales.nombre,
       apellido: this.chofer.datosPersonales.apellido,
       cuit: this.formatCuit(this.chofer.datosPersonales.cuit),
-      fechaNac: this.chofer.datosPersonales.fechaNac,
+      // FI1c: un Timestamp guardado no se puede mostrar en un input de fecha
+      // y, sin tocar el campo, se volvía a guardar tal cual.
+      fechaNac: normalizarFechaNacimiento(this.chofer.datosPersonales.fechaNac).fecha ?? "",
       email: this.chofer.datosPersonales.email,
       celularContacto: this.chofer.datosPersonales.celularContacto,
       celularEmergencia: this.chofer.datosPersonales.celularEmergencia,
@@ -544,6 +548,10 @@ export class ChoferesAltaComponent implements OnInit {
       () => {},
     );
   }
+
+  /** Límites del selector de fecha de nacimiento (FI1c). */
+  readonly fechaNacMinima = FECHA_NAC_MINIMA;
+  readonly fechaNacMaxima = hoyNegocio();
 
   hasError(controlName: string, errorName: string): boolean {
     const control = this.form.get(controlName);

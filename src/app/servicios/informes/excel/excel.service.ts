@@ -12,6 +12,7 @@ import { ConId } from "src/app/interfaces/conId";
 
 import { InformeLiq } from "src/app/interfaces/informe-liq";
 import { anioDe, fechaLegible, hoyNegocio } from "src/app/shared/utils/fecha.util";
+import { normalizarFechaNacimiento } from "src/app/shared/utils/fecha-nacimiento.util";
 
 @Injectable({
   providedIn: "root",
@@ -844,8 +845,8 @@ export class ExcelService {
 
   /** 'YYYY-MM-DD' → 'DD/MM/AAAA' sin construir un objeto fecha: antes salía
    *  un día antes (D6 del frente Lazy loading + fechas; corregido en FI1). */
-  private formatearFecha(fecha: string): string {
-    return fechaLegible(fecha, "");
+  private formatearFecha(fecha: unknown): string {
+    return fechaLegible(normalizarFechaNacimiento(fecha).fecha, "");
   }
 
   private formatearVehiculosRich(vehiculos: Vehiculo[]) {

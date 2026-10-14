@@ -8,7 +8,6 @@ import { ColumnaTablaGenerica, AccionTablaGenerica } from "src/app/interfaces/ta
 import Swal from "sweetalert2";
 import { ChoferesAltaComponent } from "../choferes-alta/choferes-alta.component";
 import { BajaObjetoComponent } from "src/app/shared/modales/baja-objeto/baja-objeto.component";
-import { DbFirestoreService } from "src/app/servicios/database/db-firestore.service";
 import { ExcelService } from "src/app/servicios/informes/excel/excel.service";
 import { VisibilidadListadosComponent } from "src/app/shared/modales/visibilidad-listados/visibilidad-listados.component";
 import { ChoferService } from "src/app/servicios/choferes/chofer.service";
@@ -30,7 +29,6 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
   choferesFiltrados: ConIdType<Chofer>[] = [];
   filtroEstado: "visibles" | "todos" = "visibles";
 
-  choferesMock: ConIdType<Chofer>[] = [];
   isLoading: boolean = false;
   $vehiculos!: ConIdType<Vehiculo>[];
 
@@ -40,7 +38,6 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
 
   constructor(
     private modalService: NgbModal,
-    private dbFirebase: DbFirestoreService,
     private excelServ: ExcelService,
     private choferService: ChoferService,
     private proveedorService: ProveedorService,
@@ -265,87 +262,5 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
         // modal cancelado → no hacemos nada
       });
     }
-  }
-
-  editarChoferesMock() {
-    this.choferesMock = structuredClone(this.$choferes);
-    this.choferesMock = this.anonimizarChoferes(this.choferesMock);
-
-    console.log("this.clientesActivo", this.choferesMock);
-  }
-
-  public anonimizarChoferes(
-    choferes: ConIdType<Chofer>[],
-  ): ConIdType<Chofer>[] {
-    return choferes.map((chofer) => ({
-      ...chofer,
-
-      nombre: this.randomString(10),
-      apellido: this.randomString(10),
-      cuit: this.randomNumber(11),
-      celularContacto: this.randomNumber(10),
-      celularEmergencia: this.randomNumber(10),
-      contactoEmergencia: this.randomString(10),
-
-      direccion: {
-        ...chofer.datosPersonales.direccion,
-        domicilio: this.randomString(10),
-      },
-
-      email: this.randomEmail(10),
-
-      fechaNac: this.randomDate(),
-
-      /*     vehiculo: chofer.vehiculo.map(v => ({
-      ...v,
-      dominio: this.randomDominio(),
-    })) */
-    }));
-  }
-
-  private randomString(length: number): string {
-    const chars = "abcdefghijklmnopqrstuvwxyz";
-    let result = "";
-    for (let i = 0; i < length; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  }
-
-  private randomNumber(length: number): number {
-    const min = Math.pow(10, length - 1);
-    const max = Math.pow(10, length) - 1;
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  }
-
-  private randomEmail(length: number): string {
-    return `${this.randomString(length)}@mail.com`;
-  }
-
-  private randomDate(): Date {
-    const start = new Date(1960, 0, 1).getTime();
-    const end = new Date(2005, 11, 31).getTime();
-    return new Date(start + Math.random() * (end - start));
-  }
-
-  async actualizarActivos() {
-    this.isLoading = true;
-    const resp = await this.dbFirebase.actualizarMultiple(
-      this.choferesMock,
-      "choferes",
-    );
-    if (resp) {
-      this.isLoading = false;
-      this.mensajesError(resp.mensaje);
-    }
-  }
-
-  mensajesError(msj: string) {
-    Swal.fire({
-      icon: "error",
-      //title: "Oops...",
-      text: `${msj}`,
-      //footer: `${msj}`
-    });
   }
 }

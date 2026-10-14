@@ -5,6 +5,7 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
+import { errorFechaNacimiento } from 'src/app/shared/utils/fecha-nacimiento.util';
 
 @Injectable({
   providedIn: 'root',
@@ -31,6 +32,13 @@ export class ValidarService implements Validators {
     const regex = /^\d{2}-\d{8}-\d{1}$/; // 2 dígitos, guion, 8 dígitos, guion, 1 dígito
     const valid = regex.test(control.value);
     return valid ? null : { cuitInvalido: true };
+  }
+
+  /** FI1c: fecha de nacimiento 'YYYY-MM-DD' entre 1900 y hoy. Vacío lo
+   *  resuelve Validators.required. */
+  static fechaNacimientoValida(control: AbstractControl): ValidationErrors | null {
+    if (control.value === null || control.value === undefined || control.value === '') return null;
+    return errorFechaNacimiento(control.value) ? { fechaNacimiento: true } : null;
   }
 
   static validarDominio(control: AbstractControl): ValidationErrors | null {

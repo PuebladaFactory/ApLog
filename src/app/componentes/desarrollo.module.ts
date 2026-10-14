@@ -11,6 +11,7 @@ import { GeneradorCircuitoComponent } from './generador-circuito/generador-circu
 import { GeneradorCobrosComponent } from './generador-cobros/generador-cobros.component';
 import { RecalculoResumenesComponent } from './recalculo-resumenes/recalculo-resumenes.component';
 import { RecalculoComisionesComponent } from './recalculo-comisiones/recalculo-comisiones.component';
+import { NormalizacionFechaNacComponent } from './normalizacion-fecha-nac/normalizacion-fecha-nac.component';
 
 // Frente lazy-fechas (LZ6): herramientas de desarrollo (/migracion, solo
 // rol dev). Módulo lazy propio para que su código no viaje en el chunk de
@@ -25,6 +26,7 @@ import { RecalculoComisionesComponent } from './recalculo-comisiones/recalculo-c
     GeneradorCobrosComponent,
     RecalculoResumenesComponent,
     RecalculoComisionesComponent,
+    NormalizacionFechaNacComponent,
   ],
   imports: [
     CommonModule,

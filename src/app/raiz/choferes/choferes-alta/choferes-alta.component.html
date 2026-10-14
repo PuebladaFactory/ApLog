@@ -83,6 +83,8 @@
                                 class="form-control"
                                 required
                                 type="date"
+                                [min]="fechaNacMinima"
+                                [max]="fechaNacMaxima"
                                 [ngClass]="{
                                     'is-invalid':
                                         form.get('fechaNac').invalid &&
@@ -94,6 +96,9 @@
                         </div>
                         @if (hasError("fechaNac", "required")) {
                             <div>La fecha de nacimiento es obligatoria.</div>
+                        }
+                        @if (hasError("fechaNac", "fechaNacimiento")) {
+                            <div>La fecha de nacimiento tiene que estar entre el 01/01/1900 y hoy.</div>
                         }
                     </div>
                     <div class="form-group mb-2">

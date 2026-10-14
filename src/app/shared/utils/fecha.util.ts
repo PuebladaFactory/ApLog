@@ -120,10 +120,11 @@ export function finDeMes(mes: string): FechaNegocio {
   return formatear(anio, numMes, diasDelMes(anio, numMes));
 }
 
-/** 'YYYY-MM-DD' → 'DD/MM/AAAA', sin pasar por Date. Vacío o nulo → `vacio`.
- *  Cualquier otro string se devuelve tal cual (no se esconde el dato). */
+/** 'YYYY-MM-DD' → 'DD/MM/AAAA', sin pasar por Date. Vacío, nulo o un valor
+ *  que no es texto (ej. un Timestamp de Firestore guardado por error) →
+ *  `vacio`. Cualquier otro string se devuelve tal cual (no se esconde el dato). */
 export function fechaLegible(f: string | null | undefined, vacio: string = '—'): string {
-  if (!f) return vacio;
+  if (!f || typeof f !== 'string') return vacio;
   const m = RE_FECHA.exec(f);
   return m ? `${m[3]}/${m[2]}/${m[1]}` : f;
 }

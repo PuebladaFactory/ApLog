@@ -9,6 +9,7 @@ import {
 import { ContratacionChofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { MigrationBackupService } from './migration-backup.service';
 import { habilitadasDesdeTarifaTipoMigracion } from './tarifa-habilitada-migracion.util';
+import { normalizarFechaNacimiento } from 'src/app/shared/utils/fecha-nacimiento.util';
 
 @Injectable({ providedIn: 'root' })
 export class ChoferMigrationService {
@@ -65,7 +66,9 @@ export class ChoferMigrationService {
         nombre: datos.nombre ?? '',
         apellido: datos.apellido ?? '',
         cuit: datos.cuit ?? 0,
-        fechaNac: datos.fechaNac ?? null,
+        // FI1c: 'YYYY-MM-DD' (null si falta o no se puede interpretar; lo
+        // marca la herramienta "Fecha de nacimiento de choferes").
+        fechaNac: normalizarFechaNacimiento(datos.fechaNac).fecha,
         email: datos.email ?? '',
         celularContacto: Number(datos.celularContacto) ?? 0,
         celularEmergencia: Number(datos.celularEmergencia) ?? 0,

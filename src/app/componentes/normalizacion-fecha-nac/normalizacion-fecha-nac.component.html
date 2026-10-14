@@ -1,0 +1,83 @@
+<div class="border border-success rounded-3 p-3 mb-4">
+  <h4 class="text-success">Fecha de nacimiento de choferes (FI1c)</h4>
+
+  @if (!esDemo) {
+    <div class="alert alert-danger">
+      Proyecto <b>{{ proyecto }}</b> — NO es demo. Ejecutar reescribe la fecha de nacimiento de
+      los choferes de este proyecto.
+    </div>
+  }
+
+  <p class="mb-2">
+    Pasa <code>datosPersonales.fechaNac</code> a texto AAAA-MM-DD en los choferes y en los
+    choferes de la papelera. Convierte las guardadas como fecha de Firestore (Timestamp o
+    mapa con <code>seconds</code>) al día que corresponde en Argentina. Las que no se
+    pueden convertir o quedan fuera de rango (antes de 1900 o después de hoy) se listan para
+    revisar y no se tocan: se corrigen editando el chofer. <b>Simular</b> no escribe nada.
+  </p>
+
+  <div class="d-flex flex-wrap gap-2 align-items-end mb-2">
+    <button type="button" class="btn btn-outline-success btn-sm" [disabled]="ejecutando" (click)="simular()">
+      1. Simular
+    </button>
+  </div>
+
+  @if (error) {
+    <div class="alert alert-danger mt-2 mb-0">{{ error }}</div>
+  }
+
+  @if (escritos !== null) {
+    <div class="alert alert-success mt-2">Fechas reescritas: {{ escritos }}.</div>
+  }
+
+  @if (simulacion) {
+    <p class="mt-3 mb-2">
+      A convertir: <b>{{ simulacion.convertir }}</b> — ya correctas: {{ simulacion.ok }}
+      — para revisar: <b>{{ simulacion.revisar }}</b>
+    </p>
+
+    @if (simulacion.renglones.length > 0) {
+      <div class="table-responsive" style="max-height: 24rem;">
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th>Chofer</th><th>Dónde</th><th>Guardado</th><th>Queda</th><th>Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of simulacion.renglones; track r.coleccion + r.id) {
+              @if (r.accion !== 'ok') {
+                <tr>
+                  <td>{{ r.nombre }}</td>
+                  <td>{{ r.coleccion === 'choferes' ? 'Choferes' : 'Papelera' }}</td>
+                  <td class="small text-break">{{ r.actual }}</td>
+                  <td>{{ r.propuesta }}</td>
+                  <td>
+                    @if (r.accion === 'convertir') {
+                      <span class="badge bg-primary">Convertir</span>
+                    } @else {
+                      <span class="badge bg-warning text-dark">Revisar</span> {{ r.motivo }}
+                    }
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    @if (simulacion.convertir > 0) {
+      <div class="d-flex flex-wrap gap-2 align-items-end mt-2">
+        <div>
+          <label class="form-label small mb-0">Escribí el id del proyecto ({{ proyecto }})</label>
+          <input type="text" class="form-control form-control-sm" [(ngModel)]="textoConfirmacion"
+            [disabled]="ejecutando" />
+        </div>
+        <button type="button" class="btn btn-success btn-sm" [disabled]="!puedeEjecutar" (click)="ejecutar()">
+          2. Ejecutar
+        </button>
+      </div>
+    }
+  }
+</div>
