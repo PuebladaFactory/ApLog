@@ -10,10 +10,10 @@ import { tabActivaDesdeUrl } from 'src/app/shared/utils/tabs-url.util';
   </div>   
   <div class="tab-container">
       <div class="tab" [class.active]="selectedTab === 'tab1'" (click)="selectTab('tab1')">Usuarios</div>
-      <div class="tab" [class.active]="selectedTab === 'tab2'" (click)="selectTab('tab2')">Registro</div>
+      <!-- <div class="tab" [class.active]="selectedTab === 'tab2'" (click)="selectTab('tab2')">Registro</div> -->
       <div class="tab" [class.active]="selectedTab === 'tab4'" (click)="selectTab('tab4')">Registro Log</div>
       <div class="tab" [class.active]="selectedTab === 'tab3'" (click)="selectTab('tab3')">Papelera</div>
-      <div class="tab" [class.active]="selectedTab === 'tab5'" (click)="selectTab('tab5')">Papelera (legado)</div>
+      <!-- <div class="tab" [class.active]="selectedTab === 'tab5'" (click)="selectTab('tab5')">Papelera (legado)</div> -->
       <div class="tab" [class.active]="selectedTab === 'tab6'" (click)="selectTab('tab6')">Datos de la empresa</div>
 
   </div>
