@@ -278,6 +278,7 @@ Por eso `Proforma CH` tiene mayor prioridad visual que `Proforma CL` en el badge
 | `log-registro/` | `LogRegistroService` (escritura, dentro del batch atómico de negocio) + `RegistroLogConsultaService` (lectura/paginación, para `RegistroLogComponent`) sobre `registroLog` — ver "Frente Log — mecanismo unificado" |
 | `papelera/` | `PapeleraService` (preparación de escrituras de baja/restauración por referencia, dentro del batch atómico de negocio) + `PapeleraConsultaService` (lectura/paginación, para `PapeleraComponent`) sobre `papeleraEventos`/`objetosEliminados` — ver "Frente Papelera — mecanismo de referencia" |
 | `visualizador-objeto/` | `VisualizadorObjetoService` — dispatcher `coleccion -> modal de vista real`, usado por `RegistroLogComponent` y (desde el Frente Papelera) por `PapeleraComponent` vía el parámetro `snapshot` de `verObjeto` |
+| `ficha-entidad/` | `FichaEntidadService.abrir(tipo, id)` (ficha de solo lectura de chofer / proveedor / cliente) y `EdicionEntidadService` ("Editar" desde la ficha, con `import()` dinámico de los modales de alta) — ver "Frente Ficha de entidad" |
 | `tarifario/` | Tarifario nuevo: `TarifarioService` (estado y escritura de `tarifas` / `tarifasEspeciales` / `registrosOpEventuales`), factories, `TarifaGuardadoService`, motor `ValoresTarifaService` y `ResolucionTarifaOpService` — ver "Frente Tarifas — tarifario nuevo" |
 | `informes-op/` | `InformeOpService` (+ Factory) — `InformeOpNuevo` en la colección única `informesOp` (un doc por lado de cada operación, con `contraParte`). `armarEscriturasEdicion` (armado sin commit) + `editar` (armado + commit) |
 | `informes-liq/` | `InformeLiqService` + `InformeLiqFactoryService` — `InformeLiqNuevo` en `informesLiq`: borradores, emisión, edición. Ver "Frente Liquidación — InformeLiqNuevo" |
@@ -291,7 +292,7 @@ Por eso `Proforma CH` tiene mayor prioridad visual que `Proforma CL` en el badge
 | `validar/` | Validación de reglas de negocio |
 | `formato-numerico/` | Formateo de números/moneda estilo Argentina |
 | `fechas/` | `DateRangeService` (rango del tablero) y `toISODateString` (delega en `fechaNegocioDe`). El util único de fechas es `shared/utils/fecha.util.ts` — ver "Frente Lazy loading + fechas" |
-| `desarrollo/` | Herramientas de `/migracion`. SOLO demo (guarda projectId `demoapplog` + rol dev): `LimpiezaDemoService`, `GeneradorOperacionesService` — ver "Herramientas de desarrollo (solo demo)"; `GeneradorCircuitoService`, `GeneradorCobrosService` — ver "Frente Finanzas". En cualquier proyecto (rol dev + confirmación escrita del id de proyecto; se usa en la migración de Vantruck): `RecalculoResumenesService` — ver "Frente Reportes"; `RecalculoComisionesService` — ver "Frente Vendedores" |
+| `desarrollo/` | Herramientas de `/migracion`. SOLO demo (guarda projectId `demoapplog` + rol dev): `LimpiezaDemoService`, `GeneradorOperacionesService` — ver "Herramientas de desarrollo (solo demo)"; `GeneradorCircuitoService`, `GeneradorCobrosService` — ver "Frente Finanzas". En cualquier proyecto (rol dev + confirmación escrita del id de proyecto; se usa en la migración de Vantruck): `RecalculoResumenesService` — ver "Frente Reportes"; `RecalculoComisionesService` — ver "Frente Vendedores"; `NormalizacionFechaNacService` — ver "Frente Ficha de entidad" |
 
 ### Entornos de build
 
@@ -565,6 +566,8 @@ Las operaciones que afectan múltiples entidades viven en XxxService, no en el c
   y define `acciones: AccionTabla[]` con handlers
 - El filtro de visibilidad (visibles/todos) lo maneja el padre
 - Los botones del toolbar (alta, descarga, visibilidad) quedan fuera de la tabla
+- Celdas: `claseCelda` (badge) y `accionCelda` (enlace que ejecuta una acción, ej. abrir
+  la ficha de entidad), los dos opcionales
 
 ### Formularios en modo vista
 Usar `form.disable()` y `formTipoTarifa.disable()` en ngOnInit cuando
@@ -3570,6 +3573,127 @@ en `fechaLegible`.
 `version.ts` con la versión de package.json, el commit y la fecha. La app muestra solo
 `appVersion` (sidebar).
 
+## Frente Ficha de entidad (Octubre 2026)
+
+Una "carpeta" de SOLO LECTURA de un chofer, proveedor o cliente: un modal `xl` con
+pestañas que junta los datos administrativos, sin abrir el form de alta. Bloques FI1, FI1b,
+FI1c, FI2, FI3 (incluye FI5 del plan), FI4 y FI6. Diseño, decisiones F1–F14 y avance:
+`claude/diseno-ficha-entidad.md` (Project). Todo se probó en demo; nada se deployó a
+Vantruck.
+
+### Piezas
+- `FichaEntidadService.abrir(tipo, id)` (`servicios/ficha-entidad/`): punto de entrada
+  único. Importa SOLO el componente de Shared (nunca un componente de feature: lo
+  arrastraría al chunk común de todos los que usan la ficha — ver la trampa de
+  `VisualizadorObjetoService` en "Frente Log → Frente 3").
+- `FichaEntidadComponent` (`shared/ficha-entidad/`): contenedor. Contrato tipado
+  `@Input() tipo: TipoFicha` (= `EntidadTipo`) / `@Input() id`, seteados por el servicio
+  antes del primer ciclo de detección (no `fromParent`).
+- Pestañas de solo presentación (`@Input`, sin servicios de datos), declaradas en
+  `SharedModule` sin exportar: `FichaChoferDatos`, `FichaVehiculos`, `FichaLegajo`,
+  `FichaEmpresaDatos` (recibe `EmpresaFicha`: los 5 campos que comparten `Proveedor` y
+  `Cliente`), `FichaContactos`, `FichaChoferes` (`@Output() abrir`) y `FichaTarifas`
+  (`@Output() irATarifas`).
+- Utils puros: `ficha-entidad.util.ts` (`cuitLegible`, `direccionLegible`, estados del
+  legajo, `renglonesLegajo`, `nombreChofer`, `contactoLegible`,
+  `filasChoferesDeProveedor`, `MODULO_FICHA`) y `ficha-tarifas/ficha-tarifas.util.ts`.
+- `EdicionEntidadService` (`servicios/ficha-entidad/`): "Editar" (ver abajo). Servicio
+  aparte de `FichaEntidadService` a propósito: ese importa el componente, y si el
+  componente lo inyectara habría un import circular.
+
+### Pestañas
+| Ficha | Pestañas |
+|---|---|
+| Chofer | Datos personales · Vehículos (de un chofer de proveedor: los del proveedor) · Legajo (estado, documentos con carrusel, categorías activas sin cargar como "Falta cargar") · Tarifas · Proveedor (solo chofer de proveedor: datos, contacto principal y "Abrir ficha del proveedor") |
+| Proveedor | Datos de la empresa · Contactos · Choferes (con estado del legajo; el nombre abre la ficha del chofer) · Vehículos · Tarifas |
+| Cliente | Datos de la empresa · Contactos · Tarifas |
+
+Encabezado fijo: nombre / razón social, CUIT con guiones, condición fiscal y badges
+(contratación del chofer, "Oculto en listados" si `visible === false`, estado del legajo).
+Historial de reemplazos y ZIP del legajo siguen en Legajos → Consultar.
+
+**Pestaña Tarifas** (F3 (b)): niveles habilitados (pipes `etiquetaNivelTarifa` /
+`claseNivelTarifa`) y tarifas vigentes HOY **sin valores**: General en una línea,
+Personalizadas (clientes) y Especiales en tabla (nombre, modo, vigente desde, categorías;
+Alcance solo en especiales de chofer/proveedor). Si hay vigentes de un nivel no
+habilitado, se listan con un aviso. Reglas: chofer → niveles con
+`ProveedorService.resolverTarifasHabilitadasChofer` (chofer de proveedor: "heredados del
+proveedor", especiales del proveedor); vigentes con los getters de `TarifarioService` sin
+fecha (la misma regla que la pantalla de Tarifas). "Ver en Tarifas" cierra y navega a la
+pestaña del nivel (Tarifas no tiene enlace a una tarifa puntual).
+
+### Datos vivos y navegación
+- UNA suscripción (`combineLatest`) a `choferes$`, `vehiculos$`, `proveedores$`,
+  `legajos$`, `categorias$`, `clientes$`, `tarifas$` y `tarifasEspeciales$` (todos en
+  memoria desde `HomeComponent`: cero lecturas nuevas a Firestore). Guarda la última
+  emisión y arma la ficha del tipo actual. Si la entidad se edita en otra pestaña, se
+  actualiza; si se da de baja, lo avisa ("se dio de baja", ver Papelera).
+- Las emisiones pueden llegar fuera de la zona de Angular (aviso "Firebase API called
+  outside injection context"): se reingresa con `NgZone.run`.
+- Navegación DENTRO del mismo modal (NgbModal apilado se ve mal y duplica el fondo): pila
+  `anteriores` con tipo, id, nombre y pestaña; `abrirFicha(tipo, id)` apila la actual; "←
+  Volver a …" retoma la anterior en la pestaña en la que estaba. Al navegar se rearma con
+  la última emisión, sin resuscribirse.
+
+### Acciones (pie de la ficha, sobre la entidad MOSTRADA)
+- **Editar** (`PermisosService.puede(MODULO_FICHA[tipo], 'editar')`: demo no lo ve):
+  cierra la ficha y abre el MISMO modal de edición de los listados (`fromParent = { modo:
+  'edicion', item }`). `EdicionEntidadService.cargarModal` trae `ChoferesAlta` /
+  `ProveedoresAlta` / `ClienteAlta` con `import()` dinámico: siguen en el chunk de su
+  módulo (el build agrega tres chunks puente de ≈ 2,4 kB). Al terminar no se vuelve a la
+  ficha.
+- **Ver cuenta** (`finanzas.ver`: user no lo ve): cierra y navega a
+  `/finanzas/cuenta/:tipo/:id`. No se muestra en un chofer de proveedor (no tiene cuenta
+  propia).
+
+### Accesos
+- Legajos → Tablero y Vencimientos: el nombre del chofer.
+- Legajos → Consultar: botón "Ver ficha" al lado de "Descargar Legajo".
+- Clientes, Choferes y Proveedores → Listado: el "ver" (ojo) de cada fila abre la ficha
+  (`abrirVista`). El modo `'vista'` del alta sigue existiendo para
+  `VisualizadorObjetoService` (Registro, Papelera, Tarifas).
+- `tabla-generica`: `ColumnaTablaGenerica.accionCelda?: (fila) => void` (opcional, como
+  `claseCelda`) dibuja la celda como enlace (`role="link"`, Enter, `.enlace-celda`). Hoy
+  lo usa Vencimientos.
+- Estilo de los nombres clickeables: el de `.enlace-entidad` de Finanzas (sin azul ni
+  subrayado; subrayado al pasar el mouse).
+
+### Bundle
+La ficha vive en un chunk compartido (≈ 51 kB) entre Clientes, Choferes, Proveedores y
+Legajos. El inicial no cambió (1,53 MB).
+
+### Fecha de nacimiento del chofer (F10 + FI1c)
+- `Chofer.datosPersonales.fechaNac` y `ChoferFormData.fechaNac` son `string`
+  'YYYY-MM-DD' (antes tipados `Date`). El Excel de choferes la formatea con `fechaLegible`
+  (salía un día antes: D6 resuelta).
+- En demo había fechas guardadas como Timestamp o mapa `{seconds, nanoseconds}`. Causas:
+  el anonimizador de prueba de `choferes-listado` (borrado) y la edición, que re-guardaba
+  lo leído (`patchValue` con el objeto; el input de fecha no lo muestra y el control lo
+  conserva).
+- `shared/utils/fecha-nacimiento.util.ts`: `errorFechaNacimiento` (1900–hoy) y
+  `normalizarFechaNacimiento` (texto, Timestamp, mapa o Date → 'YYYY-MM-DD'; un instante
+  justo a las 00:00 UTC toma el día UTC, el resto el día de Argentina).
+- `ChoferFactoryService.buildDatosPersonales` (único punto de escritura, alta y edición)
+  normaliza y LANZA si no queda una fecha válida: nunca se guarda un objeto de fecha. El
+  form carga la fecha normalizada y valida el rango (`ValidarService.fechaNacimientoValida`,
+  `min`/`max`). `ChoferMigrationService` normaliza.
+- Lectura defensiva: ficha, Excel y `fechaLegible` (un valor que no es texto → el valor de
+  "vacío").
+- Herramienta de `/migracion` "Fecha de nacimiento de choferes"
+  (`NormalizacionFechaNacService`, rol dev + id del proyecto escrito, en cualquier
+  proyecto): simula (convertir / ok / revisar) y escribe solo `datosPersonales.fechaNac`,
+  en `choferes` y en las copias de la papelera (`objetosEliminados`, `choferes__…`). Sin
+  log. Ejecutada en demo.
+
+### Verificación de cada bloque
+Antes de entregar cada instrucción: archivos comparados con el repo real, BUSCAR validados
+todos antes de escribir, aplicación por script sobre una copia limpia (resultado idéntico
+a la referencia), `tsc` (también `--noUnusedLocals`), pruebas de render con Karma +
+Chromium (spec temporal con `tsconfig` propio, porque los 7 specs rotos impiden
+`npm test`) y `build:demo` (mismas 9 advertencias). La prueba de render se sumó en FI1b:
+FI1 compilaba pero fallaba al abrir (NG0309, ver "Deuda — tras el frente Ficha de
+entidad").
+
 ## Deuda conocida
 
 Deuda técnica activa. Actualizar cuando se salda.
@@ -4432,11 +4556,11 @@ método de migración (ver "Checklist — migración de Tarifas a Vantruck").
   viejos conservan la suya hasta que se retiren.
 - ~~Los servicios viejos usan `new Date('YYYY-MM-DD').getFullYear()`~~ — RESUELTO
   en el frente Lazy loading + fechas (`anioDe`).
-- Excel de choferes (decisión D6 del frente Lazy loading + fechas):
-  `ExcelService.formatearFecha` muestra `fechaNac` un día antes (`new Date` sobre
-  un string 'YYYY-MM-DD'), y `Chofer.datosPersonales.fechaNac` está tipado `Date`
-  aunque se guarda como string. Se corrige al reescribir esa exportación sobre
-  `DocumentoTabular` (`fechaLegible`).
+- ~~Excel de choferes (decisión D6 del frente Lazy loading + fechas):
+  `ExcelService.formatearFecha` muestra `fechaNac` un día antes, y
+  `Chofer.datosPersonales.fechaNac` está tipado `Date`~~ — RESUELTO en el frente Ficha
+  de entidad (F10 + FI1c): `fechaNac: string` y `fechaLegible`. La reescritura sobre
+  `DocumentoTabular` sigue pendiente por `exceljs` (punto siguiente).
 - `exceljs` (~0,95 MB) se descarga al entrar a `/op` porque `tablero-op` inyecta
   `ExcelService` (import estático). Se resuelve con la misma reescritura
   (`ExcelTabularService` ya lo carga con `import()`).
@@ -4484,3 +4608,28 @@ Después del backup completo y de deployar este código en `pf-logistics`:
    migrar, avisar al usuario que "por vencer" pasa de 30 a 45 días.
 6. **Supabase:** decidir qué hacer con las facturas históricas (ver "Deuda —
    Facturación") y rotar las anon keys.
+
+### Deuda — tras el frente Ficha de entidad
+- **ng-bootstrap 15.1.2 sobre Angular 20:** está hecho para Angular 16. Los componentes
+  con `hostDirectives` + selector propio aplican la directiva base dos veces y Angular 20
+  lo rechaza en runtime (NG0309; `tsc` y el build no lo ven). Pasó con `ngbNavLink` en la
+  ficha (se reemplazó por pestañas de Bootstrap). Actualizar a la versión de ng-bootstrap
+  de Angular 20 es un frente aparte: revisar carrusel, datepicker, dropdown, nav y
+  modales.
+- **Anonimizadores de prueba sin uso** en `clientes-listado` (`editarClientes` /
+  `anonimizarClientes`) y `proveedores-listado` (`anonimizarProveedores`): borrarlos
+  cuando se toquen esas pantallas (el de choferes se borró en FI1c).
+- **Para analizar con la ficha en uso:**
+  - F3: un componente que muestre el detalle de una tarifa con sus valores (sin
+    edición), reutilizable desde la ficha y otras pantallas (comparar con los viewers de
+    `raiz/tarifas`, que hoy viven en el módulo de Tarifas);
+  - F7 (pedido del cliente): el apellido / la razón social de los listados como enlace a
+    la ficha. Con `accionCelda` es una línea por listado.
+- `VisualizadorObjetoService.verObjeto` podría delegar en la ficha para `choferes` /
+  `clientes` / `proveedores` vivos (hoy abre el alta en modo vista).
+
+### Checklist — migración a Vantruck: frente Ficha de entidad
+Después del backup completo y de migrar `choferes` (incluida la papelera):
+1. `/migracion` → "Fecha de nacimiento de choferes": simular, ejecutar (id
+   `pf-logistics`) y corregir a mano los que queden en "revisar" (editando el chofer).
+2. Sin reglas ni índices nuevos: la ficha solo lee colecciones que ya están mapeadas.
