@@ -8,6 +8,7 @@ import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import { LegajoService } from 'src/app/servicios/legajos/legajo.service';
 import { ColumnaTablaGenerica, AccionTablaGenerica } from 'src/app/interfaces/tabla-generica';
 import { CarruselComponent } from 'src/app/shared/carrusel/carrusel.component';
+import { FichaEntidadService } from 'src/app/servicios/ficha-entidad/ficha-entidad.service';
 
 const ORDEN_ESTADO: Record<string, number> = { vencido: 0, porVencer: 1 };
 
@@ -20,7 +21,10 @@ const ORDEN_ESTADO: Record<string, number> = { vencido: 0, porVencer: 1 };
 export class VencimientosComponent implements OnInit, OnDestroy {
 
   columnas: ColumnaTablaGenerica[] = [
-    { field: 'chofer', header: 'Chofer', visible: true, width: 180 },
+    {
+      field: 'chofer', header: 'Chofer', visible: true, width: 180,
+      accionCelda: (fila) => this.fichaEntidad.abrir('chofer', fila._objeto.idChofer),
+    },
     { field: 'categoria', header: 'Categoría', visible: true, width: 160 },
     { field: 'fechaVto', header: 'Fecha de Vencimiento', visible: true, width: 140 },
     {
@@ -39,6 +43,7 @@ export class VencimientosComponent implements OnInit, OnDestroy {
     private choferService: ChoferService,
     private legajoService: LegajoService,
     private modalService: NgbModal,
+    private fichaEntidad: FichaEntidadService,
   ) {}
 
   ngOnInit(): void {

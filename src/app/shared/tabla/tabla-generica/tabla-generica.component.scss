@@ -99,6 +99,18 @@ td {
   max-width: 120px;
 }
 
+// Celda con accionCelda: se ve como el resto del texto y se subraya al pasar el
+// mouse (mismo criterio que .enlace-entidad de Finanzas y el tablero de Legajos).
+.enlace-celda {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.enlace-celda:hover {
+  text-decoration: underline;
+}
+
 // Ancho fijo para que el badge no cambie de tamaño según el largo del texto
 // (ej. "Vencido" vs "Por vencer"). El color lo pone la clase Bootstrap que
 // devuelve claseCelda (text-bg-danger / text-bg-warning, Bootstrap 5.3+, no

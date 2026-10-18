@@ -9,6 +9,7 @@ import { Documentacion, DocumentacionHistorial, Legajo, estadoGeneralDeLegajo } 
 import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import { LegajoService } from 'src/app/servicios/legajos/legajo.service';
 import { CarruselComponent } from 'src/app/shared/carrusel/carrusel.component';
+import { FichaEntidadService } from 'src/app/servicios/ficha-entidad/ficha-entidad.service';
 
 @Component({
     selector: 'app-consulta-legajos',
@@ -36,6 +37,7 @@ export class ConsultaLegajosComponent implements OnInit, OnDestroy {
     private choferService: ChoferService,
     private legajoService: LegajoService,
     private modalService: NgbModal,
+    private fichaEntidad: FichaEntidadService,
   ) {}
 
   ngOnInit(): void {
@@ -57,6 +59,12 @@ export class ConsultaLegajosComponent implements OnInit, OnDestroy {
           this.legajoSeleccionado = this.legajos.find(l => l.idChofer === this.choferSeleccionado!.idChofer) ?? null;
         }
       });
+  }
+
+  verFicha(): void {
+    if (this.choferSeleccionado) {
+      this.fichaEntidad.abrir('chofer', this.choferSeleccionado.idChofer);
+    }
   }
 
   ngOnDestroy(): void {

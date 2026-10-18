@@ -2,11 +2,13 @@ import { Component, Input, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, combineLatest, takeUntil } from 'rxjs';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
+import { Cliente } from 'src/app/interfaces/cliente';
 import { ConIdType } from 'src/app/interfaces/conId';
 import { CategoriaDocumentacion, EstadoDocumentacion, Legajo, estadoGeneralDeLegajo } from 'src/app/interfaces/legajo';
 import { Contacto, Proveedor } from 'src/app/interfaces/proveedor';
 import { CategoriaDocumentacionService } from 'src/app/servicios/categoria-documentacion/categoria-documentacion.service';
 import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
+import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
 import { LegajoService } from 'src/app/servicios/legajos/legajo.service';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
 import {
@@ -29,11 +31,12 @@ type DatosFicha = [
   ConIdType<Vehiculo>[],
   ConIdType<Proveedor>[],
   ConIdType<Legajo>[],
+  ConIdType<Cliente>[],
 ];
 
 /**
  * Ficha de entidad: carpeta de SOLO LECTURA con los datos administrativos de
- * un chofer o un proveedor (el cliente viene en FI3). Se abre con
+ * un chofer, un proveedor o un cliente. Se abre con
  * FichaEntidadService.abrir(tipo, id), que setea `tipo` e `id` antes del
  * primer ciclo de detección.
  *
@@ -81,6 +84,9 @@ export class FichaEntidadComponent implements OnInit, OnDestroy {
   /** Ficha de proveedor: sus choferes. */
   choferesProveedor: FilaChoferFicha[] = [];
 
+  /** Ficha de cliente: el cliente. */
+  cliente: ConIdType<Cliente> | null = null;
+
   readonly etiquetaEstado = ETIQUETA_ESTADO_LEGAJO;
   readonly claseEstado = CLASE_ESTADO_LEGAJO;
   readonly cuitLegible = cuitLegible;
@@ -95,6 +101,7 @@ export class FichaEntidadComponent implements OnInit, OnDestroy {
     private proveedorService: ProveedorService,
     private legajoService: LegajoService,
     private categoriaDocumentacionService: CategoriaDocumentacionService,
+    private clienteService: ClienteService,
     private zone: NgZone,
   ) {}
 
@@ -105,11 +112,12 @@ export class FichaEntidadComponent implements OnInit, OnDestroy {
       this.proveedorService.proveedores$,
       this.legajoService.legajos$,
       this.categoriaDocumentacionService.categorias$,
+      this.clienteService.clientes$,
     ])
       .pipe(takeUntil(this.destroy$))
-      .subscribe(([choferes, vehiculos, proveedores, legajos]) =>
+      .subscribe(([choferes, vehiculos, proveedores, legajos, , clientes]) =>
         this.zone.run(() => {
-          this.ultimosDatos = [choferes, vehiculos, proveedores, legajos];
+          this.ultimosDatos = [choferes, vehiculos, proveedores, legajos, clientes];
           this.armar();
         }),
       );
@@ -133,6 +141,11 @@ export class FichaEntidadComponent implements OnInit, OnDestroy {
     return this.proveedor?.contactos ?? [];
   }
 
+  /** Contactos del cliente (un doc viejo puede no tener la lista). */
+  get contactosCliente(): Contacto[] {
+    return this.cliente?.contactos ?? [];
+  }
+
   /** Contacto principal del proveedor (el primero de la lista). */
   get contactoPrincipal(): Contacto | null {
     return this.contactosProveedor[0] ?? null;
@@ -142,6 +155,7 @@ export class FichaEntidadComponent implements OnInit, OnDestroy {
   get titulo(): string {
     if (this.tipo === 'chofer' && this.chofer) return nombreChofer(this.chofer);
     if (this.tipo === 'proveedor' && this.proveedor) return this.proveedor.razonSocial;
+    if (this.tipo === 'cliente' && this.cliente) return this.cliente.razonSocial;
     return `Ficha de ${this.tipo}`;
   }
 
@@ -172,11 +186,13 @@ export class FichaEntidadComponent implements OnInit, OnDestroy {
     this.limpiar();
     if (!this.ultimosDatos) return;
     this.cargado = true;
-    const [choferes, vehiculos, proveedores, legajos] = this.ultimosDatos;
+    const [choferes, vehiculos, proveedores, legajos, clientes] = this.ultimosDatos;
     if (this.tipo === 'chofer') {
       this.armarChofer(choferes, vehiculos, proveedores, legajos);
     } else if (this.tipo === 'proveedor') {
       this.armarProveedor(choferes, vehiculos, proveedores, legajos);
+    } else if (this.tipo === 'cliente') {
+      this.cliente = clientes.find(c => c.idCliente === this.id) ?? null;
     }
   }
 
@@ -188,6 +204,7 @@ export class FichaEntidadComponent implements OnInit, OnDestroy {
     this.proveedor = null;
     this.vehiculosProveedor = [];
     this.choferesProveedor = [];
+    this.cliente = null;
   }
 
   private armarChofer(

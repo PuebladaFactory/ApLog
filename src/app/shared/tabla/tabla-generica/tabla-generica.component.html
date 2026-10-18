@@ -137,6 +137,15 @@
                             >
                                 @if (col.claseCelda) {
                                     <span class="badge badge-ancho-fijo fs-5" [ngClass]="col.claseCelda(fila)">{{ fila[col.field] }}</span>
+                                } @else if (col.accionCelda) {
+                                    <a
+                                        class="enlace-celda"
+                                        role="link"
+                                        tabindex="0"
+                                        (click)="col.accionCelda(fila)"
+                                        (keydown.enter)="col.accionCelda(fila)"
+                                        >{{ fila[col.field] }}</a
+                                    >
                                 } @else {
                                     {{ fila[col.field] }}
                                 }

@@ -11,6 +11,7 @@ import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-obj
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { VisibilidadListadosComponent } from 'src/app/shared/modales/visibilidad-listados/visibilidad-listados.component';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
+import { FichaEntidadService } from 'src/app/servicios/ficha-entidad/ficha-entidad.service';
 
 @Component({
   selector: 'app-listado-nuevo',
@@ -36,6 +37,7 @@ export class ClientesListadoComponent implements OnInit, OnDestroy {
     private excelServ: ExcelService,
     private clienteService: ClienteService,
     public usuarioSesion: UsuarioSesionService,
+    private fichaEntidad: FichaEntidadService,
   ) {}
 
   ngOnInit(): void {
@@ -118,7 +120,7 @@ export class ClientesListadoComponent implements OnInit, OnDestroy {
 
 
   abrirVista(cliente: ConIdType<Cliente>): void {
-    this.openModal('vista', cliente);
+    this.fichaEntidad.abrir('cliente', cliente.idCliente);
   }
 
   abrirEdicion(cliente: ConIdType<Cliente>): void {

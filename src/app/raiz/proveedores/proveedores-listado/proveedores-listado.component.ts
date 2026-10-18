@@ -19,6 +19,7 @@ import { ProveedorService } from "src/app/servicios/proveedores/proveedor.servic
 import { ChoferService } from "src/app/servicios/choferes/chofer.service";
 import { ModalVehiculoComponent } from "../../choferes/modal-vehiculo/modal-vehiculo.component";
 import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-sesion.service";
+import { FichaEntidadService } from "src/app/servicios/ficha-entidad/ficha-entidad.service";
 
 @Component({
   selector: "app-proveedores-listado",
@@ -53,6 +54,7 @@ export class ProveedoresListadoComponent implements OnInit, OnDestroy {
     private proveedorService: ProveedorService,
     private choferService: ChoferService,
     public usuarioSesion: UsuarioSesionService,
+    private fichaEntidad: FichaEntidadService,
   ) {}
 
   ngOnInit(): void {
@@ -198,7 +200,7 @@ export class ProveedoresListadoComponent implements OnInit, OnDestroy {
   }
 
   abrirVista(proveedor: ConIdType<Proveedor>): void {
-    this.openModal("vista", proveedor);
+    this.fichaEntidad.abrir("proveedor", proveedor.idProveedor);
   }
 
   abrirEdicion(proveedor: ConIdType<Proveedor>): void {

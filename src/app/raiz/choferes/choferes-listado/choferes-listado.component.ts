@@ -13,6 +13,7 @@ import { VisibilidadListadosComponent } from "src/app/shared/modales/visibilidad
 import { ChoferService } from "src/app/servicios/choferes/chofer.service";
 import { ProveedorService } from "src/app/servicios/proveedores/proveedor.service";
 import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-sesion.service";
+import { FichaEntidadService } from "src/app/servicios/ficha-entidad/ficha-entidad.service";
 
 @Component({
   selector: "app-choferes-listado",
@@ -42,6 +43,7 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
     private choferService: ChoferService,
     private proveedorService: ProveedorService,
     public usuarioSesion: UsuarioSesionService,
+    private fichaEntidad: FichaEntidadService,
   ) {}
 
   ngOnInit(): void {
@@ -137,7 +139,7 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
   }
 
   abrirVista(chofer: ConIdType<Chofer>): void {
-    this.openModal('vista', chofer);
+    this.fichaEntidad.abrir('chofer', chofer.idChofer);
   }
 
   abrirEdicion(chofer: ConIdType<Chofer>): void {
