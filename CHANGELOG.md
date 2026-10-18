@@ -2240,6 +2240,37 @@ pruebas manuales en demo. Diseño y avance: `claude/diseno-lazy-fechas.md`
 
 ---
 
+## Frente Ficha de entidad (Octubre 2026)
+
+- **Ficha de entidad:** modal de solo lectura de chofer, proveedor y cliente
+  (`FichaEntidadService.abrir`), con datos vivos y sin lecturas nuevas:
+  - chofer: Datos personales, Vehículos, Legajo, Tarifas y Proveedor (si es de
+    proveedor);
+  - proveedor: Datos de la empresa, Contactos, Choferes, Vehículos y Tarifas;
+  - cliente: Datos de la empresa, Contactos y Tarifas.
+- **Navegación** chofer ↔ proveedor dentro del mismo modal, con "← Volver a …".
+- **Tarifas:** niveles habilitados y vigentes sin valores; "Ver en Tarifas".
+- **Acciones:** "Editar" (abre el modal de edición; carga diferida con
+  `import()`) y "Ver cuenta" (Finanzas), según permisos.
+- **Accesos:** el "ver" de los listados de Clientes, Choferes y Proveedores;
+  Legajos → Tablero y Vencimientos (nombre) y Consultar ("Ver ficha").
+  `tabla-generica` suma `accionCelda`.
+- **Fecha de nacimiento del chofer:** siempre 'YYYY-MM-DD' (tipo `string`,
+  factory que valida y lanza, form que no re-guarda el objeto leído);
+  herramienta de `/migracion` para normalizar lo guardado (ejecutada en demo);
+  Excel de choferes corregido (D6). Fuera el anonimizador de choferes.
+
+Detalle en `CLAUDE.md` → "Frente Ficha de entidad"; deudas en "Deuda — tras el
+frente Ficha de entidad"; pasos para Vantruck en "Checklist — migración a
+Vantruck: frente Ficha de entidad".
+
+**Verificación:** por bloque, aplicación por script sobre una copia limpia,
+`tsc`, pruebas de render con Karma, `build:demo` (mismas 9 advertencias,
+inicial 1,53 MB) y pruebas manuales en demo. Diseño y avance:
+`claude/diseno-ficha-entidad.md` (Project).
+
+---
+
 ### Pendiente
 
 Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
@@ -2255,8 +2286,10 @@ Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
 
 **Transversales**
 - Excel/PDF de los demás informes sobre `DocumentoTabular` + los renderers
-  de `servicios/exportacion/` (incluye el Excel de choferes, D6, y saca
-  `exceljs` del chunk de `/op`).
+  de `servicios/exportacion/` (saca `exceljs` del chunk de `/op`; la fecha
+  del Excel de choferes, D6, ya se corrigió en el frente Ficha de entidad).
+- ng-bootstrap 15 sobre Angular 20 (NG0309 en componentes con
+  `hostDirectives`): actualizar a la versión de Angular 20.
 - Specs de Karma: 7 no compilan (`npm test` no corre).
 - Estilo global `.col-numero` (hoy repetido en Vendedores y
   `tabla-listado`).
@@ -2281,4 +2314,6 @@ Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
   `resumenFinanzas` y de las colecciones viejas de tarifas. Del frente Lazy
   loading + fechas: "Checklist — migración a Vantruck: frente Lazy loading +
   fechas" (deploy de la Function de vencimientos, budget de `vantruck`,
-  eventuales D7, legajos FL4).
+  eventuales D7, legajos FL4). Del frente Ficha de entidad: normalizar la
+  fecha de nacimiento de los choferes migrados ("Checklist — migración a
+  Vantruck: frente Ficha de entidad").
