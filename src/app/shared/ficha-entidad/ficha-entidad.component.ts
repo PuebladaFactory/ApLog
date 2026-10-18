@@ -1,4 +1,5 @@
 import { Component, Input, NgZone, OnDestroy, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, combineLatest, takeUntil } from 'rxjs';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
@@ -11,6 +12,9 @@ import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
 import { LegajoService } from 'src/app/servicios/legajos/legajo.service';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
+import { TarifarioService } from 'src/app/servicios/tarifario/tarifario.service';
+import { nivelesHabilitados } from 'src/app/interfaces/tarifa-habilitada';
+import { TarifasFicha, filaTarifaFicha, filasTarifasFicha } from './ficha-tarifas/ficha-tarifas.util';
 import {
   CLASE_ESTADO_LEGAJO, ETIQUETA_ESTADO_LEGAJO, FilaChoferFicha, TipoFicha, contactoLegible, cuitLegible,
   filasChoferesDeProveedor, nombreChofer,
@@ -87,6 +91,9 @@ export class FichaEntidadComponent implements OnInit, OnDestroy {
   /** Ficha de cliente: el cliente. */
   cliente: ConIdType<Cliente> | null = null;
 
+  /** Pestaña Tarifas (las tres fichas); null si la entidad no existe. */
+  tarifas: TarifasFicha | null = null;
+
   readonly etiquetaEstado = ETIQUETA_ESTADO_LEGAJO;
   readonly claseEstado = CLASE_ESTADO_LEGAJO;
   readonly cuitLegible = cuitLegible;
@@ -102,6 +109,8 @@ export class FichaEntidadComponent implements OnInit, OnDestroy {
     private legajoService: LegajoService,
     private categoriaDocumentacionService: CategoriaDocumentacionService,
     private clienteService: ClienteService,
+    private tarifarioService: TarifarioService,
+    private router: Router,
     private zone: NgZone,
   ) {}
 
@@ -113,6 +122,10 @@ export class FichaEntidadComponent implements OnInit, OnDestroy {
       this.legajoService.legajos$,
       this.categoriaDocumentacionService.categorias$,
       this.clienteService.clientes$,
+      // Solo para refrescar: la pestaña Tarifas lee los vigentes con los
+      // getters de TarifarioService (misma regla que la pantalla de Tarifas).
+      this.tarifarioService.tarifas$,
+      this.tarifarioService.tarifasEspeciales$,
     ])
       .pipe(takeUntil(this.destroy$))
       .subscribe(([choferes, vehiculos, proveedores, legajos, , clientes]) =>
@@ -175,6 +188,13 @@ export class FichaEntidadComponent implements OnInit, OnDestroy {
     this.activeModal.dismiss();
   }
 
+  /** "Ver en Tarifas": cierra la ficha y va a la pestaña del módulo Tarifas
+   *  (no hay enlace directo a una tarifa puntual). */
+  irATarifas(pestana: string): void {
+    this.activeModal.dismiss();
+    this.router.navigate(['/tarifas', pestana]);
+  }
+
   private mostrar(tipo: TipoFicha, id: string, pestana: string): void {
     this.tipo = tipo;
     this.id = id;
@@ -194,6 +214,50 @@ export class FichaEntidadComponent implements OnInit, OnDestroy {
     } else if (this.tipo === 'cliente') {
       this.cliente = clientes.find(c => c.idCliente === this.id) ?? null;
     }
+    this.tarifas = this.armarTarifas();
+  }
+
+  /**
+   * Niveles habilitados y tarifas vigentes HOY de la entidad (sin valores).
+   * Chofer: los niveles salen de ProveedorService.resolverTarifasHabilitadasChofer
+   * (regla del proyecto: un chofer de proveedor hereda los del proveedor) y, si
+   * es de proveedor, las especiales son las del proveedor. Personalizadas: solo
+   * clientes.
+   */
+  private armarTarifas(): TarifasFicha | null {
+    const nombreCliente = (id: string) => this.clienteService.getClientePorId(id)?.razonSocial;
+    let idDueño: string | null = null;
+    let niveles: TarifasFicha['niveles'] = [];
+    let heredadoDe: string | null = null;
+    let personalizadas: TarifasFicha['personalizadas'] = [];
+
+    if (this.tipo === 'chofer' && this.chofer) {
+      niveles = nivelesHabilitados(this.proveedorService.resolverTarifasHabilitadasChofer(this.chofer));
+      const contratacion = this.chofer.contratacion;
+      if (contratacion.tipo === 'proveedor') {
+        idDueño = contratacion.idProveedor;
+        heredadoDe = this.proveedor?.razonSocial ?? '(dado de baja)';
+      } else {
+        idDueño = this.chofer.id;
+      }
+    } else if (this.tipo === 'proveedor' && this.proveedor) {
+      idDueño = this.proveedor.idProveedor;
+      niveles = nivelesHabilitados(this.proveedor.tarifasHabilitadas);
+    } else if (this.tipo === 'cliente' && this.cliente) {
+      idDueño = this.cliente.idCliente;
+      niveles = nivelesHabilitados(this.cliente.tarifasHabilitadas);
+      personalizadas = filasTarifasFicha(this.tarifarioService.getTarifasPersonalizadasVigentes(idDueño), nombreCliente);
+    }
+    if (!idDueño) return null;
+
+    const general = this.tarifarioService.getTarifaGeneralVigente();
+    return {
+      niveles,
+      heredadoDe,
+      general: general ? filaTarifaFicha(general, nombreCliente) : null,
+      personalizadas,
+      especiales: filasTarifasFicha(this.tarifarioService.getTarifasEspecialesVigentes(idDueño), nombreCliente),
+    };
   }
 
   private limpiar(): void {
@@ -205,6 +269,7 @@ export class FichaEntidadComponent implements OnInit, OnDestroy {
     this.vehiculosProveedor = [];
     this.choferesProveedor = [];
     this.cliente = null;
+    this.tarifas = null;
   }
 
   private armarChofer(

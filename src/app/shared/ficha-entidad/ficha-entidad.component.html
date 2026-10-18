@@ -85,6 +85,10 @@
             <button type="button" class="nav-link" role="tab" [class.active]="pestana === 'legajo'"
               [attr.aria-selected]="pestana === 'legajo'" (click)="pestana = 'legajo'">Legajo</button>
           </li>
+          <li class="nav-item" role="presentation">
+            <button type="button" class="nav-link" role="tab" [class.active]="pestana === 'tarifas'"
+              [attr.aria-selected]="pestana === 'tarifas'" (click)="pestana = 'tarifas'">Tarifas</button>
+          </li>
           @if (esChoferDeProveedor) {
             <li class="nav-item" role="presentation">
               <button type="button" class="nav-link" role="tab" [class.active]="pestana === 'proveedor'"
@@ -114,6 +118,11 @@
             }
             @case ('legajo') {
               <app-ficha-legajo [legajo]="legajo" [categoriasActivas]="categoriasActivas"></app-ficha-legajo>
+            }
+            @case ('tarifas') {
+              @if (tarifas; as t) {
+                <app-ficha-tarifas [tarifas]="t" (irATarifas)="irATarifas($event)"></app-ficha-tarifas>
+              }
             }
             @case ('proveedor') {
               @if (proveedor; as prov) {
@@ -169,6 +178,10 @@
               Vehículos <span class="badge rounded-pill bg-secondary">{{ vehiculosProveedor.length }}</span>
             </button>
           </li>
+          <li class="nav-item" role="presentation">
+            <button type="button" class="nav-link" role="tab" [class.active]="pestana === 'tarifas'"
+              [attr.aria-selected]="pestana === 'tarifas'" (click)="pestana = 'tarifas'">Tarifas</button>
+          </li>
         </ul>
         <div class="mt-3" role="tabpanel">
           @switch (pestana) {
@@ -186,6 +199,11 @@
                 [vehiculos]="vehiculosProveedor"
                 mensajeVacio="El proveedor no tiene vehículos cargados.">
               </app-ficha-vehiculos>
+            }
+            @case ('tarifas') {
+              @if (tarifas; as t) {
+                <app-ficha-tarifas [tarifas]="t" (irATarifas)="irATarifas($event)"></app-ficha-tarifas>
+              }
             }
           }
         </div>
@@ -208,6 +226,10 @@
               Contactos <span class="badge rounded-pill bg-secondary">{{ contactosCliente.length }}</span>
             </button>
           </li>
+          <li class="nav-item" role="presentation">
+            <button type="button" class="nav-link" role="tab" [class.active]="pestana === 'tarifas'"
+              [attr.aria-selected]="pestana === 'tarifas'" (click)="pestana = 'tarifas'">Tarifas</button>
+          </li>
         </ul>
         <div class="mt-3" role="tabpanel">
           @switch (pestana) {
@@ -216,6 +238,11 @@
             }
             @case ('contactos') {
               <app-ficha-contactos [contactos]="contactosCliente"></app-ficha-contactos>
+            }
+            @case ('tarifas') {
+              @if (tarifas; as t) {
+                <app-ficha-tarifas [tarifas]="t" (irATarifas)="irATarifas($event)"></app-ficha-tarifas>
+              }
             }
           }
         </div>

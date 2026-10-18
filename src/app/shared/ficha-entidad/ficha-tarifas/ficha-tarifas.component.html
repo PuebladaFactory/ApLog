@@ -1,0 +1,88 @@
+<h6>Niveles habilitados</h6>
+@if (tarifas.heredadoDe) {
+  <p class="text-muted mb-1">Chofer de proveedor: heredados del proveedor {{ tarifas.heredadoDe }}.</p>
+}
+<div class="d-flex flex-wrap gap-1 mb-3">
+  @for (nivel of tarifas.niveles; track nivel) {
+    <span class="badge" [ngClass]="nivel | claseNivelTarifa">{{ nivel | etiquetaNivelTarifa }}</span>
+  } @empty {
+    <span class="text-muted">Sin tarifas habilitadas.</span>
+  }
+</div>
+
+@if (habilitado('general')) {
+  <div class="d-flex align-items-center gap-2 mt-3">
+    <h6 class="mb-0">General</h6>
+    <button type="button" class="btn btn-sm btn-link p-0" (click)="irATarifas.emit('general')">Ver en Tarifas</button>
+  </div>
+  @if (tarifas.general; as g) {
+    <p class="mb-0">{{ g.nombre }} · {{ g.modo }} · vigente desde {{ g.vigenteDesde }} · {{ g.categorias }}</p>
+  } @else {
+    <p class="text-muted mb-0">No hay una tarifa General vigente.</p>
+  }
+}
+
+@if (habilitado('personalizada') || tarifas.personalizadas.length > 0) {
+  <div class="d-flex align-items-center gap-2 mt-3">
+    <h6 class="mb-0">Personalizadas vigentes</h6>
+    <button type="button" class="btn btn-sm btn-link p-0" (click)="irATarifas.emit('personalizada')">Ver en Tarifas</button>
+  </div>
+  @if (!habilitado('personalizada')) {
+    <p class="text-muted mb-1">El nivel Personalizada no está habilitado: estas tarifas no se usan en las operaciones.</p>
+  }
+  <ng-container *ngTemplateOutlet="tabla; context: { filas: tarifas.personalizadas, conAlcance: false }"></ng-container>
+}
+
+@if (habilitado('especial') || tarifas.especiales.length > 0) {
+  <div class="d-flex align-items-center gap-2 mt-3">
+    <h6 class="mb-0">Especiales vigentes</h6>
+    <button type="button" class="btn btn-sm btn-link p-0" (click)="irATarifas.emit('especial')">Ver en Tarifas</button>
+  </div>
+  @if (!habilitado('especial')) {
+    <p class="text-muted mb-1">El nivel Especial no está habilitado: estas tarifas no se usan en las operaciones.</p>
+  }
+  <ng-container *ngTemplateOutlet="tabla; context: { filas: tarifas.especiales, conAlcance: conAlcance(tarifas.especiales) }"></ng-container>
+}
+
+@if (habilitado('eventual')) {
+  <div class="d-flex align-items-center gap-2 mt-3">
+    <h6 class="mb-0">Eventual</h6>
+    <button type="button" class="btn btn-sm btn-link p-0" (click)="irATarifas.emit('eventual')">Ver en Tarifas</button>
+  </div>
+  <p class="text-muted mb-0">Sin tarifa propia: los valores se cargan en cada operación.</p>
+}
+
+<ng-template #tabla let-filas="filas" let-conAlcance="conAlcance">
+  @if (filas.length === 0) {
+    <p class="text-muted mb-0">No hay tarifas vigentes.</p>
+  } @else {
+    <div class="table-responsive">
+      <table class="table table-sm table-striped align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Modo</th>
+            <th>Vigente desde</th>
+            <th>Categorías</th>
+            @if (conAlcance) {
+              <th>Alcance</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (f of filas; track f.idTarifa) {
+            <tr>
+              <td>{{ f.nombre }}</td>
+              <td class="text-nowrap">{{ f.modo }}</td>
+              <td class="text-nowrap">{{ f.vigenteDesde }}</td>
+              <td>{{ f.categorias }}</td>
+              @if (conAlcance) {
+                <td>{{ f.alcance ?? '—' }}</td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</ng-template>
