@@ -1,0 +1,38 @@
+@if (choferes.length === 0) {
+  <p class="text-muted">El proveedor no tiene choferes cargados.</p>
+} @else {
+  <div class="table-responsive">
+    <table class="table table-sm table-striped align-middle">
+      <thead>
+        <tr>
+          <th>Chofer</th>
+          <th>CUIT</th>
+          <th>Celular</th>
+          <th>Legajo</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of choferes; track c.id) {
+          <tr>
+            <td>
+              <a class="enlace-ficha" role="link" tabindex="0" title="Ver ficha del chofer"
+                (click)="abrir.emit(c.id)" (keydown.enter)="abrir.emit(c.id)">{{ c.nombre }}</a>
+              @if (!c.visible) {
+                <span class="badge bg-light text-dark border ms-1">Oculto</span>
+              }
+            </td>
+            <td class="text-nowrap">{{ c.cuit }}</td>
+            <td class="text-nowrap">{{ c.celular }}</td>
+            <td>
+              @if (c.estadoLegajo) {
+                <span class="badge" [ngClass]="claseEstado[c.estadoLegajo]">{{ etiquetaEstado[c.estadoLegajo] }}</span>
+              } @else {
+                —
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

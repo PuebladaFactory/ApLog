@@ -55,6 +55,9 @@ import { FichaEntidadComponent } from './ficha-entidad/ficha-entidad.component';
 import { FichaChoferDatosComponent } from './ficha-entidad/ficha-chofer-datos/ficha-chofer-datos.component';
 import { FichaVehiculosComponent } from './ficha-entidad/ficha-vehiculos/ficha-vehiculos.component';
 import { FichaLegajoComponent } from './ficha-entidad/ficha-legajo/ficha-legajo.component';
+import { FichaEmpresaDatosComponent } from './ficha-entidad/ficha-empresa-datos/ficha-empresa-datos.component';
+import { FichaContactosComponent } from './ficha-entidad/ficha-contactos/ficha-contactos.component';
+import { FichaChoferesComponent } from './ficha-entidad/ficha-choferes/ficha-choferes.component';
 
 
 
@@ -104,6 +107,9 @@ import { FichaLegajoComponent } from './ficha-entidad/ficha-legajo/ficha-legajo.
     FichaChoferDatosComponent,  // pestañas de la ficha, solo las usa FichaEntidadComponent
     FichaVehiculosComponent,
     FichaLegajoComponent,
+    FichaEmpresaDatosComponent,
+    FichaContactosComponent,
+    FichaChoferesComponent,
 
   ],
   imports: [

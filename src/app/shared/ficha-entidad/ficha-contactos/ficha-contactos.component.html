@@ -1,0 +1,26 @@
+@if (contactos.length === 0) {
+  <p class="text-muted">No hay contactos cargados.</p>
+} @else {
+  <div class="table-responsive">
+    <table class="table table-sm table-striped align-middle">
+      <thead>
+        <tr>
+          <th>Puesto</th>
+          <th>Apellido y nombre</th>
+          <th>Teléfono</th>
+          <th>Email</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of contactos; track $index) {
+          <tr>
+            <td>{{ texto(c.puesto) }}</td>
+            <td>{{ nombre(c) }}</td>
+            <td class="text-nowrap">{{ texto(c.telefono) }}</td>
+            <td>{{ texto(c.email) }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

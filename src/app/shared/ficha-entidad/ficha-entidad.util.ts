@@ -1,5 +1,7 @@
-import { Direccion } from 'src/app/interfaces/chofer';
-import { CategoriaDocumentacion, Documentacion, EstadoDocumentacion } from 'src/app/interfaces/legajo';
+import { Chofer, Direccion } from 'src/app/interfaces/chofer';
+import { ConIdType } from 'src/app/interfaces/conId';
+import { CategoriaDocumentacion, Documentacion, EstadoDocumentacion, Legajo, estadoGeneralDeLegajo } from 'src/app/interfaces/legajo';
+import { Contacto } from 'src/app/interfaces/proveedor';
 import { EntidadTipo } from 'src/app/interfaces/tarifa';
 
 /** Entidades que tienen ficha. Mismo universo que EntidadTipo (Tarifas). */
@@ -74,4 +76,60 @@ export function renglonesLegajo(
   return [...cargados, ...faltantes].sort(
     (a, b) => posicion(a) - posicion(b) || a.titulo.localeCompare(b.titulo),
   );
+}
+
+/** "Apellido Nombre" de un chofer (encabezado de la ficha, "Volver" y tablas). */
+export function nombreChofer(chofer: Chofer): string {
+  const d = chofer.datosPersonales;
+  return `${d.apellido ?? ''} ${d.nombre ?? ''}`.trim() || '—';
+}
+
+/** Contacto en una línea: "Apellido Nombre (puesto) · teléfono · email",
+ *  sin las partes vacías. */
+export function contactoLegible(contacto: Contacto | null | undefined): string {
+  if (!contacto) return '—';
+  const texto = (v: string | number | null | undefined) => String(v ?? '').trim();
+  const nombre = [texto(contacto.apellido), texto(contacto.nombre)].filter(p => p !== '').join(' ');
+  const puesto = texto(contacto.puesto);
+  const partes = [
+    puesto ? (nombre ? `${nombre} (${puesto})` : puesto) : nombre,
+    texto(contacto.telefono),
+    texto(contacto.email),
+  ].filter(p => p !== '');
+  return partes.length ? partes.join(' · ') : '—';
+}
+
+/** Renglón de la pestaña "Choferes" de la ficha de un proveedor. */
+export interface FilaChoferFicha {
+  id: string;
+  nombre: string;
+  cuit: string;
+  celular: string;
+  /** Estado general del legajo; null si el chofer no tiene legajo. */
+  estadoLegajo: EstadoDocumentacion | 'vacio' | null;
+  /** false = oculto en los listados. */
+  visible: boolean;
+}
+
+/** Choferes de un proveedor, por apellido y nombre, con el estado de su legajo. */
+export function filasChoferesDeProveedor(
+  choferes: ConIdType<Chofer>[],
+  legajos: Legajo[],
+  idProveedor: string,
+): FilaChoferFicha[] {
+  return choferes
+    .filter(c => c.contratacion.tipo === 'proveedor' && c.contratacion.idProveedor === idProveedor)
+    .map(c => {
+      const legajo = legajos.find(l => l.idChofer === c.id);
+      const celular = String(c.datosPersonales.celularContacto ?? '').trim();
+      return {
+        id: c.id,
+        nombre: nombreChofer(c),
+        cuit: cuitLegible(c.datosPersonales.cuit),
+        celular: celular || '—',
+        estadoLegajo: legajo ? estadoGeneralDeLegajo(legajo) : null,
+        visible: c.visible !== false,
+      };
+    })
+    .sort((a, b) => a.nombre.localeCompare(b.nombre));
 }

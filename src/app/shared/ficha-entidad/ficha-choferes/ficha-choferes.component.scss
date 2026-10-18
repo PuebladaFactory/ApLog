@@ -1,0 +1,11 @@
+// El nombre se ve como el resto del texto y se subraya al pasar el mouse, como
+// en el tablero de Legajos (mismo criterio que .enlace-entidad de Finanzas).
+.enlace-ficha {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.enlace-ficha:hover {
+  text-decoration: underline;
+}
