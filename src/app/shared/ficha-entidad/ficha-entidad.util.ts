@@ -3,9 +3,17 @@ import { ConIdType } from 'src/app/interfaces/conId';
 import { CategoriaDocumentacion, Documentacion, EstadoDocumentacion, Legajo, estadoGeneralDeLegajo } from 'src/app/interfaces/legajo';
 import { Contacto } from 'src/app/interfaces/proveedor';
 import { EntidadTipo } from 'src/app/interfaces/tarifa';
+import { ModuloPermiso } from 'src/app/interfaces/permiso';
 
 /** Entidades que tienen ficha. Mismo universo que EntidadTipo (Tarifas). */
 export type TipoFicha = EntidadTipo;
+
+/** Módulo de PermisosService de cada entidad (para "Editar", FI6). */
+export const MODULO_FICHA: Readonly<Record<TipoFicha, ModuloPermiso>> = {
+  chofer: 'choferes',
+  proveedor: 'proveedores',
+  cliente: 'clientes',
+};
 
 /** CUIT de 11 dígitos → 'XX-XXXXXXXX-X'. Otro largo se muestra tal cual;
  *  vacío o nulo → '—'. */

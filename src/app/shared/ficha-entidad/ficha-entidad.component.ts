@@ -13,10 +13,12 @@ import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
 import { LegajoService } from 'src/app/servicios/legajos/legajo.service';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
 import { TarifarioService } from 'src/app/servicios/tarifario/tarifario.service';
+import { PermisosService } from 'src/app/servicios/permisos/permisos.service';
+import { EdicionEntidadService, EntidadEditable } from 'src/app/servicios/ficha-entidad/edicion-entidad.service';
 import { nivelesHabilitados } from 'src/app/interfaces/tarifa-habilitada';
 import { TarifasFicha, filaTarifaFicha, filasTarifasFicha } from './ficha-tarifas/ficha-tarifas.util';
 import {
-  CLASE_ESTADO_LEGAJO, ETIQUETA_ESTADO_LEGAJO, FilaChoferFicha, TipoFicha, contactoLegible, cuitLegible,
+  CLASE_ESTADO_LEGAJO, ETIQUETA_ESTADO_LEGAJO, FilaChoferFicha, MODULO_FICHA, TipoFicha, contactoLegible, cuitLegible,
   filasChoferesDeProveedor, nombreChofer,
 } from './ficha-entidad.util';
 
@@ -111,6 +113,8 @@ export class FichaEntidadComponent implements OnInit, OnDestroy {
     private clienteService: ClienteService,
     private tarifarioService: TarifarioService,
     private router: Router,
+    private permisos: PermisosService,
+    private edicionEntidad: EdicionEntidadService,
     private zone: NgZone,
   ) {}
 
@@ -155,6 +159,25 @@ export class FichaEntidadComponent implements OnInit, OnDestroy {
   }
 
   /** Contactos del cliente (un doc viejo puede no tener la lista). */
+  /** La entidad de la ficha que se está mostrando; null si no existe (baja). */
+  get entidadActual(): EntidadEditable | null {
+    if (this.tipo === 'chofer') return this.chofer;
+    if (this.tipo === 'proveedor') return this.proveedor;
+    return this.cliente;
+  }
+
+  /** "Editar": con permiso de edición de esa entidad (demo no lo tiene). */
+  get puedeEditar(): boolean {
+    return this.entidadActual !== null && this.permisos.puede(MODULO_FICHA[this.tipo], 'editar');
+  }
+
+  /** "Ver cuenta": con lectura de Finanzas (user no la tiene). Un chofer de
+   *  proveedor no tiene cuenta propia (se le paga al proveedor). */
+  get puedeVerCuenta(): boolean {
+    return this.entidadActual !== null && !(this.tipo === 'chofer' && this.esChoferDeProveedor)
+      && this.permisos.puede('finanzas', 'ver');
+  }
+
   get contactosCliente(): Contacto[] {
     return this.cliente?.contactos ?? [];
   }
@@ -193,6 +216,22 @@ export class FichaEntidadComponent implements OnInit, OnDestroy {
   irATarifas(pestana: string): void {
     this.activeModal.dismiss();
     this.router.navigate(['/tarifas', pestana]);
+  }
+
+  /** Cierra la ficha y abre el modal de edición de la entidad mostrada (el
+   *  mismo de los listados). */
+  editar(): void {
+    const entidad = this.entidadActual;
+    if (!entidad || !this.puedeEditar) return;
+    this.activeModal.dismiss();
+    this.edicionEntidad.editar(this.tipo, entidad);
+  }
+
+  /** Cierra la ficha y va a la cuenta de la entidad en Finanzas. */
+  verCuenta(): void {
+    if (!this.puedeVerCuenta) return;
+    this.activeModal.dismiss();
+    this.router.navigate(['/finanzas', 'cuenta', this.tipo, this.id]);
   }
 
   private mostrar(tipo: TipoFicha, id: string, pestana: string): void {
