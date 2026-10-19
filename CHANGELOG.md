@@ -2249,7 +2249,12 @@ pruebas manuales en demo. Diseño y avance: `claude/diseno-lazy-fechas.md`
   - proveedor: Datos de la empresa, Contactos, Choferes, Vehículos y Tarifas;
   - cliente: Datos de la empresa, Contactos y Tarifas.
 - **Navegación** chofer ↔ proveedor dentro del mismo modal, con "← Volver a …".
-- **Tarifas:** niveles habilitados y vigentes sin valores; "Ver en Tarifas".
+- **Tarifas:** niveles habilitados y vigentes; "Ver en Tarifas".
+- **Detalle de valores (FI7):** "Ver valores" en cada tarifa de la ficha,
+  solo del lado de la entidad (regla del motor: a cobrar / a pagar / a pagar
+  al proveedor / valor especial), con las categorías de sus vehículos (vista
+  inicial solo esas, "Ver todas" las resalta) y aviso si una no está en la
+  tarifa.
 - **Acciones:** "Editar" (abre el modal de edición; carga diferida con
   `import()`) y "Ver cuenta" (Finanzas), según permisos.
 - **Accesos:** el "ver" de los listados de Clientes, Choferes y Proveedores;
@@ -2283,6 +2288,9 @@ Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
   y PDFMake).
 - UX: el `<h1>` sin cerrar de `index.html` envuelve toda la app (ver "Deuda —
   tras el frente Lazy loading + fechas").
+- Frente futuro: el nombre de la entidad como enlace a su ficha en toda la
+  app (pieza compartida, por etapas; ver "Frente futuro — nombre de la entidad
+  como enlace a la ficha en toda la app").
 
 **Transversales**
 - Excel/PDF de los demás informes sobre `DocumentoTabular` + los renderers
