@@ -265,14 +265,19 @@ export class PermisosService {
   // no alcanza para un requisito de negocio puntual — no para "arreglar"
   // la matriz en general, eso sería reinterpretar las reglas reales.
   private readonly overrides: Partial<Record<string, Partial<Record<RolUsuario, boolean>>>> = {
-    // 'reimprimir' (Facturación/Liquidaciones) y 'descargarTablero'
-    // (tablero-asignaciones) mapean ambos a 'leer', y 'leer' da demo=true
-    // en 'operaciones' — pero el negocio pide bloquear puntualmente la
-    // descarga del tablero para demo sin afectar 'reimprimir' en los
-    // otros módulos. Por eso el override es específico de
-    // 'operaciones.descargarTablero', no un cambio a mapaAccionCrud ni a
-    // matrizBase (que romperían 'reimprimir' en Facturación).
-    'operaciones.descargarTablero': { demo: false },
+    // 'reimprimir' (Facturación/Liquidaciones) y 'descargarTablero' mapean
+    // ambos a 'leer', y 'leer' da demo=true y user=true en 'operaciones' —
+    // pero el negocio pide que la descarga quede solo en dev/admin, sin
+    // afectar 'reimprimir' en los otros módulos. Por eso el override es
+    // específico de 'operaciones.descargarTablero', no un cambio a
+    // mapaAccionCrud ni a matrizBase (que romperían 'reimprimir' en
+    // Facturación).
+    // 'user' se agregó al override en el frente Informes (IE2c): desde IE1b
+    // esta acción gobierna el botón real de descarga del tablero de
+    // OPERACIONES (antes solo el botón inerte de tablero-asignaciones), y
+    // bajar ese informe es una tarea de administración, no del empleado que
+    // carga operaciones — confirmado con el negocio el 19/10/2026.
+    'operaciones.descargarTablero': { demo: false, user: false },
     // 'limpiarTablero' mapea a 'eliminar', que da user=false en
     // 'operaciones' — pero 'user' es el rol del único empleado activo en
     // producción y uso principal de tablero-asignaciones: el negocio
