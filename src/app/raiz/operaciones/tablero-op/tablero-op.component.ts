@@ -14,6 +14,7 @@ import { CargaAsignacionComponent } from '../carga-asignacion/carga-asignacion.c
 import { NivelTarifa } from 'src/app/interfaces/tarifa';
 import { EtiquetaNivelTarifaPipe } from 'src/app/shared/pipes/etiqueta-nivel-tarifa.pipe';
 import { ClaseNivelTarifaPipe } from 'src/app/shared/pipes/clase-nivel-tarifa.pipe';
+import { etiquetaEstadoOp } from 'src/app/shared/utils/estado-op.util';
 
 // =====================
 // MODELOS
@@ -528,14 +529,8 @@ private resizeStartWidth = 0;
   // ===================== BADGES ESTADO =====================
 
   private getEstadoLabel(e: EstadoOp): string {
-    if (e.proforma.chofer)  return 'Proforma CH';
-    if (e.proforma.cliente) return 'Proforma CL';
-    if (e.liquidacion.cliente && e.liquidacion.chofer) return 'Liquidada';
-    if (e.liquidacion.cliente) return 'Liq CL';
-    if (e.liquidacion.chofer)  return 'Liq CH';
-    if (e.ciclo === 'cerrada') return 'Cerrada';
-    if (e.ciclo === 'abierta') return 'Abierta';
-    return 'Sin datos';
+    // Única definición, compartida con el informe Excel (estado-op.util).
+    return etiquetaEstadoOp(e);
   }
 
   getEstadoBadgeClass(estado: string) {
