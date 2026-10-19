@@ -9,7 +9,7 @@ import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-obj
 import { OperacionService } from 'src/app/servicios/operaciones/operacion.service';
 import Swal from 'sweetalert2';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
-import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
+import { OperacionesExportService } from 'src/app/servicios/operaciones/operaciones-export.service';
 import { CargaAsignacionComponent } from '../carga-asignacion/carga-asignacion.component';
 import { NivelTarifa } from 'src/app/interfaces/tarifa';
 import { EtiquetaNivelTarifaPipe } from 'src/app/shared/pipes/etiqueta-nivel-tarifa.pipe';
@@ -130,7 +130,7 @@ private resizeStartWidth = 0;
     private modalService: NgbModal,
     private operacionService: OperacionService,
     private formatoNum: FormatoNumericoService,
-    private excelServ: ExcelService,
+    private operacionesExport: OperacionesExportService,
   ) {}
 
   // =====================
@@ -797,8 +797,66 @@ onResizeEnd = () => {
     }
   }
 
-  descargarOp(){
-    this.excelServ.generarInformeOperaciones(this.fechaDesde, this.fechaHasta,this.operacionesPeriodo)
+  /** Informe Excel del tablero, por la fachada del camino nuevo. Exporta LO QUE
+   *  SE VE: operacionesVista son las filas con los filtros aplicados y en el
+   *  orden de la pantalla (antes bajaba operacionesPeriodo, todo el rango, sin
+   *  filtros). El spinner se apaga ANTES de cualquier Swal: el overlay lo tapa. */
+  async descargarOp(): Promise<void> {
+    if (this.operacionesVista.length === 0) {
+      Swal.fire({
+        icon: 'info',
+        title: 'No hay operaciones para exportar',
+        text: 'Con los filtros actuales no queda ninguna operación en el tablero.',
+      });
+      return;
+    }
+
+    let error: unknown = null;
+    this.isLoading = true;
+    try {
+      await this.operacionesExport.descargar({
+        desde: this.fechaDesde,
+        hasta: this.fechaHasta,
+        operaciones: this.operacionesVista.map(r => r._raw),
+        filtros: this.descripcionFiltros(),
+      });
+    } catch (e) {
+      error = e;
+    } finally {
+      this.isLoading = false;
+    }
+
+    if (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'No se pudo generar el informe',
+        text: (error as Error)?.message ?? String(error),
+      });
+    }
+  }
+
+  /** Filtros activos en texto, para el subtítulo del archivo. El nombre de la
+   *  entidad sale de las filas visibles (los dropdowns se reconstruyen según el
+   *  filtro principal y pueden no tener el id buscado). */
+  private descripcionFiltros(): string[] {
+    const textos: string[] = [];
+
+    if (this.filtros.clienteId) {
+      const fila = this.operacionesVista.find(r => r.idCliente === this.filtros.clienteId);
+      textos.push(`Cliente: ${fila?.cliente ?? this.filtros.clienteId}`);
+    }
+    if (this.filtros.choferId) {
+      const fila = this.operacionesVista.find(r => r.idChofer === this.filtros.choferId);
+      textos.push(`Chofer: ${fila?.chofer ?? this.filtros.choferId}`);
+    }
+    for (const [col, valor] of Object.entries(this.filtros.columnas)) {
+      if (valor) textos.push(`${this.headerLabel(col)}: "${valor}"`);
+    }
+    if (this.filtros.textoGlobal) {
+      textos.push(`Búsqueda: "${this.filtros.textoGlobal}"`);
+    }
+
+    return textos;
   }
 
 

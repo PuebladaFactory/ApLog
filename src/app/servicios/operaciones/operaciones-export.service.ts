@@ -8,7 +8,7 @@ import { DatosLibroOperaciones, armarLibroOperaciones } from 'src/app/shared/uti
  *  renderer genérico ExcelTabularService.generarLibro, que carga exceljs con
  *  import() (se descarga recién al exportar).
  *
- *  Solo Excel: son 20 columnas, no entran legibles en un PDF (decisión D5 del
+ *  Solo Excel: son 22 columnas, no entran legibles en un PDF (decisión D5 del
  *  frente). Sin log: es una consulta, mismo criterio que Reportes, Vendedores
  *  y Finanzas (decisión D7). */
 @Injectable({ providedIn: 'root' })
