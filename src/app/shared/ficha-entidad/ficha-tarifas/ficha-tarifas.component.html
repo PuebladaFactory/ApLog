@@ -16,7 +16,15 @@
     <button type="button" class="btn btn-sm btn-link p-0" (click)="irATarifas.emit('general')">Ver en Tarifas</button>
   </div>
   @if (tarifas.general; as g) {
-    <p class="mb-0">{{ g.nombre }} · {{ g.modo }} · vigente desde {{ g.vigenteDesde }} · {{ g.categorias }}</p>
+    <p class="mb-0">
+      {{ g.nombre }} · {{ g.modo }} · vigente desde {{ g.vigenteDesde }} · {{ g.categorias }}
+      <button type="button" class="btn btn-sm btn-link p-0 ms-2" (click)="alternar(g.idTarifa)">
+        {{ abiertas.has(g.idTarifa) ? 'Ocultar valores' : 'Ver valores' }}
+      </button>
+    </p>
+    @if (abiertas.has(g.idTarifa)) {
+      <app-ficha-tarifa-detalle [detalle]="g.detalle"></app-ficha-tarifa-detalle>
+    }
   } @else {
     <p class="text-muted mb-0">No hay una tarifa General vigente.</p>
   }
@@ -67,6 +75,7 @@
             @if (conAlcance) {
               <th>Alcance</th>
             }
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -79,7 +88,19 @@
               @if (conAlcance) {
                 <td>{{ f.alcance ?? '—' }}</td>
               }
+              <td class="text-nowrap">
+                <button type="button" class="btn btn-sm btn-link p-0" (click)="alternar(f.idTarifa)">
+                  {{ abiertas.has(f.idTarifa) ? 'Ocultar valores' : 'Ver valores' }}
+                </button>
+              </td>
             </tr>
+            @if (abiertas.has(f.idTarifa)) {
+              <tr>
+                <td [attr.colspan]="conAlcance ? 6 : 5">
+                  <app-ficha-tarifa-detalle [detalle]="f.detalle"></app-ficha-tarifa-detalle>
+                </td>
+              </tr>
+            }
           }
         </tbody>
       </table>

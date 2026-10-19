@@ -1,0 +1,13 @@
+// Bootstrap fija .btn en rem: sin esto no escala con el tamaño de letra de la ficha.
+.btn {
+  font-size: 1em;
+}
+
+.detalle-tarifa {
+  background-color: var(--bs-tertiary-bg);
+}
+
+.col-numero {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

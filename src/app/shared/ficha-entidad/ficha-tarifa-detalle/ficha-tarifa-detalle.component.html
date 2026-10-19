@@ -1,0 +1,68 @@
+<div class="detalle-tarifa border rounded p-2">
+  <div class="text-muted mb-1">
+    {{ detalle.columna }}{{ detalle.porKm ? ' (por km)' : '' }}
+    @if (detalle.acompaniante !== null) {
+      · Acompañante: <span class="col-numero">{{ detalle.acompaniante | formatearValor : "$" }}</span>
+    }
+    @if (detalle.kmDistancia; as km) {
+      · Adicional por km: después de {{ km.primerSector }} km, por tramos de {{ km.sectoresSiguientes }} km
+    }
+  </div>
+
+  @for (faltante of detalle.categoriasFaltantes; track faltante) {
+    <div class="alert alert-warning py-1 px-2 mb-1">
+      La categoría {{ faltante }} no está en esta tarifa: no se puede usar para ese vehículo.
+    </div>
+  }
+
+  @if (detalle.conVehiculos) {
+    <div class="mb-1">
+      <button type="button" class="btn btn-sm btn-link p-0" (click)="soloSusCategorias = !soloSusCategorias">
+        {{ soloSusCategorias ? 'Ver todas las categorías' : 'Solo las categorías de sus vehículos' }}
+      </button>
+    </div>
+  }
+
+  @if (renglones.length === 0) {
+    <p class="text-muted mb-0">La tarifa no tiene categorías cargadas.</p>
+  } @else {
+    <div class="table-responsive">
+      <table class="table table-sm table-bordered align-middle mb-0">
+        <thead>
+          <tr>
+            @if (detalle.variasSecciones) {
+              <th>Sección</th>
+            }
+            <th>Categoría</th>
+            <th class="text-end">{{ detalle.columna }}</th>
+            @if (conAdicionalKm) {
+              <th class="text-end">1er sector</th>
+              <th class="text-end">Intervalo</th>
+            }
+            @if (detalle.conVehiculos) {
+              <th>Vehículos</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of renglones; track $index) {
+            <tr [class.table-primary]="r.dominios.length > 0 && !soloSusCategorias">
+              @if (detalle.variasSecciones) {
+                <td>{{ r.seccion || '—' }}</td>
+              }
+              <td>{{ r.categoria }}</td>
+              <td class="text-end col-numero">{{ r.base !== null ? (r.base | formatearValor : "$") : '—' }}</td>
+              @if (conAdicionalKm) {
+                <td class="text-end col-numero">{{ r.primerSector !== null ? (r.primerSector | formatearValor : "$") : '—' }}</td>
+                <td class="text-end col-numero">{{ r.intervalo !== null ? (r.intervalo | formatearValor : "$") : '—' }}</td>
+              }
+              @if (detalle.conVehiculos) {
+                <td>{{ r.dominios.join(', ') || '—' }}</td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

@@ -59,6 +59,7 @@ import { FichaEmpresaDatosComponent } from './ficha-entidad/ficha-empresa-datos/
 import { FichaContactosComponent } from './ficha-entidad/ficha-contactos/ficha-contactos.component';
 import { FichaChoferesComponent } from './ficha-entidad/ficha-choferes/ficha-choferes.component';
 import { FichaTarifasComponent } from './ficha-entidad/ficha-tarifas/ficha-tarifas.component';
+import { FichaTarifaDetalleComponent } from './ficha-entidad/ficha-tarifa-detalle/ficha-tarifa-detalle.component';
 
 
 
@@ -112,6 +113,7 @@ import { FichaTarifasComponent } from './ficha-entidad/ficha-tarifas/ficha-tarif
     FichaContactosComponent,
     FichaChoferesComponent,
     FichaTarifasComponent,
+    FichaTarifaDetalleComponent,
 
   ],
   imports: [

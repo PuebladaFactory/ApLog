@@ -16,7 +16,9 @@ import { TarifarioService } from 'src/app/servicios/tarifario/tarifario.service'
 import { PermisosService } from 'src/app/servicios/permisos/permisos.service';
 import { EdicionEntidadService, EntidadEditable } from 'src/app/servicios/ficha-entidad/edicion-entidad.service';
 import { nivelesHabilitados } from 'src/app/interfaces/tarifa-habilitada';
-import { TarifasFicha, filaTarifaFicha, filasTarifasFicha } from './ficha-tarifas/ficha-tarifas.util';
+import {
+  ContextoTarifaFicha, LadoTarifaFicha, TarifasFicha, filaTarifaFicha, filasTarifasFicha,
+} from './ficha-tarifas/ficha-tarifas.util';
 import {
   CLASE_ESTADO_LEGAJO, ETIQUETA_ESTADO_LEGAJO, FilaChoferFicha, MODULO_FICHA, TipoFicha, contactoLegible, cuitLegible,
   filasChoferesDeProveedor, nombreChofer,
@@ -269,6 +271,10 @@ export class FichaEntidadComponent implements OnInit, OnDestroy {
     let niveles: TarifasFicha['niveles'] = [];
     let heredadoDe: string | null = null;
     let personalizadas: TarifasFicha['personalizadas'] = [];
+    // FI7: lado de la tarifa que se le aplica a la entidad y vehículos con los
+    // que se resaltan sus categorías en "Ver valores".
+    let lado: LadoTarifaFicha = 'cliente';
+    let vehiculos: ConIdType<Vehiculo>[] = [];
 
     if (this.tipo === 'chofer' && this.chofer) {
       niveles = nivelesHabilitados(this.proveedorService.resolverTarifasHabilitadasChofer(this.chofer));
@@ -276,26 +282,39 @@ export class FichaEntidadComponent implements OnInit, OnDestroy {
       if (contratacion.tipo === 'proveedor') {
         idDueño = contratacion.idProveedor;
         heredadoDe = this.proveedor?.razonSocial ?? '(dado de baja)';
+        lado = 'proveedor';
+        vehiculos = [...this.vehiculosPropios, ...this.vehiculosProveedor];
       } else {
         idDueño = this.chofer.id;
+        lado = 'chofer';
+        vehiculos = this.vehiculosPropios;
       }
     } else if (this.tipo === 'proveedor' && this.proveedor) {
       idDueño = this.proveedor.idProveedor;
       niveles = nivelesHabilitados(this.proveedor.tarifasHabilitadas);
+      lado = 'proveedor';
+      vehiculos = this.vehiculosProveedor;
     } else if (this.tipo === 'cliente' && this.cliente) {
       idDueño = this.cliente.idCliente;
       niveles = nivelesHabilitados(this.cliente.tarifasHabilitadas);
-      personalizadas = filasTarifasFicha(this.tarifarioService.getTarifasPersonalizadasVigentes(idDueño), nombreCliente);
     }
     if (!idDueño) return null;
 
+    const ctx: ContextoTarifaFicha = {
+      lado,
+      vehiculos: vehiculos.map(v => ({ dominio: v.dominio, categoria: v.categoria?.nombre ?? '' })),
+      nombreCliente,
+    };
+    if (this.tipo === 'cliente') {
+      personalizadas = filasTarifasFicha(this.tarifarioService.getTarifasPersonalizadasVigentes(idDueño), ctx);
+    }
     const general = this.tarifarioService.getTarifaGeneralVigente();
     return {
       niveles,
       heredadoDe,
-      general: general ? filaTarifaFicha(general, nombreCliente) : null,
+      general: general ? filaTarifaFicha(general, ctx) : null,
       personalizadas,
-      especiales: filasTarifasFicha(this.tarifarioService.getTarifasEspecialesVigentes(idDueño), nombreCliente),
+      especiales: filasTarifasFicha(this.tarifarioService.getTarifasEspecialesVigentes(idDueño), ctx),
     };
   }
 
