@@ -1,18 +1,11 @@
 import { Injectable } from "@angular/core";
 
-/* import * as pdfMake from 'pdfmake/build/pdfmake';
-import * as pdfFonts from 'pdfmake/build/vfs_fonts'; */
-
 import { Chofer, Vehiculo } from "src/app/interfaces/chofer";
 import { Cliente } from "src/app/interfaces/cliente";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import * as pdfMake from "pdfmake/build/pdfmake";
-import * as pdfFonts from "pdfmake/build/vfs_fonts";
 import { InformeLiq } from "src/app/interfaces/informe-liq";
 import { anioDe } from "src/app/shared/utils/fecha.util";
-
-(pdfMake as any).vfs = (pdfFonts as any).vfs;
 
 @Injectable({
   providedIn: "root",
