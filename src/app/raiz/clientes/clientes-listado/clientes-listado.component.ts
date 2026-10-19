@@ -8,7 +8,7 @@ import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
 import Swal from 'sweetalert2';
 import { ClienteAltaComponent } from '../cliente-alta/cliente-alta.component';
 import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
-import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
+import { EntidadesExportService } from 'src/app/servicios/entidades/entidades-export.service';
 import { VisibilidadListadosComponent } from 'src/app/shared/modales/visibilidad-listados/visibilidad-listados.component';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 import { FichaEntidadService } from 'src/app/servicios/ficha-entidad/ficha-entidad.service';
@@ -34,7 +34,7 @@ export class ClientesListadoComponent implements OnInit, OnDestroy {
 
   constructor(
     private modalService: NgbModal,
-    private excelServ: ExcelService,
+    private entidadesExport: EntidadesExportService,
     private clienteService: ClienteService,
     public usuarioSesion: UsuarioSesionService,
     private fichaEntidad: FichaEntidadService,
@@ -211,8 +211,37 @@ export class ClientesListadoComponent implements OnInit, OnDestroy {
     });
   }
 
-  descargarClientes(){
-    this.excelServ.exportarClientesTablaExcel(this.clientesFiltrados, 'Clientes')
+  /** Excel del listado por la fachada del camino nuevo. Exporta LO QUE SE VE:
+   *  clientesFiltrados es el listado con el filtro Visibles/Todos aplicado, y ese
+   *  filtro queda escrito en el subtítulo del archivo. El spinner se apaga
+   *  ANTES de cualquier Swal: el overlay lo tapa. */
+  async descargarClientes(): Promise<void> {
+    if (this.clientesFiltrados.length === 0) {
+      Swal.fire({
+        icon: 'info',
+        title: 'No hay clientes para exportar',
+        text: 'Con el filtro actual no queda ningún registro en el listado.',
+      });
+      return;
+    }
+
+    let error: unknown = null;
+    this.isLoading = true;
+    try {
+      await this.entidadesExport.descargarClientes(this.clientesFiltrados, this.filtroEstado);
+    } catch (e) {
+      error = e;
+    } finally {
+      this.isLoading = false;
+    }
+
+    if (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'No se pudo generar el listado',
+        text: (error as Error)?.message ?? String(error),
+      });
+    }
   }
 
   visibilidadClientes(){

@@ -247,6 +247,9 @@ export class PermisosService {
     liquidar: 'crear',
     // Exporta el tablero de asignaciones (excel), no escribe.
     descargarTablero: 'leer',
+    // Exporta el listado de una entidad (Clientes/Choferes/Proveedores) a
+    // Excel: lee lo que ya está en pantalla, no escribe.
+    descargarListado: 'leer',
     // Limpiar el tablero borra el borrador en curso — acción destructiva
     // sobre datos ya cargados, no una edición parcial.
     limpiarTablero: 'eliminar',
@@ -284,6 +287,19 @@ export class PermisosService {
     // exige que conserve esta acción en su pantalla principal pese a no
     // tener 'eliminar' general en el módulo.
     'operaciones.limpiarTablero': { user: true },
+    // Los tres listados de entidades (frente Informes, IE3b): 'descargarListado'
+    // mapea a 'leer', y 'leer' en 'entidades' da user=true y demo=true — pero
+    // bajar el listado completo de clientes, choferes o proveedores es una
+    // tarea de administración, mismo criterio que la descarga del tablero de
+    // operaciones (IE2c). Van tres entradas y no una porque la clave es el
+    // ModuloPermiso que pasa el caller: los tres módulos comparten el módulo
+    // 'entidades' de las reglas, pero no comparten la clave del override.
+    // Además, la columna "Vendedores asignados" del listado de Clientes lee la
+    // colección 'vendedores', que 'user' no puede leer: dejarlo descargar le
+    // rompería la descarga con permission-denied.
+    'clientes.descargarListado': { demo: false, user: false },
+    'choferes.descargarListado': { demo: false, user: false },
+    'proveedores.descargarListado': { demo: false, user: false },
   };
 
   puede(modulo: ModuloPermiso, accion?: AccionPermiso): boolean {

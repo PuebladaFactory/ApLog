@@ -9,7 +9,7 @@
       </app-btn-leer>
     </div>
     <div class="align-self-start mt-3 mb-1">
-      <button class="btn btn-primary boton-alta" type="button" (click)="descargarChoferes()">
+      <button *appPermiso="'choferes.descargarListado'" class="btn btn-primary boton-alta" type="button" (click)="descargarChoferes()">
         Descargar Choferes
       </button>
     </div>

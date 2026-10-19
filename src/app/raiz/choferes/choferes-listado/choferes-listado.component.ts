@@ -8,7 +8,7 @@ import { ColumnaTablaGenerica, AccionTablaGenerica } from "src/app/interfaces/ta
 import Swal from "sweetalert2";
 import { ChoferesAltaComponent } from "../choferes-alta/choferes-alta.component";
 import { BajaObjetoComponent } from "src/app/shared/modales/baja-objeto/baja-objeto.component";
-import { ExcelService } from "src/app/servicios/informes/excel/excel.service";
+import { EntidadesExportService } from "src/app/servicios/entidades/entidades-export.service";
 import { VisibilidadListadosComponent } from "src/app/shared/modales/visibilidad-listados/visibilidad-listados.component";
 import { ChoferService } from "src/app/servicios/choferes/chofer.service";
 import { ProveedorService } from "src/app/servicios/proveedores/proveedor.service";
@@ -39,7 +39,7 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
 
   constructor(
     private modalService: NgbModal,
-    private excelServ: ExcelService,
+    private entidadesExport: EntidadesExportService,
     private choferService: ChoferService,
     private proveedorService: ProveedorService,
     public usuarioSesion: UsuarioSesionService,
@@ -240,8 +240,37 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  descargarChoferes() {
-    this.excelServ.exportarChoferesTablaExcel(this.choferesFiltrados);
+  /** Excel del listado por la fachada del camino nuevo. Exporta LO QUE SE VE:
+   *  choferesFiltrados es el listado con el filtro Visibles/Todos aplicado, y ese
+   *  filtro queda escrito en el subtítulo del archivo. El spinner se apaga
+   *  ANTES de cualquier Swal: el overlay lo tapa. */
+  async descargarChoferes(): Promise<void> {
+    if (this.choferesFiltrados.length === 0) {
+      Swal.fire({
+        icon: "info",
+        title: "No hay choferes para exportar",
+        text: "Con el filtro actual no queda ningún registro en el listado.",
+      });
+      return;
+    }
+
+    let error: unknown = null;
+    this.isLoading = true;
+    try {
+      await this.entidadesExport.descargarChoferes(this.choferesFiltrados, this.filtroEstado);
+    } catch (e) {
+      error = e;
+    } finally {
+      this.isLoading = false;
+    }
+
+    if (error) {
+      Swal.fire({
+        icon: "error",
+        title: "No se pudo generar el listado",
+        text: (error as Error)?.message ?? String(error),
+      });
+    }
   }
 
   visibilidadChoferes() {

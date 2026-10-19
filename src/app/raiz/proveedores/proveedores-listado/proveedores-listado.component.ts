@@ -12,7 +12,7 @@ import { ColumnaTablaGenerica, AccionTablaGenerica } from "src/app/interfaces/ta
 import Swal from "sweetalert2";
 import { ProveedoresAltaComponent } from "../proveedores-alta/proveedores-alta.component";
 import { BajaObjetoComponent } from "src/app/shared/modales/baja-objeto/baja-objeto.component";
-import { ExcelService } from "src/app/servicios/informes/excel/excel.service";
+import { EntidadesExportService } from "src/app/servicios/entidades/entidades-export.service";
 import { VisibilidadListadosComponent } from "src/app/shared/modales/visibilidad-listados/visibilidad-listados.component";
 import { DbFirestoreService } from "src/app/servicios/database/db-firestore.service";
 import { ProveedorService } from "src/app/servicios/proveedores/proveedor.service";
@@ -49,7 +49,7 @@ export class ProveedoresListadoComponent implements OnInit, OnDestroy {
 
   constructor(
     private modalService: NgbModal,
-    private excelServ: ExcelService,
+    private entidadesExport: EntidadesExportService,
     private dbFirestore: DbFirestoreService,
     private proveedorService: ProveedorService,
     private choferService: ChoferService,
@@ -282,11 +282,37 @@ export class ProveedoresListadoComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  descargarProveedores() {
-    this.excelServ.exportarClientesTablaExcel(
-      this.proveedoresFiltrados,
-      "Proveedores",
-    );
+  /** Excel del listado por la fachada del camino nuevo. Exporta LO QUE SE VE:
+   *  proveedoresFiltrados es el listado con el filtro Visibles/Todos aplicado, y ese
+   *  filtro queda escrito en el subtítulo del archivo. El spinner se apaga
+   *  ANTES de cualquier Swal: el overlay lo tapa. */
+  async descargarProveedores(): Promise<void> {
+    if (this.proveedoresFiltrados.length === 0) {
+      Swal.fire({
+        icon: "info",
+        title: "No hay proveedores para exportar",
+        text: "Con el filtro actual no queda ningún registro en el listado.",
+      });
+      return;
+    }
+
+    let error: unknown = null;
+    this.isLoading = true;
+    try {
+      await this.entidadesExport.descargarProveedores(this.proveedoresFiltrados, this.filtroEstado);
+    } catch (e) {
+      error = e;
+    } finally {
+      this.isLoading = false;
+    }
+
+    if (error) {
+      Swal.fire({
+        icon: "error",
+        title: "No se pudo generar el listado",
+        text: (error as Error)?.message ?? String(error),
+      });
+    }
   }
 
   visibilidadProveedores() {
