@@ -6,6 +6,7 @@ import { nombreEntidadRef } from './entidad-informe.util';
 import { descripcionTipoComprobante, fechaComprobanteLegible, numeroComprobante } from './factura-electronica.util';
 import { ETIQUETA_CONCEPTO_COMPENSACION, compensacionesDe, netoDe } from './compensacion.util';
 import { instanteLegible } from './fecha.util';
+import { sanearNombreArchivo } from './nombre-archivo.util';
 
 /** Cómo se presenta un InformeLiqNuevo en Excel/PDF. Se deriva del estado,
  *  salvo la vista previa, que se indica explícitamente. */
@@ -203,11 +204,3 @@ function nombreArchivo(liq: InformeLiqNuevo, variante: VarianteDocumentoLiq, nom
   return sanearNombreArchivo(base);
 }
 
-/** Sin acentos ni caracteres inválidos en Windows; espacios → '_'. */
-function sanearNombreArchivo(texto: string): string {
-  return texto
-    .normalize('NFD').replace(/[̀-ͯ]/g, '')
-    .replace(/[^A-Za-z0-9._-]+/g, '_')
-    .replace(/_+/g, '_')
-    .replace(/^_|_$/g, '');
-}

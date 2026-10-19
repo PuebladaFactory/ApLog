@@ -66,6 +66,26 @@ export interface GrupoColumnasDoc {
   span: number;
 }
 
+/** Tabla de Excel REAL (ListObject) para una TablaDoc: autofiltro por columna,
+ *  bandas del tema y fila de totales con SUBTOTAL — que recalcula al filtrar o
+ *  al ocultar filas, a diferencia de una suma fija.
+ *
+ *  Es OPCIONAL: sin este campo la tabla se dibuja como hasta ahora (celda por
+ *  celda, sin filtros ni bandas de tema), que es lo que corresponde a un
+ *  COMPROBANTE (liquidación, comisiones, recibos). Con el campo, el documento se
+ *  comporta como un informe de TRABAJO (el tablero de operaciones, los listados
+ *  de entidades): se filtra, se ordena y los totales siguen al filtro.
+ *
+ *  Solo lo usa el Excel; el PDF lo ignora (no tiene equivalente). */
+export interface TablaExcelDoc {
+  /** Nombre del ListObject. Tiene que ser único en el LIBRO y sin espacios. */
+  nombre: string;
+  /** Estilo de tabla de Excel; por defecto 'TableStyleMedium9'. */
+  estilo?: string;
+  /** Inmoviliza la fila de encabezado de la tabla; por defecto true. */
+  congelarEncabezado?: boolean;
+}
+
 export interface TablaDoc {
   /** Título encima de la tabla; null si no lleva. */
   titulo: string | null;
@@ -75,6 +95,8 @@ export interface TablaDoc {
   filas: ValorCeldaDoc[][];
   /** Fila de totales ya calculada (negrita); null si no lleva. */
   filaTotal: ValorCeldaDoc[] | null;
+  /** Si está, el Excel la dibuja como Tabla de Excel (ver TablaExcelDoc). */
+  excel?: TablaExcelDoc;
 }
 
 export interface HojaDoc {

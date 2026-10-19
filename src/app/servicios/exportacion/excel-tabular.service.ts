@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { DocumentoTabular, LibroTabular, TipoCeldaDoc, ValorCeldaDoc } from 'src/app/interfaces/documento-tabular';
+import { DocumentoTabular, LibroTabular, TablaDoc, TablaExcelDoc, TipoCeldaDoc, ValorCeldaDoc } from 'src/app/interfaces/documento-tabular';
 import { LOGO_EMPRESA_BASE64, LOGO_EMPRESA_PX } from './logo-empresa';
 import { ANCHO_HOJA_HORIZONTAL, fechaHoraActual, fechaIsoAUtc } from './formato-exportacion';
 
@@ -9,6 +9,17 @@ const ARGB_ENCABEZADO = 'FF6495ED';
 const ARGB_ZEBRA = 'FFECF2FB';
 const ARGB_MARCA = 'FFC81E1E';
 const HORIZONTAL_EXCEL = { izquierda: 'left', centro: 'center', derecha: 'right' } as const;
+/** numFmt por tipo de celda, para la rama de Tabla de Excel (ver
+ *  dibujarTablaExcel). Son los mismos formatos que aplica escribirCelda celda
+ *  por celda; se repiten acá a propósito para no tocar ese camino, que sirve a
+ *  los documentos de presentación ya en producción. */
+const FORMATO_POR_TIPO: Partial<Record<TipoCeldaDoc, string>> = {
+  moneda: FORMATO_MONEDA,
+  numero: '#,##0',
+  decimal: '#,##0.0',
+  porcentaje: '0.0%',
+  fecha: 'dd/mm/yyyy',
+};
 const BORDE = {
   top: { style: 'thin', color: { argb: 'FFB4B4B4' } },
   bottom: { style: 'thin', color: { argb: 'FFB4B4B4' } },
@@ -205,19 +216,20 @@ export class ExcelTabularService {
           fila = this.lineaCombinada(ws, fila, n, tabla.titulo, { size: 12, bold: true });
         }
 
-        if (tabla.grupos.length > 0) {
-          let col = 1;
-          for (const g of tabla.grupos) {
-            if (g.span > 1) ws.mergeCells(fila, col, fila, col + g.span - 1);
-            const celda = ws.getCell(fila, col);
-            celda.value = g.etiqueta;
-            celda.font = { bold: true };
-            celda.alignment = { horizontal: 'center', vertical: 'middle' };
-            if (g.etiqueta) celda.fill = relleno(ARGB_ENCABEZADO);
-            celda.border = BORDE;
-            col += g.span;
+        // Tabla de Excel real (opcional, informes de trabajo): autofiltro,
+        // bandas del tema y totales por SUBTOTAL. Los grupos, si hay, se
+        // dibujan arriba como fila combinada (una Tabla de Excel no admite
+        // una fila de grupos dentro de su encabezado).
+        if (tabla.excel) {
+          if (tabla.grupos.length > 0) {
+            fila = this.dibujarGrupos(ws, tabla, fila);
           }
-          fila++;
+          fila = this.dibujarTablaExcel(ws, tabla, tabla.excel, fila) + 1;
+          continue;
+        }
+
+        if (tabla.grupos.length > 0) {
+          fila = this.dibujarGrupos(ws, tabla, fila);
         }
 
         const encabezado = ws.getRow(fila);
@@ -275,6 +287,89 @@ export class ExcelTabularService {
 
     const buffer = await wb.xlsx.writeBuffer();
     return new Blob([buffer], { type: TIPO_XLSX });
+  }
+
+  /** Fila de encabezados agrupadores (colSpan) arriba del encabezado de
+   *  columnas. Devuelve la fila siguiente. */
+  private dibujarGrupos(ws: any, tabla: TablaDoc, fila: number): number {
+    let col = 1;
+    for (const g of tabla.grupos) {
+      if (g.span > 1) ws.mergeCells(fila, col, fila, col + g.span - 1);
+      const celda = ws.getCell(fila, col);
+      celda.value = g.etiqueta;
+      celda.font = { bold: true };
+      celda.alignment = { horizontal: 'center', vertical: 'middle' };
+      if (g.etiqueta) celda.fill = relleno(ARGB_ENCABEZADO);
+      celda.border = BORDE;
+      col += g.span;
+    }
+    return fila + 1;
+  }
+
+  /** Dibuja una TablaDoc como Tabla de Excel real (ListObject), con el
+   *  encabezado en `fila`. Devuelve la ÚLTIMA fila ocupada.
+   *
+   *  La fila de totales sale de `tabla.filaTotal` (la calcula la función pura,
+   *  no el renderer): la primera celda de texto va como `totalsRowLabel` y cada
+   *  celda numérica se reescribe como `SUBTOTAL(109, Tabla[Columna])` CON el
+   *  resultado ya calculado adentro. Así Excel ajusta el total al filtrar u
+   *  ocultar filas, y cualquier visor que no recalcule igual muestra el número.
+   *
+   *  Dos requisitos que cumple quien arma el documento: `excel.nombre` único en
+   *  el libro y sin espacios, y etiquetas de columna sin `[`, `]`, `#` ni `'`
+   *  (son referencias estructuradas). */
+  private dibujarTablaExcel(ws: any, tabla: TablaDoc, excel: TablaExcelDoc, fila: number): number {
+    const total = tabla.filaTotal;
+    const columnas = tabla.columnas.map((c, i) => {
+      const col: any = { name: c.etiqueta, filterButton: true };
+      if (total) {
+        const valor = total[i];
+        if (typeof valor === 'number') col.totalsRowFunction = 'sum';
+        else if (typeof valor === 'string' && valor !== '') col.totalsRowLabel = valor;
+        else col.totalsRowFunction = 'none';
+      }
+      return col;
+    });
+
+    ws.addTable({
+      name: excel.nombre,
+      ref: `A${fila}`,
+      headerRow: true,
+      totalsRow: !!total,
+      style: { theme: excel.estilo ?? 'TableStyleMedium9', showRowStripes: true },
+      columns: columnas,
+      rows: tabla.filas.map(f => f.map((v, i) => valorParaTabla(v, tabla.columnas[i].tipo))),
+    });
+
+    // Formato y alineación, solo dentro del rango de la tabla (el encabezado de
+    // la hoja está arriba y no se toca). El relleno y los bordes los pone el
+    // tema de la tabla.
+    const ultima = fila + tabla.filas.length + (total ? 1 : 0);
+    tabla.columnas.forEach((c, i) => {
+      const formato = FORMATO_POR_TIPO[c.tipo];
+      const horizontal = HORIZONTAL_EXCEL[c.alineacion ?? alineacionPorTipo(c.tipo)];
+      for (let f = fila + 1; f <= ultima; f++) {
+        const celda = ws.getCell(f, i + 1);
+        if (formato) celda.numFmt = formato;
+        celda.alignment = { horizontal, vertical: 'middle', wrapText: c.tipo === 'texto' };
+      }
+    });
+
+    if (total) {
+      tabla.columnas.forEach((c, i) => {
+        if (typeof total[i] !== 'number') return;
+        const celda = ws.getCell(ultima, i + 1);
+        celda.value = { formula: `SUBTOTAL(109,${excel.nombre}[${c.etiqueta}])`, result: total[i] };
+        const formato = FORMATO_POR_TIPO[c.tipo];
+        if (formato) celda.numFmt = formato;
+        celda.font = { bold: true };
+      });
+    }
+
+    if (excel.congelarEncabezado !== false) {
+      ws.views = [{ state: 'frozen', ySplit: fila }];
+    }
+    return ultima;
   }
 
   /** Texto alineado a la derecha en una fila, combinado de la columna `desde`
@@ -341,6 +436,34 @@ export class ExcelTabularService {
 
 function relleno(argb: string) {
   return { type: 'pattern', pattern: 'solid', fgColor: { argb } };
+}
+
+/** Alineación por defecto de un tipo de celda (la misma que aplica
+ *  escribirCelda): montos y números a la derecha, fecha al centro, texto a la
+ *  izquierda. */
+function alineacionPorTipo(tipo: TipoCeldaDoc): 'izquierda' | 'centro' | 'derecha' {
+  if (tipo === 'texto') return 'izquierda';
+  if (tipo === 'fecha') return 'centro';
+  return 'derecha';
+}
+
+/** Valor crudo para una celda de Tabla de Excel. A diferencia de escribirCelda,
+ *  un valor nulo deja la celda VACÍA en vez de poner "—": dentro de una tabla,
+ *  un "—" en una columna de monto la vuelve de texto y arruina el filtro y el
+ *  SUBTOTAL. */
+function valorParaTabla(valor: ValorCeldaDoc, tipo: TipoCeldaDoc): string | number | Date | null {
+  if (valor === null) return null;
+  switch (tipo) {
+    case 'moneda':
+    case 'numero':
+    case 'decimal':
+    case 'porcentaje':
+      return Number(valor) || 0;
+    case 'fecha':
+      return fechaIsoAUtc(String(valor ?? '')) ?? String(valor ?? '');
+    default:
+      return String(valor ?? '');
+  }
 }
 
 /** Nombre de hoja de un LibroTabular: sin caracteres inválidos, máx. 31. */
