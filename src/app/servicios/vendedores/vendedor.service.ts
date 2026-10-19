@@ -78,6 +78,26 @@ export class VendedorService implements OnDestroy {
     return this.getVendedoresActuales().find(v => v.id === id);
   }
 
+  /** Lectura puntual (one-shot, sin listener) de TODOS los vendedores,
+   *  normalizados igual que los del listener.
+   *
+   *  Hace falta porque `init()` se llama desde el shell del módulo Vendedores,
+   *  no al arrancar la app: desde cualquier otra pantalla el BehaviorSubject
+   *  está vacío (`getVendedoresActuales()` da `[]`) salvo que esa sesión haya
+   *  entrado a Vendedores. El primer consumidor es el Excel del listado de
+   *  Clientes, que necesita el NOMBRE del vendedor para la columna de
+   *  asignaciones (el porcentaje ya está en `Cliente.comisionesVenta`).
+   *
+   *  No abre el listener a propósito: una descarga no justifica dejar un
+   *  stream vivo de una colección de otro módulo. Mismo criterio que
+   *  `DbFirestoreService.obtenerTodosConId` en el resto de las consultas
+   *  puntuales. Solo la llaman roles con lectura de `vendedores`
+   *  (dev/admin/demo); con otro rol, las reglas rechazan la lectura. */
+  async obtenerTodosUnaVez(): Promise<ConId<VendedorNuevo>[]> {
+    const docs = await this.db.obtenerTodosConId<any>(VendedorService.COLECCION);
+    return this.ordenar(docs.map(d => this.normalizar({ id: d.id, ...d.data })));
+  }
+
   /** 'Apellido, Nombre'. */
   nombre(v: VendedorNuevo): string {
     return `${v.datosPersonales.apellido}, ${v.datosPersonales.nombre}`;
