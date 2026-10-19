@@ -4,8 +4,12 @@ export type RefTarifaHabilitada =
 
 export type NivelHabilitado = RefTarifaHabilitada['nivel'];
 
-/** Orden de exhibición de los niveles (del más específico al más genérico). */
-const ORDEN_NIVELES: NivelHabilitado[] = ['personalizada', 'especial', 'general', 'eventual'];
+/** Orden de exhibición de los niveles (del más específico al más genérico).
+ *  Al ser un orden por especificidad, es también la JERARQUÍA para resolver un
+ *  empate entre los dos lados de una operación (nivelTarifaOp, en
+ *  shared/utils/nivel-tarifa-op.util.ts): gana el de menor índice. `readonly`
+ *  porque ahora sale del módulo. */
+export const ORDEN_NIVELES: readonly NivelHabilitado[] = ['personalizada', 'especial', 'general', 'eventual'];
 
 /** Niveles habilitados de una entidad, sin repetidos y en orden fijo
  *  (personalizada, especial, general, eventual). Lista vacía o ausente → [].

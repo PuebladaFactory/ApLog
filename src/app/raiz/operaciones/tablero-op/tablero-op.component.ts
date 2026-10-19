@@ -15,6 +15,7 @@ import { NivelTarifa } from 'src/app/interfaces/tarifa';
 import { EtiquetaNivelTarifaPipe } from 'src/app/shared/pipes/etiqueta-nivel-tarifa.pipe';
 import { ClaseNivelTarifaPipe } from 'src/app/shared/pipes/clase-nivel-tarifa.pipe';
 import { etiquetaEstadoOp } from 'src/app/shared/utils/estado-op.util';
+import { nivelLadoOp } from 'src/app/shared/utils/nivel-tarifa-op.util';
 
 // =====================
 // MODELOS
@@ -566,21 +567,6 @@ private resizeStartWidth = 0;
     return op.vehiculo.categoria.nombre ?? 'Sin categoría';
   }
 
-  /** Nivel real aplicado a un lado de la operación — mismo criterio que
-   *  OperacionValorLadoComponent.nivel: Eventual es a nivel de operación
-   *  completa (se chequea antes que tarifaAplicada*), y en ese caso cliente
-   *  y chofer siempre coinciden por diseño (igual que Personalizada, que se
-   *  espeja al chofer/proveedor — ver sincronizarLadoChofer). Si la
-   *  resolución automática no pudo determinar un ganador (operación previa
-   *  a Bloque 7 Paso 1 — caso real en Vantruck — u otro caso no bloqueante
-   *  sin resolver), da null y el badge cae en "Sin resolver" (mismo default
-   *  que ya usan EtiquetaNivelTarifaPipe/ClaseNivelTarifaPipe). */
-  private nivelLado(op: Operacion, lado: 'cliente' | 'chofer'): NivelTarifa | null {
-    if (op.datosTarifaEventual !== null) return 'eventual';
-    const ref = lado === 'cliente' ? op.tarifaAplicadaCliente : op.tarifaAplicadaChofer;
-    return ref?.nivel ?? null;
-  }
-
   private badgeDeNivel(nivel: NivelTarifa | null): { clase: string; etiqueta: string } {
     return {
       clase: this.claseNivelTarifaPipe.transform(nivel),
@@ -593,8 +579,8 @@ private resizeStartWidth = 0;
    *  dos badges — cliente primero, chofer después — cuando difieren (caso
    *  real posible en General/Especial). */
   getTarifaBadges(op: Operacion): { clase: string; etiqueta: string }[] {
-    const nivelCliente = this.nivelLado(op, 'cliente');
-    const nivelChofer = this.nivelLado(op, 'chofer');
+    const nivelCliente = nivelLadoOp(op, 'cliente');
+    const nivelChofer = nivelLadoOp(op, 'chofer');
 
     if (nivelCliente === nivelChofer) {
       return [this.badgeDeNivel(nivelCliente)];

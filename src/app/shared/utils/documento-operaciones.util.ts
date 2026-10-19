@@ -2,6 +2,7 @@ import { ColumnaDoc, HojaDoc, LibroTabular, TablaDoc, ValorCeldaDoc } from 'src/
 import { ConId } from 'src/app/interfaces/conId';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { etiquetaEstadoOp } from './estado-op.util';
+import { etiquetaNivelTarifa, nivelTarifaOp, refTarifaOp } from './nivel-tarifa-op.util';
 import { fechaLegible } from './fecha.util';
 import { sanearNombreArchivo } from './nombre-archivo.util';
 
@@ -22,12 +23,21 @@ export interface DatosLibroOperaciones {
  *  mostraba aunque entraba en los totales. Van dentro del desglose de cada
  *  lado (base → km → acompañante → extra → total), así las columnas suman el
  *  total. No dependen de las columnas visibles del tablero: el informe es
- *  siempre completo. */
+ *  siempre completo.
+ *
+ *  'Nivel' y 'Tarifa' cierran el bloque de la operación (antes del lado
+ *  cliente): son UNA por operación, no una por lado — ver nivelTarifaOp.
+ *
+ *  Las etiquetas son los nombres de columna de la Tabla de Excel: tienen que
+ *  ser únicas y sin `[`, `]`, `#` ni `'` (referencias estructuradas de la
+ *  fórmula del total). */
 const COLUMNAS: ColumnaDoc[] = [
   col('Estado', 'texto', 12),
   col('Fecha', 'fecha', 11),
   col('Operacion', 'numero', 10),
   col('Km', 'numero', 7),
+  col('Nivel', 'texto', 13),
+  col('Tarifa', 'texto', 22),
 
   col('Cliente', 'texto', 26),
   col('Tarifa Base Cl', 'moneda', 14),
@@ -51,8 +61,13 @@ const COLUMNAS: ColumnaDoc[] = [
   col('Observaciones', 'texto', 30),
 ];
 
-/** Índices que se suman en la fila Total: Km y las 10 columnas de monto. */
-const INDICES_TOTAL = [3, 5, 6, 7, 8, 9, 14, 15, 16, 17, 18];
+/** Índices que se suman en la fila Total: Km y las 10 columnas de monto. Se
+ *  derivan de COLUMNAS y NO se escriben a mano: con índices fijos, insertar una
+ *  columna en el medio desalinea los totales en silencio (pasó al agregar
+ *  'Nivel' y 'Tarifa'). */
+const INDICES_TOTAL = COLUMNAS
+  .map((c, i) => (c.tipo === 'moneda' || c.etiqueta === 'Km' ? i : -1))
+  .filter(i => i >= 0);
 
 /** QUÉ dice el Excel del informe de operaciones (puro: no lee Firestore ni
  *  cachés, todo sale de la Operacion y sus snapshots).
@@ -63,8 +78,9 @@ const INDICES_TOTAL = [3, 5, 6, 7, 8, 9, 14, 15, 16, 17, 18];
  *  SALIDA que calculó el motor, no la entrada `op.adExtra`): con multiplicador
  *  0 el motor lo deja en 0, y así la columna coincide con el total. Una
  *  operación sin `valoresNuevos` (nunca debería pasar en el modelo nuevo) deja
- *  los 10 montos en null: el renderer dibuja "—" y la fila Total no la suma,
- *  en vez de mentir con ceros. */
+ *  los 10 montos en null: dentro de una Tabla de Excel el renderer deja la
+ *  celda VACÍA (no "—": arruinaría el filtro numérico y el SUBTOTAL) y la fila
+ *  Total no la suma, en vez de mentir con ceros. */
 export function armarLibroOperaciones(d: DatosLibroOperaciones): LibroTabular {
   const filas: ValorCeldaDoc[][] = d.operaciones.map(op => {
     const vn = op.valoresNuevos;
@@ -73,6 +89,8 @@ export function armarLibroOperaciones(d: DatosLibroOperaciones): LibroTabular {
       op.fecha,
       op.numeroOperacion,
       op.km,
+      etiquetaNivelTarifa(nivelTarifaOp(op)),
+      refTarifaOp(op)?.nombreTarifa ?? '',
 
       op.cliente.razonSocial,
       vn ? vn.cliente.tarifaBase * (op.multiplicadorCliente ?? 0) : null,
@@ -103,6 +121,10 @@ export function armarLibroOperaciones(d: DatosLibroOperaciones): LibroTabular {
     columnas: COLUMNAS,
     filas,
     filaTotal: filas.length > 0 ? filaTotal(filas) : null,
+    // Informe de TRABAJO: filtro por columna, ordenamiento, ocultar filas y
+    // columnas, y el total como SUBTOTAL que sigue al filtro (IE2). El nombre
+    // es único: el libro tiene una sola tabla.
+    excel: { nombre: 'Operaciones' },
   };
 
   const hoja: HojaDoc = {
@@ -116,7 +138,8 @@ export function armarLibroOperaciones(d: DatosLibroOperaciones): LibroTabular {
     notas: [
       'Montos por lado desde los valores de la operación: Total = tarifa base (por el multiplicador del lado) + adicional por km + acompañante + extra.',
       'Extra Cl / Extra Ch: adicional extra cargado al cerrar o al editar el InformeOp. El concepto no se exporta, solo el importe de cada lado.',
-      'Totales: suma de las filas exportadas (las que se ven en el tablero con los filtros aplicados).',
+      'Nivel y Tarifa: nivel de tarifa aplicado a la operación y nombre de la tarifa. Cuando los dos lados difieren (uno con General y el otro con Especial), se muestra el de mayor jerarquía (Especial). En las eventuales no hay documento de tarifa, así que Tarifa queda vacía.',
+      'Totales: suma de las filas exportadas (las que se ven en el tablero con los filtros aplicados). Es un SUBTOTAL de la Tabla: si filtrás u ocultás filas dentro del Excel, se recalcula.',
     ],
   };
 
