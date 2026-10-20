@@ -2274,6 +2274,45 @@ Vantruck: frente Ficha de entidad".
 inicial 1,53 MB) y pruebas manuales en demo. Diseño y avance:
 `claude/diseno-ficha-entidad.md` (Project).
 
+## Frente Informes Excel/PDF (Octubre 2026)
+
+- **Retirados `ExcelService` y `PdfService`** (`servicios/informes/`: 4 archivos y
+  1.276 líneas con sus `.spec.ts`) y **`pdfmake` sale del proyecto**. Todos los informes
+  tabulares de la app salen ahora de una función pura por informe + los renderers
+  genéricos (`ExcelTabularService` / `PdfTabularService`), a través de una fachada por
+  dominio.
+- **Tabla de Excel real** (`TablaDoc.excel?`, extensión aditiva del renderer): filtro y
+  ordenamiento por columna, bandas, encabezado inmovilizado y fila de totales por
+  `SUBTOTAL`, que sigue al filtro. Los 4 consumidores previos no cambian (XML idéntico
+  byte a byte).
+- **Informe de operaciones** por el camino nuevo (`documento-operaciones.util.ts` +
+  `OperacionesExportService`): exporta lo filtrado en pantalla y suma las columnas
+  **Nivel** y **Tarifa**, una por operación, resolviendo entre los dos lados con la
+  jerarquía de `ORDEN_NIVELES` (`nivel-tarifa-op.util.ts`).
+- **Listados de Clientes, Choferes y Proveedores** por el camino nuevo
+  (`documento-entidades.util.ts` + `EntidadesExportService`): Vehículos de Choferes
+  ARREGLADA (salía siempre vacía: leía un campo del modelo viejo), "Vendedores asignados"
+  en Clientes, "Choferes" y "Vehículos" en Proveedores, y Fecha de Nacimiento como fecha
+  real.
+- **Descargas en dev/admin:** `AccionPermiso` suma `descargarListado`, con overrides para
+  el tablero de operaciones y para los tres listados. El botón de los listados no tenía
+  gating: `user`, `demo` y `manager` dejan de verlo.
+- **Borrados dos botones muertos:** la columna "Reimpresión" de la Papelera legado
+  (estaba rota) y el "⬇ Descargar" inerte del tablero de asignaciones.
+- **Bundle: ninguna ruta descarga una librería de exportación al entrar.** IE0 saca el
+  chunk de `pdfmake` (2,51 MB) del build entero; `exceljs` sale de `/op`, de
+  `clientes` / `choferes` / `proveedores` y, junto con `jspdf`, de `ajustes`
+  (1.331,88 kB / 324,46 kB). El inicial sigue en 1,53 MB.
+
+Detalle en `CLAUDE.md` → "Frente Informes Excel/PDF"; deudas y ofertas abiertas en
+"Deuda — tras el frente Informes Excel/PDF".
+
+**Verificación:** por bloque, aplicación por script sobre una copia limpia comparando
+hashes de git, `tsc` (+ `--noUnusedLocals`), `build:demo` (mismas 9 advertencias,
+inicial 1,53 MB), medición de chunks antes y después, y el .xlsx generado de verdad con
+el código real y releído. Diseño y avance: `claude/diseno-informes-excel-pdf.md`
+(Project).
+
 ---
 
 ### Pendiente
@@ -2284,8 +2323,8 @@ Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
 - Finanzas (frentes aparte): cartera de cheques, pago de liquidaciones de
   vendedores como movimiento, plazo de pago por entidad.
 - Ajustes: retirar el `LogService` viejo (colección `logs`) y la Papelera
-  legado (con `objeto-papelera`, `exportToExcelInforme` / `exportToPdfInforme`
-  y PDFMake).
+  legado (con `objeto-papelera`; la exportación y PDFMake ya se fueron en el
+  frente Informes).
 - UX: el `<h1>` sin cerrar de `index.html` envuelve toda la app (ver "Deuda —
   tras el frente Lazy loading + fechas").
 - Frente futuro: el nombre de la entidad como enlace a su ficha en toda la
@@ -2293,9 +2332,10 @@ Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
   como enlace a la ficha en toda la app").
 
 **Transversales**
-- Excel/PDF de los demás informes sobre `DocumentoTabular` + los renderers
-  de `servicios/exportacion/` (saca `exceljs` del chunk de `/op`; la fecha
-  del Excel de choferes, D6, ya se corrigió en el frente Ficha de entidad).
+- ~~Excel/PDF de los demás informes sobre `DocumentoTabular` + los renderers
+  de `servicios/exportacion/`~~ — RESUELTO en el frente Informes: se retiraron
+  `ExcelService` / `PdfService` y `pdfmake`, y ninguna ruta descarga una
+  librería de exportación al entrar.
 - ng-bootstrap 15 sobre Angular 20 (NG0309 en componentes con
   `hostDirectives`): actualizar a la versión de Angular 20.
 - Specs de Karma: 7 no compilan (`npm test` no corre).
