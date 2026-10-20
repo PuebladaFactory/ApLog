@@ -162,6 +162,17 @@
                 </ng-container>
             }
 
+            <ng-container *appPermiso="'operaciones.descargarAsignaciones'">
+                <button
+                    class="btn botonera boton-descargar"
+                    (click)="descargar()"
+                    [disabled]="isLoading"
+                    title="Descargar el informe del tablero (Excel o PDF)"
+                >
+                    ⬇ Descargar
+                </button>
+            </ng-container>
+
             @if (modo === "edicion") {
                 <ng-container *appPermiso="'operaciones.limpiarTablero'">
                     <button

@@ -29,6 +29,7 @@ export type AccionPermiso =
   | 'cerrar'
   | 'liquidar'
   | 'descargarTablero'
+  | 'descargarAsignaciones'
   | 'descargarListado'
   | 'limpiarTablero'
   | 'revertir'

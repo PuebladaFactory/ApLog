@@ -7,6 +7,8 @@ import Swal from 'sweetalert2';
 
 import { ModalObjetosActivosComponent } from 'src/app/raiz/operaciones/modal-objetos-activos/modal-objetos-activos.component';
 import { sumarDias } from 'src/app/shared/utils/fecha.util';
+import { choferesNoOperativos, motivoNoDisponibilidadDe } from 'src/app/shared/utils/no-disponibilidad.util';
+import { preguntarFormatoDescarga } from 'src/app/shared/utils/preguntar-descarga.util';
 
 import { Asignacion, AsignacionItem, AsignacionRef, SujetoAsignacion } from 'src/app/interfaces/asignacion';
 import { Categoria, Vehiculo, Chofer } from 'src/app/interfaces/chofer';
@@ -18,6 +20,7 @@ import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
 import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
 import { AsignacionService } from 'src/app/servicios/operaciones/asignacion.service';
+import { AsignacionesExportService } from 'src/app/servicios/operaciones/asignaciones-export.service';
 import { OperacionService, OperacionCreada, ResultadoCreacionOps, ErrorCreacionOp } from 'src/app/servicios/operaciones/operacion.service';
 import { OperacionesEditorComponent } from 'src/app/raiz/operaciones/operaciones-editor/operaciones-editor.component';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
@@ -97,6 +100,7 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
     private proveedorService: ProveedorService,
     private clienteService: ClienteService,
     private asignacionService: AsignacionService,
+    private asignacionesExport: AsignacionesExportService,
     private operacionService: OperacionService,
     private storageService: StorageService,
     private tarifarioService: TarifarioService,
@@ -660,6 +664,68 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
   }
 
   // ---------------------------------------------------------------------------
+  // Informe del tablero
+  // ---------------------------------------------------------------------------
+
+  /** Excel o PDF del tablero de la fecha: las asignaciones de pantalla (el
+   *  borrador en edición, el tablero confirmado en visor) y los choferes que
+   *  ese día no estaban disponibles. */
+  async descargar(): Promise<void> {
+    const items = this.itemsParaInforme();
+    if (items.length === 0) {
+      Swal.fire({
+        icon: 'info',
+        title: 'No hay asignaciones para exportar',
+        text: 'El tablero de esta fecha está vacío.',
+      });
+      return;
+    }
+
+    const formato = await preguntarFormatoDescarga(
+      `Informe del tablero del ${this.fechaSeleccionada}`,
+      '¿En qué formato lo querés?',
+      'question',
+    );
+    if (!formato) return;
+
+    let error: unknown = null;
+    this.isLoading = true;
+    try {
+      await this.asignacionesExport.descargar({
+        fecha: this.fechaSeleccionada,
+        estado: this.modo === 'edicion' ? 'borrador' : 'confirmado',
+        items,
+        clientes: this.clientesVisibles.map(c => ({ id: c.idCliente, razonSocial: c.razonSocial })),
+        noDisponibilidades: this.noDisponibilidades,
+      }, formato);
+    } catch (e) {
+      error = e;
+    } finally {
+      this.isLoading = false;
+    }
+
+    if (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'No se pudo generar el informe',
+        text: (error as Error)?.message ?? String(error),
+      });
+    }
+  }
+
+  /** Los items en el orden de la grilla (clientes A→Z, y dentro de cada uno
+   *  por categoría y nombre). Los items cuyo cliente no resuelve —dado de baja,
+   *  ver el TODO de papelera en clientesVisibles— NO tienen columna en la
+   *  grilla, pero un informe no puede perderlos: van al final, y el util los
+   *  marca como "Sin resolver" en la columna Cliente. */
+  private itemsParaInforme(): AsignacionItem[] {
+    const ordenados = this.clientesVisibles.flatMap(c => this.itemsDeCliente(c.idCliente));
+    const incluidos = new Set(ordenados.map(it => it.idItem));
+    const huerfanos = this.itemsActuales().filter(it => !incluidos.has(it.idItem));
+    return [...ordenados, ...huerfanos];
+  }
+
+  // ---------------------------------------------------------------------------
   // Pool
   // ---------------------------------------------------------------------------
 
@@ -749,16 +815,12 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
   // No-disponibilidad
   // ---------------------------------------------------------------------------
 
+  // La regla "¿está no operativo en esta fecha?" vive en
+  // shared/utils/no-disponibilidad.util.ts: acá estaba escrita dos veces, con
+  // dos implementaciones distintas (Date vs. comparación de strings), y el
+  // informe del tablero la habría triplicado.
   private calcularChoferesNoOperativosPorFecha(fecha: string): void {
-    this.noOperativosSet.clear();
-    const fechaMs = new Date(fecha + 'T00:00:00').getTime();
-    for (const nd of this.noDisponibilidades) {
-      const desdeMs = new Date(nd.desde + 'T00:00:00').getTime();
-      const hastaMs = nd.hasta ? new Date(nd.hasta + 'T00:00:00').getTime() : null;
-      if (fechaMs >= desdeMs && (hastaMs === null || fechaMs <= hastaMs)) {
-        this.noOperativosSet.add(nd.idChofer);
-      }
-    }
+    this.noOperativosSet = choferesNoOperativos(this.noDisponibilidades, fecha);
   }
 
   isChoferNoOperativo(idChofer: string): boolean {
@@ -766,12 +828,8 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
   }
 
   getMotivoNoDisponibilidad(idChofer: string): string {
-    const fecha = this.fechaSeleccionada;
-    const nd = this.noDisponibilidades.find(n => {
-      if (n.idChofer !== idChofer) return false;
-      return fecha >= n.desde && (!n.hasta || fecha <= n.hasta);
-    });
-    return nd?.motivo || 'No disponible';
+    return motivoNoDisponibilidadDe(this.noDisponibilidades, idChofer, this.fechaSeleccionada)
+      || 'No disponible';
   }
 
   // La no-disponibilidad solo aplica a vehículos de chofer DIRECTO.

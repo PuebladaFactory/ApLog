@@ -4,6 +4,8 @@ import { takeUntil } from 'rxjs/operators';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import Swal from 'sweetalert2';
 
+import { choferesNoOperativos, motivoNoDisponibilidadDe } from 'src/app/shared/utils/no-disponibilidad.util';
+
 import { AsignacionItem } from 'src/app/interfaces/asignacion';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Proveedor } from 'src/app/interfaces/proveedor';
@@ -207,26 +209,18 @@ export class CargaAsignacionComponent implements OnInit, OnDestroy {
     }
   }
 
+  // La regla "¿está no operativo en esta fecha?" vive en
+  // shared/utils/no-disponibilidad.util.ts: estaba escrita acá y otras dos
+  // veces en TableroAsignacionesComponent, con dos implementaciones distintas
+  // (Date vs. comparación de strings).
   private calcularChoferesNoOperativosPorFecha(fecha: string): void {
-    this.noOperativosSet.clear();
-    const fechaMs = new Date(fecha + 'T00:00:00').getTime();
-    for (const nd of this.noDisponibilidades) {
-      const desdeMs = new Date(nd.desde + 'T00:00:00').getTime();
-      const hastaMs = nd.hasta ? new Date(nd.hasta + 'T00:00:00').getTime() : null;
-      if (fechaMs >= desdeMs && (hastaMs === null || fechaMs <= hastaMs)) {
-        this.noOperativosSet.add(nd.idChofer);
-      }
-    }
+    this.noOperativosSet = choferesNoOperativos(this.noDisponibilidades, fecha);
   }
 
   getMotivoNoDisponibilidad(idChofer: string): string {
     if (!this.fechaSeleccionada) return 'No disponible';
-    const fecha = this.fechaSeleccionada;
-    const nd = this.noDisponibilidades.find(n => {
-      if (n.idChofer !== idChofer) return false;
-      return fecha >= n.desde && (!n.hasta || fecha <= n.hasta);
-    });
-    return nd?.motivo || 'No disponible';
+    return motivoNoDisponibilidadDe(this.noDisponibilidades, idChofer, this.fechaSeleccionada)
+      || 'No disponible';
   }
 
   // ---------------------------------------------------------------------------

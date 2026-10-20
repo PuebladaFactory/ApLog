@@ -245,8 +245,16 @@ export class PermisosService {
     // distinta de 'vincularFactura' (adjunta un archivo a un informe ya
     // existente en Facturación) y de 'anular'.
     liquidar: 'crear',
-    // Exporta el tablero de asignaciones (excel), no escribe.
+    // Exporta el informe del tablero de OPERACIONES (Excel), no escribe. El
+    // comentario original decía "tablero de asignaciones": era correcto cuando
+    // esta acción gobernaba el botón inerte de ese tablero, pero desde IE1b
+    // gobierna la descarga real del tablero de operaciones.
     descargarTablero: 'leer',
+    // Exporta el informe del tablero de ASIGNACIONES (Excel o PDF), no escribe.
+    // Acción propia y no 'descargarTablero': son dos informes distintos, de dos
+    // pantallas distintas, y el negocio los habilita a roles distintos (ver los
+    // overrides).
+    descargarAsignaciones: 'leer',
     // Exporta el listado de una entidad (Clientes/Choferes/Proveedores) a
     // Excel: lee lo que ya está en pantalla, no escribe.
     descargarListado: 'leer',
@@ -287,6 +295,14 @@ export class PermisosService {
     // exige que conserve esta acción en su pantalla principal pese a no
     // tener 'eliminar' general en el módulo.
     'operaciones.limpiarTablero': { user: true },
+    // 'descargarAsignaciones' mapea a 'leer', que en 'operaciones' da
+    // user=true y demo=true. Se baja demo (mismo criterio que el resto de las
+    // descargas del frente Informes) y se CONSERVA user, a diferencia de
+    // 'descargarTablero': el tablero de asignaciones es la pantalla principal
+    // del único empleado activo y el informe es de su propio trabajo del día,
+    // no el informe de administración del mes. Mismo razonamiento que
+    // 'limpiarTablero', que también se aparta de la matriz por esta pantalla.
+    'operaciones.descargarAsignaciones': { demo: false },
     // Los tres listados de entidades (frente Informes, IE3b): 'descargarListado'
     // mapea a 'leer', y 'leer' en 'entidades' da user=true y demo=true — pero
     // bajar el listado completo de clientes, choferes o proveedores es una
