@@ -4789,13 +4789,20 @@ Después del backup completo y de migrar `choferes` (incluida la papelera):
 2. Sin reglas ni índices nuevos: la ficha solo lee colecciones que ya están mapeadas.
 
 ### Deuda — tras el frente Informes Excel/PDF
-- **Etiqueta "Municipio Operativa"** en los listados de Clientes y Proveedores: no
-  concuerda en género ("Municipio Operativo"). Se dejó tal cual la del informe viejo a
-  propósito — es la que el usuario conoce y cambiar un encabezado es decisión de
-  producto. ("Provincia Operativa" sí está bien.)
-- **Badge de nivel de tarifa del tablero de operaciones:** sigue mostrando un badge por
-  lado (cliente y chofer). Con `nivelTarifaOp` ya se puede colapsar a uno solo con la
-  misma jerarquía que usa el informe; es un cambio visible, queda como oferta.
+- ~~**Etiqueta "Municipio Operativa"** en los listados de Clientes y Proveedores~~ —
+  CORREGIDA a "Municipio Operativo" en un fix posterior al cierre del frente. Las otras
+  tres etiquetas del par Operativa (Dirección, Localidad, Provincia) ya concordaban, y
+  las cuatro Fiscal no tienen género.
+- **Badge de nivel de tarifa del tablero de operaciones: se queda con uno por lado**
+  (cliente y chofer) — decisión tomada al cierre del frente, viéndolo en pantalla: los
+  dos niveles juntos informan y no estorban. Si el usuario pide uno solo,
+  `nivelTarifaOp` ya resuelve la jerarquía y el cambio es de template. En el informe de
+  Excel sí va uno solo, y por un motivo que NO aplica a la pantalla: con los dos lados
+  en la celda, el filtro de la Tabla trataría "Especial - General" como un valor
+  distinto de "Especial" y la columna dejaría de servir para filtrar u ordenar;
+  separarlos pediría una columna por lado y filtros compuestos, que no se justifica para
+  este dato. La pantalla no filtra por el badge, así que ahí el doble dato no cuesta
+  nada.
 - **`arrayFacOp` y `$choferes` de `objeto-papelera`** se siguen cargando sin ningún
   consumidor desde que se fue la columna "Reimpresión" (IE4). Se van con la Papelera
   legado (frente Ajustes).

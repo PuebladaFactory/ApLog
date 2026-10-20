@@ -51,9 +51,12 @@ export interface DatosLibroProveedores {
 
 /** Las 12 columnas que Cliente y Proveedor comparten, en el orden del informe
  *  viejo (ExcelService.exportarClientesTablaExcel, que servía a los dos).
- *  Las etiquetas se mantienen TAL CUAL las de hoy, incluidas "Municipio
- *  Operativa" y "Provincia Operativa": son las que el usuario ya conoce y
- *  cambiarlas no es parte de este frente. */
+ *  Las etiquetas son las del informe viejo —las que el usuario ya conoce—, con
+ *  una sola corrección de concordancia de género en "Municipio Operativo".
+ *  Las otras tres del par Operativa (Dirección, Localidad, Provincia) ya
+ *  concordaban, y las cuatro Fiscal no tienen género. Al tocar una etiqueta:
+ *  tienen que seguir siendo únicas y sin [ ] # ', que es lo que exige la
+ *  referencia estructurada de la Tabla de Excel. */
 const COLUMNAS_EMPRESA: ColumnaDoc[] = [
   col('Razón Social', 'texto', 28),
   col('CUIT', 'texto', 14),
@@ -63,7 +66,7 @@ const COLUMNAS_EMPRESA: ColumnaDoc[] = [
   col('Provincia Fiscal', 'texto', 16),
   col('Dirección Operativa', 'texto', 26),
   col('Localidad Operativa', 'texto', 18),
-  col('Municipio Operativa', 'texto', 18),
+  col('Municipio Operativo', 'texto', 18),
   col('Provincia Operativa', 'texto', 16),
   col('Condición Fiscal', 'texto', 18),
   col('Contactos', 'texto', 38),
