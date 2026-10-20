@@ -3735,15 +3735,17 @@ Todo se probó en demo; nada se deployó a Vantruck.
 | **CÓMO** | `ExcelTabularService` / `PdfTabularService` (`servicios/exportacion/`) | dibujar un `DocumentoTabular` / `LibroTabular`; nada del dominio |
 | **QUIÉN** | una fachada por dominio | resolver los datos, llamar al renderer y descargar |
 
-Las 6 fachadas de hoy: `LiquidacionExportService` (`informes-liq/`),
+Las 7 fachadas de hoy: `LiquidacionExportService` (`informes-liq/`),
 `ResumenOpExportService` (`reportes/resumenes-op/`), `ComisionesExportService`
 (`vendedores/`), `FinanzasExportService` (`finanzas-nueva/`), `OperacionesExportService`
-(`operaciones/`) y `EntidadesExportService` (`entidades/`) — las dos últimas, de este
-frente. El componente llama SOLO a la fachada de su dominio; nunca al renderer ni a la
-función pura. De las 6, la única que loguea es `LiquidacionExportService` (REIMPRIMIR, y
-solo si el documento tiene número: decisión E5 del frente Excel/PDF); un listado o un
-informe del mes no deja registro. (`ReciboPdfService` queda fuera del esquema: el Recibo /
-Orden de pago no es una tabla, dibuja con jsPDF directo — y sí loguea REIMPRIMIR.)
+(`operaciones/`), `EntidadesExportService` (`entidades/`) y `AsignacionesExportService`
+(`operaciones/`) — `OperacionesExportService` y `EntidadesExportService` son de este
+frente; `AsignacionesExportService`, de AS1, posterior al cierre. El componente llama SOLO
+a la fachada de su dominio; nunca al renderer ni a la función pura. De las 7, la única que
+loguea es `LiquidacionExportService` (REIMPRIMIR, y solo si el documento tiene número:
+decisión E5 del frente Excel/PDF); un listado o un informe del mes no deja registro.
+(`ReciboPdfService` queda fuera del esquema: el Recibo / Orden de pago no es una tabla,
+dibuja con jsPDF directo — y sí loguea REIMPRIMIR.)
 
 ### Tabla de Excel real (IE2)
 
@@ -3866,6 +3868,61 @@ siguió, avisando. Un PASO 0 detecta el desvío cuando es grande; con un solo va
 que decide es el criterio. **Desde IE4** el bloque del chat ya no lleva hashes: van solo
 en el archivo de la instrucción, generados con `git rev-parse` / `git hash-object` y nunca
 tipeados.
+
+### Informe del tablero de asignaciones (AS1, posterior al cierre)
+
+El informe que IE4 había retirado, reescrito sobre el mecanismo de este frente. NO es el
+viejo: ese era un LAYOUT —matriz de clientes con celdas pintadas por categoría, notas de
+celda, bloques laterales y una hoja oculta para un ida y vuelta por Excel que nunca se
+cableó— y `LibroTabular` no tiene relleno por celda, ni notas, ni celdas combinadas. El
+viejo quedó registrado en `claude/diseno-informes-excel-pdf.md` §7, por si alguna vez se
+quiere la réplica visual; haría falta extender el renderer compartido.
+
+`shared/utils/documento-asignaciones.util.ts` (puro) + `AsignacionesExportService`
+(`servicios/operaciones/`), **Excel y PDF**: con 9 y 6 columnas entra legible en PDF, a
+diferencia del informe de operaciones (22 columnas, D5). Dos hojas, las dos Tabla de Excel
+y sin fila de totales:
+- **Asignaciones** — una fila por asignación: Cliente · Categoría · Dominio · Chofer ·
+  Proveedor · Observación · Hoja de ruta · Estado · Motivo anulación. Exporta lo que está
+  EN PANTALLA (el borrador en modo edición, el tablero confirmado en visor) y el subtítulo
+  dice cuál de los dos. Un item cuyo cliente ya no resuelve no tiene columna en la grilla,
+  pero sí fila en el informe: va al final, con Cliente "Sin resolver" — un informe no puede
+  perder items.
+- **No disponibles** — una fila por chofer no disponible Y VEHÍCULO: Chofer · Dominio ·
+  Categoría · Desde · Hasta · Motivo. Solo las vigentes en la fecha del tablero, no todas
+  las cargadas.
+
+Decisiones que conviene no reabrir:
+- **Chofer y Proveedor en columnas separadas**, y **Estado** separado de **Motivo
+  anulación**: es la lección de IE2b. Un "Anulada: el cliente canceló" sería un valor
+  distinto de "Anulada" para el filtro de la Tabla, y la columna dejaría de servir.
+- **No hay columna de operación.** `AsignacionItem.idOperacion` guarda el document id de
+  Firestore (`altaDesdeAsignacion` le asigna `db.generarId('operaciones')`), no el número
+  visible, que es `Operacion.numeroOperacion`.
+- **Una fila por chofer Y vehículo** en la hoja 2: es lo que permite filtrar por categoría.
+  Un chofer sin vehículos propios aparece igual, con esas dos celdas vacías.
+- **`Hasta` sin valor va VACÍO** en el Excel ("—" en el PDF): un guión en una columna de
+  fecha la vuelve de texto y rompe el filtro y el orden (regla de `valorParaTabla`, IE2).
+
+**Permiso `descargarAsignaciones`** → `leer`, con override `{ demo: false }`:
+dev/admin/user sí, demo y manager no. NO reusa `descargarTablero`, que desde IE1b gobierna
+el tablero de OPERACIONES y quedó en dev/admin (IE2c) — este tablero es la pantalla
+principal del único empleado activo y el informe es de su propio trabajo del día. No
+necesita `user: true`: `leer` en `operaciones` ya lo da, y lo único de lo que hay que
+apartarse en la matriz es `demo`.
+
+**`shared/utils/no-disponibilidad.util.ts`:** la regla "¿está no operativo en esta fecha?"
+estaba escrita CUATRO veces —el par `calcularChoferesNoOperativosPorFecha` +
+`getMotivoNoDisponibilidad`, duplicado en `tablero-asignaciones` y en `carga-asignacion`, y
+en cada par con dos implementaciones distintas: `new Date(f + 'T00:00:00')` contra
+comparación de strings—. Queda UNA sola, por string (la convención del proyecto), y los dos
+componentes delegan conservando sus fallbacks en el caller. `carga-asignacion` entró al
+bloque solo por esto: dejar ahí la cuarta copia habría dejado el JSDoc del util afirmando
+"única definición" en falso.
+
+El bundle no se movió donde importa: **ninguna ruta pide `exceljs` ni `jspdf`**, pese a que
+la fachada inyecta los DOS renderers, porque los cargan con `import()`. El chunk de
+`operaciones` sube de 200,00 a 214,17 kB (el código nuevo) y el inicial sigue en 1,53 MB.
 
 ## Deuda conocida
 
@@ -4050,10 +4107,11 @@ desuscribía). **Convención para shells nuevos:** `tabs: TabRuta[]` + getter
 
 ### Deuda menor — tablero-asignaciones
 
-~~**Informe Excel (`descargar`):** inerte, muestra aviso.~~ — RESUELTO en el frente
-Informes (IE4): el botón y su método se borraron (D6). Si el informe se quiere de vuelta,
-se escribe de cero sobre `LibroTabular` desde `AsignacionItem[]`; el viejo quedó
-registrado en `claude/diseno-informes-excel-pdf.md` §7.
+~~**Informe Excel (`descargar`):** inerte, muestra aviso.~~ — el botón y su método se
+borraron en el frente Informes (IE4, D6), y el informe VOLVIÓ en AS1, reescrito de cero
+sobre `LibroTabular`, con Excel y PDF y una hoja de choferes no disponibles — ver "Informe
+del tablero de asignaciones". El viejo quedó registrado en
+`claude/diseno-informes-excel-pdf.md` §7.
 
 **No-disponibilidad sin probar end-to-end:** la atenuación de vehículos de proveedor está
 correctamente ausente en el tablero (diferida a operaciones-editor), pero verificar la
@@ -4232,6 +4290,13 @@ hasta|null, motivo, activa. Lógica derivada "si el único vehículo no está, l
 no está". Rehace la interfaz `NoDisponibilidadChofer`, el modal completo y el consumo del
 tablero; toca `operaciones-editor` (no-disp de choferes de proveedor se resuelve allá).
 El modal actual quedó con arreglo mínimo hasta entonces.
+
+⚠️ **Desde AS1 la regla "¿está no operativo en esta fecha?" vive en
+`shared/utils/no-disponibilidad.util.ts`**, no en los componentes (antes estaba escrita
+cuatro veces entre `tablero-asignaciones` y `carga-asignacion`): el rediseño la cambia
+ahí. Y el informe del tablero deja dicho en una nota el límite del modelo actual —la
+no-disponibilidad es solo de choferes, no de proveedores ni de vehículos sueltos—, que es
+justo lo que este rediseño viene a levantar: al hacerlo hay que actualizar esa nota.
 
 **`clientesVisibles` getter "con trabajo"** (arma Map + ordena en cada acceso): candidato
 a cachear si hubiera cientos de clientes. Hoy trivial.
@@ -4806,9 +4871,9 @@ Después del backup completo y de migrar `choferes` (incluida la papelera):
 - **`arrayFacOp` y `$choferes` de `objeto-papelera`** se siguen cargando sin ningún
   consumidor desde que se fue la columna "Reimpresión" (IE4). Se van con la Papelera
   legado (frente Ajustes).
-- El informe del tablero de asignaciones quedó sin botón (IE4). Si se quiere de vuelta,
-  se escribe de cero sobre `LibroTabular` desde `AsignacionItem[]`; el viejo quedó
-  registrado en `claude/diseno-informes-excel-pdf.md` §7.
+- ~~El informe del tablero de asignaciones quedó sin botón (IE4)~~ — REPUESTO en AS1
+  (20/10), reescrito de cero sobre `LibroTabular`, con Excel y PDF: ver "Informe del
+  tablero de asignaciones".
 
 ### Frente futuro — nombre de la entidad como enlace a la ficha en toda la app
 Análisis hecho al cierre del frente Ficha de entidad (18/10/2026); se encara como FRENTE

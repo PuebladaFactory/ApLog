@@ -2313,6 +2313,36 @@ inicial 1,53 MB), medición de chunks antes y después, y el .xlsx generado de v
 el código real y releído. Diseño y avance: `claude/diseno-informes-excel-pdf.md`
 (Project).
 
+## Informe del tablero de asignaciones (Octubre 2026)
+
+- **Vuelve el informe del tablero de asignaciones**, que el frente Informes había retirado
+  por inerte (IE4, D6). Reescrito de cero sobre `LibroTabular`: el viejo era un layout con
+  celdas pintadas por categoría y notas de celda, que el renderer genérico no tiene.
+- **Dos hojas, en Excel y en PDF:** "Asignaciones" (una fila por asignación: cliente,
+  categoría, dominio, chofer o proveedor, observación, hoja de ruta, estado y motivo de
+  anulación) y "No disponibles" (una fila por chofer no disponible y vehículo, con desde,
+  hasta y motivo, solo las vigentes en la fecha del tablero). Exporta lo que está en
+  pantalla: el borrador en modo edición, el tablero confirmado en modo visor.
+- **Permiso propio `descargarAsignaciones`** (dev/admin/user; demo no). No reusa
+  `descargarTablero`, que desde IE1b gobierna el tablero de operaciones y quedó en
+  dev/admin.
+- **`no-disponibilidad.util.ts`:** la regla "¿está no operativo en esta fecha?" estaba
+  escrita cuatro veces entre `tablero-asignaciones` y `carga-asignacion`, con dos
+  implementaciones distintas. Queda una sola y los dos componentes delegan.
+- **Bundle:** ninguna ruta pide `exceljs` ni `jspdf`, pese a que la fachada inyecta los dos
+  renderers. El inicial sigue en 1,53 MB.
+
+Detalle en `CLAUDE.md` → "Frente Informes Excel/PDF" → "Informe del tablero de
+asignaciones".
+
+**Verificación:** round-trip por hash de los nueve archivos y rematerialización del bloque
+desde su propia instrucción, `tsc` (+ `--noUnusedLocals`), `build:demo` (mismas 9
+advertencias, inicial 1,53 MB), medición de las cinco rutas contra los chunks de las
+librerías de exportación, y el .xlsx y el .pdf generados de verdad con el código real y
+revisados, con casos límite (proveedor sin chofer resuelto, chofer dado de baja, anulada
+sin motivo, cliente borrado, chofer sin vehículos y con dos, no-disponibilidad que no
+cubre la fecha).
+
 ---
 
 ### Pendiente
