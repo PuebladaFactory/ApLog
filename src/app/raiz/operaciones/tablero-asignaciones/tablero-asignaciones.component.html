@@ -162,21 +162,6 @@
                 </ng-container>
             }
 
-            <ng-container *appPermiso="'operaciones.descargarTablero'">
-                <button
-                    class="btn botonera boton-descargar"
-                    (click)="descargar()"
-                    [disabled]="!tablero"
-                    title="{{
-                        tablero
-                            ? 'Descargar informe'
-                            : 'Debe cargar un tablero antes de descargar'
-                    }}"
-                >
-                    ⬇ Descargar
-                </button>
-            </ng-container>
-
             @if (modo === "edicion") {
                 <ng-container *appPermiso="'operaciones.limpiarTablero'">
                     <button

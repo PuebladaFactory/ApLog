@@ -10,9 +10,6 @@ import { Proveedor } from 'src/app/interfaces/proveedor';
 import { RefTarifaHabilitada, nivelesHabilitados } from 'src/app/interfaces/tarifa-habilitada';
 import { EtiquetaNivelTarifaPipe } from 'src/app/shared/pipes/etiqueta-nivel-tarifa.pipe';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
-import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
-import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
-import { LogService } from 'src/app/servicios/log/log.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
 import { PapeleraService } from 'src/app/servicios/papelera/papelera.service';
@@ -39,7 +36,7 @@ export class ObjetoPapeleraComponent implements OnInit {
   private tarifasProveedorFallback: RefTarifaHabilitada[] | null = null;
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
 
-  constructor(public activeModal: NgbActiveModal, private dbFirebase: DbFirestoreService, private storageService: StorageService,  private pdfServ: PdfService, private excelServ: ExcelService, private logService: LogService, private proveedorService: ProveedorService, private papeleraService: PapeleraService){}
+  constructor(public activeModal: NgbActiveModal, private dbFirebase: DbFirestoreService, private storageService: StorageService,  private proveedorService: ProveedorService, private papeleraService: PapeleraService){}
 
   ngOnInit(): void {  
     console.log("this.fromParent", this.fromParent);    
@@ -137,65 +134,6 @@ export class ObjetoPapeleraComponent implements OnInit {
     return { max, min }; // Devolvemos un objeto con el máximo y el mínimo
   }
   
-
-  reimprimirFac(formato: string) {    
-
-    //reimpresion general
-    if (formato === 'excel') {
-      //console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );      
-      this.excelServ.exportToExcelInforme(this.objeto, this.arrayFacOp, this.$clientes, this.$choferes, 'factura');
-      this.logService.logEvent("REIMPRESION", "facturaCliente", `Reimpresion de detalle en excel de Factura Eliminada del Cliente ${this.objeto.razonSocial}`, this.objeto.idFacturaCliente, true);
-    } else if(formato === 'pdf') {
-      //console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );
-      this.pdfServ.exportToPdfInforme(this.objeto, this.arrayFacOp, this.$clientes, this.$choferes, 'factura');
-      this.logService.logEvent("REIMPRESION", "facturaCliente", `Reimpresion de detalle en pdf de Factura Eliminada del Cliente ${this.objeto.razonSocial}`, this.objeto.idFacturaCliente, true);
-    } 
-
-
-/*         switch(this.fromParent.modo){
-            case 'facturaCliente':
-              ////////////// FACTURA CLIENTE ///////////////////////
-              if (formato === 'excel') {
-                //console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );      
-                this.excelServ.exportToExcelInforme(this.objeto, this.arrayFacOp, this.$clientes, this.$choferes, 'factura');
-                this.logService.logEvent("REIMPRESION", "facturaCliente", `Reimpresion de detalle en excel de Factura Eliminada del Cliente ${this.objeto.razonSocial}`, this.objeto.idFacturaCliente, true);
-              } else if(formato === 'pdf') {
-                //console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );
-                this.pdfServ.exportToPdfInforme(this.objeto, this.arrayFacOp, this.$clientes, this.$choferes, 'factura');
-                this.logService.logEvent("REIMPRESION", "facturaCliente", `Reimpresion de detalle en pdf de Factura Eliminada del Cliente ${this.objeto.razonSocial}`, this.objeto.idFacturaCliente, true);
-              }   
-              break
-            case 'facturaChofer':
-              ////////////// FACTURA CHOFER ///////////////////////
-              if (formato === 'excel') {
-                //console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );      
-                this.excelServ.exportToExcelInforme(this.objeto, this.arrayFacOp, this.$clientes, this.$choferes, 'factura');
-                this.logService.logEvent("REIMPRESION", "facturaChofer", `Reimpresion de detalle en excel de Factura Eliminada del Chofer ${this.objeto.apellido} ${this.objeto.nombre}`, this.objeto.idFacturaCliente, true);
-              } else if(formato === 'pdf') {
-                //console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );
-                this.pdfServ.exportToPdfInforme(this.objeto, this.arrayFacOp, this.$clientes, this.$choferes, 'factura');
-                this.logService.logEvent("REIMPRESION", "facturaChofer", `Reimpresion de detalle en pdf de Factura Eliminada del Chofer ${this.objeto.apellido} ${this.objeto.nombre}`, this.objeto.idFacturaCliente, true);
-              }  
-              break
-            case 'facturaProveedor':
-              if (formato === 'excel') {
-                ////////////// FACTURA PROVEEDOR ///////////////////////
-                //console.log("3)factura y facturasOpProveedor: ",factura[0], this.operacionFac );      
-                this.excelServ.exportToExcelInforme(this.objeto, this.arrayFacOp, this.$clientes, this.$choferes, 'factura');
-                this.logService.logEvent("REIMPRESION", "facturaProveedor", `Reimpresion de detalle en excel del Proveedor ${this.objeto.razonSocial}`, this.objeto.idFacturaProveedor, true);
-              } else if(formato === 'pdf') {
-                //console.log("3)factura y facturasOpProveedor: ",factura[0], this.operacionFac );
-                this.pdfServ.exportToPdfInforme(this.objeto, this.arrayFacOp, this.$clientes, this.$choferes, 'factura');
-                this.logService.logEvent("REIMPRESION", "facturaProveedor", `Reimpresion de detalle en excel del Proveedor ${this.objeto.razonSocial}`, this.objeto.idFacturaProveedor, true);
-              }   
-            break
-            default:
-            break
-        } */
-      
-      
-      
-    }
 
     getProveedor(id: string){
       let proveedor:Proveedor[];

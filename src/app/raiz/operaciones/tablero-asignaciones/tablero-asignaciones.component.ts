@@ -659,13 +659,6 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
     this.asignacionService.limpiarBorradorEnCurso();
   }
 
-  // El informe Excel debe reescribirse para AsignacionItem[] (modelo nuevo).
-  // TODO: cierre de módulo — reescribir informe Excel para el modelo nuevo.
-  descargar(): void {
-    Swal.fire({ icon: 'info', title: 'Próximamente',
-      text: 'La descarga de informes estará disponible próximamente.' });
-  }
-
   // ---------------------------------------------------------------------------
   // Pool
   // ---------------------------------------------------------------------------
