@@ -5,6 +5,7 @@ import { AjustesUsuariosComponent } from './ajustes-usuarios/ajustes-usuarios.co
 import { RoleGuard } from 'src/app/guards/role.guard';
 import { RegistroComponent } from './registro/registro.component';
 import { PapeleraComponent } from './papelera/papelera.component';
+import { RecalculoTarifaComponent } from './recalculo-tarifa/recalculo-tarifa.component';
 
 const routes: Routes = [
   {path: '', component:AjustesControlComponent,
@@ -21,6 +22,10 @@ const routes: Routes = [
       {path: 'papelera', component:PapeleraComponent,
         canActivate: [RoleGuard],
         data: { roles: ['god', 'admin', 'demo'] }, // no se permiten usuarios
+      },
+      {path: 'recalculo-tarifa', component:RecalculoTarifaComponent,
+        canActivate: [RoleGuard],
+        data: { roles: ['god'] }, // solo god
       },
   ]}
 ];

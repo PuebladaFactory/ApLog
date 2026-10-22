@@ -125,13 +125,9 @@ export class PapeleraComponent implements OnInit {
       case "operaciones":
         id = logDoc.objeto.idOperacion;
         titulo = "Operación";
-        logDoc.objeto.estado = {
-          abierta: true,
-          cerrada: false,
-          facturada: false,
-        };
-        logDoc.objeto.km = 0;
-
+        // El reseteo se hace más abajo, después de validar que no queden
+        // informes vivos y de que el usuario confirme: si se aborta, el
+        // objeto no debe quedar mutado.
         break;
       case "clientes":
         id = logDoc.objeto.idCliente;
@@ -169,6 +165,25 @@ export class PapeleraComponent implements OnInit {
         break;
     }
     console.log("id", id);
+
+    if (logDoc.logEntry.coleccion === "operaciones") {
+      // Si sobrevivieron informes del cierre anterior, restaurar crearía una
+      // operación abierta que al cerrarse generaría informes duplicados y
+      // sumaría dos veces en los resúmenes mensuales.
+      this.isLoading = true;
+      const colecciones = await this.coleccionesConInformes(id);
+      this.isLoading = false;
+
+      if (colecciones.length > 0) {
+        this.mensajesError(
+          `No se puede restaurar la operación ${id}: todavía existen informes de operación en ${colecciones.join(", ")}. ` +
+            `Hay que eliminarlos antes de restaurarla, o la operación va a quedar duplicada al cerrarse.`,
+          "error",
+        );
+        return;
+      }
+    }
+
     delete logDoc.objeto.id;
 
     const confirmacion = await Swal.fire({
@@ -183,6 +198,9 @@ export class PapeleraComponent implements OnInit {
     });
 
     if (confirmacion.isConfirmed) {
+      if (logDoc.logEntry.coleccion === "operaciones") {
+        this.resetearOperacionAFormaDeAlta(logDoc.objeto);
+      }
       this.isLoading = true;
       await this.addItem(logDoc, id, titulo); // ahora espera el resultado
       this.isLoading = false;
@@ -243,6 +261,101 @@ export class PapeleraComponent implements OnInit {
         this.mensajesError("error en la restauracion del objeto", "error");
       }
     }
+  }
+
+  /**
+   * Devuelve las colecciones de InformeOp donde todavía existe un informe de
+   * esta operación. Si devuelve algo, la operación no se puede restaurar.
+   * Si una consulta falla, la colección se informa igual: ante la duda, no
+   * se restaura.
+   */
+  private async coleccionesConInformes(idOperacion: number): Promise<string[]> {
+    const colecciones = [
+      "informesOpClientes",
+      "informesOpChoferes",
+      "informesOpProveedores",
+      "infOpLiqClientes",
+      "infOpLiqChoferes",
+      "infOpLiqProveedores",
+    ];
+
+    const conInformes: string[] = [];
+
+    for (const coleccion of colecciones) {
+      try {
+        const res = await this.dbFirebase.obtenerDocsPorIdsOperacion(
+          coleccion,
+          [idOperacion],
+        );
+        if (res.encontrados.length > 0) {
+          conInformes.push(coleccion);
+        }
+      } catch (e) {
+        console.error(`Error al revisar ${coleccion}:`, e);
+        conInformes.push(`${coleccion} (no se pudo verificar)`);
+      }
+    }
+
+    return conInformes;
+  }
+
+  /**
+   * Devuelve la operación a su forma de alta.
+   *
+   * Al restaurar desde la papelera el documento conserva todo lo que se le
+   * escribió durante el cierre y la liquidación. Si eso queda, la operación
+   * vuelve "abierta" pero el sistema la sigue considerando procesada: el
+   * cierre falla con "ya fue procesada en resúmenes" y quedan punteros a
+   * informes que ya no existen.
+   *
+   * Se conservan los datos propios del alta (fecha, cliente, chofer, patente,
+   * tarifaTipo, tarifas eventual/personalizada, observaciones, hoja de ruta,
+   * acompañante) y se limpia todo lo que nace en el cierre.
+   */
+  private resetearOperacionAFormaDeAlta(op: any): void {
+    // EstadoOp tiene 7 campos, no 3.
+    op.estado = {
+      abierta: true,
+      cerrada: false,
+      facCliente: false,
+      facChofer: false,
+      facturada: false,
+      proformaCl: false,
+      proformaCh: false,
+    };
+
+    op.km = 0;
+
+    // Punteros a los InformeOp del cierre anterior.
+    op.facturaCliente = 0;
+    op.facturaChofer = 0;
+
+    // Multiplicadores: son decisión del cierre, en el alta valen 1.
+    op.multiplicadorCliente = 1;
+    op.multiplicadorChofer = 1;
+
+    // Valores calculados en el cierre.
+    if (op.valores?.cliente) {
+      op.valores.cliente.acompValor = 0;
+      op.valores.cliente.kmAdicional = 0;
+      op.valores.cliente.aCobrar = op.valores.cliente.tarifaBase ?? 0;
+      delete op.valores.cliente.adExtraValor;
+    }
+
+    if (op.valores?.chofer) {
+      op.valores.chofer.acompValor = 0;
+      op.valores.chofer.kmAdicional = 0;
+      op.valores.chofer.aPagar = op.valores.chofer.tarifaBase ?? 0;
+      delete op.valores.chofer.adExtraValor;
+    }
+
+    // Campos que no existen en una operación recién dada de alta.
+    // altaOperacionYActualizarTablero escribe el objeto completo, así que
+    // borrarlos acá los deja fuera del documento nuevo.
+    delete op.resumenProcesado;
+    delete op.lockLiquidacion;
+    delete op.acompanienteCant;
+    delete op.adExtraConcepto;
   }
 
   mensajesError(msj: string, resultado: string) {

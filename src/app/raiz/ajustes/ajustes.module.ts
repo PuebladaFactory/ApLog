@@ -10,6 +10,7 @@ import { RegistroComponent } from './registro/registro.component';
 import { NgbDatepickerModule } from '@ng-bootstrap/ng-bootstrap';
 import { PapeleraComponent } from './papelera/papelera.component';
 import { FilterPipeModule } from 'ngx-filter-pipe';
+import { RecalculoTarifaComponent } from './recalculo-tarifa/recalculo-tarifa.component';
 
 
 
@@ -19,7 +20,8 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
     AjustesUsuariosComponent,
     UsuariosEdicionComponent,
     RegistroComponent,
-    PapeleraComponent
+    PapeleraComponent,
+    RecalculoTarifaComponent
   ],
   imports: [
     CommonModule,

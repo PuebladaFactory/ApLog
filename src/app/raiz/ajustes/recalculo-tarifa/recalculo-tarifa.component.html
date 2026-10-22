@@ -1,0 +1,370 @@
+<div class="mt-3">
+
+  <div class="alert alert-secondary py-2">
+    <strong>Vista previa.</strong> Esta pantalla no modifica ningún dato:
+    solo muestra cómo quedarían las operaciones del período si se
+    recalcularan con la tarifa vigente del cliente.
+  </div>
+
+  <!-- ============ FILTROS ============ -->
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="row g-2 align-items-end">
+
+        <div class="col-md-5">
+          <label class="form-label mb-1">Cliente</label>
+          <select class="form-select" [(ngModel)]="idClienteSel">
+            <option [ngValue]="0">Seleccionar...</option>
+            <option *ngFor="let c of clientes" [ngValue]="c.idCliente">
+              {{ c.razonSocial }}
+            </option>
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label mb-1">Mes</label>
+          <select class="form-select" [(ngModel)]="mesSel">
+            <option *ngFor="let m of meses" [ngValue]="m.valor">
+              {{ m.nombre }}
+            </option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label mb-1">Año</label>
+          <select class="form-select" [(ngModel)]="anioSel">
+            <option *ngFor="let a of anios" [ngValue]="a">{{ a }}</option>
+          </select>
+        </div>
+
+        <div class="col-md-2 d-grid">
+          <button class="btn btn-primary" (click)="generar()" [disabled]="cargando || procesando">
+            <span *ngIf="cargando" class="spinner-border spinner-border-sm me-1"></span>
+            Generar
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ RESUMEN ============ -->
+  <div class="card mb-3" *ngIf="preview">
+    <div class="card-body">
+      <div class="row">
+
+        <div class="col-md-5">
+          <h5 class="mb-1">{{ preview.razonSocial }}</h5>
+          <div class="text-muted small">
+            {{ nombreMes(preview.periodo.mes) }} {{ preview.periodo.anio }}
+            ({{ preview.periodo.desde }} a {{ preview.periodo.hasta }})
+          </div>
+          <div class="small mt-2">
+            Tarifa vigente:
+            <span class="badge bg-secondary">{{ preview.tarifaVigente.nivel }}</span>
+            <span class="ms-1">id {{ preview.tarifaVigente.idTarifa }}</span>
+            <span class="ms-1 text-muted">({{ preview.tarifaVigente.fecha }})</span>
+          </div>
+        </div>
+
+        <div class="col-md-7">
+          <div class="row text-center">
+            <div class="col">
+              <div class="text-muted small">Abiertas</div>
+              <div class="fs-5">{{ preview.totales.cantidadAbiertas }}</div>
+            </div>
+            <div class="col">
+              <div class="text-muted small">Cerradas</div>
+              <div class="fs-5">{{ preview.totales.cantidadCerradas }}</div>
+            </div>
+            <div class="col">
+              <div class="text-muted small">No recalculables</div>
+              <div class="fs-5" [class.text-danger]="preview.totales.cantidadNoRecalculables > 0">
+                {{ preview.totales.cantidadNoRecalculables }}
+              </div>
+            </div>
+            <div class="col">
+              <div class="text-muted small">Diferencia total</div>
+              <div class="fs-5" [ngClass]="claseDiferencia(preview.totales.diferenciaTotal)">
+                {{ preview.totales.diferenciaTotal | formatearValor : "$" }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TABLA ============ -->
+  <div *ngIf="preview">
+
+    <div class="alert alert-info" *ngIf="preview.filas.length === 0">
+      No se encontraron operaciones de este cliente en el período
+      (se excluyen las de tarifa eventual).
+    </div>
+
+    <div class="table-responsive" *ngIf="preview.filas.length > 0">
+      <table class="table table-sm table-bordered align-middle">
+        <thead class="table-light">
+          <tr>
+            <th></th>
+            <th>Op</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+            <th>Hoja ruta</th>
+            <th>Patente</th>
+            <th>Tarifa</th>
+            <th class="text-end">Base</th>
+            <th class="text-end">Acomp.</th>
+            <th class="text-end">Km</th>
+            <th class="text-end">Total actual</th>
+            <th class="text-end">Total nuevo</th>
+            <th class="text-end">Diferencia</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let f of preview.filas" [ngClass]="claseFila(f)">
+
+            <td class="text-center">
+              <i *ngIf="f.advertencias.length > 0"
+                 class="bi bi-exclamation-triangle-fill text-warning"
+                 [title]="textoAdvertencias(f)"></i>
+            </td>
+
+            <td>{{ f.idOperacion }}</td>
+            <td>{{ formatearFecha(f.fecha) }}</td>
+
+            <td>
+              <span class="badge" [ngClass]="claseEstado(f)">
+                {{ textoEstado(f) }}
+              </span>
+            </td>
+
+            <td>{{ f.hojaRuta }}</td>
+            <td>{{ f.patente }}</td>
+            <td class="small">{{ textoTarifa(f) }}</td>
+
+            <td class="text-end small">
+              {{ f.actual.tarifaBase | formatearValor : "$" }}
+              <span *ngIf="f.recalculable && f.nueva.tarifaBase !== f.actual.tarifaBase">
+                <br><strong>{{ f.nueva.tarifaBase | formatearValor : "$" }}</strong>
+              </span>
+            </td>
+
+            <td class="text-end small">
+              {{ f.actual.acompValor | formatearValor : "$" }}
+              <span *ngIf="f.recalculable && f.nueva.acompValor !== f.actual.acompValor">
+                <br><strong>{{ f.nueva.acompValor | formatearValor : "$" }}</strong>
+              </span>
+            </td>
+
+            <td class="text-end small">
+              {{ f.actual.kmAdicional | formatearValor : "$" }}
+              <span *ngIf="f.recalculable && f.nueva.kmAdicional !== f.actual.kmAdicional">
+                <br><strong>{{ f.nueva.kmAdicional | formatearValor : "$" }}</strong>
+              </span>
+            </td>
+
+            <td class="text-end">{{ f.actual.total | formatearValor : "$" }}</td>
+
+            <td class="text-end fw-semibold">
+              <span *ngIf="f.recalculable">{{ f.nueva.total | formatearValor : "$" }}</span>
+              <span *ngIf="!f.recalculable" class="text-muted">—</span>
+            </td>
+
+            <td class="text-end fw-semibold" [ngClass]="claseDiferencia(f.diferencia)">
+              <span *ngIf="f.recalculable">{{ f.diferencia | formatearValor : "$" }}</span>
+              <span *ngIf="!f.recalculable" class="text-muted">—</span>
+            </td>
+
+          </tr>
+        </tbody>
+
+        <tfoot class="table-light">
+          <tr>
+            <th colspan="12" class="text-end">Diferencia total</th>
+            <th class="text-end" [ngClass]="claseDiferencia(preview.totales.diferenciaTotal)">
+              {{ preview.totales.diferenciaTotal | formatearValor : "$" }}
+            </th>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- ============ ADVERTENCIAS ============ -->
+    <div class="card mt-3" *ngIf="preview.totales.cantidadNoRecalculables > 0">
+      <div class="card-header bg-warning-subtle">
+        Operaciones que no se pueden recalcular
+        ({{ preview.totales.cantidadNoRecalculables }})
+      </div>
+      <ul class="list-group list-group-flush">
+        <ng-container *ngFor="let f of preview.filas">
+          <li class="list-group-item small" *ngIf="!f.recalculable">
+            <strong>Op {{ f.idOperacion }}</strong>
+            ({{ formatearFecha(f.fecha) }}) — {{ textoAdvertencias(f) }}
+          </li>
+        </ng-container>
+      </ul>
+    </div>
+
+    <!-- ============ ACCIONES ============ -->
+    <div class="card mt-3" *ngIf="hayCambios">
+      <div class="card-body">
+
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+
+          <button class="btn btn-outline-primary"
+                  (click)="simular()"
+                  [disabled]="procesando">
+            <span *ngIf="procesando" class="spinner-border spinner-border-sm me-1"></span>
+            Simulacro (no escribe)
+          </button>
+
+          <button class="btn btn-danger"
+                  (click)="aplicarReal()"
+                  [disabled]="procesando || !simulacroOk">
+            Aplicar en producción
+          </button>
+
+          <span class="text-muted small" *ngIf="!simulacroOk">
+            Corré el simulacro primero.
+          </span>
+
+          <button class="btn btn-outline-secondary btn-sm ms-auto"
+                  (click)="limpiar()"
+                  [disabled]="procesando">
+            Limpiar
+          </button>
+
+        </div>
+
+        <div class="progress mt-3" style="height: 6px;" *ngIf="procesando">
+          <div class="progress-bar progress-bar-striped progress-bar-animated"
+               [style.width.%]="porcentajeProgreso"></div>
+        </div>
+
+        <div class="small text-muted mt-1" *ngIf="procesando">
+          {{ progreso.hechas }} / {{ progreso.total }}
+        </div>
+
+      </div>
+    </div>
+
+    <div class="mt-3" *ngIf="!hayCambios">
+      <button class="btn btn-outline-secondary btn-sm" (click)="limpiar()">
+        Limpiar
+      </button>
+    </div>
+
+    <!-- ============ REPORTE ============ -->
+    <div class="card mt-3" *ngIf="resultado">
+      <div class="card-header"
+           [ngClass]="resultado.dryRun ? 'bg-primary-subtle' : 'bg-success-subtle'">
+        <strong>
+          {{ resultado.dryRun ? "Resultado del simulacro" : "Recálculo aplicado" }}
+        </strong>
+        <span class="text-muted small ms-2" *ngIf="resultado.dryRun">
+          no se escribió ningún dato
+        </span>
+      </div>
+
+      <div class="card-body">
+
+        <div class="row text-center mb-3">
+          <div class="col">
+            <div class="text-muted small">Operaciones</div>
+            <div class="fs-5">{{ resultado.aplicadas }}</div>
+          </div>
+          <div class="col">
+            <div class="text-muted small">Diferencia</div>
+            <div class="fs-5">
+              {{ resultado.diferenciaAplicada | formatearValor : "$" }}
+            </div>
+          </div>
+          <div class="col">
+            <div class="text-muted small">Informes de liquidación</div>
+            <div class="fs-5">{{ resultado.ajustesInformeLiq.length }}</div>
+          </div>
+          <div class="col">
+            <div class="text-muted small">Fallidas</div>
+            <div class="fs-5" [class.text-danger]="resultado.fallidas.length > 0">
+              {{ resultado.fallidas.length }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Ajustes de InformeLiq -->
+        <div *ngIf="resultado.ajustesInformeLiq.length > 0">
+          <h6>Informes de liquidación de la contraparte</h6>
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered">
+              <thead class="table-light">
+                <tr>
+                  <th>Número</th>
+                  <th>Tipo</th>
+                  <th class="text-end">Ops del recálculo</th>
+                  <th class="text-end">Ops del informe</th>
+                  <th class="text-end">Total actual</th>
+                  <th class="text-end">Total nuevo</th>
+                  <th class="text-end">Delta</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let a of resultado.ajustesInformeLiq">
+                  <td>{{ a.numeroInterno }}</td>
+                  <td>{{ a.tipo }}</td>
+                  <td class="text-end">{{ a.cantidadOps }}</td>
+                  <td class="text-end">{{ a.cantidadOpsTotal }}</td>
+                  <td class="text-end">{{ a.totalActual | formatearValor : "$" }}</td>
+                  <td class="text-end fw-semibold">
+                    {{ a.totalNuevo | formatearValor : "$" }}
+                  </td>
+                  <td class="text-end" [ngClass]="claseDiferencia(a.delta)">
+                    {{ a.delta | formatearValor : "$" }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="small text-muted">
+            Si algún delta no se explica por el aumento de tarifa, es un
+            desfasaje preexistente entre el total guardado y la suma real de
+            los montos de contraparte. Revisalo antes de aplicar.
+          </p>
+        </div>
+
+        <!-- Fallidas -->
+        <div *ngIf="resultado.fallidas.length > 0" class="mt-3">
+          <h6 class="text-danger">Fallidas</h6>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item small" *ngFor="let f of resultado.fallidas">
+              <strong *ngIf="f.idOperacion">Op {{ f.idOperacion }}</strong>
+              <strong *ngIf="!f.idOperacion">Informe de liquidación</strong>
+              — {{ f.motivo }}
+            </li>
+          </ul>
+        </div>
+
+        <!-- Ops sin InformeLiq -->
+        <div *ngIf="resultado.opsSinInformeLiq.length > 0" class="mt-3">
+          <h6 class="text-warning">
+            Operaciones liquidadas sin informe de liquidación vigente
+          </h6>
+          <p class="small text-muted">
+            Su contraparte figura como liquidada pero no se encontró un
+            InformeLiq no anulado que las contenga. El monto de contraparte
+            se actualiza igual; no hay total que ajustar.
+          </p>
+          <div class="small">
+            {{ resultado.opsSinInformeLiq.join(", ") }}
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>
