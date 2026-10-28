@@ -2395,3 +2395,378 @@ Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
   eventuales D7, legajos FL4). Del frente Ficha de entidad: normalizar la
   fecha de nacimiento de los choferes migrados ("Checklist — migración a
   Vantruck: frente Ficha de entidad").
+
+## Deuda saldada — consolidado desde CLAUDE.md (Octubre 2026)
+
+### Switch completado — tablero-asignaciones / operaciones-editor / carga-asignacion
+
+tablero-diario, carga-tablero-diario y operaciones-table (y su modal embebido) fueron
+eliminados junto con sus interfaces exclusivas (TableroDiario, ChoferAsignadoBase) y los
+métodos acotados de TableroService/DbFirestoreService que solo ellos usaban
+(getTableroPorFecha viejo, guardarTablero, altaMultipleOperacionesYActualizarTablero,
+getCategoriaDesdeOperacion, deleteTablero — el último ya estaba comentado).
+
+Única ruta de tablero de asignaciones activa hoy: tablero-asignaciones (pestaña 'Tablero
+Asignaciones' en el shell de Operaciones). La pestaña 'Tablero Diario' fue quitada de
+op-control.component.ts. La ruta 'diario' fue quitada del routing — /op/diario ya no
+resuelve a ningún componente.
+
+Los dos caminos de alta activos son tablero-asignaciones (principal) y carga-asignacion
+(caso especial — agregar a fecha ya confirmada o alta puntual), ambos convergiendo en
+operaciones-editor + altaDesdeAsignacion.
+
+**Cerrado (Bloque 7 del frente Botones y Permisos):** los 8 botones de acción de
+`tablero-asignaciones` (4 modales de gestión + Alta de Op/Guardar/Descargar/Limpiar)
+conectados a `PermisosService` vía `*appPermiso`. Detalle completo, incluidos los dos
+primeros `overrides` reales del servicio, en "Frente Botones y Permisos" → Bloque 7.
+
+### Resuelto — pestaña activa derivada de la URL (shell-con-pestañas)
+
+Resuelto en el cierre del frente InformeLiqNuevo (B4).
+Aplicado a los 13 shells, incluido LiqGral; tarifas-control y
+finanzas-control abandonaron su suscripción propia (la de finanzas no se
+desuscribía).
+
+> La convención vigente para shells nuevos vive en la skill `shells-con-pestanas`.
+
+### Componente operaciones-editor (migración de operaciones-table — COMPLETADA)
+
+`operaciones-table` migrado a un componente NUEVO `operaciones-editor`
+(`src/app/raiz/operaciones/operaciones-editor/`), construido de cero al lado del viejo
+(patrón de migración estructural profunda). `operaciones-table` fue eliminado por completo
+en el switch de Asignaciones (Bloques 13-19) — ya no está declarado en OperacionesModule.
+
+> El contrato vigente de `operaciones-editor` (entrada, salida, y que no calcula valores ni persiste) vive en la skill `modulo-operaciones`.
+
+**Reglas de decisión en `ResolucionTarifaOpService` (frente Generador, P2):**
+la resolución de chofer/vehículo pendientes, eventual forzada, candidatos
+de tarifa por lado, espejo de Personalizada y detección de selección manual
+se movieron a `servicios/tarifario/resolucion-tarifa-op.service.ts`, que
+también usa el generador de operaciones de prueba. Lo que sigue describe
+esas reglas (siguen vigentes); el editor ya no inyecta `ChoferService` /
+`ProveedorService` y conserva solo el estado de UI.
+
+**Resolución de pendientes:**
+- Chofer (caso proveedor, `op.chofer.id === ''`): selector con
+  `ChoferService.getChoferesPorProveedor(idProveedor)`. Al resolver,
+  `ResolucionTarifaOpService.asignarChofer` recalcula si la op es eventual con las
+  tarifas habilitadas del PROVEEDOR (`resolverTarifasHabilitadasChofer`) y devuelve
+  `eventualRecalculado`.
+- Vehículo (`op.vehiculo.id === ''`): selector con vehículos del dueño (proveedor si
+  `op.proveedor`, chofer si directo), filtro síncrono sobre `getVehiculosActuales()`.
+
+**Eliminar = excluir del resultado (Opción B):** `Set<idItem>` de eliminadas; se ocultan
+del render y se excluyen del array devuelto. NO muta `operacionesCreadas` (cancelar reabre
+desde cero, inocuo). NO toca Firestore.
+
+**Toggle eventual reversible:** `eventualOriginal: Map<idItem, boolean>` guarda si la op
+era eventual al entrar (estado de UI, no ensucia la Operacion — reemplaza el viejo
+`OperacionRuntime`). La mutación coherente (`datosTarifaEventual`, manteniendo el
+invariante) vive en `OperacionFactoryService.aplicarEventual`.
+
+**Badges de tarifa del encabezado:** los niveles habilitados del CLIENTE vivo
+(`nivelesHabilitados(cliente.tarifasHabilitadas)`), uno por nivel; informativos. La
+tarifa elegida de cada lado se ve en su fila.
+
+`OperacionRuntime` y `patenteChofer` ELIMINADOS en operaciones-editor. El viejo
+operaciones-table (que sí los usaba) fue eliminado por completo en el switch de
+Asignaciones — no quedan copias vivas de estos tipos en ningún componente.
+
+### Componente carga-asignacion (migración de carga-multiple — COMPLETADA)
+
+`carga-multiple` migrado a un componente NUEVO `carga-asignacion`
+(`src/app/raiz/operaciones/carga-asignacion/`), construido de cero al lado del viejo (mismo
+patrón que `tablero-asignaciones`/`operaciones-editor`). `carga-multiple` ELIMINADO en sesión
+posterior (ver "Eliminado en esta sesión" más abajo).
+
+**Selección sin pool de vehículos:** a diferencia de `tablero-asignaciones` (que arrastra
+vehículos concretos), acá se elige CHOFER DIRECTO o PROVEEDOR (checkboxes), sin resolver
+vehículo. `armarItems()` arma cada `AsignacionItem` con `sujeto.idVehiculo: null` siempre —
+la resolución de vehículo (único candidato o varios) queda enteramente para
+`operaciones-editor`. El `item.ref` que arma este componente es un placeholder
+(`dominio: ''`, `categoria: {catOrden:0, nombre:''}`); ver más abajo cómo se corrige.
+
+> La regla vigente de que `altaDesdeAsignacion` es el único lugar donde se reconstruye el `ref` de un `AsignacionItem` vive en la skill `modulo-operaciones`.
+
+**Fusión con tablero existente y bloqueo de borrador ajeno (agregado en la sesión de
+carga-asignacion):** `altaDesdeAsignacion(fecha, creadas, siExisteBorrador: 'reemplazar'|'bloquear' = 'reemplazar')`.
+Antes de armar el tablero final, lee el existente: si `asignado===true`, fusiona
+(`existente.items ++ creadas`) — habilita altas parciales repetidas sobre la misma fecha ya
+confirmada. Si `asignado===false` (borrador) y `siExisteBorrador==='bloquear'`, aborta sin
+escribir con mensaje explicando que debe resolverse desde el Tablero de Asignaciones. El
+default `'reemplazar'` preserva el comportamiento de `tablero-asignaciones` (que ya manda su
+`itemsBorrador` completo, no un delta — fusionar ahí duplicaría). La validación de
+pendientes (chofer/vehículo) sigue aplicando solo a `creadas`, nunca a los items previos que
+arrastra la fusión. `ref` del item también se reconstruye en este mismo paso (junto con
+`sujeto`) desde los datos finales de la op — idempotente para `tablero-asignaciones`,
+corrige el placeholder de `carga-asignacion`.
+
+**Filtro defensivo asimétrico (choferes directos vs. proveedores):** `choferesDirectosBase`
+excluye choferes directos sin vehículos (`vehiculos.length === 0`) porque tener vehículo es
+requisito de alta de chofer directo — es un seguro, no una regla de negocio activa.
+`proveedoresBase` NO aplica ese filtro: un proveedor sin vehículos es un caso válido a
+mostrar (el chofer/vehículo del proveedor se resuelve después, en operaciones-editor).
+
+**Flujo de alta:** igual a `tablero-asignaciones.altaOp()` en 3 etapas (crear ops básicas vía
+`crearOperacionesDesdeAsignacion` → editar en `operaciones-editor` modal → `altaDesdeAsignacion`
+con `siExisteBorrador: 'bloquear'`), pero sin borrador ni modo edición/visor: no hay estado de
+larga vida que sobreviva navegación. El componente arma items en memoria y delega el resto a
+`OperacionService`; sí usa `AsignacionService`, pero solo para la consulta de lectura de
+`existeBorradorSinConfirmar` (ver más abajo), no para estado persistente propio.
+
+**Pre-resolución de vehículo único:** al armar los items (`armarItems()`), si el chofer
+directo o proveedor seleccionado tiene exactamente UN vehículo asociado, se resuelve de
+inmediato: `sujeto.idVehiculo` y `ref` (dominio, categoria) se completan con los datos reales
+en ese momento, en vez de nacer vacíos. Con 2+ vehículos, sigue diferido a
+`operaciones-editor` sin cambios. El viewmodel `ChoferDirectoSeleccionable`/
+`ProveedorSeleccionable` pasó de guardar `categorias: Categoria[]` a
+`vehiculos: ConIdType<Vehiculo>[]` (las categorías para los badges se derivan de ahí). El
+filtro defensivo de choferes directos sin vehículo ahora chequea `vehiculos.length === 0`
+(antes `categorias.length === 0`), mismo criterio.
+
+**Orden alfabético:** `clientesActivos`, `choferesDirectosBase` y `proveedoresBase` se
+ordenan por `localeCompare` (`razonSocial` / `apellido`) al construirse — antes llegaban en
+el orden crudo de sus respectivos observables.
+
+**Detección temprana de borrador sin confirmar:** `AsignacionService.existeBorradorSinConfirmar(fecha)`
+— nuevo método, indica si existe un tablero `asignado:false` para la fecha. Se consulta en
+`onFechaChange()` (async) antes de que el usuario invierta tiempo armando una selección que
+`altaDesdeAsignacion` bloquearía igual al final. Si detecta un borrador: `bloqueadoPorBorrador
+= true`, deshabilita select de cliente + checkboxes + botón de alta, y muestra un banner de
+alerta persistente en el body (no solo un Swal transitorio) indicando que debe resolverse
+desde el Tablero de Asignaciones. No reemplaza la validación de `altaDesdeAsignacion` (que
+sigue siendo la protección real) — es una advertencia temprana adicional.
+
+> El fix de altura del modal de `carga-asignacion` y su deuda abierta (está limitado a `tablero-op`) viven en la skill `modulo-operaciones`.
+
+**Eliminado en esta sesión:** `carga-multiple.component.ts/.html/.scss/.spec.ts` borrados
+completos, entrada quitada de `OperacionesModule`, import muerto quitado de
+`tablero-op.component.ts`. Diagnóstico previo confirmó sin referencias cruzadas
+(`OperacionRuntime`/`TarifaBase`/`GrupoTabla` eran copias locales en
+`carga-tablero-diario`/`operaciones-table`, no compartidas — ambos componentes fueron, a su
+vez, eliminados en una sesión posterior junto con `tablero-diario`, ver "Switch completado").
+
+**Caller confirmado:** `tablero-op.component.ts`, método `modalCargaMultiple()` (nombre
+heredado del componente viejo, no renombrado — el cuerpo ya abre `CargaAsignacionComponent`).
+Candidato a renombrar el método en una sesión futura por claridad, no urgente.
+
+### ~~Pendiente — sidebar: apertura/cierre según tamaño de pantalla y navegación~~ — RESUELTO (SB1, Octubre 2026)
+`HomeComponent`: dos modos con breakpoint 1600 px (`matchMedia`, se recalcula solo al
+cruzar). Ancho: fijo, empuja el contenido, abierto por defecto. Angosto: superpuesto con
+fondo (z-index 1045/1040, debajo de los modales), cerrado por defecto, se cierra al navegar
+(`NavigationEnd`), con Esc o tocando el fondo. Fuera los listeners de resize (uno tiraba
+`TypeError`), `sidebarAbierto` / clase `cerrado`, `<main id="content">`. Texto original:
+
+**Síntoma (Nico, Octubre 2026):** el sidebar "ya no se cierra de forma
+automática"; revisar su comportamiento con distintos tamaños de pantalla y
+en las distintas pestañas/pantallas. Sin reproducir todavía: falta precisar
+en qué ancho y después de qué acción (navegar desde el menú, cambiar el
+tamaño de la ventana, cambiar de pestaña del navegador).
+
+**Cómo funciona hoy (relevado del código, sin cambios):**
+- El estado vive en `HomeComponent` (`raiz/home`), el shell de TODAS las
+  rutas de raiz: `activo: boolean`; el template pone la clase `active`
+  cuando `!activo` (nombre invertido: `active` = oculto,
+  `#sidebar.active { margin-left: -200px }`).
+- Reglas: al iniciar, `activo = window.innerWidth >= 1600`; en CADA evento
+  `resize` se vuelve a calcular igual (pisa lo que eligió el usuario con el
+  botón); el botón ☰ (`toogleSidebar`) lo invierte.
+- **Navegar NO lo cierra:** `HomeComponent` no se recrea al cambiar de
+  ruta hija y no escucha eventos del router; los links del menú son
+  `routerLink` sin `(click)`. Con ancho < 1600, si se abre con ☰ queda
+  abierto en todas las pantallas siguientes hasta cerrarlo a mano o hasta
+  un `resize`. Probable explicación del síntoma.
+- Es un elemento flex al lado del contenido (empuja, no se superpone): en
+  pantallas angostas abierto achica el contenido (tablas anchas como
+  tablero-op o Finanzas).
+- **Bug:** el resize se escucha DOS veces: `@HostListener('window:resize')`
+  (funciona) y `window.addEventListener('resize', this.onResize)` en
+  `ngOnInit` SIN bind → en ese listener `this` es `window` y cada resize
+  tira `TypeError: this.setInitialSidebarState is not a function` en la
+  consola (no rompe el cierre porque el HostListener corre antes).
+- Otros: `<body id="content">` anidado dentro del componente (HTML
+  inválido); `SidebarComponent.navegar()` (solo el logo) escribe `ruta` en
+  localStorage, sin efecto sobre el sidebar; `#menu { height: 93vh }` +
+  `sticky-top`; `home.component.css` conserva media queries comentadas.
+
+**Propuesta (a confirmar al encarar):**
+1. Dos modos por ancho (breakpoint a definir, hoy 1600): ancho → fijo
+   abierto, empuja el contenido (como hoy); angosto → superpuesto
+   (offcanvas) cerrado por defecto, con fondo que lo cierra al tocar
+   afuera.
+2. En modo angosto, cerrarlo al navegar (`Router.events` →
+   `NavigationEnd`) y con Esc.
+3. Reaccionar solo al CRUZAR el breakpoint (`matchMedia(...).addEventListener('change')`
+   o `BreakpointObserver` de CDK, que ya está en el proyecto) en lugar de en
+   cada `resize`: así se respeta la elección manual mientras el ancho no
+   cambia de lado.
+4. Quitar el listener duplicado sin bind; renombrar `activo`/`active` a
+   algo explícito (`sidebarAbierto` / clase `cerrado`); `<body>` → `<main>`.
+5. Pruebas: ≥ 1600, 1200–1599, 768–1199, < 768; navegar desde el menú;
+   abrir/cerrar a mano y redimensionar sin cruzar el breakpoint; volver de
+   otra pestaña del navegador; pantallas con tablas anchas.
+
+### ~~Deuda — RaizModule importa los módulos de feature en forma eager~~ — RESUELTO (frente Lazy loading + fechas, Octubre 2026)
+Ver "Frente Lazy loading + fechas → Lazy loading" (bundle inicial 8,49 → 1,53 MB). Texto
+original:
+`RaizModule` importa en forma EAGER casi todos los módulos de feature
+(Ajustes, Choferes, Legajos, Proveedores, Liquidacion, Vendedores,
+NuevaFacturacion, Reportes; Finanzas salió en el Frente Finanzas), que además se cargan lazy desde
+raiz-routing. Efectos: el lazy loading queda anulado (todo va al bundle
+inicial: causa probable del budget excedido) y el `RouterModule.forChild`
+de cada feature registra sus rutas también en el router de Raiz (hoy no
+ganan porque RaizRoutingModule va primero). No se quita a ciegas: hay
+dependencias reales vía exports (ej. `MigracionComponent`, declarado en
+RaizModule, puede depender de `MigrarDatosComponent`, exportado por
+LiquidacionModule). Frente propio: auditar qué usan realmente
+HomeComponent / SidebarComponent / MigracionComponent y quitar los imports
+eager uno por uno. Detectado en el frente Facturación (F0).
+
+### ~~Pendiente — auditar fechas 'YYYY-MM-DD' vs huso horario en toda la app~~ — RESUELTO (frente Lazy loading + fechas, Octubre 2026)
+Ver "Frente Lazy loading + fechas → Fechas" y "Convenciones". Lo que quedó afuera está en
+"Deuda — tras el frente Lazy loading + fechas". Texto original:
+Averiguar si la inconsistencia de `getPeriodo` se repite en otros lugares.
+Relevamiento preliminar por patrón (sin verificar caso por caso):
+- `new Date('YYYY-MM-DD').getFullYear()/getMonth()/getDate()` → día
+  anterior en Argentina (el 1/1 cae en el año anterior): `excel.service`,
+  `liquidaciones-op`, `proforma` (`facturacion-historico` / `-listado` y
+  `cuenta-corriente.service` se borraron en el Frente Finanzas). También
+  `pdf.service` con `new Date(<fecha>)`.
+- `toISOString().split('T')[0]` (o `slice`) sobre una fecha LOCAL → desde
+  las 21:00 en Argentina da el día siguiente. 16 archivos, entre ellos
+  código vivo: `tablero-asignaciones`, `TableroService`,
+  `tablero-calendario`, `InformeOpFactoryService`, `registro-log`,
+  `papelera`, `baja-objeto`; además `StorageService` y servicios
+  de migración.
+- Pipe `date` sobre strings 'YYYY-MM-DD' (muestra el día anterior):
+  `informe-liq-nuevo-detalle`, `informe-op-anulados`. En Facturación ya se
+  resolvió con `fechaComprobanteLegible`.
+- Comparaciones/ordenamientos con `getTime()` no se ven afectados
+  (corrimiento parejo).
+Criterio a definir: las fechas de negocio son strings 'YYYY-MM-DD' y se
+operan como strings o con helpers en hora local (`toISODateString` de
+`servicios/fechas/date-range.service.ts` ya usa hora local); no usar
+`new Date(string)` ni `toISOString()` para fechas de negocio. Posible util
+único en `servicios/fechas/`. Frente propio (decisión R8 del frente
+Reportes: la auditoría quedó fuera). Semilla: `shared/utils/periodo.util.ts`
+(`periodoDeFecha` toma año y mes del string, sin `Date`), usado por Reportes.
+
+### ~~Deuda — campos legacy de Operacion~~ — RESUELTO (cierre de Tarifas, Octubre 2026)
+Fuera de `Operacion`: el campo de datos de Personalizada, el tipo de tarifa de 4
+booleanos, `adExtraConcepto` y el espejo `valores`. Marca de eventual:
+`datosTarifaEventual !== null`; adicional extra: `op.adExtra` (entrada) →
+`valoresNuevos.<lado>.adExtraValor` (salida); única fuente de valores:
+`valoresNuevos` (tablero-op, su Excel, la papelera, Reportes y comisiones). Las ops de
+demo se limpiaron con la herramienta de `/migracion`; las de Vantruck se traducen con el
+método de migración (ver "Checklist — migración de Tarifas a Vantruck").
+
+### ~~Deuda — Excel/PDF~~ — SALDADA (frente Informes, Octubre 2026)
+`ExcelService` y `PdfService` se retiraron, con `pdfmake`; todos los informes de la app
+salen de `DocumentoTabular` / `LibroTabular` + los renderers de `exportacion/`, por una
+fachada por dominio. Con eso quedaron hechos los cuatro puntos que esta entrada pedía: el
+logo en una sola copia, el import dinámico sacando de verdad las librerías del bundle
+(ninguna ruta las descarga al entrar), el Excel de choferes reescrito y `exceljs` fuera
+de `/op`. Ver "Frente Informes Excel/PDF" y, para lo que quedó abierto, "Deuda — tras el
+frente Informes Excel/PDF".
+
+### Deuda — integración de callers para bajaOperacion/restaurarOperacion
+
+**Saldada (frente Baja de Operación, Septiembre 2026):** la baja de operación
+cerrada desde Liquidación ya tiene camino nuevo (`bajaOperacionCerrada`,
+ver "Coordinadores"). El texto de abajo queda como historial. El código
+legacy sin callers (`DbFirestoreService.eliminarOperacionEInformes`,
+`DbFirestoreService.eliminarInformesPorIdOperacion`,
+`TableroService.anularOpEnTablero`, `TableroService.anularOperacionYActualizarTablero`
+y `AsignacionService.marcarItemAnulado`) fue eliminado en el bloque C3 de ese frente.
+
+Los coordinadores existen y son atómicos (ver "Coordinadores bajaOperacion / restaurarOperacion
+(Operaciones)" más arriba) pero NO tienen caller nuevo todavía. Pendiente:
+- Baja de operación paso a paso (liquidaciones-op / tablero-op, lugar exacto a confirmar):
+  migrar a `OperacionService.bajaOperacion(op, motivo)`.
+- Al migrar ambos callers: evaluar eliminar `TableroService.anularOperacionYActualizarTablero`
+  y `DbFirestoreService.eliminarInformesPorIdOperacion` (único caller)
+  (eliminados — frente Baja de Operación, C3).
+- `editarOperacion` sigue diferido al refactor de Tarifas (sin cambios respecto a la deuda ya
+  registrada).
+- `tablero-op` ya usa `OperacionService.bajaOperacion` para la baja de operaciones
+  abiertas (sesión de migración de tablero-op). Sigue pendiente:
+  - Caller de `restaurarOperacion` desde `PapeleraComponent` (sin cambios respecto a
+    lo ya registrado).
+  - Caller de `bajaOperacion` para operaciones **cerradas** desde el módulo de
+    Liquidaciones (hoy la baja de una op cerrada sigue el camino paso a paso legacy,
+    lugar exacto a confirmar en esa sesión).
+- **Hallazgo (sesión de diseño del frente Log, ago-2026):** mientras `PapeleraComponent`
+  siga llamando a `TableroService.altaOperacionYActualizarTablero` /
+  `anularOperacionYActualizarTablero` (eliminado — frente Baja de Operación, C3), restaurar y dar de baja una operación generan
+  **dos registros de log por una sola acción de usuario**, no uno:
+  - Restaurar: `altaOperacionYActualizarTablero` loguea `'ALTA'` directo, y después llama
+    a `AsignacionService.reactivarItem`, que loguea su propio `'EDITAR'` (vía
+    `registrarLog`).
+  - Baja: `StorageService.deleteItemPapelera` loguea `'BAJA'`, y después
+    `TableroService.anularOperacionYActualizarTablero` (eliminado — frente Baja de Operación, C3) llama a
+    `AsignacionService.marcarItemAnulado` (eliminado — frente Baja de Operación, C3), que loguea su propio `'EDITAR'` — el propio
+    comentario del método ya lo señala (línea ~127-130 de `asignacion.service.ts`).
+  - Los coordinadores atómicos (`bajaOperacion`/`restaurarOperacion`) YA evitan esto:
+    usan las versiones puras `anularItemEnLista`/`reactivarItemEnLista` (sin log
+    propio) en vez de `marcarItemAnulado` (eliminado — frente Baja de Operación, C3)/`reactivarItem`. Migrar los callers de arriba
+    (`PapeleraComponent` → `restaurarOperacion`; baja paso a paso → `bajaOperacion`)
+    elimina el duplicado como efecto colateral — no requiere trabajo aparte.
+  - Diferido a propósito al frente de Papelera (no al frente de Log): decisión explícita
+    tomada en la sesión de diseño de Log, porque esta migración de callers cae del lado
+    "acciones que trabajan con papelera", excluido del nuevo mecanismo de log por
+    criterio de esa sesión.
+
+⚠️ **Actualizado (Frente Papelera, Agosto 2026) — parcialmente saldada, NO borrar esta
+entrada, sigue habiendo deuda real:**
+- `OperacionService.bajaOperacion`/`restaurarOperacion` migraron al mecanismo de
+  papelera por referencia (`PapeleraService`) — `restaurarOperacion` cambió de firma,
+  de `(logDoc: LogDoc)` a `(idEvento: string)`. El caller nuevo es
+  `PapeleraComponent` (`raiz/ajustes/papelera/`, la pantalla NUEVA de este frente,
+  no la vieja renombrada `PapeleraLegadoComponent`) — el hallazgo de arriba (doble
+  log por restaurar/dar de baja una operación, vía
+  `TableroService.altaOperacionYActualizarTablero`/`anularOperacionYActualizarTablero`
+  (eliminado — frente Baja de Operación, C3))
+  queda resuelto para este caller: `PapeleraComponent` llama directo a
+  `restaurarOperacion(idEvento)`, sin pasar por `TableroService`.
+  `bajaOperacion`/`restaurarOperacion` ya no dependen de `LogService`/`LogDoc` —
+  loguean vía `LogRegistroService.agregarAlBatch` dentro del mismo `commitBatch`.
+- **Sigue sin resolver, a propósito, fuera de este frente:** la baja de operación
+  **cerrada** desde Liquidaciones (`liquidaciones-op.component.ts` →
+  `openModalBaja`/`bajaInformeOp`) sigue en su camino legacy
+  (`eliminarOperacionEInformes` (eliminado — frente Baja de Operación, C3) + `TableroService.anularOpEnTablero` (eliminado — frente Baja de Operación, C3) +
+  `StorageService.addSimpleLogPapelera`) — NO pasa por `bajaOperacion`. Motivo
+  puntual (ver también "Fuera de alcance" del Frente Papelera): esa baja también
+  elimina los informes de liquidación, que habría que refactorizar antes de
+  poder unificarla con el coordinador atómico — queda para el frente de
+  Liquidación. `TableroService.anularOperacionYActualizarTablero` (eliminado — frente Baja de Operación, C3) y
+  `DbFirestoreService.eliminarInformesPorIdOperacion` (eliminado — frente Baja de Operación, C3) por lo tanto siguen sin
+  eliminarse (siguen intactos, sin caller nuevo agregado en este frente —
+  `anularOperacionYActualizarTablero` de hecho quedó sin ningún caller real, ver
+  nota en el propio método).
+- `editarOperacion` sigue diferido al refactor de Tarifas, sin cambios.
+
+### Deuda — Liquidación (camino InformeLiqNuevo)
+- ~~Excel/PDF para `InformeLiqNuevo` y los dos botones "Vista previa"~~ —
+  RESUELTO en el Frente Excel/PDF (Septiembre 2026). Ver esa sección y
+  "Deuda — Excel/PDF".
+- ~~Camino nuevo de Facturación para emitidos~~ — RESUELTO en el Frente
+  Facturación (Septiembre 2026): ver/editar emitidos, facturar, desvincular y
+  revertir. Ver esa sección y "Deuda — Facturación".
+- ~~Cascada de Finanzas sobre `InformeLiqNuevo`~~ — RESUELTO en el Frente
+  Finanzas (saldos en `valoresFinancieros`, cuentas calculadas al consultar;
+  editar un emitido respeta neto ≥ 0 con compensaciones).
+- ~~Reportes: ids NaN en los resúmenes por entidad~~ — RESUELTO en el Frente
+  Reportes (`resumenesOp`).
+- ~~`revertirInformeLiq` (camino viejo) no restaura `bloqueadoPorContraparte`~~ y
+  ~~retirar el camino viejo (LiquidacionesOp, Proforma, LiquidacionService,
+  LiquidacionBuilderService, rutas comentadas en liquidacion-routing y
+  LiqGral)~~ — RESUELTO en el frente Lazy loading + fechas (LR1): no tenía ruta
+  ni consumidores vivos. Se quedan el Registro viejo y la Papelera legado
+  (frente Ajustes).
+- ~~InformeVenta (comisiones) quedan huérfanos al dar de baja una operación
+  cerrada~~ — RESUELTO en el Frente Vendedores (`comisionesVenta`).
+- ~~Resúmenes: mes corrido por huso horario~~ — RESUELTO en el Frente
+  Reportes (`periodoDeFecha`).
+- ~~Pantallas viejas que leen por `InformeOpService.obtenerPorIdsOperacion`~~
+  — RESUELTO: el método y `proforma` se borraron en el frente Lazy loading +
+  fechas (LR1 / LR1b).
