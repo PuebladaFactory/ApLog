@@ -151,6 +151,21 @@ cargados.
 siguen en `altaDesdeAsignacion`. Sin suscripciones (resolución síncrona puntual): edita,
 no observa.
 
+### `operaciones-editor` — conducta del componente
+
+**Eliminar = excluir del resultado (Opción B):** `Set<idItem>` de eliminadas; se ocultan
+del render y se excluyen del array devuelto. NO muta `operacionesCreadas` (cancelar reabre
+desde cero, inocuo). NO toca Firestore.
+
+**Toggle eventual reversible:** `eventualOriginal: Map<idItem, boolean>` guarda si la op
+era eventual al entrar (estado de UI, no ensucia la Operacion — reemplaza el viejo
+`OperacionRuntime`). La mutación coherente (`datosTarifaEventual`, manteniendo el
+invariante) vive en `OperacionFactoryService.aplicarEventual`.
+
+**Badges de tarifa del encabezado:** los niveles habilitados del CLIENTE vivo
+(`nivelesHabilitados(cliente.tarifasHabilitadas)`), uno por nivel; informativos. La
+tarifa elegida de cada lado se ve en su fila.
+
 ### `altaDesdeAsignacion` reconstruye el `ref`
 
 **`AsignacionRef` placeholder corregido en `altaDesdeAsignacion`:** `OperacionService.altaDesdeAsignacion`
@@ -175,6 +190,48 @@ pendientes (chofer/vehículo) sigue aplicando solo a `creadas`, nunca a los item
 arrastra la fusión. `ref` del item también se reconstruye en este mismo paso (junto con
 `sujeto`) desde los datos finales de la op — idempotente para `tablero-asignaciones`,
 corrige el placeholder de `carga-asignacion`.
+
+Callers con `'bloquear'`: `carga-asignacion` (`carga-asignacion.component.ts:383-384`) y el
+generador de operaciones de demo (`servicios/desarrollo/generador-operaciones.service.ts:305-307`),
+que da de alta día por día. Con el default `'reemplazar'`: `tablero-asignaciones`.
+
+## Conducta vigente — `carga-asignacion`
+
+**Filtro defensivo asimétrico (choferes directos vs. proveedores):** `choferesDirectosBase`
+excluye choferes directos sin vehículos (`vehiculos.length === 0`) porque tener vehículo es
+requisito de alta de chofer directo — es un seguro, no una regla de negocio activa.
+`proveedoresBase` NO aplica ese filtro: un proveedor sin vehículos es un caso válido a
+mostrar (el chofer/vehículo del proveedor se resuelve después, en operaciones-editor).
+
+**Flujo de alta:** igual a `tablero-asignaciones.altaOp()` en 3 etapas (crear ops básicas vía
+`crearOperacionesDesdeAsignacion` → editar en `operaciones-editor` modal → `altaDesdeAsignacion`
+con `siExisteBorrador: 'bloquear'`), pero sin borrador ni modo edición/visor: no hay estado de
+larga vida que sobreviva navegación. El componente arma items en memoria y delega el resto a
+`OperacionService`; sí usa `AsignacionService`, pero solo para la consulta de lectura de
+`existeBorradorSinConfirmar` (ver más abajo), no para estado persistente propio.
+
+**Pre-resolución de vehículo único:** al armar los items (`armarItems()`), si el chofer
+directo o proveedor seleccionado tiene exactamente UN vehículo asociado, se resuelve de
+inmediato: `sujeto.idVehiculo` y `ref` (dominio, categoria) se completan con los datos reales
+en ese momento, en vez de nacer vacíos. Con 2+ vehículos, sigue diferido a
+`operaciones-editor` sin cambios. El viewmodel `ChoferDirectoSeleccionable`/
+`ProveedorSeleccionable` pasó de guardar `categorias: Categoria[]` a
+`vehiculos: ConIdType<Vehiculo>[]` (las categorías para los badges se derivan de ahí). El
+filtro defensivo de choferes directos sin vehículo ahora chequea `vehiculos.length === 0`
+(antes `categorias.length === 0`), mismo criterio.
+
+**Orden alfabético:** `clientesActivos`, `choferesDirectosBase` y `proveedoresBase` se
+ordenan por `localeCompare` (`razonSocial` / `apellido`) al construirse — antes llegaban en
+el orden crudo de sus respectivos observables.
+
+**Detección temprana de borrador sin confirmar:** `AsignacionService.existeBorradorSinConfirmar(fecha)`
+— nuevo método, indica si existe un tablero `asignado:false` para la fecha. Se consulta en
+`onFechaChange()` (async) antes de que el usuario invierta tiempo armando una selección que
+`altaDesdeAsignacion` bloquearía igual al final. Si detecta un borrador: `bloqueadoPorBorrador
+= true`, deshabilita select de cliente + checkboxes + botón de alta, y muestra un banner de
+alerta persistente en el body (no solo un Swal transitorio) indicando que debe resolverse
+desde el Tablero de Asignaciones. No reemplaza la validación de `altaDesdeAsignacion` (que
+sigue siendo la protección real) — es una advertencia temprana adicional.
 
 ## Deuda abierta — integración de callers para bajaOperacion/restaurarOperacion
 
@@ -293,3 +350,68 @@ para que el host del componente se estire dentro del modal y el footer quede peg
 `carga-asignacion`) sin pasar por `tablero-op`, hay que replicarlo ahí. `operaciones-editor`
 también se beneficia por compartir módulo lazy-loaded, pero no fue verificado a fondo, solo
 visualmente de paso.
+
+## Deuda abierta — `restaurarOperacion` aproxima el estado del alta con una lista manual (BLOQUEANTE para la promoción)
+
+`restaurarOperacion` promete devolver la operación "al estado del ALTA", pero **el estado del
+alta no se persiste en ninguna parte**. El método lo aproxima con una lista escrita a mano:
+algunos campos se fuerzan al default y otros se conservan.
+
+Esa lista es correcta para los campos que sólo escribe el cierre, e **incorrecta para
+cualquier campo escribible tanto en el alta como en el cierre**. Hay al menos dos:
+
+- **`acompaniante` / `acompanianteCant`.** El comentario del código los da como "datos que se
+  cargan al cerrar o al editar el InformeOp" y los fuerza a `false` / `0`. Pero el editor del
+  alta también los carga (`operaciones-editor.component.html:186,199`) y el editor de InformeOp
+  también (commit `897dfee`). Forzarlos a cero **pierde el dato del alta**; conservarlos
+  guardaría el del cierre. Ninguna de las dos opciones es "el estado del alta".
+- **`tarifaAplicadaCliente` / `tarifaAplicadaChofer`.** Se conservan, lo que equivale al valor
+  del alta salvo que se hayan cambiado después en el flujo Personalizada
+  (`modal-detalle-op.component.ts:125-133`), caso en que se conserva el del cierre.
+
+**Impacto: los dos afectan montos.** El acompañante entra en la valorización y la tarifa
+aplicada define los valores enteros. El cambio es silencioso: nadie se entera hasta que
+alguien compara contra el remito.
+
+**Por qué no se arregla re-resolviendo.** El encabezado de `ValoresTarifaService` documenta que
+la elección de la tarifa de cada lado la hace el usuario sobre los candidatos, y que con dos o
+más "no hay forma automática de saber cuál corresponde y se elige a mano". Un re-resolver
+automático en la restauración no puede reproducir una elección manual.
+
+**Por qué no se arregla parcheando los dos campos.** Un parche en acompañante deja la tarifa
+mal, y uno en la tarifa no es implementable (arriba). Y sobre todo deja la clase de bug
+intacta: el próximo campo que se vuelva escribible en los dos momentos repite el problema sin
+que nadie lo note.
+
+**Dirección de la solución.** Persistir el snapshot del alta: congelar al alta lo que el alta
+definió, que es el mismo patrón de snapshot que el proyecto ya usa en `RefCliente`,
+`RefChofer` y el `titulo` de `CategoriaDocumentacion`. Con ese snapshot, `restaurarOperacion`
+deja de aproximar y vuelve literalmente al alta, y la lista escrita a mano desaparece.
+
+**Estado.** No urgente mientras `refactor` no esté en producción. **Bloqueante antes de la
+promoción:** es cambio silencioso de montos en el camino de restaurar. Necesita su propio
+frente de diseño, no un parche.
+
+## Deuda abierta — `editarOperacion` puede fallar sin devolver `Resultado`
+
+`editarOperacion` (`operacion.service.ts:665`) arma la escritura del ítem del tablero
+(`:670`) **antes** del `try`. Si no existe tablero de asignaciones para la fecha de la
+operación, la excepción se escapa: el método no devuelve `Resultado` y el error no pasa por
+`registrarError`. El usuario queda sin saber qué ocurrió.
+
+Viola el invariante de que toda operatoria compleja devuelve `Resultado<T>` y registra el
+error.
+
+**La forma correcta ya existe dos métodos más abajo:** `restaurarOperacion`
+(`operacion.service.ts:622-629`) consulta el tablero antes y, si no existe, devuelve
+`{ exito: false, mensaje: ... }` con el detalle de la inconsistencia. El arreglo es replicar
+esa forma: o mover el armado de la escritura dentro del `try`, o hacer el chequeo temprano con
+retorno de `Resultado` como hace la restauración.
+
+Caller único: `modal-detalle-op.component.ts:246`.
+
+## Deuda abierta — renombre de `modalCargaMultiple()` (cosmética)
+
+**Caller confirmado:** `tablero-op.component.ts`, método `modalCargaMultiple()` (nombre
+heredado del componente viejo, no renombrado — el cuerpo ya abre `CargaAsignacionComponent`).
+Candidato a renombrar el método en una sesión futura por claridad, no urgente.

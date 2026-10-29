@@ -206,7 +206,9 @@ esas reglas (siguen vigentes); el editor ya no inyecta `ChoferService` /
 `ProveedorService` y conserva solo el estado de UI.
 
 **Resolución de pendientes:**
-- Chofer (caso proveedor, `op.chofer.id === ''`): selector con
+- Chofer (caso proveedor): la detección del pendiente (`op.chofer.id === ''`) la hacen los
+  callers, no el servicio (`operaciones-editor.component.ts:148`,
+  `generador-operaciones.service.ts:397`). Selector con
   `ChoferService.getChoferesPorProveedor(idProveedor)`. Al resolver,
   `ResolucionTarifaOpService.asignarChofer` recalcula si la op es eventual con las
   tarifas habilitadas del PROVEEDOR (`resolverTarifasHabilitadasChofer`) y devuelve

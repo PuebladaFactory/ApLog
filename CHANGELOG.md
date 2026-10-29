@@ -2440,18 +2440,7 @@ en el switch de Asignaciones (Bloques 13-19) — ya no está declarado en Operac
 
 > Las reglas vigentes de `ResolucionTarifaOpService` (resolución de chofer y vehículo pendientes, eventual forzada, candidatos por lado, espejo de Personalizada, selección manual) viven en la skill `modulo-tarifas`.
 
-**Eliminar = excluir del resultado (Opción B):** `Set<idItem>` de eliminadas; se ocultan
-del render y se excluyen del array devuelto. NO muta `operacionesCreadas` (cancelar reabre
-desde cero, inocuo). NO toca Firestore.
-
-**Toggle eventual reversible:** `eventualOriginal: Map<idItem, boolean>` guarda si la op
-era eventual al entrar (estado de UI, no ensucia la Operacion — reemplaza el viejo
-`OperacionRuntime`). La mutación coherente (`datosTarifaEventual`, manteniendo el
-invariante) vive en `OperacionFactoryService.aplicarEventual`.
-
-**Badges de tarifa del encabezado:** los niveles habilitados del CLIENTE vivo
-(`nivelesHabilitados(cliente.tarifasHabilitadas)`), uno por nivel; informativos. La
-tarifa elegida de cada lado se ve en su fila.
+> Las conductas vigentes de `operaciones-editor` (eliminar = excluir del resultado, toggle eventual reversible, badges de tarifa del encabezado) viven en la skill `modulo-operaciones`.
 
 `OperacionRuntime` y `patenteChofer` ELIMINADOS en operaciones-editor. El viejo
 operaciones-table (que sí los usaba) fue eliminado por completo en el switch de
@@ -2475,41 +2464,7 @@ la resolución de vehículo (único candidato o varios) queda enteramente para
 
 > El contrato vigente de `siExisteBorrador` en `altaDesdeAsignacion` (fusión con un tablero confirmado, bloqueo ante un borrador ajeno) vive en la skill `modulo-operaciones`.
 
-**Filtro defensivo asimétrico (choferes directos vs. proveedores):** `choferesDirectosBase`
-excluye choferes directos sin vehículos (`vehiculos.length === 0`) porque tener vehículo es
-requisito de alta de chofer directo — es un seguro, no una regla de negocio activa.
-`proveedoresBase` NO aplica ese filtro: un proveedor sin vehículos es un caso válido a
-mostrar (el chofer/vehículo del proveedor se resuelve después, en operaciones-editor).
-
-**Flujo de alta:** igual a `tablero-asignaciones.altaOp()` en 3 etapas (crear ops básicas vía
-`crearOperacionesDesdeAsignacion` → editar en `operaciones-editor` modal → `altaDesdeAsignacion`
-con `siExisteBorrador: 'bloquear'`), pero sin borrador ni modo edición/visor: no hay estado de
-larga vida que sobreviva navegación. El componente arma items en memoria y delega el resto a
-`OperacionService`; sí usa `AsignacionService`, pero solo para la consulta de lectura de
-`existeBorradorSinConfirmar` (ver más abajo), no para estado persistente propio.
-
-**Pre-resolución de vehículo único:** al armar los items (`armarItems()`), si el chofer
-directo o proveedor seleccionado tiene exactamente UN vehículo asociado, se resuelve de
-inmediato: `sujeto.idVehiculo` y `ref` (dominio, categoria) se completan con los datos reales
-en ese momento, en vez de nacer vacíos. Con 2+ vehículos, sigue diferido a
-`operaciones-editor` sin cambios. El viewmodel `ChoferDirectoSeleccionable`/
-`ProveedorSeleccionable` pasó de guardar `categorias: Categoria[]` a
-`vehiculos: ConIdType<Vehiculo>[]` (las categorías para los badges se derivan de ahí). El
-filtro defensivo de choferes directos sin vehículo ahora chequea `vehiculos.length === 0`
-(antes `categorias.length === 0`), mismo criterio.
-
-**Orden alfabético:** `clientesActivos`, `choferesDirectosBase` y `proveedoresBase` se
-ordenan por `localeCompare` (`razonSocial` / `apellido`) al construirse — antes llegaban en
-el orden crudo de sus respectivos observables.
-
-**Detección temprana de borrador sin confirmar:** `AsignacionService.existeBorradorSinConfirmar(fecha)`
-— nuevo método, indica si existe un tablero `asignado:false` para la fecha. Se consulta en
-`onFechaChange()` (async) antes de que el usuario invierta tiempo armando una selección que
-`altaDesdeAsignacion` bloquearía igual al final. Si detecta un borrador: `bloqueadoPorBorrador
-= true`, deshabilita select de cliente + checkboxes + botón de alta, y muestra un banner de
-alerta persistente en el body (no solo un Swal transitorio) indicando que debe resolverse
-desde el Tablero de Asignaciones. No reemplaza la validación de `altaDesdeAsignacion` (que
-sigue siendo la protección real) — es una advertencia temprana adicional.
+> Las conductas vigentes de `carga-asignacion` (filtro defensivo asimétrico, flujo de alta en 3 etapas, pre-resolución de vehículo único, orden alfabético, detección temprana de borrador sin confirmar) viven en la skill `modulo-operaciones`.
 
 > El fix de altura del modal de `carga-asignacion` y su deuda abierta (está limitado a `tablero-op`) viven en la skill `modulo-operaciones`.
 
@@ -2520,9 +2475,7 @@ completos, entrada quitada de `OperacionesModule`, import muerto quitado de
 `carga-tablero-diario`/`operaciones-table`, no compartidas — ambos componentes fueron, a su
 vez, eliminados en una sesión posterior junto con `tablero-diario`, ver "Switch completado").
 
-**Caller confirmado:** `tablero-op.component.ts`, método `modalCargaMultiple()` (nombre
-heredado del componente viejo, no renombrado — el cuerpo ya abre `CargaAsignacionComponent`).
-Candidato a renombrar el método en una sesión futura por claridad, no urgente.
+> El renombre pendiente de `tablero-op.modalCargaMultiple()` (abre `CargaAsignacionComponent`) vive como deuda en la skill `modulo-operaciones`.
 
 ### ~~Pendiente — sidebar: apertura/cierre según tamaño de pantalla y navegación~~ — RESUELTO (SB1, Octubre 2026)
 `HomeComponent`: dos modos con breakpoint 1600 px (`matchMedia`, se recalcula solo al

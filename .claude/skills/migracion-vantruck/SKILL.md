@@ -16,6 +16,14 @@ La forma de la migración todavía no está definida. Opciones en análisis:
 
 Nada de lo que sigue asume una de las dos. Cuando se decida, revisar esta skill completa.
 
+## Bloqueantes para la promoción
+
+Deuda que no puede llegar a producción. Revisar esta lista antes de cualquier switch.
+
+| Qué | Dónde está el detalle |
+|---|---|
+| `restaurarOperacion` aproxima el estado del alta con una lista manual: pierde el acompañante cargado en el alta y puede conservar una elección de tarifa posterior. Cambio silencioso de montos. | skill `modulo-operaciones` |
+
 ## Lo que existe sólo en `main`
 
 `refactor` no se va a fusionar con `main`: el código de `main` está escrito contra campos que

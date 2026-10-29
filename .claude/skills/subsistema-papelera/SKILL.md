@@ -105,17 +105,21 @@ para eventos `'activo'`), objetos secundarios listados en línea sin modal propi
 Restaurar deshabilitado si `estado !== 'activo'`. Tab nuevo ("Papelera (legado)") en
 `AjustesControlComponent`, mismo patrón que el tab de Registro Log.
 
-**Fuera de alcance — SIN tocar:** Facturación, Liquidación, Vendedores — siguen
-escribiendo a la colección vieja `papelera`/`LogDoc` vía `StorageService`, sin
-cambios. Motivo puntual de **Liquidación**: la baja de una operación cerrada desde
-`liquidaciones-op.component.ts` también elimina los informes de liquidación
-asociados (`eliminarOperacionEInformes`, eliminado — frente Baja de Operación, C3) — antes de poder unificarla con
-`OperacionService.bajaOperacion` hay que refactorizar esa eliminación de informes,
-que queda para el frente de Liquidación (ver Deuda actualizada arriba).
-`StorageService.deleteItemPapelera*`/`addSimpleLogPapelera`/
-`deleteItemPapeleraCompuestoAsync` quedan intactos — siguen siendo lo que usan estos
-3 módulos. `BajaObjetoComponent` (modal de motivo) tampoco se tocó — lo siguen
-usando callers viejos y nuevos por igual.
+**Módulos que quedaron fuera de este frente — estado actual:** cuando se hizo el frente,
+Facturación, Liquidación y Vendedores siguieron escribiendo en la colección vieja `papelera`
+vía `StorageService`. Hoy ninguno lo hace: `StorageService.deleteItemPapelera*`/
+`addSimpleLogPapelera`/`deleteItemPapeleraCompuestoAsync` ya no existen (quitados como código
+muerto en LR2a, `6f350b5`), ningún componente de esos tres módulos usa `StorageService`, y la
+colección `papelera` sólo la lee `PapeleraLegadoComponent`. La baja de una operación cerrada,
+que era el motivo puntual de Liquidación, ya está unificada: `liquidaciones-op.component.ts` y
+`eliminarOperacionEInformes` no existen, y la baja se hace desde `InformeOpListadoComponent`
+con `OperacionService.bajaOperacionCerrada`, en una sola transacción que usa el mismo
+`agregarEscriturasBaja` que `bajaOperacion` (evento de papelera + log BAJA), **anula** los dos
+`InformeOp` del par (`estado: 'anulado'` + `anulacion`, con el `idEventoPapelera`; no se
+borran), revierte `resumenesOp` si la op estaba procesada y anula las comisiones de venta y
+los `RegistroOpEventual` activos. De esa unificación no queda nada pendiente.
+`BajaObjetoComponent` (modal de motivo) lo usan los callers nuevos: los listados de choferes,
+clientes y proveedores, `tablero-op` e `informe-op-listado`.
 
 **Fix de permisos encontrado (Security Rules):** la rama `papelera` de
 `permitido()` en `firestore.rules` no le daba a `demo` NINGÚN permiso, pese a que

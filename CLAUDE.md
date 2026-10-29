@@ -690,10 +690,12 @@ este archivo. Antes de trabajar sobre un módulo, leer su skill.
 
 Deuda técnica activa. Actualizar cuando se salda.
 
+- **BLOQUEANTE para la promoción — `restaurarOperacion` aproxima el estado del alta** — el estado del alta no se persiste y la lista manual de campos pierde el acompañante cargado en el alta y puede conservar una tarifa elegida después: cambio silencioso de montos. Necesita frente de diseño (snapshot del alta), no un parche. Detalle: skills `modulo-operaciones` y `migracion-vantruck`.
 - **Región de Cloud Functions en Vantruck** — las funciones de `pf-logistics` siguen en la región default: alinearlas a `southamerica-east1` exige delete + recreate (corte en producción) y agregar `functionsRegion` a `environment.vantruck.ts`. Detalle: skill `migracion-vantruck`.
 - **Bucket de Storage de `pf-logistics`** — antes de llevar Legajos a producción hay que confirmar que el bucket existe, tiene CORS y tiene `storage.rules` desplegadas. Detalle: skill `migracion-vantruck`.
 - **Herramienta de recálculo de tarifas (sólo en `main`)** — existe en producción (`98edb35`) y no en `refactor`; hay que reimplementarla sobre el modelo nuevo porque `RefTarifaAplicada` queda congelada al cerrar y una tarifa con vigencia retroactiva no corrige las operaciones ya cerradas. Detalle: skill `migracion-vantruck`.
 - **Restaurar operaciones desde la Papelera legado** — `PapeleraLegadoComponent.addItem` sigue restaurando operaciones por `TableroService.altaOperacionYActualizarTablero`, que no es atómico y loguea con el `LogService` viejo; el resto de la deuda de callers está saldado. Detalle: skill `modulo-operaciones`.
+- **`editarOperacion` puede fallar sin devolver `Resultado`** — arma la escritura del tablero antes del `try`: si no hay tablero para la fecha, la excepción se escapa sin `Resultado` ni `registrarError` y el usuario no se entera. Detalle: skill `modulo-operaciones`.
 - **Deuda menor del tablero de asignaciones** — la no-disponibilidad no está probada end-to-end y el borrador del tablero se pierde con F5. Detalle: skill `modulo-operaciones`.
 - **operaciones-editor / Tarifas** — estilos SCSS de tarifa duplicados sin consolidar, y el patrón `@if` obligatorio para bindear tarifas nullable. Detalle: skill `modulo-operaciones`.
 - **Fix de altura del modal limitado a `tablero-op`** — el ajuste que estira `carga-asignacion` dentro del modal vive en `tablero-op.component.scss`: otro caller que abra ese modal tiene que replicarlo. Detalle: skill `modulo-operaciones`.
