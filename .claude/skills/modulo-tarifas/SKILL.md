@@ -195,6 +195,25 @@ avance: `claude/diseno-tarifas-cierre.md` (Project).
   `deleteField()` los campos retirados de `Operacion`. Hace falta porque
   `opToFirestore` reescribe lo que se leyó (spread).
 
+## Reglas vigentes — `ResolucionTarifaOpService`
+
+**Reglas de decisión en `ResolucionTarifaOpService` (frente Generador, P2):**
+la resolución de chofer/vehículo pendientes, eventual forzada, candidatos
+de tarifa por lado, espejo de Personalizada y detección de selección manual
+se movieron a `servicios/tarifario/resolucion-tarifa-op.service.ts`, que
+también usa el generador de operaciones de prueba. Lo que sigue describe
+esas reglas (siguen vigentes); el editor ya no inyecta `ChoferService` /
+`ProveedorService` y conserva solo el estado de UI.
+
+**Resolución de pendientes:**
+- Chofer (caso proveedor, `op.chofer.id === ''`): selector con
+  `ChoferService.getChoferesPorProveedor(idProveedor)`. Al resolver,
+  `ResolucionTarifaOpService.asignarChofer` recalcula si la op es eventual con las
+  tarifas habilitadas del PROVEEDOR (`resolverTarifasHabilitadasChofer`) y devuelve
+  `eventualRecalculado`.
+- Vehículo (`op.vehiculo.id === ''`): selector con vehículos del dueño (proveedor si
+  `op.proveedor`, chofer si directo), filtro síncrono sobre `getVehiculosActuales()`.
+
 ## Deuda abierta — Tarifas (tras el cierre del frente)
 - Datos de demo: clientes/choferes/proveedores conservan `idTarifa`/`tarifaAsignada`
   en Firestore (inertes; las ediciones con merge no los borran).

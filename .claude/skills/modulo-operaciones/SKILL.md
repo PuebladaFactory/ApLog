@@ -161,6 +161,21 @@ Para `carga-asignacion` corrige el placeholder una vez que `operaciones-editor` 
 vehículo pendiente. Es el único punto de verdad para "cómo se ve un `AsignacionItem`
 persistido" — no reconstruir `ref` en ningún otro caller.
 
+### `altaDesdeAsignacion` — `siExisteBorrador`
+
+**Fusión con tablero existente y bloqueo de borrador ajeno (agregado en la sesión de
+carga-asignacion):** `altaDesdeAsignacion(fecha, creadas, siExisteBorrador: 'reemplazar'|'bloquear' = 'reemplazar')`.
+Antes de armar el tablero final, lee el existente: si `asignado===true`, fusiona
+(`existente.items ++ creadas`) — habilita altas parciales repetidas sobre la misma fecha ya
+confirmada. Si `asignado===false` (borrador) y `siExisteBorrador==='bloquear'`, aborta sin
+escribir con mensaje explicando que debe resolverse desde el Tablero de Asignaciones. El
+default `'reemplazar'` preserva el comportamiento de `tablero-asignaciones` (que ya manda su
+`itemsBorrador` completo, no un delta — fusionar ahí duplicaría). La validación de
+pendientes (chofer/vehículo) sigue aplicando solo a `creadas`, nunca a los items previos que
+arrastra la fusión. `ref` del item también se reconstruye en este mismo paso (junto con
+`sujeto`) desde los datos finales de la op — idempotente para `tablero-asignaciones`,
+corrige el placeholder de `carga-asignacion`.
+
 ## Deuda abierta — integración de callers para bajaOperacion/restaurarOperacion
 
 - `PapeleraComponent.addItem` (caso `'operaciones'`): hoy llama a
@@ -169,7 +184,7 @@ persistido" — no reconstruir `ref` en ningún otro caller.
   papelera vía `getByField('papelera','idDoc',...)` porque `PapeleraComponent` solo tiene
   `LogDoc` plano, no el id de Firestore.
 
-## Deuda abierta — menor — tablero-asignaciones
+## Deuda abierta — tablero-asignaciones (menor)
 
 ~~**Informe Excel (`descargar`):** inerte, muestra aviso.~~ — el botón y su método se
 borraron en el frente Informes (IE4, D6), y el informe VOLVIÓ en AS1, reescrito de cero
@@ -220,6 +235,14 @@ justo lo que este rediseño viene a levantar: al hacerlo hay que actualizar esa 
 a cachear si hubiera cientos de clientes. Hoy trivial.
 
 **Item con cliente borrado** (papelera) sin columna: `// TODO: refactor Papelera`.
+
+**Cadena de dependencias — esta deuda es el primer eslabón:** `rehacer noDisponibilidad` → `eliminar el log viejo` → `eliminar el camino legado de la papelera`.
+La no-disponibilidad todavía se escribe con el mecanismo viejo: `modal-choferes-no-disponibles`
+usa `StorageService.addItem`/`updateItem` sobre `noOperativo`, que loguea con el `LogService`
+viejo (colección `logs`). Mientras no se rehaga sobre el modelo nuevo (con `LogRegistroService`),
+el log viejo no se puede eliminar. **No la bloquea ninguna de las otras dos; rehacerla destraba
+la eliminación del log viejo** (skill `subsistema-log`) y, detrás de esa, la del camino legado de
+la papelera (skill `subsistema-papelera`).
 
 ## Deuda abierta — Frente futuro — persistencia de filtros/rango de fechas vs. listener en background
 

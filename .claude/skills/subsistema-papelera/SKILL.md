@@ -68,8 +68,8 @@ que lo generó, y una pantalla de listado genérica sobre los eventos.
   `PapeleraService` + `LogRegistroService.agregarAlBatch`, dentro del mismo
   `commitBatch` que ya escribía operaciones/informes/tablero. `restaurarOperacion`
   cambió de firma: de `(logDoc: LogDoc)` a `(idEvento: string)`. **Sin
-  secundarios** — los `informesOpXxx` que la baja elimina NO se archivan (mismo
-  comportamiento que ya tenía el código viejo, deliberado: los InformeOp no se
+  secundarios** — la baja no archiva InformeOp: una op abierta no los tiene (se crean al
+  cerrar) y en la de una cerrada (`bajaOperacionCerrada`) se ANULAN y quedan en `informesOp` (deliberado: los InformeOp no se
   reconstruyen al restaurar, `restaurarOperacion` siempre deja la op `'abierta'`
   con `km: 0`, ver "Coordinadores bajaOperacion / restaurarOperacion" en CLAUDE.md).
 - **`VisualizadorObjetoService.verObjeto`** gana un tercer parámetro opcional
@@ -174,3 +174,17 @@ baja de Cliente y de Proveedor (cascada N-choferes), restaurar cada caso, confir
 entradas BAJA/RESTAURAR en `RegistroLogComponent`, y confirmar en la pantalla de
 Papelera nueva que el detalle abre el snapshot correcto para eventos `'activo'` y
 el objeto vivo para `'restaurado'`.
+
+## Deuda abierta — eliminar el camino legado de la papelera
+
+**Cadena de dependencias — último eslabón:** `rehacer noDisponibilidad` → `eliminar el log viejo` → `eliminar el camino legado de la papelera`.
+
+**Qué la bloquea:** el camino legado (`PapeleraLegadoComponent`, colección `papelera` con `LogDoc`,
+`ObjetoPapeleraComponent`) estaba previsto para eliminarse junto con el log viejo, y el log viejo
+no se puede eliminar antes de rehacer la no-disponibilidad (skills `subsistema-log` y
+`modulo-operaciones`). El propio camino legado usa el log viejo: restaura con
+`StorageService.addItem` y, para operaciones, con `TableroService.altaOperacionYActualizarTablero`.
+
+**Qué destraba:** con él se van la restauración no atómica de operaciones desde la Papelera legado
+(skill `modulo-operaciones`, "Deuda abierta — integración de callers…") y los residuos de
+`objeto-papelera` (skills `exportacion-excel-pdf` y `lazy-loading-y-fechas`).

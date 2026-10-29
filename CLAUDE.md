@@ -63,7 +63,7 @@ src/app/
 │   ├── finanzas-nueva/ # Finanzas (ruta finanzas): cobros, pagos, ajustes, cuentas, antigüedad
 │   └── ajustes/       # Usuarios, log de actividad, papelera
 ├── shared/            # Componentes, directivas y pipes reutilizables
-├── servicios/         # 22 servicios especializados
+├── servicios/         # 37 carpetas de servicios
 ├── interfaces/        # 32+ interfaces TypeScript de dominio
 ├── guards/            # RoleGuard (control de acceso por rol)
 └── constantes/        # Constantes de negocio
@@ -156,8 +156,8 @@ no en reglas declarativas):
 
 **Pantalla:** `raiz/ajustes/gestion-usuarios/` (reemplaza a
 `ajustes-usuarios`/`usuarios-edicion`, eliminados). Lectura puntual de
-`/users` (sin listener — mismo patrón que
-`CuentaCorrienteService.obtenerRankingMorosos()`, sin `ConId` porque el
+`/users` (sin listener — `GestionUsuariosService.obtenerUsuarios()` con
+`getDocs`, sin `ConId` porque el
 doc ya trae su propio `uid`), filtrando `role !== 'dev'` siempre —
 `dev` no se lista ni gestiona desde la app, exclusivamente por consola.
 
@@ -176,7 +176,7 @@ El refactor arquitectónico está migrando el manejo de estado desde un store ce
 
 **Módulos refactorizados** (Choferes, Proveedores, Clientes; Operaciones en progreso — subsistema Asignaciones: capa de servicios y fachada completas; switch completo de `tablero-diario` → `tablero-asignaciones` (tablero-diario, carga-tablero-diario y operaciones-table eliminados); `carga-multiple` migrado a `carga-asignacion` y switch completado (carga-multiple eliminado), con caller confirmado en tablero-op (`modalCargaMultiple()`); coordinadores `bajaOperacion`/`restaurarOperacion` en OperacionService completos (atómicos,
 batch + log único), con `tablero-op` ya usando `bajaOperacion` como caller para la baja
-de operaciones abiertas; `editarOperacion` pendiente, depende del refactor de Tarifas):
+de operaciones abiertas; `editarOperacion` ya existe en `OperacionService` (`servicios/operaciones/operacion.service.ts`), atómico, y lo usa `modal-detalle-op`):
 cada entidad tiene su `XxxService` con un BehaviorSubject propio que mantiene el estado
 en memoria (NO en localStorage). El `init()` del servicio abre el listener de Firestore
 y se llama al arrancar la app. Los componentes se suscriben directamente al observable
@@ -187,7 +187,7 @@ del servicio.
 sincroniza con localStorage.
 
 `StorageService` NO desaparece: sigue manteniendo el estado de los módulos viejos.
-**Actualizado (Frente Papelera, ver más abajo):** la baja con papelera de
+**Actualizado (Frente Papelera, ver la skill `subsistema-papelera`):** la baja con papelera de
 Cliente/Chofer/Proveedor/Operación (los 4 módulos ya migrados) YA NO pasa por
 `StorageService.deleteItemPapeleraCompuestoAsync()` — escribe atómico vía
 `DbFirestoreService.commitBatch` + `PapeleraService` + `LogRegistroService`, igual que
@@ -209,7 +209,7 @@ Escritura (alta/edición/baja simple, y baja/restauración con papelera):
 ### Sistema de tarifas
 
 Resumen del modelo; el detalle (versionado, vigencia por fecha, motor, pantallas,
-reglas, migración) está en "Frente Tarifas — tarifario nuevo".
+reglas, migración) está en la skill `modulo-tarifas`.
 
 - **Tarifas:** `Tarifa` (`nivel` 'general' | 'personalizada'; `aCobrar`/`aPagar`/
   `aPagarProveedor` por categoría) y `TarifaEspecial` (parche de la General para una
@@ -275,24 +275,24 @@ Por eso `Proforma CH` tiene mayor prioridad visual que `Proforma CL` en el badge
 | `usuario-sesion/` | Fuente única de la sesión en memoria (rol, uid, email del usuario logueado). Sin listener — no reactivo en vivo. |
 | `database/` | CRUD Firestore |
 | `storage/` | Estado de módulos no migrados (BehaviorSubjects + localStorage) y capa de escritura/logging centralizada para todos los módulos |
-| `log/` | Log de actividad viejo (colección `logs`) — sigue activo para lo no migrado (ver "Frente Log") |
-| `log-registro/` | `LogRegistroService` (escritura, dentro del batch atómico de negocio) + `RegistroLogConsultaService` (lectura/paginación, para `RegistroLogComponent`) sobre `registroLog` — ver "Frente Log — mecanismo unificado" |
-| `papelera/` | `PapeleraService` (preparación de escrituras de baja/restauración por referencia, dentro del batch atómico de negocio) + `PapeleraConsultaService` (lectura/paginación, para `PapeleraComponent`) sobre `papeleraEventos`/`objetosEliminados` — ver "Frente Papelera — mecanismo de referencia" |
+| `log/` | Log de actividad viejo (colección `logs`) — sigue activo para lo no migrado (ver la skill `subsistema-log`) |
+| `log-registro/` | `LogRegistroService` (escritura, dentro del batch atómico de negocio) + `RegistroLogConsultaService` (lectura/paginación, para `RegistroLogComponent`) sobre `registroLog` — ver la skill `subsistema-log` |
+| `papelera/` | `PapeleraService` (preparación de escrituras de baja/restauración por referencia, dentro del batch atómico de negocio) + `PapeleraConsultaService` (lectura/paginación, para `PapeleraComponent`) sobre `papeleraEventos`/`objetosEliminados` — ver la skill `subsistema-papelera` |
 | `visualizador-objeto/` | `VisualizadorObjetoService` — dispatcher `coleccion -> modal de vista real`, usado por `RegistroLogComponent` y (desde el Frente Papelera) por `PapeleraComponent` vía el parámetro `snapshot` de `verObjeto` |
-| `ficha-entidad/` | `FichaEntidadService.abrir(tipo, id)` (ficha de solo lectura de chofer / proveedor / cliente) y `EdicionEntidadService` ("Editar" desde la ficha, con `import()` dinámico de los modales de alta) — ver "Frente Ficha de entidad" |
-| `tarifario/` | Tarifario nuevo: `TarifarioService` (estado y escritura de `tarifas` / `tarifasEspeciales` / `registrosOpEventuales`), factories, `TarifaGuardadoService`, motor `ValoresTarifaService` y `ResolucionTarifaOpService` — ver "Frente Tarifas — tarifario nuevo" |
+| `ficha-entidad/` | `FichaEntidadService.abrir(tipo, id)` (ficha de solo lectura de chofer / proveedor / cliente) y `EdicionEntidadService` ("Editar" desde la ficha, con `import()` dinámico de los modales de alta) — ver la skill `ficha-entidad` |
+| `tarifario/` | Tarifario nuevo: `TarifarioService` (estado y escritura de `tarifas` / `tarifasEspeciales` / `registrosOpEventuales`), factories, `TarifaGuardadoService`, motor `ValoresTarifaService` y `ResolucionTarifaOpService` — ver la skill `modulo-tarifas` |
 | `informes-op/` | `InformeOpService` (+ Factory) — `InformeOpNuevo` en la colección única `informesOp` (un doc por lado de cada operación, con `contraParte`). `armarEscriturasEdicion` (armado sin commit) + `editar` (armado + commit) |
-| `informes-liq/` | `InformeLiqService` + `InformeLiqFactoryService` — `InformeLiqNuevo` en `informesLiq`: borradores, emisión, edición. Ver "Frente Liquidación — InformeLiqNuevo" |
-| `exportacion/` | Renderers GENÉRICOS de `DocumentoTabular` (`generar`) y `LibroTabular` (`generarLibro`, varias hojas con varias tablas) — no saben de qué informe se trata: `PdfTabularService` (jsPDF + autotable), `ExcelTabularService` (exceljs, con Tabla de Excel real cuando la tabla trae `excel`), formatos y logo compartidos. Librerías con import dinámico. Desde el frente Informes, TODO informe tabular de la app sale de acá, por la fachada de su dominio (la única excepción es el Recibo / Orden de pago, que no es una tabla) — ver "Frente Informes Excel/PDF" |
-| `reportes/resumenes-op/` | Resúmenes mensuales de operaciones (`resumenesOp`): `ResumenOpFactoryService` (pura: aporte de una op, claves, escrituras de cierre/edición/baja, agregados del Recálculo), `ResumenOpConsultaService` (solo lectura, pantallas), `TablaResumenConfigService` (columnas y fórmulas por modo), `ResumenOpExportService` (Excel/PDF) — ver "Frente Reportes" |
-| `vendedores/` | Vendedores y comisiones de venta: `VendedorService` (listener en memoria; alta/edición/asignación, desactivar/reactivar), `ComisionVentaFactoryService` (pura: escrituras de cierre/edición/baja sobre `comisionesVenta`), `ComisionVentaConsultaService` (solo lectura: mes, pendientes, tablero), `LiquidacionVentaService` (emitir/pagar/revertir/anular en transacción), `ComisionesExportService` (Excel/PDF) — ver "Frente Vendedores" |
-| `finanzas-nueva/` | Finanzas: `MovimientoFinService` (registrar, anular, imputar saldo, ajustes, cerrar saldo, devolución; cada gesto en transacción con log), `FinanzasConsultaService` (solo lectura, en vivo), `FinanzasExportService` (Excel/PDF de listados y cuenta), `ReciboPdfService` (Recibo / Orden de pago) — ver "Frente Finanzas" |
-| `configuracion/` | `ConfiguracionEmpresaService`: datos de la empresa (`configuracion/empresa`), lectura con caché y guardado con log — ver "Frente Finanzas" |
+| `informes-liq/` | `InformeLiqService` + `InformeLiqFactoryService` — `InformeLiqNuevo` en `informesLiq`: borradores, emisión, edición. Ver la skill `modulo-liquidacion` |
+| `exportacion/` | Renderers GENÉRICOS de `DocumentoTabular` (`generar`) y `LibroTabular` (`generarLibro`, varias hojas con varias tablas) — no saben de qué informe se trata: `PdfTabularService` (jsPDF + autotable), `ExcelTabularService` (exceljs, con Tabla de Excel real cuando la tabla trae `excel`), formatos y logo compartidos. Librerías con import dinámico. Desde el frente Informes, TODO informe tabular de la app sale de acá, por la fachada de su dominio (la única excepción es el Recibo / Orden de pago, que no es una tabla) — ver la skill `exportacion-excel-pdf` |
+| `reportes/resumenes-op/` | Resúmenes mensuales de operaciones (`resumenesOp`): `ResumenOpFactoryService` (pura: aporte de una op, claves, escrituras de cierre/edición/baja, agregados del Recálculo), `ResumenOpConsultaService` (solo lectura, pantallas), `TablaResumenConfigService` (columnas y fórmulas por modo), `ResumenOpExportService` (Excel/PDF) — ver la skill `modulo-reportes` |
+| `vendedores/` | Vendedores y comisiones de venta: `VendedorService` (listener en memoria; alta/edición/asignación, desactivar/reactivar), `ComisionVentaFactoryService` (pura: escrituras de cierre/edición/baja sobre `comisionesVenta`), `ComisionVentaConsultaService` (solo lectura: mes, pendientes, tablero), `LiquidacionVentaService` (emitir/pagar/revertir/anular en transacción), `ComisionesExportService` (Excel/PDF) — ver la skill `modulo-vendedores` |
+| `finanzas-nueva/` | Finanzas: `MovimientoFinService` (registrar, anular, imputar saldo, ajustes, cerrar saldo, devolución; cada gesto en transacción con log), `FinanzasConsultaService` (solo lectura, en vivo), `FinanzasExportService` (Excel/PDF de listados y cuenta), `ReciboPdfService` (Recibo / Orden de pago) — ver la skill `modulo-finanzas` |
+| `configuracion/` | `ConfiguracionEmpresaService`: datos de la empresa (`configuracion/empresa`), lectura con caché y guardado con log — ver la skill `modulo-finanzas` |
 | `numerador/` | Generación de IDs secuenciales (operaciones, facturas) |
 | `validar/` | Validación de reglas de negocio |
 | `formato-numerico/` | Formateo de números/moneda estilo Argentina |
-| `fechas/` | `DateRangeService` (rango del tablero) y `toISODateString` (delega en `fechaNegocioDe`). El util único de fechas es `shared/utils/fecha.util.ts` — ver "Frente Lazy loading + fechas" |
-| `desarrollo/` | Herramientas de `/migracion`. SOLO demo (guarda projectId `demoapplog` + rol dev): `LimpiezaDemoService`, `GeneradorOperacionesService` — ver "Herramientas de desarrollo (solo demo)"; `GeneradorCircuitoService`, `GeneradorCobrosService` — ver "Frente Finanzas". En cualquier proyecto (rol dev + confirmación escrita del id de proyecto; se usa en la migración de Vantruck): `RecalculoResumenesService` — ver "Frente Reportes"; `RecalculoComisionesService` — ver "Frente Vendedores"; `NormalizacionFechaNacService` — ver "Frente Ficha de entidad" |
+| `fechas/` | `DateRangeService` (rango del tablero) y `toISODateString` (delega en `fechaNegocioDe`). El util único de fechas es `shared/utils/fecha.util.ts` — ver la skill `lazy-loading-y-fechas` |
+| `desarrollo/` | Herramientas de `/migracion`. SOLO demo (guarda projectId `demoapplog` + rol dev): `LimpiezaDemoService`, `GeneradorOperacionesService` — ver la skill `herramientas-demo`; `GeneradorCircuitoService`, `GeneradorCobrosService` — ver la skill `modulo-finanzas`. En cualquier proyecto (rol dev + confirmación escrita del id de proyecto; se usa en la migración de Vantruck): `RecalculoResumenesService` — ver la skill `modulo-reportes`; `RecalculoComisionesService` — ver la skill `modulo-vendedores`; `NormalizacionFechaNacService` — ver la skill `ficha-entidad` |
 
 ### Entornos de build
 
@@ -312,8 +312,8 @@ interruptor manual existente para debug local contra el proyecto de producción 
 ni un tercer proyecto, es una práctica ya establecida sobre el mismo `development`.
 
 Budget del bundle inicial: `demo` aviso 2 MB / error 3 MB (hoy 1,53 MB); `production`
-6 / 7 MB; `vantruck` sin budget hasta la migración (ver "Checklist — migración a
-Vantruck: frente Lazy loading + fechas").
+6 / 7 MB; `vantruck` sin budget hasta la migración (ver la skill `migracion-vantruck`,
+subsección "Checklist — migración a Vantruck: frente Lazy loading + fechas").
 
 ### Cloud Functions
 
@@ -326,8 +326,8 @@ proyecto vía `--project`).
 - `syncRoleClaim`: ver "Autenticación y roles".
 - `crearUsuario`/`editarUsuario`/`editarEmailUsuario`/`eliminarUsuario`:
   ver "Autenticación y roles".
-- `verificarVencimientosDocumentacion`: ver "Módulo Legajos — reconstrucción
-  completa" → "Verificación periódica de vencimientos (Cloud Scheduler)".
+- `verificarVencimientosDocumentacion`: ver la skill `modulo-legajos`,
+  subsección "Verificación periódica de vencimientos (Cloud Scheduler)".
   Primera función PROGRAMADA del proyecto (Cloud Scheduler vía `onSchedule`,
   las anteriores son triggers `onWrite`/`onCall`) — puede ser la primera vez
   que el proyecto usa Cloud Scheduler; si el deploy o la consola piden
@@ -344,7 +344,7 @@ in-place); la CLI lo marca explícitamente al correr
 `firebase deploy --only functions --project demo` — es esperable, confirmar
 el prompt. **Deuda:** alinear también `pf-logistics`/Vantruck cuando ese
 frente se aborde — ahí sí es un corte real en producción, coordinar el
-momento. Ver "Deuda conocida".
+momento. Ver la skill `migracion-vantruck`, subsección "Deuda abierta — alinear región de Cloud Functions en `pf-logistics`/Vantruck".
 
 **Orden de deploy obligatorio** (evita ventanas de bloqueo): funciones
 primero (`firebase deploy --only functions --project <alias>`), esperar
@@ -422,7 +422,7 @@ Categorías especiales:
 - `desarrollo`: módulo solo para `dev` (todas las acciones:
   `(modulo == 'desarrollo' && r == 'dev')` en `permitido()`), para las
   herramientas de desarrollo de demo. Hoy: `generacionesPrueba` (lotes del
-  generador de operaciones). Ver "Herramientas de desarrollo (solo demo)".
+  generador de operaciones). Ver la skill `herramientas-demo`.
 - `noOperativo` → 'operaciones': agregado en el frente Generador. Faltaba en
   `moduloDe()` y la lectura directa de no-disponibilidades desde el SDK web
   fallaba con "Missing or insufficient permissions" (fail-safe).
@@ -692,11 +692,13 @@ Deuda técnica activa. Actualizar cuando se salda.
 
 - **Región de Cloud Functions en Vantruck** — las funciones de `pf-logistics` siguen en la región default: alinearlas a `southamerica-east1` exige delete + recreate (corte en producción) y agregar `functionsRegion` a `environment.vantruck.ts`. Detalle: skill `migracion-vantruck`.
 - **Bucket de Storage de `pf-logistics`** — antes de llevar Legajos a producción hay que confirmar que el bucket existe, tiene CORS y tiene `storage.rules` desplegadas. Detalle: skill `migracion-vantruck`.
+- **Herramienta de recálculo de tarifas (sólo en `main`)** — existe en producción (`98edb35`) y no en `refactor`; hay que reimplementarla sobre el modelo nuevo porque `RefTarifaAplicada` queda congelada al cerrar y una tarifa con vigencia retroactiva no corrige las operaciones ya cerradas. Detalle: skill `migracion-vantruck`.
 - **Restaurar operaciones desde la Papelera legado** — `PapeleraLegadoComponent.addItem` sigue restaurando operaciones por `TableroService.altaOperacionYActualizarTablero`, que no es atómico y loguea con el `LogService` viejo; el resto de la deuda de callers está saldado. Detalle: skill `modulo-operaciones`.
 - **Deuda menor del tablero de asignaciones** — la no-disponibilidad no está probada end-to-end y el borrador del tablero se pierde con F5. Detalle: skill `modulo-operaciones`.
 - **operaciones-editor / Tarifas** — estilos SCSS de tarifa duplicados sin consolidar, y el patrón `@if` obligatorio para bindear tarifas nullable. Detalle: skill `modulo-operaciones`.
 - **Fix de altura del modal limitado a `tablero-op`** — el ajuste que estira `carga-asignacion` dentro del modal vive en `tablero-op.component.scss`: otro caller que abra ese modal tiene que replicarlo. Detalle: skill `modulo-operaciones`.
 - **No-disponibilidad y tablero** — falta el rediseño del modelo (hoy solo cubre choferes; la regla vive en `no-disponibilidad.util.ts`). Detalle: skill `modulo-operaciones`.
+- **Cadena: noDisponibilidad → log viejo → Papelera legado** — rehacer la no-disponibilidad (hoy escribe por `StorageService` con el `LogService` viejo) es requisito para eliminar el log viejo, y la Papelera legado se elimina junto con el log viejo: ninguna de las tres se puede encarar fuera de ese orden. Detalle: skills `modulo-operaciones`, `subsistema-log` y `subsistema-papelera`.
 - **Filtros vs. listener en background (frente futuro)** — en `tablero-op` los datos pueden quedar congelados al volver de background mientras los filtros muestran otro período; las suscripciones a `operaciones$` no manejan errores. Detalle: skill `modulo-operaciones`.
 - **Permisos de UI dispersos** — quedan `*appRole`/`esRol()` puntuales sin migrar a `PermisosService`, con riesgo de mostrar acciones que las Security Rules rechazan. Detalle: skill `botones-y-permisos`.
 - **Tarifas tras el cierre** — quedan residuos inertes en datos de demo (`idTarifa`/`tarifaAsignada`, `adExtra: null`) y `tarifa-gral-cliente.ts` sigue vivo por la Liquidación vieja. Detalle: skill `modulo-tarifas`.

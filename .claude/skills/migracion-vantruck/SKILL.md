@@ -3,6 +3,40 @@ name: migracion-vantruck
 description: Checklists y deuda pendiente de ApLog para migrar datos y deployar en producción (Vantruck, proyecto pf-logistics) — región de Cloud Functions, bucket de Storage, tarifas y eventuales, choferes/vehículos/legajos y fechas de nacimiento. Leer antes de planificar o ejecutar la migración, un deploy a pf-logistics o cualquier herramienta de /migracion que toque datos de producción.
 ---
 
+## Estrategia de migración — sin decidir
+
+La forma de la migración todavía no está definida. Opciones en análisis:
+
+- **Migración en el mismo proyecto**: migrar los datos de Vantruck a la estructura nueva y
+  hacer el switch en el proyecto existente.
+- **Proyecto nuevo en paralelo**: crear un proyecto Firebase nuevo donde corra el código
+  nuevo, dejando Vantruck en funcionamiento como respaldo de hecho y como camino de vuelta
+  si la versión nueva falla en producción con algo que no apareció en la simulación. Permite
+  tener las dos versiones corriendo a la vez para comparar resultados.
+
+Nada de lo que sigue asume una de las dos. Cuando se decida, revisar esta skill completa.
+
+## Lo que existe sólo en `main`
+
+`refactor` no se va a fusionar con `main`: el código de `main` está escrito contra campos que
+el refactor eliminó (`tarifaTipo`, `op.valores`, `acompanienteCant`, `facturaCliente` /
+`facturaChofer`), así que no compila contra el modelo nuevo. La promoción va a ser un
+**reemplazo de rama**, no un merge.
+
+Consecuencia: en el momento del reemplazo se pierde todo lo que exista sólo en `main`, salvo
+lo que se haya pasado explícitamente. Esta tabla es ese inventario.
+
+**Mantenerla al día: cada hotfix que se haga directo sobre `main` agrega una fila acá.**
+
+Para regenerar la lista: `git log --oneline refactor..main`
+
+| Commit | Qué hace | Decisión |
+|---|---|---|
+| `98edb35` — `feat(ajustes): recálculo de tarifa por cliente y período` | Herramienta en Configuración (solo rol god) que recalcula las operaciones de un cliente y período contra su tarifa vigente, con vista previa y simulacro. Corrió en producción: Logistica Patagonia S.A., octubre 2026, 59 operaciones por $1.148.100 y 7 informes de liquidación ajustados. | **A portar y rediseñar.** Ver "Deuda abierta — herramienta de recálculo de tarifas" más abajo. |
+| `98edb35` (segunda parte del mensaje) — `fix(papelera): restaurar operaciones a su forma de alta real` | `resetearOperacionAFormaDeAlta()` y una guarda que bloquea la restauración si quedan `InformeOp` huérfanos. | **Ya cubierto.** `refactor` tiene su equivalente en `5672836`. El problema de huérfanos no se da en el modelo nuevo. |
+| `3378cc7` — `fix: ignorar node_modules en cualquier nivel del repo` | Regla de `.gitignore`. | **Portado** (ver `.gitignore` en `refactor`). |
+| `74ca1eb` — `Merge hotfix errorProveedores: tarifa proveedor en cierre` y `8fec196` — `fix(tarifas): cierre de op con tarifa vigente de chofer/proveedor` | Al actualizar la tarifa especial de un proveedor no se actualizaba la referencia de sus choferes ni sus tarifas, lo que afectaba la obtención de la tarifa en el cálculo del cierre. | **No aplica.** Son defectos del modelo viejo de tarifas y de cálculo. El modelo nuevo reescribió la resolución completa (`RefTarifaHabilitada`, `TarifaEspecial` como patch, `ResolucionTarifaOpService`), así que no se reproducen. |
+
 ### Checklist — migración de Tarifas a Vantruck
 Después del backup completo y de deployar este código en `pf-logistics`:
 1. Reglas: `tarifas`, `tarifasEspeciales` ('tarifas') y `registrosOpEventuales`
@@ -155,3 +189,24 @@ antes de migrar (el Legajos viejo guardaba `new Date(fecha).getTime()`, 00:00 UT
 correcto hacia adelante) — es deuda del PROCESO de migración de datos legacy de
 producción, que corre aparte y más adelante, cuando se aborde el traspaso completo a
 Vantruck. Registrado acá para que no se pierda de vista al planificar ese proceso.
+
+## Deuda abierta — herramienta de recálculo de tarifas
+
+Existe en `main` (`98edb35`) y no en `refactor`. Funcionalidad en producción, usada sobre
+datos reales.
+
+**Por qué se escribió:** el cierre tomaba la tarifa vigente al momento de cerrar y no la
+vigente a la fecha de la operación, así que un aumento cargado a mitad de mes dejaba las
+operaciones ya cerradas valorizadas con la tarifa anterior.
+
+**Por qué sigue haciendo falta aunque esa causa esté resuelta:** el modelo nuevo resuelve la
+tarifa por la fecha de la operación, así que el desfasaje no se genera solo. Pero
+`RefTarifaAplicada` queda congelada al cerrar: si se carga una tarifa con vigencia
+retroactiva, las operaciones ya cerradas conservan el valor congelado y nada las corrige.
+
+**Qué hay que hacer:** reimplementarla sobre el modelo nuevo (`RefTarifaAplicada`,
+`valoresNuevos`, `resumenesOp`), no portar la versión de `main`, que además está incompleta
+respecto del diseño que el modelo nuevo necesita. Conservar del original los criterios que
+siguen siendo válidos: vista previa obligatoria antes de escribir, escritura atómica por
+operación, idempotencia y reejecución, bloqueo de operaciones con proforma o con el lado
+cliente ya liquidado, y control de concurrencia por fila.

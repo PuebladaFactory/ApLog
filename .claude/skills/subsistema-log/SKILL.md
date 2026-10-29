@@ -70,7 +70,7 @@ migradas.
 - `OperacionService.bajaOperacion`/`restaurarOperacion` (papelera) y
   `AsignacionService.marcarItemAnulado` (eliminado — frente Baja de Operación, C3)/`reactivarItem` (usados hoy solo por
   `TableroService`, facade vieja intacta) — sin cambios, ver CHANGELOG.md, sección "Deuda — integración de
-  callers para bajaOperacion/restaurarOperacion", que sigue vigente tal cual.
+  callers para bajaOperacion/restaurarOperacion": está saldada salvo la restauración desde la Papelera legado (`PapeleraLegadoComponent.addItem` → `TableroService.altaOperacionYActualizarTablero` → `reactivarItem`), que sigue abierta en la skill `modulo-operaciones`.
 - Cualquier módulo sin `XxxService` propio confirmado (Vendedores, Tarifas,
   Facturación, Liquidaciones, Finanzas) — sin tocar. ⚠️ **Corrección (Frente 2):** esta
   entrada agrupaba a Legajos junto a estos módulos por error — `LegajoService` SÍ tiene
@@ -333,7 +333,7 @@ todavía** — `PapeleraComponent.modalObjeto` sigue con su mecanismo propio,
   pipes/directivas de cada componente queda resuelta en su propia compilación, no
   depende de que su NgModule esté "activo" en runtime) — confirmado con `ng build`
   real, no solo `tsc`. Costo real, medido: bundle inicial +~90 KB (7.65 MB → 7.74 MB;
-  el budget ya estaba excedido antes de este frente, ver "Deuda conocida" si aplica) —
+  el budget ya estaba excedido antes de este frente, ver "Deuda abierta" en CLAUDE.md si aplica) —
   antes esas piezas de Clientes/Choferes/Proveedores/Operaciones vivían enteras en sus
   chunks lazy; ahora una porción se comparte con el chunk de Ajustes. Aceptado a
   propósito por ser exactamente el diseño pedido (reusar los modales reales, no
@@ -546,3 +546,17 @@ indefinidamente como histórico congelado a la fecha del corte a Vantruck —
 no recibe escrituras nuevas del mecanismo nuevo, solo se consulta.
 `RegistroLogComponent` (`registroLog`) arranca en blanco desde esa fecha.
 Sin fusión de pantallas ni migración de datos entre ambas colecciones.
+
+## Deuda abierta — eliminar el log viejo (`LogService`, colección `logs`)
+
+**Cadena de dependencias — eslabón del medio:** `rehacer noDisponibilidad` → `eliminar el log viejo` → `eliminar el camino legado de la papelera`.
+
+**Qué la bloquea:** la no-disponibilidad (`modal-choferes-no-disponibles`) sigue escribiendo por
+`StorageService.addItem`/`updateItem`, que loguea con el `LogService` viejo; el log viejo no se
+puede eliminar antes de rehacerla (skill `modulo-operaciones`, "Deuda abierta — no-disponibilidad y tablero").
+Otros usos vivos del `LogService` viejo hoy: `StorageService` add/update/delete,
+`TableroService.altaOperacionYActualizarTablero` y `AsignacionService.reactivarItem`, los dos
+últimos sólo desde la Papelera legado.
+
+**Qué destraba:** el camino legado de la papelera estaba previsto para eliminarse junto con el
+log viejo (skill `subsistema-papelera`, "Deuda abierta — eliminar el camino legado de la papelera").

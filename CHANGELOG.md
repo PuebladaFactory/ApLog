@@ -2438,22 +2438,7 @@ en el switch de Asignaciones (Bloques 13-19) — ya no está declarado en Operac
 
 > El contrato vigente de `operaciones-editor` (entrada, salida, y que no calcula valores ni persiste) vive en la skill `modulo-operaciones`.
 
-**Reglas de decisión en `ResolucionTarifaOpService` (frente Generador, P2):**
-la resolución de chofer/vehículo pendientes, eventual forzada, candidatos
-de tarifa por lado, espejo de Personalizada y detección de selección manual
-se movieron a `servicios/tarifario/resolucion-tarifa-op.service.ts`, que
-también usa el generador de operaciones de prueba. Lo que sigue describe
-esas reglas (siguen vigentes); el editor ya no inyecta `ChoferService` /
-`ProveedorService` y conserva solo el estado de UI.
-
-**Resolución de pendientes:**
-- Chofer (caso proveedor, `op.chofer.id === ''`): selector con
-  `ChoferService.getChoferesPorProveedor(idProveedor)`. Al resolver,
-  `ResolucionTarifaOpService.asignarChofer` recalcula si la op es eventual con las
-  tarifas habilitadas del PROVEEDOR (`resolverTarifasHabilitadasChofer`) y devuelve
-  `eventualRecalculado`.
-- Vehículo (`op.vehiculo.id === ''`): selector con vehículos del dueño (proveedor si
-  `op.proveedor`, chofer si directo), filtro síncrono sobre `getVehiculosActuales()`.
+> Las reglas vigentes de `ResolucionTarifaOpService` (resolución de chofer y vehículo pendientes, eventual forzada, candidatos por lado, espejo de Personalizada, selección manual) viven en la skill `modulo-tarifas`.
 
 **Eliminar = excluir del resultado (Opción B):** `Set<idItem>` de eliminadas; se ocultan
 del render y se excluyen del array devuelto. NO muta `operacionesCreadas` (cancelar reabre
@@ -2488,18 +2473,7 @@ la resolución de vehículo (único candidato o varios) queda enteramente para
 
 > La regla vigente de que `altaDesdeAsignacion` es el único lugar donde se reconstruye el `ref` de un `AsignacionItem` vive en la skill `modulo-operaciones`.
 
-**Fusión con tablero existente y bloqueo de borrador ajeno (agregado en la sesión de
-carga-asignacion):** `altaDesdeAsignacion(fecha, creadas, siExisteBorrador: 'reemplazar'|'bloquear' = 'reemplazar')`.
-Antes de armar el tablero final, lee el existente: si `asignado===true`, fusiona
-(`existente.items ++ creadas`) — habilita altas parciales repetidas sobre la misma fecha ya
-confirmada. Si `asignado===false` (borrador) y `siExisteBorrador==='bloquear'`, aborta sin
-escribir con mensaje explicando que debe resolverse desde el Tablero de Asignaciones. El
-default `'reemplazar'` preserva el comportamiento de `tablero-asignaciones` (que ya manda su
-`itemsBorrador` completo, no un delta — fusionar ahí duplicaría). La validación de
-pendientes (chofer/vehículo) sigue aplicando solo a `creadas`, nunca a los items previos que
-arrastra la fusión. `ref` del item también se reconstruye en este mismo paso (junto con
-`sujeto`) desde los datos finales de la op — idempotente para `tablero-asignaciones`,
-corrige el placeholder de `carga-asignacion`.
+> El contrato vigente de `siExisteBorrador` en `altaDesdeAsignacion` (fusión con un tablero confirmado, bloqueo ante un borrador ajeno) vive en la skill `modulo-operaciones`.
 
 **Filtro defensivo asimétrico (choferes directos vs. proveedores):** `choferesDirectosBase`
 excluye choferes directos sin vehículos (`vehiculos.length === 0`) porque tener vehículo es
