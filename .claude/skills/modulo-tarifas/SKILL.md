@@ -213,7 +213,10 @@ esas reglas (siguen vigentes); el editor ya no inyecta `ChoferService` /
   `ResolucionTarifaOpService.asignarChofer` recalcula si la op es eventual con las
   tarifas habilitadas del PROVEEDOR (`resolverTarifasHabilitadasChofer`) y devuelve
   `eventualRecalculado`.
-- Vehículo (`op.vehiculo.id === ''`): selector con vehículos del dueño (proveedor si
+- Vehículo: la detección del pendiente (`op.vehiculo.id === ''`) la hace el editor, no el
+  servicio (`operaciones-editor.component.ts:191`); `ResolucionTarifaOpService` sólo lo
+  usa en `candidatosOp` (`resolucion-tarifa-op.service.ts:127`), para devolver
+  `{ estado: 'pendiente' }`. Selector con vehículos del dueño (proveedor si
   `op.proveedor`, chofer si directo), filtro síncrono sobre `getVehiculosActuales()`.
 
 ## Deuda abierta — Tarifas (tras el cierre del frente)

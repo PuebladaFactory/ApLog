@@ -79,12 +79,13 @@ que lo generó, y una pantalla de listado genérica sobre los eventos.
   (uso desde `RegistroLogComponent`, y desde `PapeleraComponent` para eventos
   `'restaurado'`), comportamiento sin cambios.
 - **`// TODO: refactor Papelera` resueltos con fallback a
-  `papeleraService.getObjetoEliminado()`:** `TableroService` (fallback de
-  `getTipoContratacion` en la baja legacy `anularOperacionYActualizarTablero`
-  (eliminado — frente Baja de Operación, C3),
-  método hoy sin caller real) y `liquidaciones-op.component.ts` (mismo fallback,
-  en la baja de operación cerrada desde Liquidaciones — ver Deuda actualizada
-  arriba). **`objeto-papelera.component.ts` resuelto distinto:** `getTarifaLabel`
+  `papeleraService.getObjetoEliminado()`:** los dos que se resolvieron así ya no
+  existen. Eran la baja legacy `TableroService.anularOperacionYActualizarTablero`
+  (eliminada en el frente Baja de Operación, C3) y la baja de operación cerrada de
+  `liquidaciones-op.component.ts` (componente eliminado; esa baja hoy es
+  `OperacionService.bajaOperacionCerrada`, ver más abajo). Hoy `getObjetoEliminado`
+  lo usan `PapeleraComponent` (snapshot del detalle) y `objeto-papelera`.
+  **`objeto-papelera.component.ts` resuelto distinto:** `getTarifaLabel`
   corre síncrono desde el template, y `PapeleraService.getObjetoEliminado` es
   async — se resuelve en `ngOnInit` (fire-and-forget, popula un campo que
   `getTarifaLabel` lee) en vez de adentro del getter. **`proveedor.service.ts`

@@ -1,5 +1,14 @@
 # Changelog — ApLog
 
+> **Qué es este archivo.** Registro histórico del proyecto. Cada entrada describe el estado
+> **a la fecha en que se escribió** y puede haber sido superada después. Las entradas no se
+> corrigen retroactivamente: lo que dice una entrada vieja no es necesariamente cierto hoy.
+>
+> **Para el estado vigente:** CLAUDE.md (proyecto, arquitectura, invariantes del proyecto,
+> índice de deuda abierta) y las skills de `.claude/skills/` (conocimiento por módulo).
+>
+> Si una entrada de este archivo contradice a una skill o a CLAUDE.md, **manda la skill**.
+
 ## Refactorización arquitectural (en progreso)
 
 ### Infraestructura transversal
