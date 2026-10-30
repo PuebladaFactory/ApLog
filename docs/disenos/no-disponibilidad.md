@@ -259,6 +259,10 @@ Bloquean y devuelven `Resultado` con el detalle:
 
 En los tres casos la verificación es contra la **fecha de la operación/tablero**, no contra hoy.
 
+**Sin camino de forzado.** Cuando una guarda bloquea, el usuario recibe el mensaje con el sujeto
+y el motivo, y nada más: no hay opción de forzar la asignación dejando constancia. Si la
+situación cambió, lo que corresponde es corregir la no disponibilidad.
+
 ## Validaciones del alta/edición
 
 | Regla | Comportamiento |
@@ -268,6 +272,16 @@ En los tres casos la verificación es contra la **fecha de la operación/tablero
 | `hasta >= desde` cuando `hasta` no es `null` | Rechaza, con mensaje |
 | `motivo` obligatorio | Rechaza. Hoy es opcional y el fallback `'No disponible'` no sirve en un informe |
 | Solapamiento con otra no disponibilidad **vigente del mismo sujeto** | **Avisa, no rechaza.** Muestra la existente (período y motivo) y ofrece editarla en vez de crear otra. Dos registros solapados con motivos distintos no son un error —alguien puede empezar vacaciones y enfermarse—, y la resolución toma la unión. El error real es el duplicado por olvido, y avisar con el dato a la vista lo evita sin prohibir el caso legítimo |
+
+## Listado y historial del modal
+
+- **Vigentes:** las que cubren la fecha de hoy, ordenadas por sujeto para poder buscar a alguien
+  de un vistazo.
+- **Historial:** **todas** las no disponibilidades, de la más nueva a la más vieja por `desde`.
+  Incluye las ya terminadas y las anuladas, estas últimas marcadas como tales — el sentido de
+  `activa: false` en vez de borrar es justamente que el registro quede.
+
+Las dos listas salen del mismo stream del listener; no hay consulta aparte.
 
 ## Arquitectura de servicios
 
@@ -283,9 +297,11 @@ Siguiendo el patrón del proyecto:
 
 ### Listener
 
-Una sola query: `where('activa', '==', true)`. Trae las no anuladas, vigentes y pasadas, y la
-vigencia se deriva en memoria por fecha. Con eso el historial sale del mismo stream y no hace
-falta una segunda consulta.
+Una sola query, **sin filtro**: trae la colección completa. La vigencia y el historial se
+derivan en memoria por fecha, y las anuladas se marcan. Con eso no hace falta una segunda
+consulta para el historial y el stream es la única fuente.
+
+El volumen lo permite: unas pocas decenas de registros por año, documentos chicos.
 
 ### Log
 
@@ -305,12 +321,26 @@ Hoy el modal no tiene ningún `*appPermiso` y el botón de `carga-asignacion` ta
 botón del tablero (`operaciones.editar`). Las reglas de Firestore sí restringen, así que la
 falla es de UI: se muestran acciones que después el backend rechaza.
 
-- Abrir el modal: `operaciones.editar` desde las dos pantallas.
-- Alta, edición y anulación: `operaciones.editar`, con `*appPermiso` en cada botón.
+**Permiso propio: `operaciones.noDisponibilidad`.**
 
-**A confirmar:** si conviene un permiso propio (`operaciones.noDisponibilidad`) en vez de
-reutilizar `operaciones.editar`. Reutilizar es más simple; uno propio permite que un rol
-administre no disponibilidades sin poder editar operaciones.
+| Rol | Acceso |
+|---|---|
+| `dev` | Sí |
+| `admin` | Sí |
+| `user` | Sí |
+| `demo` | No |
+| `manager` | No, como en todos los módulos hoy |
+
+Se aplica con `*appPermiso` en el botón del tablero, el botón de `carga-asignacion` y las
+acciones de alta, edición, cierre y anulación dentro del modal.
+
+Propio y no `operaciones.editar` para que un cambio que el usuario pida sobre quién administra
+no disponibilidades no arrastre a la edición de operaciones.
+
+**Esto es gating de UI, no una frontera de seguridad.** Las reglas de Firestore gobiernan por
+**módulo**, así que la colección `noDisponibilidades` queda mapeada a `operaciones` igual que el
+resto: a nivel de reglas, un rol con escritura en el módulo puede escribirla por fuera de la UI.
+Es el esquema que el proyecto ya tiene y no cambia acá.
 
 ## Informe del tablero
 
@@ -370,11 +400,18 @@ viejo.
 - Las referencias de documentación desactualizadas (hallazgos 19 y 20) van con el cierre del
   frente.
 
-## Preguntas abiertas
+## Decisiones tomadas
 
-1. ¿Permiso propio `operaciones.noDisponibilidad` o se reutiliza `operaciones.editar`?
-2. El historial del modal: ¿muestra todas las no disponibilidades pasadas, o sólo las de los
-   últimos N meses? Hoy trae las últimas por `getMostRecentLimitId`.
-3. Cuando se bloquea un alta por no disponibilidad, ¿alcanza con el mensaje de error, o el
-   usuario necesita un camino para forzar la asignación dejando constancia? El cliente dijo
-   "bloquea", así que la respuesta por defecto es que no hay forzado.
+| Punto | Decisión |
+|---|---|
+| Sujetos a cubrir | Los tres, aunque hoy el cliente sólo use choferes directos |
+| Bloqueo | Bloquea, no avisa |
+| Bloqueo en borrador | Bloquea: un borrador tiene fecha fija y la no disponibilidad la cubre |
+| Alta bloqueada | Sólo mensaje de error, sin camino de forzado |
+| Permiso | Propio, `operaciones.noDisponibilidad`, para `user`, `admin` y `dev` |
+| Historial | Todas, de la más nueva a la más vieja |
+| `hasta` | Nunca obligatorio: `null` = sin fecha de fin prevista |
+| Vigencia | Derivada, no guardada |
+| Migración de datos | Colección nueva vacía; `noOperativo` queda como pseudo-backup |
+
+No quedan puntos abiertos de diseño.
