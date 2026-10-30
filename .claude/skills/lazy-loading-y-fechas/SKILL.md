@@ -141,9 +141,21 @@ en `fechaLegible`.
 - **Bundle:** ~~`pdfmake` (~2,5 MB) en el chunk de Ajustes~~ y ~~`exceljs` en `/op`~~ —
   RESUELTOS en el frente Informes: `pdfmake` salió del proyecto y ninguna ruta descarga
   una librería de exportación al entrar.
-- **Specs de Karma:** 7 no compilan (`npm test` no corre). Son nombres de clase que ya
-  no existen (`clientes-control`, `valores-op`) y directivas instanciadas sin
-  argumentos (5 specs). Preexistente.
+- **Specs de Karma:** ~~7 no compilan (`npm test` no corre)~~ — los 7 se BORRARON
+  (2026-10-30, para destrabar los tests del frente No disponibilidad): eran specs
+  generados por el CLI sin lógica (`clientes-control` y `valores-op` importaban clases que
+  ya no existen; 5 directivas se instanciaban sin los argumentos del constructor).
+  `npm test` ya compila y corre.
+  - ~~Los 72 specs restantes (54 de 74 tests fallaban por armado del TestBed)~~ —
+    CERRADA: se borraron los 72 (2026-10-30). Eran "should create" generados por el CLI;
+    ninguno verificaba lógica. La suite arranca de cero con tests de funciones puras.
+  - ~~No hay Chrome instalado; corría con Edge y tardaba ~4 min~~ — CERRADA: se usa
+    **Chrome Dev** (`C:\Program Files\Google\Chrome Dev\Application\chrome.exe`) vía el
+    script `npm run test:ci`, que fija `CHROME_BIN` y corre `ng test --watch=false
+    --browsers=ChromeHeadless`. Corrida completa ~12 s, sin reintentos del launcher.
+  - `src/test.ts` es un resto del esquema viejo (`require.context`, "required by
+    karma.conf.js"): no hay `karma.conf.js` ni `main` en el target `test` de
+    `angular.json`, así que el builder no lo usa. Muerto.
 - **Versión:**
   - `app.component`, `home` y `sidebar` leen la versión con `require()`; se podría
     pasar a un import estático y retirar el fallback `v0.0.0`;

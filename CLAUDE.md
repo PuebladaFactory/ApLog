@@ -29,7 +29,8 @@ no por limitación de la plataforma.
 
 ```bash
 npm start                   # Dev server en localhost:4200
-npm test                    # Tests con Karma
+npm test                    # Tests con Karma (modo watch, necesita CHROME_BIN)
+npm run test:ci             # Tests una vez, Karma + Chrome Dev headless (~12 s). Specs al lado del archivo (*.spec.ts)
 npm run build               # Build de producción
 npm run build:demo          # Build para entorno demo
 npm run build:vantruck      # Build para entorno Vantruck (producción)
@@ -710,7 +711,7 @@ Deuda técnica activa. Actualizar cuando se salda.
 - **Vendedores** — checklist de migración pendiente; pagar una liquidación no genera movimiento financiero y restaurar un cliente no revalida vendedores desactivados. Detalle: skill `modulo-vendedores`.
 - **Finanzas** — checklist de migración pendiente (incluida la apertura de saldos); las cuentas se calculan en memoria sin agregado y los generadores de demo no son idempotentes. Detalle: skill `modulo-finanzas`.
 - **Generador y datos de demo** — en eventuales el pago al chofer puede superar el cobro, la limpieza no toca Storage y el `LogService` viejo sigue escribiendo en `logs`. Detalle: skill `herramientas-demo`.
-- **Tras Lazy loading + fechas** — el `<h1>` sin cerrar de `index.html` envuelve toda la app y 7 specs de Karma no compilan (`npm test` no corre). Detalle: skill `lazy-loading-y-fechas`.
+- **Tras Lazy loading + fechas** — el `<h1>` sin cerrar de `index.html` envuelve toda la app y `src/test.ts` quedó como resto sin uso. Detalle: skill `lazy-loading-y-fechas`.
 - **Tras Ficha de entidad** — ng-bootstrap 15 sobre Angular 20 falla en runtime con `hostDirectives` (NG0309) y quedan anonimizadores de prueba sin uso. Detalle: skill `ficha-entidad`.
 - **Tras Informes Excel/PDF** — `arrayFacOp` y `$choferes` de `objeto-papelera` se cargan sin consumidor (se van con la Papelera legado). Detalle: skill `exportacion-excel-pdf`.
 - **Nombre de entidad como enlace a la ficha (frente futuro)** — el pedido F7 del cliente, ampliado a ≈ 34 plantillas, con análisis de riesgos y etapas ya hecho. Detalle: skill `ficha-entidad`.

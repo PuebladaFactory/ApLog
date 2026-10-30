@@ -7,6 +7,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "test:ci": "set \"CHROME_BIN=C:\\Program Files\\Google\\Chrome Dev\\Application\\chrome.exe\" && ng test --watch=false --browsers=ChromeHeadless",
     "prebuild": "node set-version.js",
     "build:demo": "ng build --configuration=demo",
     "deploy:demo": "node set-version.js && ng build --configuration=demo && firebase use demo && firebase deploy",
