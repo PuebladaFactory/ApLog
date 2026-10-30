@@ -170,6 +170,46 @@ del código que hoy la aplica a choferes de proveedor.
 Un vehículo con `asignadoA.tipo === 'chofer'` donde ese chofer es de proveedor hereda la cadena
 completa: proveedor no disponible → chofer no disponible → vehículo no disponible.
 
+### Casos que la tabla no dice en voz alta
+
+Salieron al implementar el bloque 2 y quedan fijados acá para que nadie los resuelva distinto
+después:
+
+- **Vehículo de proveedor sin ningún chofer disponible:** cae. La fila 3 dice "siguen
+  disponibles si queda otro chofer"; su contrapositiva es que sin ninguno, no. Los motivos son
+  los registros de cada chofer, con origen `cascadaChofer`.
+- **Proveedor sin choferes:** `disponibilidadDe(proveedor)` lo da **disponible**, porque no hay
+  ningún registro que citar y un motivo sin registro no existe. Que no pueda aportar nada no es
+  una no disponibilidad, es falta de capacidad, y eso lo responde `vehiculosDisponiblesDe`
+  devolviendo lista vacía. El consumidor bloquea la entidad por la segunda condición —"no le
+  queda ningún vehículo disponible"—, no por la primera. El resultado para el usuario es el
+  mismo; el camino es otro.
+- **El proveedor como entidad sólo cae por registros propios.** Que todos sus choferes estén
+  fuera no lo tumba a él; lo que caen son sus vehículos.
+- **Un chofer directo con todos sus vehículos no disponibles está disponible.** Él no tiene
+  registro. Por eso las guardas tienen que preguntar por la entidad **y** por el vehículo: con
+  una sola de las dos no alcanza.
+- **`origen` en la cadena transitiva** se etiqueta según **de quién es el registro**, no por
+  dónde pasó la cascada. Si el vehículo cae porque cayó el proveedor del chofer, es
+  `cascadaProveedor`.
+- **Un mismo registro que llega por dos caminos** aparece una sola vez. Cuando hay empate gana
+  el origen **más cercano a la causa**: `propia` > `cascadaProveedor` > `cascadaChofer`. Sin
+  esta regla, el mensaje que ve el usuario depende del orden de iteración: diría "el chofer X
+  no está disponible" cuando la causa real es que el proveedor está suspendido.
+
+### Limitaciones conocidas
+
+- **`activo` no entra en "queda otro chofer".** Un chofer inactivo cuenta como disponible a los
+  efectos de sostener los vehículos del proveedor, porque `activo` está fuera del frente. Un
+  proveedor cuyo único chofer restante está inactivo va a mostrar sus vehículos como
+  disponibles, y el usuario se entera recién en el editor, donde la lista de choferes sale
+  vacía. **Este es el caso concreto que justifica sumar `activo` a la costura**, y el primero
+  que hay que arreglar cuando eso pase. No se parchea sólo acá: se resolvería en un lugar y
+  seguiría mal en los otros tres donde `activo` se filtra por separado.
+- **Un sujeto ausente de los datos en memoria** —en papelera, o sin cargar— sólo cuenta sus
+  registros propios. `datosCargados()` detecta que no cargó nada, no que falte una entidad
+  puntual.
+
 ## Servicio de resolución
 
 Punto único que responde la pregunta de disponibilidad. **Es la costura**: hoy consulta sólo
@@ -277,7 +317,10 @@ Bloquean y devuelven `Resultado` con el detalle:
 | `altaDesdeAsignacion` | **Bloquea y aborta el alta completa**, nombrando qué ítems y por qué. Mismo patrón que TC2 cuando falta la tarifa: nada toca la red. |
 | `editarOperacion` | **Bloquea** al cambiar chofer o vehículo por uno no disponible en la fecha de la operación. |
 
-En los tres casos la verificación es contra la **fecha de la operación/tablero**, no contra hoy.
+En los tres casos la verificación es contra la **fecha de la operación/tablero**, no contra hoy,
+y pregunta **por la entidad y por el vehículo por separado**. Un chofer directo cuyos vehículos
+están todos no disponibles está él mismo disponible —no tiene registro propio—, así que
+preguntar sólo por la entidad deja pasar la operación.
 
 **Sin camino de forzado.** Cuando una guarda bloquea, el usuario recibe el mensaje con el sujeto
 y el motivo, y nada más: no hay opción de forzar la asignación dejando constancia. Si la
@@ -392,8 +435,10 @@ Cada bloque deja el proyecto compilando.
 
 1. **Modelo y datos.** Interfaz, `NoDisponibilidadService` con listener, factory, colección
    nueva, `firestore.rules`, `LimpiezaDemoService`. Sin consumidores todavía.
-2. **Resolución.** `DisponibilidadService` con las cascadas, el util de fechas, y **tests** de
-   las funciones puras y de las cascadas. El generador borra su copia de la regla.
+2. **Resolución.** `DisponibilidadService` con las cascadas y **tests**. Sin consumidores.
+   **Las cascadas van en funciones puras** que reciben los datos por argumento; el servicio
+   sólo lee el estado y delega. Así los tests no necesitan TestBed ni stubs, y la lógica queda
+   verificable sin infraestructura — mismo patrón que `calcularEstadoDocumentacion` en Legajos.
 3. **Modal nuevo.** Selector de sujeto, alta/edición/cerrar/anular, las validaciones de arriba,
    permisos, historial.
 4. **Tablero y carga.** Los dos sobre `DisponibilidadService`, con la verificación por los dos
@@ -401,7 +446,11 @@ Cada bloque deja el proyecto compilando.
 5. **Editor.** Choferes de proveedor y vehículos, más la autoselección.
 6. **Guardas duras.** `guardarBorrador`, `altaDesdeAsignacion`, `editarOperacion`.
 7. **Informe y retiro del camino viejo.** La hoja con tres sujetos; el caso `noOperativo` de
-   `StorageService`, la copia de la regla del generador, y el `LogService` de este circuito.
+   `StorageService`, el util viejo (y el renombre del nuevo), y el `LogService` de este
+   circuito. **El generador de demo migra acá, no en el bloque 2**: su copia de la regla está
+   tipada contra el modelo viejo y lee la colección vieja, así que cambiarle la regla sin
+   cambiarle la fuente de datos no se puede. Es un cambio de camino completo, no de una
+   función.
 
 El bloque 2 es donde los tests valen: las cascadas son funciones puras sobre datos, el
 compilador no puede verificarlas, y son exactamente el tipo de regla que se rompe en silencio.

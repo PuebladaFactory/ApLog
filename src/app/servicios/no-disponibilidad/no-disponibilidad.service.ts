@@ -38,6 +38,9 @@ export class NoDisponibilidadService implements OnDestroy {
 
   private destroy$ = new Subject<void>();
   private iniciado = false;
+  /** true desde el primer snapshot del listener. La colección puede estar
+   *  vacía de verdad, así que `[]` no alcanza para saber si ya se leyó. */
+  private cargado = false;
 
   constructor(
     private db: DbFirestoreService,
@@ -69,13 +72,20 @@ export class NoDisponibilidadService implements OnDestroy {
               actual = [...actual, nd];
             }
           }
+          this.cargado = true;
           this._noDisponibilidades$.next(this.ordenar(actual));
         },
         error: err => {
           this.iniciado = false;
+          this.cargado = false;
           console.error('NoDisponibilidadService: error en el listener de noDisponibilidades', err);
         },
       });
+  }
+
+  /** ¿Ya llegó el primer snapshot? false antes de `init()` o si el listener falló. */
+  estaCargado(): boolean {
+    return this.cargado;
   }
 
   /** Todas (incluidas las terminadas y las anuladas), más nueva primero. */
