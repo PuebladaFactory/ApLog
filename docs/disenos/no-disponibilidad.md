@@ -96,9 +96,22 @@ export interface NoDisponibilidad {
   motivo: string;                  // Obligatorio.
   activa: boolean;                 // false = ANULADA (cargada por error).
                                    // NO expresa vigencia.
+  anulacion?: Anulacion;           // presente sólo si activa === false.
+                                   // Reutiliza interfaces/anulacion.ts, como InformeOp.
   timestamp: number;               // último guardado
 }
 ```
+
+**El sujeto no es editable.** Si se cargó sobre la entidad equivocada se anula y se carga otra.
+Permitir cambiarlo obligaría a reconstruir el snapshot y dejaría un registro cuyo historial no
+corresponde a ninguna entidad real.
+
+**La anulación lleva motivo.** El log registra quién y cuándo, pero no por qué, y el historial
+del modal muestra las anuladas: una anulada sin explicación es ruido para quien la lee después.
+Se reutiliza la interfaz `Anulacion` del proyecto en vez de inventar un campo suelto, aunque eso
+duplique usuario y fecha con el log — misma redundancia aceptada que `ConId` sobre
+`idNoDisponibilidad`, y por la misma razón: la consistencia con el resto del proyecto vale más
+que ahorrar un campo.
 
 ### Vigencia: derivada, no guardada
 
@@ -203,8 +216,15 @@ y el mensaje del bloqueo duro tiene que nombrar la causa.
 inyectar `ChoferService` y `ProveedorService` (y mañana `LegajoService`), y el proyecto no
 inyecta servicios en la capa de datos.
 
-La regla pura de fechas sigue en `shared/utils/no-disponibilidad.util.ts`, como funciones puras
-sin estado. El generador de demo **borra su copia** de `cubreFecha` e importa el util.
+La regla pura de fechas vive en `shared/utils/vigencia-no-disponibilidad.util.ts`, como funciones
+puras sin estado. Nombre provisorio: el util viejo `no-disponibilidad.util.ts` sigue en uso por
+los componentes que todavía no se migraron, y los dos no pueden convivir con el mismo nombre. En
+el **bloque 7**, al borrar el viejo, el nuevo se renombra a `no-disponibilidad.util.ts`.
+
+El generador de demo **borra su copia** de `cubreFecha` e importa el util **nuevo**.
+
+`ConsultaSujeto` vive en `interfaces/no-disponibilidad.ts`, no dentro del servicio de resolución:
+el alta del bloque 1 ya la necesita para recibir el sujeto por id, y duplicarla sería peor.
 
 ## Comportamiento por consumidor
 
@@ -263,6 +283,13 @@ En los tres casos la verificación es contra la **fecha de la operación/tablero
 y el motivo, y nada más: no hay opción de forzar la asignación dejando constancia. Si la
 situación cambió, lo que corresponde es corregir la no disponibilidad.
 
+**"No se pudo verificar" no es "está disponible".** Las guardas duras consultan el estado en
+memoria del servicio. Si el listener todavía no cargó, la lista está vacía y una guarda ingenua
+dejaría pasar todo. Por eso el servicio expone su estado de inicialización y las guardas
+**rechazan** cuando no puede verificar, con un mensaje que lo diga, en vez de aprobar por
+defecto. Es el mismo criterio que usa `restaurarOperacion` cuando no encuentra el tablero de la
+fecha: ante la duda, no escribe.
+
 ## Validaciones del alta/edición
 
 | Regla | Comportamiento |
@@ -271,7 +298,7 @@ situación cambió, lo que corresponde es corregir la no disponibilidad.
 | `hasta` opcional | `null` = sin fecha de fin prevista. **Nunca obligatorio.** |
 | `hasta >= desde` cuando `hasta` no es `null` | Rechaza, con mensaje |
 | `motivo` obligatorio | Rechaza. Hoy es opcional y el fallback `'No disponible'` no sirve en un informe |
-| Solapamiento con otra no disponibilidad **vigente del mismo sujeto** | **Avisa, no rechaza.** Muestra la existente (período y motivo) y ofrece editarla en vez de crear otra. Dos registros solapados con motivos distintos no son un error —alguien puede empezar vacaciones y enfermarse—, y la resolución toma la unión. El error real es el duplicado por olvido, y avisar con el dato a la vista lo evita sin prohibir el caso legítimo |
+| Solapamiento con otra no disponibilidad **activa del mismo sujeto cuyo período se superpone**, sea cual sea la fecha de hoy | **Avisa, no rechaza.** Muestra la existente (período y motivo) y ofrece editarla en vez de crear otra. Dos registros solapados con motivos distintos no son un error —alguien puede empezar vacaciones y enfermarse—, y la resolución toma la unión. El error real es el duplicado por olvido, y avisar con el dato a la vista lo evita sin prohibir el caso legítimo |
 
 ## Listado y historial del modal
 
@@ -302,6 +329,12 @@ derivan en memoria por fecha, y las anuladas se marcan. Con eso no hace falta un
 consulta para el historial y el stream es la única fuente.
 
 El volumen lo permite: unas pocas decenas de registros por año, documentos chicos.
+
+**Quién lo arranca.** `HomeComponent`, como el resto de los catálogos, pero **condicionado al
+permiso de lectura del módulo `operaciones`** vía `PermisosService`. Sin esa condición, un rol
+sin acceso al módulo —hoy `manager`— abre un listener que Firestore rechaza, deja un error en
+consola y el servicio queda sin inicializar de todos modos. Gatear con la matriz que el proyecto
+ya tiene es preferible a escribir una lista de roles a mano en el componente.
 
 ### Log
 
@@ -413,5 +446,11 @@ viejo.
 | `hasta` | Nunca obligatorio: `null` = sin fecha de fin prevista |
 | Vigencia | Derivada, no guardada |
 | Migración de datos | Colección nueva vacía; `noOperativo` queda como pseudo-backup |
+| Sujeto | No editable. Si está mal, se anula y se carga otra |
+| Anulación | Lleva `Anulacion` con motivo, reutilizando la interfaz del proyecto |
+| Solapamiento | Se evalúa por superposición de períodos, no por "cubre hoy" |
+| `init()` del listener | Desde `HomeComponent`, condicionado al permiso de lectura de `operaciones` |
+| Guardas sin datos cargados | Rechazan. "No se pudo verificar" no es "está disponible" |
+| Util de fechas | `vigencia-no-disponibilidad.util.ts` hasta el bloque 7, donde se renombra |
 
 No quedan puntos abiertos de diseño.
