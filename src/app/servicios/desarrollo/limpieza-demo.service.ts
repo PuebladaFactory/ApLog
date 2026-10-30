@@ -61,6 +61,7 @@ export class LimpiezaDemoService {
     'comisionesVenta',
     'liquidacionesVenta',
     'registrosOpEventuales',
+    'noDisponibilidades',
     'resumenOpMensual',
     'resumenesOp',
     'movimientos',
