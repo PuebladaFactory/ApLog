@@ -22,7 +22,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { TarifarioService } from 'src/app/servicios/tarifario/tarifario.service';
 import { OperacionesEditorComponent } from 'src/app/raiz/operaciones/operaciones-editor/operaciones-editor.component';
 import { ModalObjetosActivosComponent } from '../modal-objetos-activos/modal-objetos-activos.component';
-import { ModalChoferesNoDisponiblesComponent } from '../modal-choferes-no-disponibles/modal-choferes-no-disponibles.component';
+import { ModalNoDisponibilidadComponent } from '../modal-no-disponibilidad/modal-no-disponibilidad.component';
 
 /** Viewmodel efímero de exhibición: chofer directo seleccionable + sus vehículos
  *  (para badges de categoría). Vive en el componente, no en interfaces/. */
@@ -410,7 +410,6 @@ export class CargaAsignacionComponent implements OnInit, OnDestroy {
     }
   
     openModalNoOperativos(): void {
-      // TODO: migrar ModalChoferesNoDisponiblesComponent al modelo nuevo (frente aparte).
-      this.modal.open(ModalChoferesNoDisponiblesComponent, { centered: true, size: 'lg', });
+      this.modal.open(ModalNoDisponibilidadComponent, { centered: true, size: 'xl', scrollable: true });
     }
 }

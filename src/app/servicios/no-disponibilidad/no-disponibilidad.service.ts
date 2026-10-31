@@ -1,6 +1,7 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { Anulacion } from 'src/app/interfaces/anulacion';
 import { ConId } from 'src/app/interfaces/conId';
 import { ConsultaSujeto, NoDisponibilidad, SujetoNoDisponibilidad } from 'src/app/interfaces/no-disponibilidad';
 import { Resultado } from 'src/app/interfaces/resultado';
@@ -8,6 +9,7 @@ import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/d
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
+import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 import {
   NoDisponibilidadFactoryService, PeriodoNoDisponibilidad,
 } from './no-disponibilidad-factory.service';
@@ -48,6 +50,7 @@ export class NoDisponibilidadService implements OnDestroy {
     private factory: NoDisponibilidadFactoryService,
     private choferService: ChoferService,
     private proveedorService: ProveedorService,
+    private usuarioSesion: UsuarioSesionService,
   ) {}
 
   // ── Lectura ─────────────────────────────────────────────────────
@@ -169,21 +172,30 @@ export class NoDisponibilidadService implements OnDestroy {
     return { exito: true, mensaje: 'No disponibilidad actualizada.' };
   }
 
-  /** Anulación: se cargó por error, nunca existió. `activa: false`, el
-   *  registro queda (historial). NO es "ya terminó": eso es editar `hasta`. */
-  async anular(idNoDisponibilidad: string): Promise<Resultado<void>> {
+  /** Anulación: se cargó por error, nunca existió. `activa: false` + la
+   *  `anulacion` con quién, cuándo y por qué; el registro queda (historial).
+   *  NO es "ya terminó": eso es editar `hasta`. */
+  async anular(idNoDisponibilidad: string, motivo: string): Promise<Resultado<void>> {
+    const motivoLimpio = (motivo ?? '').trim();
+    if (!motivoLimpio) return { exito: false, mensaje: 'Falta el motivo de la anulación.' };
+
     const coleccion = NoDisponibilidadService.COLECCION;
+    const anulacion: Anulacion = {
+      motivo: motivoLimpio,
+      usuario: this.usuarioSesion.getUsuarioActual()?.email ?? 'Desconocido',
+      fecha: new Date().toISOString(),
+    };
     try {
       const anterior = await this.db.getById<NoDisponibilidad>(coleccion, idNoDisponibilidad);
       if (!anterior) return { exito: false, mensaje: 'La no disponibilidad ya no existe.' };
       if (!anterior.activa) return { exito: false, mensaje: 'La no disponibilidad ya estaba anulada.' };
 
       const escrituras: EscrituraBatch[] = [
-        { coleccion, id: idNoDisponibilidad, data: { activa: false, timestamp: Date.now() }, modo: 'actualizar' },
+        { coleccion, id: idNoDisponibilidad, data: { activa: false, anulacion, timestamp: Date.now() }, modo: 'actualizar' },
       ];
       await this.logRegistro.agregarAlBatch(
         escrituras, 'ANULAR', coleccion, idNoDisponibilidad,
-        `Anulación de No disponibilidad de ${this.descripcion(anterior)}`, anterior,
+        `Anulación de No disponibilidad de ${this.descripcion(anterior)}. Motivo: ${motivoLimpio}`, anterior,
       );
       await this.db.commitBatch(escrituras);
     } catch (e: any) {

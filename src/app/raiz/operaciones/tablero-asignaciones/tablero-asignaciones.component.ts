@@ -25,7 +25,7 @@ import { OperacionService, OperacionCreada, ResultadoCreacionOps, ErrorCreacionO
 import { OperacionesEditorComponent } from 'src/app/raiz/operaciones/operaciones-editor/operaciones-editor.component';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { TarifarioService } from 'src/app/servicios/tarifario/tarifario.service';
-import { ModalChoferesNoDisponiblesComponent } from '../modal-choferes-no-disponibles/modal-choferes-no-disponibles.component';
+import { ModalNoDisponibilidadComponent } from '../modal-no-disponibilidad/modal-no-disponibilidad.component';
 
 interface VehiculoPool {
   idVehiculo: string;
@@ -851,7 +851,6 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
   }
 
   openModalNoOperativos(): void {
-    // TODO: migrar ModalChoferesNoDisponiblesComponent al modelo nuevo (frente aparte).
-    this.modal.open(ModalChoferesNoDisponiblesComponent, { centered: true, size: 'lg', });
+    this.modal.open(ModalNoDisponibilidadComponent, { centered: true, size: 'xl', scrollable: true });
   }
 }

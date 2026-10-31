@@ -39,12 +39,14 @@
                 >
                     Clientes
                 </button>
-                <button
-                    class="btn btn-outline-secondary botonera btn-chofer"
-                    (click)="openModalNoOperativos()"
-                >
-                    No Operativos
-                </button>
+                <ng-container *appPermiso="'operaciones.noDisponibilidad'">
+                    <button
+                        class="btn btn-outline-secondary botonera btn-chofer"
+                        (click)="openModalNoOperativos()"
+                    >
+                        No Operativos
+                    </button>
+                </ng-container>
             </div>
         </div>
         <div class="col-2">

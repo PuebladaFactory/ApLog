@@ -1,0 +1,13 @@
+.tabla-nd {
+  max-height: 45vh;
+  overflow-y: auto;
+}
+
+// Anulada: queda en el historial, pero se lee como "no cuenta".
+tr.anulada td:not(:last-child) {
+  color: var(--bs-secondary-color);
+}
+
+tr.anulada td:nth-child(3) {
+  text-decoration: line-through;
+}

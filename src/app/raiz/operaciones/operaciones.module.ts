@@ -16,6 +16,7 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ModalObjetosActivosComponent } from './modal-objetos-activos/modal-objetos-activos.component';
 import { ModalChoferesNoDisponiblesComponent } from './modal-choferes-no-disponibles/modal-choferes-no-disponibles.component';
+import { ModalNoDisponibilidadComponent } from './modal-no-disponibilidad/modal-no-disponibilidad.component';
 import { TableroOpComponent } from './tablero-op/tablero-op.component';
 import { DateRangeService } from 'src/app/servicios/fechas/date-range.service';
 import { TableroAsignacionesComponent } from './tablero-asignaciones/tablero-asignaciones.component';
@@ -35,6 +36,7 @@ import { ModalDetalleOpComponent } from './modal-detalle-op/modal-detalle-op.com
     OpControlComponent,
     ModalObjetosActivosComponent,
     ModalChoferesNoDisponiblesComponent,
+    ModalNoDisponibilidadComponent,
     TableroOpComponent,
     TableroAsignacionesComponent,
     OperacionesEditorComponent,

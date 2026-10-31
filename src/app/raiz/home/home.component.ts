@@ -9,6 +9,8 @@ import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
 import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
 import { TarifarioService } from 'src/app/servicios/tarifario/tarifario.service';
+import { NoDisponibilidadService } from 'src/app/servicios/no-disponibilidad/no-disponibilidad.service';
+import { PermisosService } from 'src/app/servicios/permisos/permisos.service';
 
 let version = 'v0.0.0'; // fallback por defecto
 
@@ -46,7 +48,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   private alCambiarAncho = (e: MediaQueryListEvent) => this.aplicarModo(e.matches);
   private destroy$ = new Subject<void>();
 
-  constructor(private storageService: StorageService, private categoriaDocumentacionService: CategoriaDocumentacionService, private legajoService: LegajoService, private choferService: ChoferService, private proveedorService: ProveedorService, private clienteService: ClienteService, private tarifarioService: TarifarioService, private router: Router) { }
+  constructor(private storageService: StorageService, private categoriaDocumentacionService: CategoriaDocumentacionService, private legajoService: LegajoService, private choferService: ChoferService, private proveedorService: ProveedorService, private clienteService: ClienteService, private tarifarioService: TarifarioService, private noDisponibilidadService: NoDisponibilidadService, private permisosService: PermisosService, private router: Router) { }
 
   ngOnInit(): void {
     this.choferService.init();
@@ -55,6 +57,9 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.tarifarioService.init();
     this.categoriaDocumentacionService.init();
     this.legajoService.init();
+    // Sólo con lectura del módulo 'operaciones' (donde las reglas mapean
+    // noDisponibilidades): sin ella el listener lo rechaza Firestore.
+    if (this.permisosService.puede('operaciones')) this.noDisponibilidadService.init();
     // TC-R3: fuera los listeners de las 7 colecciones de tarifas viejas
     // (tarifasGral/Esp/PersCliente, tarifasGral/EspChofer,
     // tarifasGral/EspProveedor) — sin lectores desde TC-R1/TC-R2. Las

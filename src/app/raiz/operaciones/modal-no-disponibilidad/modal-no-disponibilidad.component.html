@@ -1,0 +1,196 @@
+<div class="modal-header">
+    <h4 class="modal-title">No disponibilidades</h4>
+    <button type="button" class="btn-close" aria-label="Cerrar" (click)="activeModal.close()"></button>
+</div>
+
+<div class="modal-body">
+    <!-- ALTA / EDICIÓN -->
+    <ng-container *appPermiso="'operaciones.noDisponibilidad'">
+        <form [formGroup]="form" (ngSubmit)="guardar()" class="border rounded p-3 mb-3 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">
+                    @if (enEdicion) {
+                        Editar no disponibilidad
+                    } @else {
+                        Nueva no disponibilidad
+                    }
+                </h5>
+                @if (enEdicion) {
+                    <button type="button" class="btn btn-sm btn-outline-secondary" (click)="nueva()">
+                        Cancelar edición
+                    </button>
+                }
+            </div>
+
+            <div class="row g-2">
+                <div class="col-12">
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Tipo de sujeto">
+                        @for (t of tipos; track t) {
+                            <input
+                                type="radio"
+                                class="btn-check"
+                                formControlName="tipo"
+                                [value]="t"
+                                [id]="'nd-tipo-' + t"
+                            />
+                            <label class="btn btn-outline-primary" [for]="'nd-tipo-' + t">
+                                {{ etiquetaTipo[t] }}
+                            </label>
+                        }
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    @if (enEdicion) {
+                        <label class="form-label mb-0">{{ etiquetaTipo[enEdicion.sujeto.tipo] }}</label>
+                        <div class="form-control-plaintext fw-bold">
+                            {{ nombreSujeto(enEdicion.sujeto) }}
+                            <small class="text-muted fw-normal">
+                                (no se puede cambiar: si está mal, anulala y cargá otra)
+                            </small>
+                        </div>
+                    } @else {
+                        <label class="form-label mb-0" for="nd-sujeto">{{ etiquetaTipo[tipoActual] }}</label>
+                        <select id="nd-sujeto" class="form-select form-select-sm" formControlName="idSujeto">
+                            <option value="">— Elegí —</option>
+                            @for (o of opciones[tipoActual]; track o.id) {
+                                <option [value]="o.id">{{ o.etiqueta }}</option>
+                            }
+                        </select>
+                    }
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <label class="form-label mb-0" for="nd-desde">Desde</label>
+                    <input id="nd-desde" type="date" class="form-control form-control-sm" formControlName="desde" />
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label mb-0" for="nd-hasta">Hasta (opcional)</label>
+                    <input id="nd-hasta" type="date" class="form-control form-control-sm" formControlName="hasta" />
+                    <small class="text-muted">Vacío: sin fecha de fin prevista.</small>
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label mb-0" for="nd-motivo">Motivo</label>
+                    <input
+                        id="nd-motivo"
+                        type="text"
+                        class="form-control form-control-sm"
+                        formControlName="motivo"
+                        placeholder="Vacaciones, licencia, taller…"
+                    />
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end mt-3">
+                <button type="submit" class="btn btn-primary btn-sm" [disabled]="guardando">
+                    {{ enEdicion ? 'Guardar cambios' : 'Agregar' }}
+                </button>
+            </div>
+        </form>
+    </ng-container>
+
+    <!-- LISTAS -->
+    <div class="btn-group btn-group-sm mb-2" role="group" aria-label="Lista">
+        <button
+            type="button"
+            class="btn"
+            [class.btn-secondary]="vista === 'vigentes'"
+            [class.btn-outline-secondary]="vista !== 'vigentes'"
+            (click)="vista = 'vigentes'"
+        >
+            Vigentes hoy ({{ vigentes.length }})
+        </button>
+        <button
+            type="button"
+            class="btn"
+            [class.btn-secondary]="vista === 'historial'"
+            [class.btn-outline-secondary]="vista !== 'historial'"
+            (click)="vista = 'historial'"
+        >
+            Historial ({{ historial.length }})
+        </button>
+    </div>
+
+    @let lista = vista === 'vigentes' ? vigentes : historial;
+    @if (lista.length === 0) {
+        <p class="text-muted ms-1">
+            {{ vista === 'vigentes' ? 'No hay no disponibilidades vigentes hoy.' : 'Todavía no se cargó ninguna.' }}
+        </p>
+    } @else {
+        <div class="tabla-nd">
+            <table class="table table-sm table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Sujeto</th>
+                        <th>Período</th>
+                        <th>Motivo</th>
+                        <th>Estado</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (nd of lista; track nd.id) {
+                        <tr [class.anulada]="!nd.activa" [class.table-active]="enEdicion?.id === nd.id">
+                            <td>{{ etiquetaTipo[nd.sujeto.tipo] }}</td>
+                            <td>{{ nombreSujeto(nd.sujeto) }}</td>
+                            <td class="text-nowrap">
+                                {{ fechaLegible(nd.desde) }} →
+                                @if (nd.hasta) {
+                                    {{ fechaLegible(nd.hasta) }}
+                                } @else {
+                                    <em>sin fecha de fin</em>
+                                }
+                            </td>
+                            <td>
+                                {{ nd.motivo }}
+                                @if (nd.anulacion) {
+                                    <div class="small text-muted">{{ detalleAnulacion(nd) }}</div>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge" [ngClass]="claseEstado(nd)">{{ estado(nd) }}</span>
+                            </td>
+                            <td class="text-end text-nowrap">
+                                @if (nd.activa) {
+                                    <ng-container *appPermiso="'operaciones.noDisponibilidad'">
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-outline-primary me-1"
+                                            [disabled]="guardando"
+                                            (click)="editar(nd)"
+                                        >
+                                            Editar
+                                        </button>
+                                        @if (puedeCerrar(nd)) {
+                                            <button
+                                                type="button"
+                                                class="btn btn-sm btn-outline-success me-1"
+                                                [disabled]="guardando"
+                                                (click)="cerrar(nd)"
+                                            >
+                                                Cerrar
+                                            </button>
+                                        }
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-outline-danger"
+                                            [disabled]="guardando"
+                                            (click)="anular(nd)"
+                                        >
+                                            Anular
+                                        </button>
+                                    </ng-container>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@if (guardando) {
+    <app-spinner></app-spinner>
+}

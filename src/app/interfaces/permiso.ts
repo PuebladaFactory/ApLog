@@ -33,7 +33,8 @@ export type AccionPermiso =
   | 'descargarListado'
   | 'limpiarTablero'
   | 'revertir'
-  | 'desvincular';
+  | 'desvincular'
+  | 'noDisponibilidad';
 
 // Las 4 acciones reales que distingue firestore.rules (función permitido()).
 // Toda AccionPermiso se traduce a una de estas 4 antes de consultar la

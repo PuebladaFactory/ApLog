@@ -192,10 +192,18 @@ después:
 - **`origen` en la cadena transitiva** se etiqueta según **de quién es el registro**, no por
   dónde pasó la cascada. Si el vehículo cae porque cayó el proveedor del chofer, es
   `cascadaProveedor`.
-- **Un mismo registro que llega por dos caminos** aparece una sola vez. Cuando hay empate gana
-  el origen **más cercano a la causa**: `propia` > `cascadaProveedor` > `cascadaChofer`. Sin
-  esta regla, el mensaje que ve el usuario depende del orden de iteración: diría "el chofer X
-  no está disponible" cuando la causa real es que el proveedor está suspendido.
+- **`origen` sale del dueño del registro, no del camino recorrido.** Un registro de proveedor
+  llega siempre como `cascadaProveedor`, uno de chofer como `cascadaChofer` y uno de vehículo
+  como `propia`, sin importar por cuántas vías alcance al sujeto que se está evaluando. Un
+  registro repetido se deja una sola vez y **no hace falta desempatar**, porque un mismo
+  registro nunca llega con dos orígenes distintos en una misma evaluación.
+
+  Esto se intentó fijar con una regla de precedencia (`propia` > `cascadaProveedor` >
+  `cascadaChofer`) y resultó **código inalcanzable**: invertirla dejaba los 27 tests en verde,
+  porque el conflicto que pretendía resolver no puede ocurrir. La ambigüedad está eliminada en
+  la construcción, no resuelta en tiempo de ejecución. **No volver a agregarla.** Lo que
+  garantiza el etiquetado correcto es que `heredadoDeChofer` sólo convierte en `cascadaChofer`
+  lo que es propio del chofer, y eso ya lo fija el test de la fila 4.
 
 ### Limitaciones conocidas
 

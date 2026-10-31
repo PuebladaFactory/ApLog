@@ -267,6 +267,13 @@ export class PermisosService {
     // Desvincular la factura de un InformeLiq (facturado → emitido): edición
     // del documento, igual que vincularFactura.
     desvincular: 'editar',
+    // Administrar no disponibilidades (alta, edición, cierre, anulación —
+    // ninguna borra: la anulación es un update). Escribe la colección
+    // noDisponibilidades, mapeada al módulo 'operaciones' en las reglas.
+    // Acción propia y no 'editar' para que un cambio sobre quién las
+    // administra no arrastre a la edición de operaciones. 'editar' en
+    // 'operaciones' da dev/admin/user sí, demo/manager no: lo pedido.
+    noDisponibilidad: 'editar',
   };
 
   // Primer caso real poblado (Bloque 7, tablero-asignaciones) — hasta acá

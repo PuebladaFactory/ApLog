@@ -1,3 +1,4 @@
+import { Anulacion } from './anulacion';
 import { ConId } from './conId';
 
 /** No disponibilidad de un chofer, un vehículo o un proveedor durante un
@@ -58,5 +59,7 @@ export interface NoDisponibilidad {
   activa: boolean;                 // false = ANULADA (cargada por error).
                                    // NO expresa vigencia: la vigencia es derivada
                                    // (ver vigencia-no-disponibilidad.util.ts).
+  anulacion?: Anulacion;           // presente sólo si activa === false: quién,
+                                   // cuándo y por qué se anuló.
   timestamp: number;               // último guardado
 }
