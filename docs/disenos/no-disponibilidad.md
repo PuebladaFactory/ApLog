@@ -181,10 +181,15 @@ del código que hoy la aplica a choferes de proveedor.
   que las cascadas no se desplazan con el tiempo: un vehículo que hoy cae con su chofer
   directo va a seguir cayendo con él.
 
-### Resolución transitiva
+### Resolución transitiva: no puede darse
 
-Un vehículo con `asignadoA.tipo === 'chofer'` donde ese chofer es de proveedor hereda la cadena
-completa: proveedor no disponible → chofer no disponible → vehículo no disponible.
+La cadena "proveedor no disponible → chofer de proveedor → vehículo de ese chofer" **no puede
+darse en los datos**, por el invariante 1: un vehículo cuelga de un chofer directo o de un
+proveedor, nunca de un chofer de proveedor. El código igual la resuelve de forma defensiva
+(si el dueño de un vehículo fuera un chofer de proveedor, el vehículo heredaría lo que tumba a
+ese chofer, incluido su proveedor) y hay un test que lo fija, pero no es un caso que los datos
+produzcan. El código y el test se quedan: no molestan; lo que no hay que hacer es tratarlo como
+un caso real al diseñar.
 
 ### Casos que la tabla no dice en voz alta
 
@@ -194,12 +199,16 @@ después:
 - **Vehículo de proveedor sin ningún chofer disponible:** cae. La fila 3 dice "siguen
   disponibles si queda otro chofer"; su contrapositiva es que sin ninguno, no. Los motivos son
   los registros de cada chofer, con origen `cascadaChofer`.
-- **Proveedor sin choferes:** `disponibilidadDe(proveedor)` lo da **disponible**, porque no hay
-  ningún registro que citar y un motivo sin registro no existe. Que no pueda aportar nada no es
-  una no disponibilidad, es falta de capacidad, y eso lo responde `vehiculosDisponiblesDe`
-  devolviendo lista vacía. El consumidor bloquea la entidad por la segunda condición —"no le
-  queda ningún vehículo disponible"—, no por la primera. El resultado para el usuario es el
-  mismo; el camino es otro.
+- **Proveedor sin choferes:** son dos casos distintos y no hay que mezclarlos.
+  - **Todos sus choferes no disponibles:** hay registros que citar, así que los vehículos del
+    proveedor caen, con origen `cascadaChofer` (el primer punto de esta lista).
+  - **Cero choferes:** no hay ningún registro, y una no disponibilidad sin registro no existe.
+    El proveedor queda **disponible** y sus vehículos también: `vehiculosDisponiblesDe` los
+    devuelve como disponibles, a propósito y con un test.
+
+  Un proveedor con vehículos y sin choferes no puede aportar nada, pero **eso es falta de
+  capacidad, no indisponibilidad**: resolverlo es filtrado de pool, igual que `activo`, y
+  queda fuera de este frente (ver "Limitaciones conocidas").
 - **El proveedor como entidad sólo cae por registros propios.** Que todos sus choferes estén
   fuera no lo tumba a él; lo que caen son sus vehículos.
 - **Un chofer directo con todos sus vehículos no disponibles está disponible.** Él no tiene
@@ -230,6 +239,10 @@ después:
   vacía. **Este es el caso concreto que justifica sumar `activo` a la costura**, y el primero
   que hay que arreglar cuando eso pase. No se parchea sólo acá: se resolvería en un lugar y
   seguiría mal en los otros tres donde `activo` se filtra por separado.
+- **Un proveedor con vehículos y sin ningún chofer aparece disponible.** No puede aportar
+  nada, pero eso es falta de capacidad, no indisponibilidad: no hay registro que citar (ver
+  "Proveedor sin choferes" en "Casos que la tabla no dice en voz alta"). Se resuelve con
+  filtrado de pool, igual que `activo`, y va junto con él cuando se sume a la costura.
 - **Un sujeto ausente de los datos en memoria** —en papelera, o sin cargar— sólo cuenta sus
   registros propios. `datosCargados()` detecta que no cargó nada, no que falte una entidad
   puntual.
@@ -340,8 +353,9 @@ Bloquean y devuelven `Resultado` con el detalle:
 | `guardarBorrador` | **Bloquea.** Un borrador tiene fecha determinada; si esa fecha cae dentro del período, la entidad no va a estar disponible y dejarlo pasar induce a un error de planificación. |
 | `altaDesdeAsignacion` | **Bloquea y aborta el alta completa**, nombrando qué ítems y por qué. Mismo patrón que TC2 cuando falta la tarifa: nada toca la red. |
 | `editarOperacion` | **Bloquea** al cambiar chofer o vehículo por uno no disponible en la fecha de la operación. |
+| Botón **"Alta de Op"** de `tablero-asignaciones` | **Se frena en el botón, nombrando qué ítems y por qué**, en vez de dejar entrar a `operaciones-editor` para fallar al confirmar. Hoy abre el editor sin verificar nada: probado en demo, con un borrador que tiene un ítem no disponible se entra igual. **Bloque 6.** |
 
-En los tres casos la verificación es contra la **fecha de la operación/tablero**, no contra hoy,
+En todos los casos la verificación es contra la **fecha de la operación/tablero**, no contra hoy,
 y pregunta **por la entidad y por el vehículo por separado**. Un chofer directo cuyos vehículos
 están todos no disponibles está él mismo disponible —no tiene registro propio—, así que
 preguntar sólo por la entidad deja pasar la operación.

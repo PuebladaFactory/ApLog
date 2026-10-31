@@ -96,6 +96,14 @@ export function describirMotivos(motivos: MotivoNoDisponible[]): string {
   }).join('\n');
 }
 
+/** Versión de una línea, sin períodos: para lugares chicos como una opción
+ *  de un <select> o una fila de error. */
+export function resumirMotivos(motivos: MotivoNoDisponible[]): string {
+  return motivos
+    .map(({ noDisponibilidad: nd }) => `${ETIQUETA_TIPO[nd.sujeto.tipo]} ${nombreSujeto(nd.sujeto)}: ${nd.motivo}`)
+    .join('; ');
+}
+
 // ── Resolución y cascadas ─────────────────────────────────────────
 //
 // Funciones puras: reciben por argumento todo lo que necesitan. Las usa

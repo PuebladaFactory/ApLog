@@ -220,6 +220,15 @@ esas reglas (siguen vigentes); el editor ya no inyecta `ChoferService` /
   `op.proveedor`, chofer si directo), filtro síncrono sobre `getVehiculosActuales()`.
 
 ## Deuda abierta — Tarifas (tras el cierre del frente)
+- **Renombrar `ResolucionTarifaOpService.choferesDisponibles` / `vehiculosDisponibles`**
+  (y los métodos homónimos de `operaciones-editor` que los envuelven). Devuelven
+  CANDIDATOS para resolver la tarifa (los choferes del proveedor, los vehículos de la
+  entidad), no filtran por no disponibilidad. Desde el bloque 5 del frente No
+  disponibilidad conviven en `operaciones-editor` con la disponibilidad de verdad
+  (`DisponibilidadService`), y el nombre invita a suponer que ya filtran y saltear el
+  chequeo real. Hoy hay un comentario en cada uno; el renombre (p. ej. `choferesCandidatos`
+  / `vehiculosCandidatos`) se dejó afuera de ese frente para no arrastrar el diff a
+  Tarifas. Callers: `operaciones-editor` y el generador de demo.
 - Datos de demo: clientes/choferes/proveedores conservan `idTarifa`/`tarifaAsignada`
   en Firestore (inertes; las ediciones con merge no los borran).
 - Papelera: una op sin `valoresNuevos` muestra $0 en "Tarifa Base" (solo ops de

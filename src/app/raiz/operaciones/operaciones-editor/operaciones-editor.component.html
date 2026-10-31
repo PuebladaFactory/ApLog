@@ -72,24 +72,57 @@
                                             );
                                             track ch.id
                                         ) {
-                                            <option [value]="ch.id">
+                                            @let mCh = motivosChofer(
+                                                c.operacion,
+                                                ch.id
+                                            );
+                                            <option
+                                                [value]="ch.id"
+                                                [disabled]="!estaDisponible(mCh)"
+                                            >
                                                 {{
                                                     ch.datosPersonales.apellido
                                                 }},
-                                                {{ ch.datosPersonales.nombre }}
+                                                {{ ch.datosPersonales.nombre
+                                                }}{{ sufijoOpcion(mCh) }}
                                             </option>
                                         }
                                     </select>
+                                    @let avisoCh = avisoSinElegibles(
+                                        c.operacion,
+                                        'chofer'
+                                    );
+                                    @if (avisoCh) {
+                                        <div class="small text-danger mt-1">
+                                            {{ avisoCh }}
+                                        </div>
+                                    }
                                 } @else {
                                     <div
                                         class="d-flex align-items-center justify-content-between"
                                     >
+                                        @let mChRes = motivosChofer(
+                                            c.operacion,
+                                            c.operacion.chofer.id
+                                        );
                                         <span
+                                            [class.text-danger]="
+                                                !estaDisponible(mChRes)
+                                            "
+                                            [title]="tituloNoDisponible(mChRes)"
                                             >{{ c.operacion.chofer.apellido }},
-                                            {{
-                                                c.operacion.chofer.nombre
-                                            }}</span
-                                        >
+                                            {{ c.operacion.chofer.nombre }}
+                                            @if (!estaDisponible(mChRes)) {
+                                                <span
+                                                    class="badge bg-danger ms-1"
+                                                    >{{
+                                                        mChRes === null
+                                                            ? 'Sin verificar'
+                                                            : 'No disponible'
+                                                    }}</span
+                                                >
+                                            }
+                                        </span>
                                         @if (
                                             choferesDisponibles(c.operacion)
                                                 .length > 1
@@ -138,18 +171,44 @@
                                             );
                                             track v.id
                                         ) {
-                                            <option [value]="v.id">
+                                            @let mV = motivosVehiculo(
+                                                c.operacion,
+                                                v.id
+                                            );
+                                            <option
+                                                [value]="v.id"
+                                                [disabled]="!estaDisponible(mV)"
+                                            >
                                                 {{ v.categoria.nombre }} —
-                                                {{ v.dominio }}
+                                                {{ v.dominio
+                                                }}{{ sufijoOpcion(mV) }}
                                             </option>
                                         }
                                     </select>
+                                    @let avisoV = avisoSinElegibles(
+                                        c.operacion,
+                                        'vehiculo'
+                                    );
+                                    @if (avisoV) {
+                                        <div class="small text-danger mt-1">
+                                            {{ avisoV }}
+                                        </div>
+                                    }
                                 } @else {
+                                    @let mVRes = motivosVehiculo(
+                                        c.operacion,
+                                        c.operacion.vehiculo.id
+                                    );
+                                    <!-- title en el contenedor: un input disabled no muestra el suyo -->
                                     <div
                                         class="d-flex align-items-center gap-1"
+                                        [title]="tituloNoDisponible(mVRes)"
                                     >
                                         <input
                                             class="form-control form-control-sm"
+                                            [class.is-invalid]="
+                                                !estaDisponible(mVRes)
+                                            "
                                             [value]="
                                                 c.operacion.vehiculo.dominio
                                             "

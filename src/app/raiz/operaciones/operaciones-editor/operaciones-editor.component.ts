@@ -9,6 +9,11 @@ import { OperacionFactoryService } from 'src/app/servicios/operaciones/operacion
 import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
 import { ValoresTarifaService, CandidatoTarifa, CandidatosLado } from 'src/app/servicios/tarifario/valores-tarifa.service';
 import { ResolucionTarifaOpService } from 'src/app/servicios/tarifario/resolucion-tarifa-op.service';
+import { ConsultaSujeto, MotivoNoDisponible } from 'src/app/interfaces/no-disponibilidad';
+import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
+import { DisponibilidadService } from 'src/app/servicios/no-disponibilidad/disponibilidad.service';
+import { NoDisponibilidadService } from 'src/app/servicios/no-disponibilidad/no-disponibilidad.service';
+import { describirMotivos, idDeSujeto, resumirMotivos } from 'src/app/shared/utils/vigencia-no-disponibilidad.util';
 import Swal from 'sweetalert2';
 
 /** Grupo de exhibición: una tabla por cliente. Viewmodel efímero del componente. */
@@ -65,12 +70,23 @@ export class OperacionesEditorComponent implements OnInit {
 
   fecha: string = "";
 
+  /** Memo de la resolución de disponibilidad por fecha y sujeto: el template
+   *  pregunta por cada opción de cada fila en cada ciclo. El editor no observa
+   *  (no hay suscripciones): el memo se vacía solo cuando cambia la identidad
+   *  de los arrays en memoria de los services (cada emisión de su listener
+   *  los reemplaza). */
+  private memoDisponibilidad = new Map<string, MotivoNoDisponible[]>();
+  private memoRefs: unknown[] = [];
+
   constructor(
-    public  activeModal:          NgbActiveModal,
-    private operacionFactory:     OperacionFactoryService,
-    private clienteService:       ClienteService,
-    private valoresTarifaService: ValoresTarifaService,
-    private resolucionTarifa:     ResolucionTarifaOpService,
+    public  activeModal:           NgbActiveModal,
+    private operacionFactory:      OperacionFactoryService,
+    private clienteService:        ClienteService,
+    private valoresTarifaService:  ValoresTarifaService,
+    private resolucionTarifa:      ResolucionTarifaOpService,
+    private disponibilidadService: DisponibilidadService,
+    private noDisponibilidadService: NoDisponibilidadService,
+    private choferService:         ChoferService,
   ) {}
 
   // ===========================================================================
@@ -79,6 +95,8 @@ export class OperacionesEditorComponent implements OnInit {
 
   ngOnInit(): void {
     this.fecha = this.operacionesCreadas[0].operacion.fecha;
+    // Idempotente: normalmente ya lo arrancó HomeComponent.
+    this.noDisponibilidadService.init();
 
     // Sembrar si cada op era eventual (antes de cualquier toggle).
     for (const c of this.operacionesCreadas) {
@@ -122,21 +140,114 @@ export class OperacionesEditorComponent implements OnInit {
     this.grupos = Array.from(mapa.values());
   }
 
-  /** Si chofer o vehículo quedaron pendientes pero solo hay UNA opción disponible, se
-   *  resuelven solos — mismo criterio que la selección de tarifa (autoSeleccionarSiCorresponde):
-   *  con una sola opción no hay nada que elegir, no tiene sentido forzar al usuario a
-   *  confirmarla a mano. Con 2+ opciones sigue quedando pendiente para que el usuario
-   *  elija en el <select>. Se llama en cada reagrupar() — es idempotente: una vez
-   *  resuelto, choferPendiente/vehiculoPendiente da false y no vuelve a intervenir. */
+  /** Si chofer o vehículo quedaron pendientes pero solo hay UNA opción
+   *  ELEGIBLE (candidato y disponible en la fecha de la op), se resuelven solos
+   *  — mismo criterio que la selección de tarifa (autoSeleccionarSiCorresponde):
+   *  con una sola opción no hay nada que elegir. Si la única opción no está
+   *  disponible (o no se pudo verificar), NO se elige: queda pendiente con el
+   *  motivo a la vista. Con 2+ elegibles sigue pendiente para que elija el
+   *  usuario. Se llama en cada reagrupar() — es idempotente: una vez resuelto,
+   *  choferPendiente/vehiculoPendiente da false y no vuelve a intervenir. */
   private autoResolverPendientesSiCorresponde(c: OperacionCreada): void {
     if (this.choferPendiente(c.operacion)) {
-      const disponibles = this.choferesDisponibles(c.operacion);
-      if (disponibles.length === 1) this.onChoferSeleccionado(c, disponibles[0].id);
+      const elegibles = this.choferesDisponibles(c.operacion)
+        .filter(ch => this.estaDisponible(this.motivosChofer(c.operacion, ch.id)));
+      if (elegibles.length === 1) this.onChoferSeleccionado(c, elegibles[0].id);
     }
     if (this.vehiculoPendiente(c.operacion)) {
-      const disponibles = this.vehiculosDisponibles(c.operacion);
-      if (disponibles.length === 1) this.onVehiculoSeleccionado(c, disponibles[0].id);
+      const elegibles = this.vehiculosDisponibles(c.operacion)
+        .filter(v => this.estaDisponible(this.motivosVehiculo(c.operacion, v.id)));
+      if (elegibles.length === 1) this.onVehiculoSeleccionado(c, elegibles[0].id);
     }
+  }
+
+  // ===========================================================================
+  // NO DISPONIBILIDAD (DisponibilidadService, contra la FECHA DE LA OP)
+  // ===========================================================================
+  //
+  // Los candidatos salen de ResolucionTarifaOpService (choferesDisponibles /
+  // vehiculosDisponibles: pese al nombre, NO miran disponibilidad). La
+  // disponibilidad se cruza acá, sin esconder a nadie: un candidato no
+  // disponible se muestra deshabilitado con el motivo. Chofer y vehículo se
+  // preguntan por separado: un chofer directo con todos sus vehículos fuera
+  // está él mismo disponible. `null` = no se pudo verificar (sin datos
+  // cargados): NO cuenta como disponible.
+
+  private motivosDe(consulta: ConsultaSujeto, fecha: string): MotivoNoDisponible[] | null {
+    if (!this.disponibilidadService.datosCargados()) return null;
+    const refs = [
+      this.noDisponibilidadService.getNoDisponibilidadesActuales(),
+      this.choferService.getChoferesActuales(),
+      this.choferService.getVehiculosActuales(),
+    ];
+    if (refs.some((r, i) => r !== this.memoRefs[i])) {
+      this.memoDisponibilidad.clear();
+      this.memoRefs = refs;
+    }
+    const clave = `${fecha}|${consulta.tipo}:${idDeSujeto(consulta)}`;
+    let motivos = this.memoDisponibilidad.get(clave);
+    if (!motivos) {
+      const r = this.disponibilidadService.disponibilidadDe(consulta, fecha);
+      motivos = r.disponible ? [] : r.motivos;
+      this.memoDisponibilidad.set(clave, motivos);
+    }
+    return motivos;
+  }
+
+  motivosChofer(op: Operacion, idChofer: string): MotivoNoDisponible[] | null {
+    return this.motivosDe({ tipo: 'chofer', idChofer }, op.fecha);
+  }
+
+  motivosVehiculo(op: Operacion, idVehiculo: string): MotivoNoDisponible[] | null {
+    return this.motivosDe({ tipo: 'vehiculo', idVehiculo }, op.fecha);
+  }
+
+  estaDisponible(motivos: MotivoNoDisponible[] | null): boolean {
+    return motivos !== null && motivos.length === 0;
+  }
+
+  /** Sufijo de una opción del <select>: vacío si está disponible. */
+  sufijoOpcion(motivos: MotivoNoDisponible[] | null): string {
+    if (motivos === null) return ' — sin verificar';
+    return motivos.length > 0 ? ` — no disponible (${resumirMotivos(motivos)})` : '';
+  }
+
+  /** Aviso bajo un selector pendiente cuando ningún candidato es elegible:
+   *  explica por qué no se autoseleccionó. '' si hay alguno elegible. */
+  avisoSinElegibles(op: Operacion, lado: 'chofer' | 'vehiculo'): string {
+    const motivosPorCandidato = lado === 'chofer'
+      ? this.choferesDisponibles(op).map(ch => this.motivosChofer(op, ch.id))
+      : this.vehiculosDisponibles(op).map(v => this.motivosVehiculo(op, v.id));
+    if (motivosPorCandidato.length === 0) return '';
+    if (motivosPorCandidato.some(m => this.estaDisponible(m))) return '';
+    if (motivosPorCandidato.some(m => m === null)) {
+      return 'No se pudo verificar la disponibilidad: todavía se están cargando los datos.';
+    }
+    const quien = lado === 'chofer' ? 'chofer' : 'vehículo';
+    return `Ningún ${quien} disponible el ${op.fecha}.`;
+  }
+
+  /** Chofer y vehículo YA resueltos de la op que no se pueden usar en su
+   *  fecha (o que no se pudieron verificar). Vacío si está todo bien. */
+  problemasDisponibilidad(op: Operacion): string[] {
+    const problemas: string[] = [];
+    if (op.chofer.id !== '') {
+      const m = this.motivosChofer(op, op.chofer.id);
+      if (m === null) problemas.push('No se pudo verificar la disponibilidad del chofer');
+      else if (m.length > 0) problemas.push(`Chofer no disponible: ${resumirMotivos(m)}`);
+    }
+    if (op.vehiculo.id !== '') {
+      const m = this.motivosVehiculo(op, op.vehiculo.id);
+      if (m === null) problemas.push('No se pudo verificar la disponibilidad del vehículo');
+      else if (m.length > 0) problemas.push(`Vehículo no disponible: ${resumirMotivos(m)}`);
+    }
+    return problemas;
+  }
+
+  /** Title del chofer/vehículo resuelto que no está disponible. */
+  tituloNoDisponible(motivos: MotivoNoDisponible[] | null): string {
+    if (motivos === null) return 'No se pudo verificar la disponibilidad.';
+    return motivos.length > 0 ? `No disponible en la fecha:\n${describirMotivos(motivos)}` : '';
   }
 
   // ===========================================================================
@@ -148,7 +259,9 @@ export class OperacionesEditorComponent implements OnInit {
     return op.chofer.id === '';
   }
 
-  /** Choferes disponibles para resolver el pendiente: los del proveedor de la op. */
+  /** CANDIDATOS para resolver el chofer pendiente: los del proveedor de la op.
+   *  Pese al nombre (heredado de ResolucionTarifaOpService), NO filtra por
+   *  disponibilidad: eso es motivosChofer. */
   choferesDisponibles(op: Operacion): ConIdType<Chofer>[] {
     return this.resolucionTarifa.choferesDisponibles(op);
   }
@@ -191,7 +304,8 @@ export class OperacionesEditorComponent implements OnInit {
     return op.vehiculo.id === '';
   }
 
-  /** Vehículos disponibles: del proveedor si la op es de proveedor, del chofer si es directa.
+  /** CANDIDATOS de vehículo: del proveedor si la op es de proveedor, del chofer si es
+   *  directa. Pese al nombre, NO filtra por disponibilidad: eso es motivosVehiculo.
    *  Filtro síncrono inline sobre getVehiculosActuales (no suscripción: el editor edita). */
   vehiculosDisponibles(op: Operacion): ConIdType<Vehiculo>[] {
     return this.resolucionTarifa.vehiculosDisponibles(op);
@@ -528,6 +642,8 @@ export class OperacionesEditorComponent implements OnInit {
     if (op.acompaniante && op.acompanianteCant === 0)
       errores.push('La cantidad de acompañantes no puede ser 0');
 
+    errores.push(...this.problemasDisponibilidad(op));
+
     return errores;
   }
 
@@ -567,6 +683,28 @@ export class OperacionesEditorComponent implements OnInit {
       return;
     }
 
+    // Disponibilidad primero, con detalle: qué fila y por qué. Bloqueo de UI;
+    // la guarda dura de altaDesdeAsignacion (bloque 6) va igual.
+    const noDisponibles = vigentes
+      .map(c => ({ c, problemas: this.problemasDisponibilidad(c.operacion) }))
+      .filter(x => x.problemas.length > 0);
+    if (noDisponibles.length > 0) {
+      const detalle = noDisponibles.map(({ c, problemas }) => {
+        const op = c.operacion;
+        const quien = op.chofer.id ? `${op.chofer.apellido}, ${op.chofer.nombre}` : op.vehiculo.dominio;
+        return `<li><b>${escapar(op.cliente.razonSocial)} — ${escapar(quien)}</b>: `
+          + `${problemas.map(escapar).join('; ')}</li>`;
+      }).join('');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Hay choferes o vehículos no disponibles',
+        html: `No se puede confirmar mientras estas operaciones usen un chofer o un vehículo `
+          + `no disponible en su fecha. Cambialos o quitá la operación.`
+          + `<ul class="text-start mt-2">${detalle}</ul>`,
+      });
+      return;
+    }
+
     const conErrores = vigentes.filter(c => this.tieneErrores(c.operacion));
     if (conErrores.length > 0) {
       Swal.fire(
@@ -583,4 +721,11 @@ export class OperacionesEditorComponent implements OnInit {
   cancelar(): void {
     this.activeModal.dismiss();
   }
+}
+
+/** El motivo lo escribe el usuario: va al html del Swal. */
+function escapar(texto: string): string {
+  return texto.replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!
+  ));
 }

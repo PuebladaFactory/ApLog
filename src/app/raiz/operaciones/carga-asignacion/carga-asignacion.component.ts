@@ -59,6 +59,9 @@ interface EstadoEntidad {
   bloqueada: boolean;
   motivo: string;
   categorias: CategoriaEntidad[];
+  /** Los vehículos que se pueden usar en la fecha: base de la preselección de
+   *  vehículo único en armarItems. Sin fecha o sin verificar, todos. */
+  vehiculosDisponibles: ConIdType<Vehiculo>[];
 }
 
 @Component({
@@ -276,15 +279,16 @@ export class CargaAsignacionComponent implements OnInit, OnDestroy {
       };
     });
 
+    const vehiculosDisponibles = vehiculos.filter(v => idsDisponibles.has(v.idVehiculo));
     if (!propia.disponible) {
-      return { bloqueada: true, motivo: describirMotivos(propia.motivos), categorias };
+      return { bloqueada: true, motivo: describirMotivos(propia.motivos), categorias, vehiculosDisponibles };
     }
     // Sin vehículos: caso válido para un proveedor (se resuelve en el editor);
     // no hay vehículo "que le quede", así que no se bloquea por esta vía.
     if (vehiculos.length > 0 && disponibles.length === 0) {
-      return { bloqueada: true, motivo: 'Ningún vehículo disponible en la fecha.', categorias };
+      return { bloqueada: true, motivo: 'Ningún vehículo disponible en la fecha.', categorias, vehiculosDisponibles };
     }
-    return { bloqueada: false, motivo: '', categorias };
+    return { bloqueada: false, motivo: '', categorias, vehiculosDisponibles };
   }
 
   /** Sin fecha (o sin verificar): las categorías tal cual, sin bloqueos. */
@@ -298,6 +302,7 @@ export class CargaAsignacionComponent implements OnInit, OnDestroy {
         disponible: true,
         titulo: g.vehiculos.map(v => v.dominio).join(', '),
       })),
+      vehiculosDisponibles: vehiculos,
     };
   }
 
@@ -357,17 +362,19 @@ export class CargaAsignacionComponent implements OnInit, OnDestroy {
     const items: AsignacionItem[] = [];
     const idCliente = this.clienteSeleccionado!.id;
 
-    // Resolución anticipada de vehículo único. Si la entidad (chofer/proveedor) tiene
-    // un solo vehículo no hay elección posible — se resuelve acá para que
-    // crearOperacionesDesdeAsignacion arme la op ya completa y operaciones-editor no pida
-    // nada al usuario para esa fila. Con 2+ vehículos, idVehiculo queda null y la elección
-    // se difiere a operaciones-editor, sin cambios respecto al comportamiento anterior.
+    // Resolución anticipada de vehículo único. Si a la entidad (chofer/proveedor) le
+    // queda un solo vehículo DISPONIBLE en la fecha no hay elección posible — se
+    // resuelve acá para que crearOperacionesDesdeAsignacion arme la op ya completa y
+    // operaciones-editor no pida nada al usuario para esa fila. Ej.: dos vehículos y
+    // uno roto → se preselecciona el sano. Con 2+ disponibles, idVehiculo queda null y
+    // la elección se difiere a operaciones-editor.
 
     for (const idChofer of this.choferesSeleccionadosIds) {
       const entry = this.choferesDirectosBase.find(x => x.chofer.idChofer === idChofer);
       if (!entry) continue;
       const chofer = entry.chofer;
-      const vehiculoUnico = entry.vehiculos.length === 1 ? entry.vehiculos[0] : null;
+      const elegibles = this.estadoChofer(entry).vehiculosDisponibles;
+      const vehiculoUnico = elegibles.length === 1 ? elegibles[0] : null;
 
       items.push({
         idItem: crypto.randomUUID(),
@@ -394,7 +401,8 @@ export class CargaAsignacionComponent implements OnInit, OnDestroy {
       const entry = this.proveedoresBase.find(x => x.proveedor.idProveedor === idProveedor);
       if (!entry) continue;
       const proveedor = entry.proveedor;
-      const vehiculoUnico = entry.vehiculos.length === 1 ? entry.vehiculos[0] : null;
+      const elegibles = this.estadoProveedor(entry).vehiculosDisponibles;
+      const vehiculoUnico = elegibles.length === 1 ? elegibles[0] : null;
 
       items.push({
         idItem: crypto.randomUUID(),

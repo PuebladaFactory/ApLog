@@ -39,14 +39,21 @@ export class ResolucionTarifaOpService {
   private operacionFactory = inject(OperacionFactoryService);
   private valoresTarifa = inject(ValoresTarifaService);
 
-  /** Choferes para resolver el chofer pendiente: los del proveedor de la op. */
+  /** Choferes para resolver el chofer pendiente: los del proveedor de la op.
+   *  OJO — "disponibles" acá significa CANDIDATOS, no disponibilidad: no
+   *  filtra por no disponibilidad. Esa se verifica aparte, contra
+   *  DisponibilidadService (operaciones-editor). Renombre pendiente: ver la
+   *  skill modulo-tarifas, "Deuda abierta". */
   choferesDisponibles(op: Operacion): ConIdType<Chofer>[] {
     if (!op.proveedor) return [];
     return this.choferService.getChoferesPorProveedor(op.proveedor.id);
   }
 
-  /** Vehículos disponibles: del proveedor si la op es de proveedor, del chofer
-   *  si es directa. */
+  /** Vehículos candidatos: del proveedor si la op es de proveedor, del chofer
+   *  si es directa. OJO — igual que choferesDisponibles, "disponibles" acá
+   *  significa CANDIDATOS: no filtra por no disponibilidad, que se verifica
+   *  aparte contra DisponibilidadService. Renombre pendiente (skill
+   *  modulo-tarifas). */
   vehiculosDisponibles(op: Operacion): ConIdType<Vehiculo>[] {
     const vehiculos = this.choferService.getVehiculosActuales();
     if (op.proveedor) {
