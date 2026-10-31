@@ -7,7 +7,10 @@ import Swal from 'sweetalert2';
 
 import { ModalObjetosActivosComponent } from 'src/app/raiz/operaciones/modal-objetos-activos/modal-objetos-activos.component';
 import { sumarDias } from 'src/app/shared/utils/fecha.util';
-import { describirMotivos, idDeSujeto, unirMotivos } from 'src/app/shared/utils/vigencia-no-disponibilidad.util';
+import {
+  consultasDeAsignacion, describirMotivos, idDeSujeto, listarItemsNoDisponibles, unirMotivos,
+} from 'src/app/shared/utils/vigencia-no-disponibilidad.util';
+import { textoAHtml } from 'src/app/shared/utils/texto-html.util';
 import { preguntarFormatoDescarga } from 'src/app/shared/utils/preguntar-descarga.util';
 
 import { Asignacion, AsignacionItem, AsignacionRef, SujetoAsignacion } from 'src/app/interfaces/asignacion';
@@ -508,7 +511,13 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
 
     this.isLoading = true;
     try {
-      await this.asignacionService.guardarBorrador(this.fechaSeleccionada, this.itemsBorrador);
+      // guardarBorrador devuelve Resultado (bloque 6): puede rechazar por
+      // disponibilidad, nombrando los ítems a quitar.
+      const r = await this.asignacionService.guardarBorrador(this.fechaSeleccionada, this.itemsBorrador);
+      if (!r.exito) {
+        Swal.fire({ icon: 'warning', title: 'No se guardó el tablero', html: textoAHtml(r.mensaje) });
+        return;
+      }
       this.asignacionService.limpiarBorradorEnCurso();
       // Recargar: la máquina de estados actualiza modo + apaga borradorSucio.
       await this.cargarTablero(this.fechaSeleccionada);
@@ -533,6 +542,27 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
     if (this.itemsBorrador.length === 0) {
       Swal.fire({ icon: 'error', title: 'Sin asignaciones',
         text: 'Debe asignar al menos un vehículo para crear operaciones.' });
+      return;
+    }
+
+    // DISPONIBILIDAD (bloque 6): se frena acá, nombrando qué ítems y por qué,
+    // en vez de dejar entrar al editor para fallar al confirmar. Sin datos
+    // cargados también se frena. altaDesdeAsignacion verifica de nuevo (guarda dura).
+    const noDisponibles = this.disponibilidadService.itemsNoDisponibles(this.itemsBorrador, this.fechaSeleccionada);
+    if (noDisponibles === null) {
+      Swal.fire({ icon: 'warning', title: 'No se pudo verificar la disponibilidad',
+        text: 'Todavía se están cargando los datos. Probá de nuevo en unos segundos.' });
+      return;
+    }
+    if (noDisponibles.length > 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Hay asignaciones no disponibles',
+        html: textoAHtml(
+          `No se puede dar de alta: estas asignaciones no están disponibles el ${this.fechaSeleccionada}:\n` +
+          listarItemsNoDisponibles(noDisponibles) +
+          '\n\nQuitalas del tablero (están marcadas con borde rojo) y volvé a intentar.'),
+      });
       return;
     }
 
@@ -600,7 +630,7 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
         await this.cargarTablero(this.fechaSeleccionada);
       } else {
         Swal.fire({ icon: 'error', title: 'No se pudo dar de alta',
-          text: resultado.mensaje });
+          html: textoAHtml(resultado.mensaje) });
       }
     } catch (e) {
       console.error(e);
@@ -861,16 +891,8 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
    *  uno de proveedor, también el chofer si ya se eligió. */
   motivosItem(item: AsignacionItem): MotivoNoDisponible[] | null {
     if (!this.puedeVerificar()) return null;
-    const s = item.sujeto;
-    const listas: MotivoNoDisponible[][] = [];
-    if (s.idVehiculo) listas.push(this.motivosDe({ tipo: 'vehiculo', idVehiculo: s.idVehiculo }));
-    if (s.tipo === 'directo') {
-      listas.push(this.motivosDe({ tipo: 'chofer', idChofer: s.idChofer }));
-    } else {
-      listas.push(this.motivosDe({ tipo: 'proveedor', idProveedor: s.idProveedor }));
-      if (s.idChofer) listas.push(this.motivosDe({ tipo: 'chofer', idChofer: s.idChofer }));
-    }
-    return unirMotivos(...listas);
+    // consultasDeAsignacion: la misma regla que usan las guardas duras.
+    return unirMotivos(...consultasDeAsignacion(item.sujeto).map(c => this.motivosDe(c)));
   }
 
   /** Atenuada y sin arrastre: no disponible, o no se pudo verificar. */

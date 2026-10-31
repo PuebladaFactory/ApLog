@@ -1,14 +1,24 @@
 import { Injectable } from '@angular/core';
+import { AsignacionItem } from 'src/app/interfaces/asignacion';
 import { Vehiculo } from 'src/app/interfaces/chofer';
 import { ConIdType } from 'src/app/interfaces/conId';
 import {
-  ConsultaSujeto, EntidadConVehiculos, ResultadoDisponibilidad, VehiculosDisponibles,
+  ConsultaSujeto, EntidadConVehiculos, MotivoNoDisponible, ResultadoDisponibilidad, VehiculosDisponibles,
 } from 'src/app/interfaces/no-disponibilidad';
+import { Operacion } from 'src/app/interfaces/operacion';
 import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import { NoDisponibilidadService } from './no-disponibilidad.service';
 import {
-  DatosDisponibilidad, disponibilidadDe, vehiculosDisponiblesDe,
+  consultasDeAsignacion, consultasDeOperacion, DatosDisponibilidad, disponibilidadDe,
+  unirMotivos, vehiculosDisponiblesDe,
 } from 'src/app/shared/utils/vigencia-no-disponibilidad.util';
+
+/** Un ítem del tablero que no se puede usar en la fecha, con los registros que
+ *  lo impiden. */
+export interface ItemNoDisponible {
+  item: AsignacionItem;
+  motivos: MotivoNoDisponible[];
+}
 
 /** Punto único de la pregunta "¿está disponible X en la fecha F?" (diseño:
  *  docs/disenos/no-disponibilidad.md, "Servicio de resolución").
@@ -49,6 +59,42 @@ export class DisponibilidadService {
   /** Para carga-asignacion: qué vehículos de una entidad están disponibles en la fecha. */
   vehiculosDisponiblesDe(entidad: EntidadConVehiculos, fecha: string): VehiculosDisponibles<ConIdType<Vehiculo>> {
     return vehiculosDisponiblesDe(this.datos(), entidad, fecha);
+  }
+
+  /** Para las guardas sobre el tablero: los ítems ACTIVOS (los anulados no
+   *  cuentan) que no están disponibles en la fecha. `null` = no se pudo
+   *  verificar (datos sin cargar): el que llama RECHAZA, nunca lo toma como
+   *  "todo disponible". Lista vacía = todos disponibles. */
+  itemsNoDisponibles(items: AsignacionItem[], fecha: string): ItemNoDisponible[] | null {
+    if (!this.datosCargados()) return null;
+    const datos = this.datos();
+    const resultado: ItemNoDisponible[] = [];
+    for (const item of items) {
+      if (item.estado.estado === 'anulada') continue;
+      const motivos = this.motivosDeConsultas(datos, consultasDeAsignacion(item.sujeto), fecha);
+      if (motivos.length > 0) resultado.push({ item, motivos });
+    }
+    return resultado;
+  }
+
+  /** Para las guardas sobre operaciones: motivos de su chofer, vehículo y
+   *  proveedor en la fecha de la op. `null` = no se pudo verificar. Vacío =
+   *  disponible. `soloConsultas` acota a qué sujetos preguntar (editar sólo
+   *  verifica lo que cambia). */
+  motivosDeOperacion(
+    op: Pick<Operacion, 'chofer' | 'vehiculo' | 'proveedor' | 'fecha'>,
+    soloConsultas?: (c: ConsultaSujeto) => boolean,
+  ): MotivoNoDisponible[] | null {
+    if (!this.datosCargados()) return null;
+    const consultas = consultasDeOperacion(op).filter(c => !soloConsultas || soloConsultas(c));
+    return this.motivosDeConsultas(this.datos(), consultas, op.fecha);
+  }
+
+  private motivosDeConsultas(datos: DatosDisponibilidad, consultas: ConsultaSujeto[], fecha: string): MotivoNoDisponible[] {
+    return unirMotivos(...consultas.map(c => {
+      const r = disponibilidadDe(datos, c, fecha);
+      return r.disponible ? [] : r.motivos;
+    }));
   }
 
   private datos(): DatosDisponibilidad & { vehiculos: ConIdType<Vehiculo>[] } {

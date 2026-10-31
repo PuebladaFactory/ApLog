@@ -1,3 +1,4 @@
+import { AsignacionItem, SujetoAsignacion } from 'src/app/interfaces/asignacion';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { ConId } from 'src/app/interfaces/conId';
 import {
@@ -68,6 +69,47 @@ export function nombreSujeto(s: SujetoNoDisponibilidad): string {
   }
 }
 
+// ── Qué se pregunta en cada caso ──────────────────────────────────
+//
+// La entidad Y el vehículo por separado: un chofer directo con todos sus
+// vehículos fuera está él mismo disponible (no tiene registro propio), así que
+// con una sola de las dos preguntas se cuela.
+
+/** Un ítem de asignación: lo que ya se sabe de su sujeto (resolución
+ *  progresiva). El vehículo si ya está resuelto; la entidad siempre; y en uno
+ *  de proveedor, también el chofer si ya se eligió. */
+export function consultasDeAsignacion(sujeto: SujetoAsignacion): ConsultaSujeto[] {
+  const consultas: ConsultaSujeto[] = [];
+  if (sujeto.idVehiculo) consultas.push({ tipo: 'vehiculo', idVehiculo: sujeto.idVehiculo });
+  if (sujeto.tipo === 'directo') {
+    consultas.push({ tipo: 'chofer', idChofer: sujeto.idChofer });
+  } else {
+    consultas.push({ tipo: 'proveedor', idProveedor: sujeto.idProveedor });
+    if (sujeto.idChofer) consultas.push({ tipo: 'chofer', idChofer: sujeto.idChofer });
+  }
+  return consultas;
+}
+
+/** Una operación: chofer y vehículo si están resueltos, y el proveedor si es
+ *  de proveedor. */
+export function consultasDeOperacion(
+  op: { chofer: { id: string }; vehiculo: { id: string }; proveedor?: { id: string } | null },
+): ConsultaSujeto[] {
+  const consultas: ConsultaSujeto[] = [];
+  if (op.chofer.id) consultas.push({ tipo: 'chofer', idChofer: op.chofer.id });
+  if (op.vehiculo.id) consultas.push({ tipo: 'vehiculo', idVehiculo: op.vehiculo.id });
+  if (op.proveedor?.id) consultas.push({ tipo: 'proveedor', idProveedor: op.proveedor.id });
+  return consultas;
+}
+
+/** 'Pérez, Juan — AB123CD' / 'Transportes Sur — AB123CD': cómo se nombra un
+ *  ítem del tablero en un mensaje (el mismo texto que la tarjeta). */
+export function describirItemAsignacion(item: AsignacionItem): string {
+  const a = item.ref.asignadoA;
+  const quien = a.tipo === 'chofer' ? `${a.apellido}, ${a.nombre}` : a.razonSocial;
+  return item.ref.dominio ? `${quien} — ${item.ref.dominio}` : quien;
+}
+
 // ── Presentación de motivos ───────────────────────────────────────
 
 const ETIQUETA_TIPO: Record<SujetoNoDisponibilidad['tipo'], string> = {
@@ -94,6 +136,12 @@ export function describirMotivos(motivos: MotivoNoDisponible[]): string {
     return `${ETIQUETA_TIPO[nd.sujeto.tipo]} ${nombreSujeto(nd.sujeto)}: ${nd.motivo} `
       + `(desde el ${fechaLegible(nd.desde)}, ${hasta})`;
   }).join('\n');
+}
+
+/** Una línea por ítem del tablero no disponible: quién, qué vehículo y por qué.
+ *  Para los mensajes de las guardas sobre el tablero. */
+export function listarItemsNoDisponibles(lista: { item: AsignacionItem; motivos: MotivoNoDisponible[] }[]): string {
+  return lista.map(x => `• ${describirItemAsignacion(x.item)}: ${resumirMotivos(x.motivos)}`).join('\n');
 }
 
 /** Versión de una línea, sin períodos: para lugares chicos como una opción

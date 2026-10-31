@@ -25,6 +25,9 @@ import { ComisionVentaFactoryService } from 'src/app/servicios/vendedores/comisi
 import { Resultado } from 'src/app/interfaces/resultado';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 import { AnulacionInformeOp } from 'src/app/interfaces/informe-op-nuevo';
+import { ConsultaSujeto } from 'src/app/interfaces/no-disponibilidad';
+import { DisponibilidadService } from 'src/app/servicios/no-disponibilidad/disponibilidad.service';
+import { resumirMotivos } from 'src/app/shared/utils/vigencia-no-disponibilidad.util';
 
 export interface OperacionCreada {
   item:      AsignacionItem;
@@ -68,6 +71,7 @@ export class OperacionService implements OnDestroy {
     private resumenOpFactory: ResumenOpFactoryService,
     private comisionVentaFactory: ComisionVentaFactoryService,
     private tarifario:        TarifarioService,
+    private disponibilidad:   DisponibilidadService,
   ) {}
 
   /**
@@ -207,6 +211,36 @@ export class OperacionService implements OnDestroy {
     creadas: OperacionCreada[],
     siExisteBorrador: 'reemplazar' | 'bloquear' = 'reemplazar',
   ): Promise<Resultado<{ creadas: OperacionCreada[]; errores: ErrorCreacionOp[] }>> {
+
+    // 2. GUARDA DE DISPONIBILIDAD (bloque 6) — antes de tocar la red, como TC2:
+    //    si una sola op usa un chofer, vehículo o proveedor no disponible en su
+    //    fecha, se aborta el alta COMPLETA nombrando cuáles y por qué. Sin
+    //    datos cargados también se aborta: "no se pudo verificar" no es
+    //    "disponible". Entidad y vehículo por separado (consultasDeOperacion).
+    const noDisponibles: string[] = [];
+    for (const c of creadas) {
+      const motivos = this.disponibilidad.motivosDeOperacion(c.operacion);
+      if (motivos === null) {
+        return {
+          exito: false,
+          mensaje: 'No se pudo verificar la disponibilidad de choferes, vehículos y proveedores: ' +
+                   'todavía se están cargando los datos. No se guardó ninguna operación; ' +
+                   'probá de nuevo en unos segundos.',
+          objeto: { creadas, errores: [] },
+        };
+      }
+      if (motivos.length > 0) {
+        noDisponibles.push(`• ${this.describirOp(c.operacion)}: ${resumirMotivos(motivos)}`);
+      }
+    }
+    if (noDisponibles.length > 0) {
+      return {
+        exito: false,
+        mensaje: `No se dio de alta ninguna operación: hay ${noDisponibles.length} con un chofer, ` +
+                 `vehículo o proveedor no disponible el ${fecha}:\n${noDisponibles.join('\n')}`,
+        objeto: { creadas, errores: [] },
+      };
+    }
 
     // 3. CALCULAR VALORES + RECONSTRUIR SUJETO/REF DESDE OP FINAL (un solo recorrido, antes de tocar red)
     for (const c of creadas) {
@@ -663,6 +697,9 @@ export class OperacionService implements OnDestroy {
    *  TableroService.actualizarAsignacionDesdeOperacion (dos escrituras separadas,
    *  no atómicas). */
   async editarOperacion(op: ConId<Operacion>, msj: string = 'Edición de Operación'): Promise<Resultado<void>> {
+    const guarda = await this.guardaDisponibilidadEdicion(op);
+    if (guarda) return guarda;
+
     const escrituras: EscrituraBatch[] = [
       { coleccion: 'operaciones', id: op.idOperacion, data: this.opToFirestore(op), modo: 'reemplazar' },
     ];
@@ -681,6 +718,54 @@ export class OperacionService implements OnDestroy {
     }
 
     return { exito: true, mensaje: `Operación ${op.idOperacion} editada correctamente.` };
+  }
+
+  /** GUARDA DE DISPONIBILIDAD de editarOperacion (bloque 6). Bloquea sólo
+   *  si se MUEVE la op hacia un sujeto no disponible: verifica el chofer, el
+   *  vehículo y el proveedor que se están escribiendo y son DISTINTOS de los
+   *  guardados (comparando ids contra la op tal como está persistida). Si
+   *  ninguno cambió, no verifica nada: una op cuyo chofer quedó no disponible
+   *  después del alta tiene que poder seguir editándose (km, observaciones,
+   *  hoja de ruta). Devuelve el Resultado de rechazo, o null si pasa. */
+  private async guardaDisponibilidadEdicion(op: ConId<Operacion>): Promise<Resultado<void> | null> {
+    let anterior: Operacion | null | undefined =
+      this._operaciones$.getValue().find(o => o.idOperacion === op.idOperacion);
+    if (!anterior) {
+      try {
+        anterior = await this.db.getById<Operacion>('operaciones', op.idOperacion);
+      } catch (e: any) {
+        return { exito: false, mensaje: `No se pudo leer la operación guardada para verificar el cambio: ${e?.message ?? e}` };
+      }
+    }
+    if (!anterior) return { exito: false, mensaje: `La operación ${op.idOperacion} ya no existe.` };
+
+    const cambiaChofer    = op.chofer.id !== anterior.chofer.id;
+    const cambiaVehiculo  = op.vehiculo.id !== anterior.vehiculo.id;
+    const cambiaProveedor = (op.proveedor?.id ?? null) !== (anterior.proveedor?.id ?? null);
+    if (!cambiaChofer && !cambiaVehiculo && !cambiaProveedor) return null;
+
+    const cambia = (c: ConsultaSujeto) =>
+      (c.tipo === 'chofer' && cambiaChofer)
+      || (c.tipo === 'vehiculo' && cambiaVehiculo)
+      || (c.tipo === 'proveedor' && cambiaProveedor);
+    const motivos = this.disponibilidad.motivosDeOperacion(op, cambia);
+    if (motivos === null) {
+      return { exito: false, mensaje:
+        'No se pudo verificar la disponibilidad del chofer o vehículo nuevo: todavía se están ' +
+        'cargando los datos. No se guardó la edición; probá de nuevo en unos segundos.' };
+    }
+    if (motivos.length > 0) {
+      return { exito: false, mensaje:
+        `No se guardó la edición: el chofer o vehículo nuevo no está disponible el ${op.fecha}. ` +
+        resumirMotivos(motivos) };
+    }
+    return null;
+  }
+
+  /** 'Cliente — Apellido, Nombre — AB123CD' para los mensajes de las guardas. */
+  private describirOp(op: Operacion): string {
+    const chofer = op.chofer.id ? `${op.chofer.apellido}, ${op.chofer.nombre}` : (op.proveedor?.razonSocial ?? '');
+    return [op.cliente.razonSocial, chofer, op.vehiculo.dominio].filter(Boolean).join(' — ');
   }
 
   /** Cierra una operación — orquestador atómico con commitEnTransaccion

@@ -6,6 +6,9 @@ import { Asignacion, AsignacionItem, EstadoAsignacion } from 'src/app/interfaces
 import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
 import { LogService } from 'src/app/servicios/log/log.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
+import { DisponibilidadService } from 'src/app/servicios/no-disponibilidad/disponibilidad.service';
+import { Resultado } from 'src/app/interfaces/resultado';
+import { listarItemsNoDisponibles } from 'src/app/shared/utils/vigencia-no-disponibilidad.util';
 
 interface BorradorEnCurso {
   fecha: string;
@@ -31,6 +34,7 @@ export class AsignacionService implements OnDestroy {
     private db:          DbFirestoreService,
     private logService:  LogService,
     private logRegistro: LogRegistroService,
+    private disponibilidad: DisponibilidadService,
   ) {}
 
   // ---- Lectura / estado ----
@@ -81,8 +85,28 @@ export class AsignacionService implements OnDestroy {
 
   // ---- Escrituras directas (informan al log) ----
 
-  /** Guarda/actualiza un borrador (asignado:false). Acción de log: ALTA. */
-  async guardarBorrador(fecha: string, items: AsignacionItem[]): Promise<void> {
+  /** Guarda/actualiza un borrador (asignado:false). Acción de log: ALTA.
+   *
+   *  GUARDA DE DISPONIBILIDAD (bloque 6): un borrador tiene fecha fija; si
+   *  algún ítem no está disponible en esa fecha, no se guarda. El mensaje
+   *  nombra los ítems y dice cómo salir (quitarlos no requiere guardar). Sin
+   *  datos cargados, rechaza: "no se pudo verificar" no es "disponible".
+   *  Devuelve Resultado; no lanza. */
+  async guardarBorrador(fecha: string, items: AsignacionItem[]): Promise<Resultado<void>> {
+    const noDisponibles = this.disponibilidad.itemsNoDisponibles(items, fecha);
+    if (noDisponibles === null) {
+      return { exito: false, mensaje:
+        'No se pudo verificar la disponibilidad de los choferes, vehículos y proveedores: ' +
+        'todavía se están cargando los datos. Probá de nuevo en unos segundos.' };
+    }
+    if (noDisponibles.length > 0) {
+      return { exito: false, mensaje:
+        `No se puede guardar: estas asignaciones no están disponibles el ${fecha}:\n` +
+        listarItemsNoDisponibles(noDisponibles) + '\n\n' +
+        'Quitalas del tablero (están marcadas con borde rojo; quitarlas no requiere guardar) ' +
+        'y volvé a guardar. El resto de los cambios no se pierde.' };
+    }
+
     const asignacion: Asignacion = {
       idAsignacion: fecha, fecha, asignado: false, timestamp: Date.now(), items,
     };
@@ -95,11 +119,12 @@ export class AsignacionService implements OnDestroy {
     try {
       await this.db.commitBatch(escrituras);
     } catch (e: any) {
-      await this.logRegistro.registrarError(
+      void this.logRegistro.registrarError(
         'ALTA', this.COLECCION, fecha, `Error al guardar borrador ${fecha}: ${e?.message ?? e}`,
       );
-      throw e;
+      return { exito: false, mensaje: `Ocurrió un problema al guardar el tablero: ${e?.message ?? e}` };
     }
+    return { exito: true, mensaje: 'Tablero guardado.' };
   }
 
   /** Puro: devuelve items con el idOperacion dado marcado como anulado. Sin efectos de red. */

@@ -5,6 +5,7 @@ import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import Swal from 'sweetalert2';
 
 import { describirMotivos } from 'src/app/shared/utils/vigencia-no-disponibilidad.util';
+import { textoAHtml } from 'src/app/shared/utils/texto-html.util';
 
 import { AsignacionItem } from 'src/app/interfaces/asignacion';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
@@ -493,7 +494,7 @@ export class CargaAsignacionComponent implements OnInit, OnDestroy {
         Swal.fire({ icon: 'success', title: 'Operaciones creadas', text: resultado.mensaje });
         this.activeModal.close();
       } else {
-        Swal.fire({ icon: 'error', title: 'No se pudo dar de alta', text: resultado.mensaje });
+        Swal.fire({ icon: 'error', title: 'No se pudo dar de alta', html: textoAHtml(resultado.mensaje) });
       }
     } catch (e) {
       console.error(e);

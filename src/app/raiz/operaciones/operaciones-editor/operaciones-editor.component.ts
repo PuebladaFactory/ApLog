@@ -692,14 +692,21 @@ export class OperacionesEditorComponent implements OnInit {
       const detalle = noDisponibles.map(({ c, problemas }) => {
         const op = c.operacion;
         const quien = op.chofer.id ? `${op.chofer.apellido}, ${op.chofer.nombre}` : op.vehiculo.dominio;
+        // Chofer DIRECTO no disponible: acá no se puede cambiar, porque él es el
+        // sujeto de la asignación (cambiarlo es otra asignación).
+        const choferDirectoFuera = !op.proveedor && op.chofer.id !== ''
+          && !this.estaDisponible(this.motivosChofer(op, op.chofer.id));
+        const indicacion = choferDirectoFuera
+          ? '<br><i>Quitá esta operación y reasigná en el tablero: el chofer directo no se puede cambiar acá.</i>'
+          : '';
         return `<li><b>${escapar(op.cliente.razonSocial)} — ${escapar(quien)}</b>: `
-          + `${problemas.map(escapar).join('; ')}</li>`;
+          + `${problemas.map(escapar).join('; ')}${indicacion}</li>`;
       }).join('');
       Swal.fire({
         icon: 'warning',
         title: 'Hay choferes o vehículos no disponibles',
         html: `No se puede confirmar mientras estas operaciones usen un chofer o un vehículo `
-          + `no disponible en su fecha. Cambialos o quitá la operación.`
+          + `no disponible en su fecha. Elegí otro donde se pueda cambiar, o quitá la operación.`
           + `<ul class="text-start mt-2">${detalle}</ul>`,
       });
       return;
