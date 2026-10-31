@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Proveedor } from 'src/app/interfaces/proveedor';
-import { NoDisponibilidad, SujetoNoDisponibilidad } from 'src/app/interfaces/no-disponibilidad';
+import {
+  NoDisponibilidad, SujetoChofer, SujetoNoDisponibilidad, SujetoProveedor, SujetoVehiculo,
+} from 'src/app/interfaces/no-disponibilidad';
 import { esFechaNegocio } from 'src/app/shared/utils/fecha.util';
 
 /** Datos del período que carga el usuario (alta y edición). */
@@ -18,7 +20,7 @@ export class NoDisponibilidadFactoryService {
 
   // ── Snapshot del sujeto (congelado al crear) ────────────────────
 
-  sujetoChofer(chofer: Chofer): SujetoNoDisponibilidad {
+  sujetoChofer(chofer: Chofer): SujetoChofer {
     return {
       tipo: 'chofer',
       idChofer: chofer.idChofer,
@@ -27,11 +29,25 @@ export class NoDisponibilidadFactoryService {
     };
   }
 
-  sujetoVehiculo(vehiculo: Vehiculo): SujetoNoDisponibilidad {
-    return { tipo: 'vehiculo', idVehiculo: vehiculo.idVehiculo, dominio: vehiculo.dominio };
+  /** `duenio`: la entidad de `vehiculo.asignadoA`, ya resuelta por quien
+   *  llama. Si no se pudo resolver, el snapshot va sin `asignadoA` (Firestore
+   *  no acepta `undefined`, por eso el campo se omite y no se escribe vacío). */
+  sujetoVehiculo(
+    vehiculo: Vehiculo,
+    duenio?: { tipo: 'chofer'; chofer: Chofer } | { tipo: 'proveedor'; proveedor: Proveedor },
+  ): SujetoVehiculo {
+    const asignadoA = duenio?.tipo === 'chofer' ? this.sujetoChofer(duenio.chofer)
+      : duenio?.tipo === 'proveedor' ? this.sujetoProveedor(duenio.proveedor)
+      : undefined;
+    return {
+      tipo: 'vehiculo',
+      idVehiculo: vehiculo.idVehiculo,
+      dominio: vehiculo.dominio,
+      ...(asignadoA ? { asignadoA } : {}),
+    };
   }
 
-  sujetoProveedor(proveedor: Proveedor): SujetoNoDisponibilidad {
+  sujetoProveedor(proveedor: Proveedor): SujetoProveedor {
     return { tipo: 'proveedor', idProveedor: proveedor.idProveedor, razonSocial: proveedor.razonSocial };
   }
 

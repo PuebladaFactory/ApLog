@@ -13,10 +13,23 @@ import { ConId } from './conId';
  *
  *  Cada caso lleva el id (para resolver en vivo) y el snapshot de exhibición
  *  congelado al crear. */
-export type SujetoNoDisponibilidad =
-  | { tipo: 'chofer';    idChofer: string;    nombre: string; apellido: string }
-  | { tipo: 'vehiculo';  idVehiculo: string;  dominio: string }
-  | { tipo: 'proveedor'; idProveedor: string; razonSocial: string };
+export type SujetoNoDisponibilidad = SujetoChofer | SujetoVehiculo | SujetoProveedor;
+
+export type SujetoChofer = { tipo: 'chofer'; idChofer: string; nombre: string; apellido: string };
+
+export type SujetoProveedor = { tipo: 'proveedor'; idProveedor: string; razonSocial: string };
+
+/** `asignadoA`: de quién era el vehículo AL CARGARSE (snapshot de
+ *  `Vehiculo.asignadoA` con sus datos de exhibición), para que el historial
+ *  lo siga diciendo aunque cambie de dueño o se borre. Opcional: los
+ *  registros anteriores a este campo no lo tienen, y se omite si el dueño no
+ *  se pudo resolver al cargar. */
+export type SujetoVehiculo = {
+  tipo: 'vehiculo';
+  idVehiculo: string;
+  dominio: string;
+  asignadoA?: SujetoChofer | SujetoProveedor;
+};
 
 /** El sujeto sólo por id, sin snapshot: lo que se elige en un formulario o se
  *  consulta en la resolución de disponibilidad. */

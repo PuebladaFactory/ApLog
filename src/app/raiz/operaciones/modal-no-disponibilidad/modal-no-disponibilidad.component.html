@@ -4,6 +4,13 @@
 </div>
 
 <div class="modal-body">
+    @if (sinConexion) {
+        <div class="alert alert-warning" role="status">
+            <b>Sin conexión.</b> El cambio quedó pendiente en este equipo y se va a guardar solo
+            cuando vuelva la conexión. Podés cerrar esta ventana; no hace falta cargarlo de nuevo.
+        </div>
+    }
+
     <!-- ALTA / EDICIÓN -->
     <ng-container *appPermiso="'operaciones.noDisponibilidad'">
         <form [formGroup]="form" (ngSubmit)="guardar()" class="border rounded p-3 mb-3 shadow-sm">
@@ -94,11 +101,11 @@
         <button
             type="button"
             class="btn"
-            [class.btn-secondary]="vista === 'vigentes'"
-            [class.btn-outline-secondary]="vista !== 'vigentes'"
-            (click)="vista = 'vigentes'"
+            [class.btn-secondary]="vista === 'activas'"
+            [class.btn-outline-secondary]="vista !== 'activas'"
+            (click)="vista = 'activas'"
         >
-            Vigentes hoy ({{ vigentes.length }})
+            Activas ({{ activas.length }})
         </button>
         <button
             type="button"
@@ -111,10 +118,10 @@
         </button>
     </div>
 
-    @let lista = vista === 'vigentes' ? vigentes : historial;
+    @let lista = vista === 'activas' ? activas : historial;
     @if (lista.length === 0) {
         <p class="text-muted ms-1">
-            {{ vista === 'vigentes' ? 'No hay no disponibilidades vigentes hoy.' : 'Todavía no se cargó ninguna.' }}
+            {{ vista === 'activas' ? 'No hay no disponibilidades en curso ni programadas.' : 'Todavía no se cargó ninguna.' }}
         </p>
     } @else {
         <div class="tabla-nd">
@@ -133,7 +140,13 @@
                     @for (nd of lista; track nd.id) {
                         <tr [class.anulada]="!nd.activa" [class.table-active]="enEdicion?.id === nd.id">
                             <td>{{ etiquetaTipo[nd.sujeto.tipo] }}</td>
-                            <td>{{ nombreSujeto(nd.sujeto) }}</td>
+                            <td>
+                                {{ nombreSujeto(nd.sujeto) }}
+                                @let duenio = duenioAlCargar(nd);
+                                @if (duenio) {
+                                    <div class="small text-muted">{{ duenio }}</div>
+                                }
+                            </td>
                             <td class="text-nowrap">
                                 {{ fechaLegible(nd.desde) }} →
                                 @if (nd.hasta) {
@@ -162,7 +175,7 @@
                                         >
                                             Editar
                                         </button>
-                                        @if (puedeCerrar(nd)) {
+                                        @if (noTermino(nd)) {
                                             <button
                                                 type="button"
                                                 class="btn btn-sm btn-outline-success me-1"
@@ -191,6 +204,6 @@
     }
 </div>
 
-@if (guardando) {
+@if (guardando && !sinConexion) {
     <app-spinner></app-spinner>
 }

@@ -1,3 +1,17 @@
+:host {
+  font-size: 1.2rem;
+}
+
+// Bootstrap fija estas clases en rem (relativo a la raíz del documento, no
+// al :host): sin este override no escalan con el font-size de arriba.
+.form-control,
+.form-control-sm,
+.form-select,
+.form-select-sm,
+.btn {
+  font-size: 1em;
+}
+
 .tabla-nd {
   max-height: 45vh;
   overflow-y: auto;

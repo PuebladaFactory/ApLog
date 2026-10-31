@@ -26,6 +26,11 @@ import {
  *  - Escritura: alta, edición y anulación, cada una en UN commitBatch con su
  *    log (LogRegistroService) y retorno Resultado<T>. Cerrar una no
  *    disponibilidad indeterminada es una edición (se escribe `hasta`).
+ *  - Sin conexión las cuatro se comportan igual: ninguna lee del servidor
+ *    antes de escribir (el `anterior` del log sale del estado en memoria del
+ *    listener), así que Firestore encola el batch y lo completa al reconectar.
+ *    El registro de un error es best-effort y no se espera: el Resultado
+ *    vuelve en el momento.
  *  - Patrón puente: el alta recibe el sujeto por id, lo resuelve contra
  *    ChoferService / ProveedorService y le pasa la entidad al factory para el
  *    snapshot. */
@@ -135,7 +140,7 @@ export class NoDisponibilidadService implements OnDestroy {
       await this.logRegistro.agregarAlBatch(escrituras, 'ALTA', NoDisponibilidadService.COLECCION, id, detalle);
       await this.db.commitBatch(escrituras);
     } catch (e: any) {
-      await this.logRegistro.registrarError(
+      void this.logRegistro.registrarError(
         'ALTA', NoDisponibilidadService.COLECCION, id, `Error en ${detalle}: ${e?.message ?? e}`,
       );
       return { exito: false, mensaje: `No se pudo guardar la no disponibilidad: ${e?.message ?? e}` };
@@ -150,10 +155,11 @@ export class NoDisponibilidadService implements OnDestroy {
     if (error) return { exito: false, mensaje: error };
 
     const coleccion = NoDisponibilidadService.COLECCION;
+    const leido = this.anteriorEnMemoria(idNoDisponibilidad);
+    if ('error' in leido) return { exito: false, mensaje: leido.error };
+    const anterior = leido.anterior;
+    if (!anterior.activa) return { exito: false, mensaje: 'La no disponibilidad está anulada: no se puede editar.' };
     try {
-      const anterior = await this.db.getById<NoDisponibilidad>(coleccion, idNoDisponibilidad);
-      if (!anterior) return { exito: false, mensaje: 'La no disponibilidad ya no existe.' };
-      if (!anterior.activa) return { exito: false, mensaje: 'La no disponibilidad está anulada: no se puede editar.' };
 
       const escrituras: EscrituraBatch[] = [
         { coleccion, id: idNoDisponibilidad, data: this.factory.edicionPeriodo(periodo), modo: 'actualizar' },
@@ -164,7 +170,7 @@ export class NoDisponibilidadService implements OnDestroy {
       );
       await this.db.commitBatch(escrituras);
     } catch (e: any) {
-      await this.logRegistro.registrarError(
+      void this.logRegistro.registrarError(
         'EDITAR', coleccion, idNoDisponibilidad, `Error al editar No disponibilidad: ${e?.message ?? e}`,
       );
       return { exito: false, mensaje: `No se pudo editar la no disponibilidad: ${e?.message ?? e}` };
@@ -185,10 +191,11 @@ export class NoDisponibilidadService implements OnDestroy {
       usuario: this.usuarioSesion.getUsuarioActual()?.email ?? 'Desconocido',
       fecha: new Date().toISOString(),
     };
+    const leido = this.anteriorEnMemoria(idNoDisponibilidad);
+    if ('error' in leido) return { exito: false, mensaje: leido.error };
+    const anterior = leido.anterior;
+    if (!anterior.activa) return { exito: false, mensaje: 'La no disponibilidad ya estaba anulada.' };
     try {
-      const anterior = await this.db.getById<NoDisponibilidad>(coleccion, idNoDisponibilidad);
-      if (!anterior) return { exito: false, mensaje: 'La no disponibilidad ya no existe.' };
-      if (!anterior.activa) return { exito: false, mensaje: 'La no disponibilidad ya estaba anulada.' };
 
       const escrituras: EscrituraBatch[] = [
         { coleccion, id: idNoDisponibilidad, data: { activa: false, anulacion, timestamp: Date.now() }, modo: 'actualizar' },
@@ -199,7 +206,7 @@ export class NoDisponibilidadService implements OnDestroy {
       );
       await this.db.commitBatch(escrituras);
     } catch (e: any) {
-      await this.logRegistro.registrarError(
+      void this.logRegistro.registrarError(
         'ANULAR', coleccion, idNoDisponibilidad, `Error al anular No disponibilidad: ${e?.message ?? e}`,
       );
       return { exito: false, mensaje: `No se pudo anular la no disponibilidad: ${e?.message ?? e}` };
@@ -208,6 +215,20 @@ export class NoDisponibilidadService implements OnDestroy {
   }
 
   // ── Privados ────────────────────────────────────────────────────
+
+  /** El documento tal como lo tiene el listener, para el `anterior` del log y
+   *  las validaciones de editar/anular. NO se lee del servidor: esa lectura
+   *  falla sin conexión y dejaba a editar/anular fallando mientras el alta se
+   *  encolaba. Sin `id`/`idNoDisponibilidad`, que no se persisten. */
+  private anteriorEnMemoria(idNoDisponibilidad: string): { anterior: NoDisponibilidad } | { error: string } {
+    if (!this.cargado) {
+      return { error: 'Todavía no se cargaron las no disponibilidades. Probá de nuevo en unos segundos.' };
+    }
+    const actual = this.getNoDisponibilidadPorId(idNoDisponibilidad);
+    if (!actual) return { error: 'La no disponibilidad ya no existe.' };
+    const { id, idNoDisponibilidad: _id, ...persistido } = actual;
+    return { anterior: { ...persistido, idNoDisponibilidad } };
+  }
 
   /** Puente: id → entidad viva → snapshot. undefined si no resuelve (ej.
    *  entidad dada de baja): el alta se rechaza, nunca se escribe un snapshot vacío. */
@@ -219,7 +240,17 @@ export class NoDisponibilidadService implements OnDestroy {
       }
       case 'vehiculo': {
         const vehiculo = this.choferService.getVehiculoPorId(sujeto.idVehiculo);
-        return vehiculo ? this.factory.sujetoVehiculo(vehiculo) : undefined;
+        if (!vehiculo) return undefined;
+        // El dueño va al snapshot si resuelve. Si no (dato inconsistente: el
+        // asignadoA apunta a una entidad que ya no está), el vehículo igual se
+        // puede marcar: el registro es del vehículo, no del dueño.
+        const a = vehiculo.asignadoA;
+        const chofer = a.tipo === 'chofer' ? this.choferService.getChoferPorId(a.idChofer) : undefined;
+        const proveedor = a.tipo === 'proveedor' ? this.proveedorService.getProveedorPorId(a.idProveedor) : undefined;
+        return this.factory.sujetoVehiculo(
+          vehiculo,
+          chofer ? { tipo: 'chofer', chofer } : proveedor ? { tipo: 'proveedor', proveedor } : undefined,
+        );
       }
       case 'proveedor': {
         const proveedor = this.proveedorService.getProveedorPorId(sujeto.idProveedor);

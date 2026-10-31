@@ -28,16 +28,18 @@ interface OpcionSujeto {
   etiqueta: string;
 }
 
-type EstadoNoDisponibilidad = 'Vigente' | 'Programada' | 'Terminada' | 'Anulada';
+type EstadoNoDisponibilidad = 'En curso' | 'Programada' | 'Terminada' | 'Anulada';
 
-const ORDEN_TIPO: Record<TipoSujeto, number> = { chofer: 0, vehiculo: 1, proveedor: 2 };
+/** Si una escritura no resuelve en este tiempo, casi seguro no hay conexión:
+ *  Firestore la encola y la completa al reconectar (la promesa no rechaza). */
+const ESPERA_SIN_CONEXION_MS = 8000;
 
 /** Alta, edición, cierre y anulación de no disponibilidades de choferes,
  *  vehículos y proveedores (diseño: docs/disenos/no-disponibilidad.md).
  *
  *  No escribe: todo pasa por NoDisponibilidadService, que devuelve
  *  Resultado. Los avisos de éxito se muestran recién cuando el Resultado
- *  vuelve con éxito. Las dos listas (vigentes e historial) salen del mismo
+ *  vuelve con éxito. Las dos listas (activas e historial) salen del mismo
  *  stream del listener. */
 @Component({
   selector: 'app-modal-no-disponibilidad',
@@ -66,13 +68,17 @@ export class ModalNoDisponibilidadComponent implements OnInit, OnDestroy {
   /** La que se está editando; null = alta. */
   enEdicion: ConId<NoDisponibilidad> | null = null;
 
-  vista: 'vigentes' | 'historial' = 'vigentes';
-  vigentes: ConId<NoDisponibilidad>[] = [];
+  vista: 'activas' | 'historial' = 'activas';
+  /** En curso y programadas: las que todavía no terminaron. */
+  activas: ConId<NoDisponibilidad>[] = [];
   historial: ConId<NoDisponibilidad>[] = [];
 
   opciones: Record<TipoSujeto, OpcionSujeto[]> = { chofer: [], vehiculo: [], proveedor: [] };
 
   guardando = false;
+  /** La escritura en curso no resolvió a tiempo: está encolada esperando conexión. */
+  sinConexion = false;
+  private destruido = false;
 
   private destroy$ = new Subject<void>();
 
@@ -94,10 +100,10 @@ export class ModalNoDisponibilidadComponent implements OnInit, OnDestroy {
       .subscribe(todas => {
         // El service ya las entrega de la más nueva a la más vieja por `desde`.
         this.historial = todas;
-        this.vigentes = todas
-          .filter(nd => cubreFecha(nd, this.hoy))
+        this.activas = todas
+          .filter(nd => this.noTermino(nd))
           .sort((a, b) =>
-            ORDEN_TIPO[a.sujeto.tipo] - ORDEN_TIPO[b.sujeto.tipo]
+            a.desde.localeCompare(b.desde)
             || nombreSujeto(a.sujeto).localeCompare(nombreSujeto(b.sujeto)));
       });
 
@@ -119,6 +125,7 @@ export class ModalNoDisponibilidadComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.destruido = true;
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -131,22 +138,32 @@ export class ModalNoDisponibilidadComponent implements OnInit, OnDestroy {
 
   estado(nd: NoDisponibilidad): EstadoNoDisponibilidad {
     if (!nd.activa) return 'Anulada';
-    if (cubreFecha(nd, this.hoy)) return 'Vigente';
+    if (cubreFecha(nd, this.hoy)) return 'En curso';
     return nd.desde > this.hoy ? 'Programada' : 'Terminada';
   }
 
   claseEstado(nd: NoDisponibilidad): string {
     switch (this.estado(nd)) {
-      case 'Vigente':    return 'bg-danger';
+      case 'En curso':   return 'bg-danger';
       case 'Programada': return 'bg-warning text-dark';
       case 'Terminada':  return 'bg-secondary';
       case 'Anulada':    return 'bg-light text-dark border';
     }
   }
 
-  /** Se puede cerrar lo que todavía no terminó: vigente o programada. */
-  puedeCerrar(nd: NoDisponibilidad): boolean {
+  /** Activa y todavía no terminó: en curso o programada. Es lo que lista
+   *  "Activas" y lo que se puede cerrar. */
+  noTermino(nd: NoDisponibilidad): boolean {
     return nd.activa && (nd.hasta === null || nd.hasta >= this.hoy);
+  }
+
+  /** De quién era el vehículo AL CARGARSE el registro (snapshot), con el
+   *  mismo texto que el selector. null si el sujeto no es un vehículo o si el
+   *  registro es anterior al campo: ahí se muestra sólo el dominio. */
+  duenioAlCargar(nd: NoDisponibilidad): string | null {
+    if (nd.sujeto.tipo !== 'vehiculo' || !nd.sujeto.asignadoA) return null;
+    const a = nd.sujeto.asignadoA;
+    return `de ${a.tipo === 'chofer' ? `${a.apellido}, ${a.nombre}` : a.razonSocial}`;
   }
 
   detalleAnulacion(nd: NoDisponibilidad): string {
@@ -239,6 +256,15 @@ export class ModalNoDisponibilidadComponent implements OnInit, OnDestroy {
     if (!regreso) return;
 
     const periodo: PeriodoNoDisponibilidad = { desde: nd.desde, hasta: sumarDias(regreso, -1), motivo: nd.motivo };
+
+    // Acortar no puede solapar, pero alargar sí: se chequea siempre, como al editar.
+    const solapadas = this.noDisponibilidadService.solapadasCon(consultaDe(nd.sujeto), periodo, nd.id);
+    if (solapadas.length > 0) {
+      const decision = await this.avisarSolapamiento(solapadas);
+      if (decision === 'editarExistente') { this.editar(solapadas[0]); return; }
+      if (decision === 'cancelar') return;
+    }
+
     const r = await this.ejecutar(() => this.noDisponibilidadService.editar(nd.id, periodo), 'No disponibilidad cerrada.');
     if (r?.exito && this.enEdicion?.id === nd.id) this.nueva();
   }
@@ -273,17 +299,26 @@ export class ModalNoDisponibilidadComponent implements OnInit, OnDestroy {
   // ── Privados ────────────────────────────────────────────────────
 
   /** Corre una escritura del service y avisa DESPUÉS de que vuelve el
-   *  Resultado: éxito sólo si de verdad se escribió. */
+   *  Resultado: éxito sólo si de verdad se escribió.
+   *
+   *  Sin conexión, Firestore encola la escritura y la promesa recién resuelve
+   *  al reconectar: no hay error que mostrar y el dato no se pierde. Si no
+   *  resolvió en ESPERA_SIN_CONEXION_MS se avisa (sin cancelar nada) y se deja
+   *  cerrar el modal. Si se cerró antes de que resuelva, no se avisa nada más. */
   private async ejecutar<T>(escritura: () => Promise<Resultado<T>>, textoExito?: string): Promise<Resultado<T> | null> {
     this.guardando = true;
+    const aviso = setTimeout(() => { this.sinConexion = true; }, ESPERA_SIN_CONEXION_MS);
     let r: Resultado<T>;
     try {
       r = await escritura();
     } catch (e: any) {
       r = { exito: false, mensaje: e?.message ?? String(e) };
     } finally {
+      clearTimeout(aviso);
       this.guardando = false;
+      this.sinConexion = false;
     }
+    if (this.destruido) return r;
     if (r.exito) {
       await Swal.fire({ icon: 'success', title: textoExito ?? r.mensaje, timer: 1500, showConfirmButton: false });
     } else {
@@ -325,8 +360,7 @@ export class ModalNoDisponibilidadComponent implements OnInit, OnDestroy {
     vehiculos: Vehiculo[],
     proveedores: Proveedor[],
   ): Record<TipoSujeto, OpcionSujeto[]> {
-    const razonSocial = (id: string) => proveedores.find(p => p.idProveedor === id)?.razonSocial ?? '(proveedor no encontrado)';
-    const nombreChofer = (c: Chofer) => `${c.datosPersonales.apellido}, ${c.datosPersonales.nombre}`;
+    const razonSocial = (id: string) => razonSocialDe(id, proveedores);
     const inactivo = (activo: boolean | undefined) => (activo === false ? ' (inactivo)' : '');
     const porEtiqueta = (a: OpcionSujeto, b: OpcionSujeto) => a.etiqueta.localeCompare(b.etiqueta);
 
@@ -337,13 +371,10 @@ export class ModalNoDisponibilidadComponent implements OnInit, OnDestroy {
         : `de ${razonSocial(c.contratacion.idProveedor)}`}${inactivo(c.activo)}`,
     })).sort(porEtiqueta);
 
-    const vehiculo: OpcionSujeto[] = vehiculos.map(v => {
-      const a = v.asignadoA;
-      const duenio = a.tipo === 'chofer'
-        ? (() => { const c = choferes.find(x => x.idChofer === a.idChofer); return c ? nombreChofer(c) : '(chofer no encontrado)'; })()
-        : razonSocial(a.idProveedor);
-      return { id: v.idVehiculo, etiqueta: `${v.dominio} — ${v.categoria?.nombre ?? 'sin categoría'} — de ${duenio}` };
-    }).sort(porEtiqueta);
+    const vehiculo: OpcionSujeto[] = vehiculos.map(v => ({
+      id: v.idVehiculo,
+      etiqueta: `${v.dominio} — ${v.categoria?.nombre ?? 'sin categoría'} — de ${duenioDe(v, choferes, proveedores)}`,
+    })).sort(porEtiqueta);
 
     const proveedor: OpcionSujeto[] = proveedores
       .map(p => ({ id: p.idProveedor, etiqueta: `${p.razonSocial}${inactivo(p.activo)}` }))
@@ -351,6 +382,24 @@ export class ModalNoDisponibilidadComponent implements OnInit, OnDestroy {
 
     return { chofer, vehiculo, proveedor };
   }
+}
+
+function nombreChofer(c: Chofer): string {
+  return `${c.datosPersonales.apellido}, ${c.datosPersonales.nombre}`;
+}
+
+function razonSocialDe(idProveedor: string, proveedores: Proveedor[]): string {
+  return proveedores.find(p => p.idProveedor === idProveedor)?.razonSocial ?? '(proveedor no encontrado)';
+}
+
+/** A quién pertenece el vehículo HOY (Vehiculo.asignadoA). Para el
+ *  selector, donde se elige entre entidades vivas; los listados usan el
+ *  dueño del snapshot (duenioAlCargar). */
+function duenioDe(v: Vehiculo, choferes: Chofer[], proveedores: Proveedor[]): string {
+  const a = v.asignadoA;
+  if (a.tipo === 'proveedor') return razonSocialDe(a.idProveedor, proveedores);
+  const c = choferes.find(x => x.idChofer === a.idChofer);
+  return c ? nombreChofer(c) : '(chofer no encontrado)';
 }
 
 function consultaDe(s: SujetoNoDisponibilidad): ConsultaSujeto {

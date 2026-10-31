@@ -125,6 +125,10 @@ Esta es la decisión que cambia respecto del modelo viejo.
 - **Cerrar** una no disponibilidad indeterminada es **escribir `hasta`**. Es una edición, no un
   cambio de estado. Así queda registrado el fin real y se puede responder "cuántos días estuvo
   fuera el chofer X", que con el modelo viejo se perdía.
+
+  La UI pregunta **la fecha de regreso** —el primer día disponible—, que es la pregunta natural
+  para quien carga, y guarda `hasta = regreso − 1`. Guardar el regreso tal cual dejaría el día
+  en que vuelve marcado como no disponible.
 - **Anular** (`activa: false`) significa una sola cosa: se cargó por error, nunca existió. No se
   usa para "ya terminó".
 
@@ -351,15 +355,30 @@ fecha: ante la duda, no escribe.
 | `motivo` obligatorio | Rechaza. Hoy es opcional y el fallback `'No disponible'` no sirve en un informe |
 | Solapamiento con otra no disponibilidad **activa del mismo sujeto cuyo período se superpone**, sea cual sea la fecha de hoy | **Avisa, no rechaza.** Muestra la existente (período y motivo) y ofrece editarla en vez de crear otra. Dos registros solapados con motivos distintos no son un error —alguien puede empezar vacaciones y enfermarse—, y la resolución toma la unión. El error real es el duplicado por olvido, y avisar con el dato a la vista lo evita sin prohibir el caso legítimo |
 
+El chequeo de solapamiento corre en el alta, en la edición **y al cerrar**. Acortar un período
+no puede crear un solapamiento, pero alargarlo sí, y cerrar con una fecha de regreso posterior
+a la que ya tenía es alargarlo.
+
 ## Listado y historial del modal
 
-- **Vigentes:** las que cubren la fecha de hoy, ordenadas por sujeto para poder buscar a alguien
-  de un vistazo.
+- **Activas:** las que cubren hoy **y las programadas a futuro**, ordenadas por fecha de inicio,
+  con una marca que distinga "en curso" de "programada". Las dos responden la misma pregunta
+  desde ventanas distintas —quién no está disponible y quién no va a estarlo— y el usuario
+  necesita las dos para planificar. Separarlas lo obliga a mirar dos pestañas para saber con
+  quién puede contar la semana que viene.
 - **Historial:** **todas** las no disponibilidades, de la más nueva a la más vieja por `desde`.
   Incluye las ya terminadas y las anuladas, estas últimas marcadas como tales — el sentido de
   `activa: false` en vez de borrar es justamente que el registro quede.
 
-Las dos listas salen del mismo stream del listener; no hay consulta aparte.
+Las dos listas salen del mismo stream del listener; no hay consulta aparte, y **se superponen
+a propósito**: "Activas" es la vista de trabajo y el historial es el registro completo. Filtrar
+las activas del historial dejaría sin ninguna vista que muestre todo.
+
+**Un sujeto de tipo vehículo muestra en los listados a quién pertenecía**, tomado del snapshot
+y no resuelto en vivo: si el vehículo cambia de dueño o se borra, el historial tiene que seguir
+diciendo de quién era entonces. Va como texto complementario en la misma celda, no como
+columna, que quedaría vacía para los otros dos tipos de sujeto. El selector, en cambio, muestra
+el dueño actual: ahí se elige entre entidades que existen hoy.
 
 ## Arquitectura de servicios
 
@@ -398,6 +417,28 @@ acción `"EDICION"` ni `"BAJA"` para un update.
 Hoy `addItem`/`updateItem` son `void`, el log va en una escritura aparte y el aviso de éxito se
 muestra antes de que termine la escritura: si Firestore falla, el usuario ve "Guardado". Con
 `commitBatch` + `Resultado<T>` eso desaparece.
+
+### Escritura sin conexión
+
+Verificado en demo: con la red cortada, un alta queda esperando indefinidamente y se completa
+sola al reconectar, sin perder el dato.
+
+Es el comportamiento propio de Firestore: encola las escrituras locales y **la promesa de
+`commitBatch` no rechaza**, queda pendiente hasta que la escritura llega al servidor. Así que
+"avisar el error de red" no es alcanzable ni deseable — no hay tal error y el dato no se pierde.
+
+Lo que corresponde es **informar, no fallar**: si la escritura no resuelve en unos segundos, el
+modal avisa que no hay conexión y que el cambio se guardará al reconectar, y deja cerrar sin
+cancelar nada. Nunca mostrar "Guardado" antes de que vuelva el `Resultado`.
+
+**Las cuatro operaciones tienen que comportarse igual sin conexión.** `editar`, `cerrar` y
+`anular` leen el documento antes de escribir para armar el diff del log, y esa lectura sí falla
+sin red, así que fallaban mientras el alta se encolaba. El `anterior` del log sale del estado en
+memoria del listener, no de una lectura al servidor. Y el `Resultado` vuelve en el momento: el
+registro del error es best-effort y no puede bloquear la respuesta.
+
+Esto vale para **toda** escritura de la app, no sólo para este modal: cualquier `commitBatch`
+se comporta igual. Acá se resuelve puntualmente; generalizarlo es su propio frente.
 
 ## Permisos
 
