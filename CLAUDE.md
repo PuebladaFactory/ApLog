@@ -424,9 +424,9 @@ Categorías especiales:
   `(modulo == 'desarrollo' && r == 'dev')` en `permitido()`), para las
   herramientas de desarrollo de demo. Hoy: `generacionesPrueba` (lotes del
   generador de operaciones). Ver la skill `herramientas-demo`.
-- `noOperativo` → 'operaciones': agregado en el frente Generador. Faltaba en
-  `moduloDe()` y la lectura directa de no-disponibilidades desde el SDK web
-  fallaba con "Missing or insufficient permissions" (fail-safe).
+- `noOperativo` → 'operaciones': colección anterior de no disponibilidad, **en
+  desuso** (ningún código la lee ni la escribe). El mapeo queda hasta migrar sus
+  datos a `noDisponibilidades` (→ 'operaciones'); ver "Deuda abierta".
 - `informesOp` → módulo propio 'informesOp' (frente Reportes): `dev`/`admin`
   todo; `user` leer + crear (el cierre de una operación crea el par de
   InformeOp); `demo` leer. Antes estaba en 'finanzas' y el cierre fallaba
@@ -706,6 +706,7 @@ Deuda técnica activa. Actualizar cuando se salda.
 - **Cadena: log viejo → Papelera legado (destrabada)** — la no disponibilidad ya no usa el log viejo. Lo único que sigue escribiendo en `logs` es la Papelera legado (`StorageService.addItem`/`deleteItem`, `TableroService.altaOperacionYActualizarTablero`, `AsignacionService.reactivarItem`), así que el log viejo y la Papelera legado se eliminan juntos. Detalle: skills `subsistema-log` y `subsistema-papelera`.
 - **Migración de `noOperativo`** — la colección anterior de no disponibilidad quedó sin lectores: 6 documentos en demo y los de producción (2 vigentes al relevar), con la forma y el trabajo de "Datos de la colección anterior" en `docs/disenos/no-disponibilidad.md`. **Va después de la migración de Choferes**: 3 de los 6 de demo tienen `idChofer` numéricos del modelo viejo que sólo resuelven con su mapeo; al revés, se pierden.
 - **Mapeo de `noOperativo` en `firestore.rules`** — se saca recién cuando termine esa migración.
+- **Filtro por colección del Registro de actividad incompleto** — `COLECCIONES_REGISTRO_LOG` (`registro-log-consulta.service.ts`) no tiene 10 colecciones que ya escriben en `registroLog`: `users`, `informesOp`, `informesLiq`, `movimientosFin`, `tarifas`, `tarifasEspeciales`, `registrosOpEventuales`, `vendedores`, `liquidacionesVenta` y `configuracion`. Sus entradas se ven sin filtrar, pero no se pueden filtrar por colección. Detalle: skill `subsistema-log`.
 - **Cuatro copias de `escapar`** — en `modal-no-disponibilidad`, `operaciones-editor`, `vendedor-historial` y `shared/utils/texto-html.util.ts`: unificar sobre `escaparHtml`/`textoAHtml` del util.
 - **Filtros vs. listener en background (frente futuro)** — en `tablero-op` los datos pueden quedar congelados al volver de background mientras los filtros muestran otro período; las suscripciones a `operaciones$` no manejan errores. Detalle: skill `modulo-operaciones`.
 - **Permisos de UI dispersos** — quedan `*appRole`/`esRol()` puntuales sin migrar a `PermisosService`, con riesgo de mostrar acciones que las Security Rules rechazan. Detalle: skill `botones-y-permisos`.

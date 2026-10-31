@@ -524,6 +524,9 @@ excepción; `'demo'` no ve ninguno de los 8.
     correcto sin necesitarlo.
 - Los 4 botones de gestión (franja izquierda): `<ng-container *appPermiso="'operaciones.editar'">`
   en los 4 — mismo permiso, todos gestionan disponibilidad/estado, no son de lectura.
+  ⚠️ **Vigente hoy (frente No disponibilidad):** el cuarto botón es **"No disponibles"**
+  (abre `ModalNoDisponibilidadComponent`) y usa `'operaciones.noDisponibilidad'`, no
+  `'operaciones.editar'`; los otros tres siguen en `'operaciones.editar'`. Ver "Estado final".
 - Los 4 de la franja derecha: Alta de Op → `'operaciones.agregar'`; Guardar →
   `'operaciones.editar'`; Descargar → `'operaciones.descargarTablero'`; Limpiar →
   `'operaciones.limpiarTablero'`. El `[disabled]` propio de cada botón (`isLoading`,
@@ -569,6 +572,13 @@ operativas de punta a punta, con consumidores reales conectados:
    `tablero-asignaciones`) — todos con el `*appRole`/`esRol()`/`ngClass` suelto que tenían
    reemplazado por `modulo`/`accion` real, y su efecto por rol verificado contra la
    matriz en cada bloque, no asumido.
+
+**Permiso de no disponibilidad (posterior al cierre):** `AccionPermiso` `'noDisponibilidad'`,
+mapeada a `editar` en `mapaAccionCrud` (sin override): dev/admin/user sí, demo/manager no.
+Gobierna el botón "No disponibles" de `tablero-asignaciones` y de `carga-asignacion` y las
+acciones de alta, edición, cierre y anulación del modal. Propia y no `operaciones.editar`
+para que cambiar quién administra no disponibilidades no arrastre a la edición de
+operaciones. Detalle: skill `modulo-operaciones`, "No disponibilidad".
 
 **Estado final:** único `*appRole` restante en toda la app: los 6 sitios de Tarifas
 (cliente/choferes/proveedores × gral/especial), excluidos a propósito — frente de Tarifas

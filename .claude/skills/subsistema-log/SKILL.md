@@ -256,10 +256,14 @@ de `AjustesControlComponent` (`tab4`), junto a Usuarios/Registro/Papelera.
   paginación ni índice compuesto.
 - **Filtros server-side** (van a Firestore): rango de fechas (obligatorio, default
   última semana) + colección opcional (`COLECCIONES_REGISTRO_LOG`, exportado desde el
-  mismo archivo — lista de las 9 colecciones que escriben a `registroLog` hoy: choferes,
-  clientes, proveedores, vehiculos, legajos, documentacionHistorial,
-  categoriasDocumentacion, operaciones, asignaciones — **ampliar esta lista cuando se
-  migre un módulo nuevo al mecanismo de log**).
+  mismo archivo — hoy 10: choferes, clientes, proveedores, vehiculos, legajos,
+  documentacionHistorial, categoriasDocumentacion, operaciones, asignaciones,
+  noDisponibilidades — **ampliar esta lista cuando se migre un módulo nuevo al mecanismo
+  de log**). ⚠️ Incompleta: otras 10 colecciones ya escriben en `registroLog` y no están
+  (users, informesOp, informesLiq, movimientosFin, tarifas, tarifasEspeciales,
+  registrosOpEventuales, vendedores, liquidacionesVenta, configuracion); deuda en
+  CLAUDE.md. El selector muestra el nombre crudo de la colección (no hay mapa de
+  etiquetas).
 - **Filtros client-side** (sobre `registros` ya cargado en memoria, sin ida a
   Firestore): acción, usuario (por email, texto libre), status. El componente avisa en
   el propio template que estos filtros no traen más resultados — si no hay matches en
@@ -555,10 +559,8 @@ cerrar, que es escribir `hasta`) y `ANULAR`. El `anterior` del diff sale del est
 del listener (no se lee del servidor), y el `registrarError` del `catch` no se espera. Este
 circuito **no pasa por `StorageService` ni por el `LogService` viejo**.
 
-⚠️ `noDisponibilidades` escribe en `registroLog` pero **no está en `COLECCIONES_REGISTRO_LOG`**
-(`registro-log-consulta.service.ts`), así que no aparece en el filtro de colección de
-`RegistroLogComponent`; sus entradas se ven sin filtrar. La lista tampoco tiene otras
-colecciones que ya escriben en el log nuevo: hay que revisarla entera.
+`noDisponibilidades` está en `COLECCIONES_REGISTRO_LOG`: se puede filtrar por colección en
+`RegistroLogComponent`.
 
 ## Deuda abierta — eliminar el log viejo (`LogService`, colección `logs`)
 

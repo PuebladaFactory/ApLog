@@ -257,18 +257,38 @@ viejo quedó registrado en `claude/diseno-informes-excel-pdf.md` §7, por si alg
 quiere la réplica visual; haría falta extender el renderer compartido.
 
 `shared/utils/documento-asignaciones.util.ts` (puro) + `AsignacionesExportService`
-(`servicios/operaciones/`), **Excel y PDF**: con 9 y 6 columnas entra legible en PDF, a
-diferencia del informe de operaciones (22 columnas, D5). Dos hojas, las dos Tabla de Excel
-y sin fila de totales:
+(`servicios/operaciones/`), **Excel y PDF** (columnas pocas: entra legible en PDF, a
+diferencia del informe de operaciones, 22 columnas, D5). Todas las tablas son Tabla de
+Excel y ninguna lleva fila de totales.
+
+**La disponibilidad la resuelve la fachada, no el util.** `AsignacionesExportService` usa
+`DisponibilidadService` y `consultasDeAsignacion` (`shared/utils/no-disponibilidad.util.ts`)
+— la misma regla que marca el tablero y que aplican las guardas (skill
+`modulo-operaciones`, "No disponibilidad") — y le pasa al util un `DisponibilidadInforme`
+ya armado: por ítem, los vehículos y los choferes de proveedor no disponibles. El util sólo
+presenta. Si el informe contara distinto de lo que se ve y de lo que se bloquea, el
+usuario no sabría a cuál creerle.
+
 - **Asignaciones** — una fila por asignación: Cliente · Categoría · Dominio · Chofer ·
-  Proveedor · Observación · Hoja de ruta · Estado · Motivo anulación. Exporta lo que está
-  EN PANTALLA (el borrador en modo edición, el tablero confirmado en visor) y el subtítulo
-  dice cuál de los dos. Un item cuyo cliente ya no resuelve no tiene columna en la grilla,
-  pero sí fila en el informe: va al final, con Cliente "Sin resolver" — un informe no puede
-  perder items.
-- **No disponibles** — una fila por chofer no disponible Y VEHÍCULO: Chofer · Dominio ·
-  Categoría · Desde · Hasta · Motivo. Solo las vigentes en la fecha del tablero, no todas
-  las cargadas.
+  Proveedor · Observación · Hoja de ruta · Estado · Motivo anulación · **No disponible**.
+  Exporta lo que está EN PANTALLA (el borrador en modo edición, el tablero confirmado en
+  visor) y el subtítulo dice cuál de los dos. Un item cuyo cliente ya no resuelve no tiene
+  columna en la grilla, pero sí fila en el informe: va al final, con Cliente "Sin
+  resolver" — un informe no puede perder items. **No disponible** trae los motivos de los
+  ítems activos que el tablero marca con borde rojo (vacía si está disponible; vacía
+  también en los anulados).
+- **No disponibles** — dos tablas, sólo lo no disponible en la fecha del tablero:
+  - **Vehículos:** los de la flota que lista el pool del tablero (dueño activo), una fila
+    por vehículo **y causa**: Dueño · Tipo (Chofer directo / Proveedor) · Dominio ·
+    Categoría · Causa · Desde · Hasta · Motivo. Causa = el sujeto del registro ("Chofer
+    Pérez Juan", "Vehículo AB123CD", "Proveedor X"): un vehículo que cae por dos causas
+    aparece en dos filas, para filtrar por causa o por motivo.
+  - **Choferes de proveedor:** aparte, porque no tienen vehículo propio y no están en el
+    pool: Chofer · Proveedor · Causa · Desde · Hasta · Motivo, una fila por chofer y causa.
+- **Sin datos de disponibilidad cargados** (`DisponibilidadService.datosCargados()` en
+  false), el informe **lo dice** y no omite: subtítulo "Disponibilidad sin verificar" y una
+  nota en las dos hojas, tablas de no disponibles vacías, y "Sin verificar" en la columna
+  No disponible de cada ítem activo. Nunca lo da por disponible.
 
 Decisiones que conviene no reabrir:
 - **Chofer y Proveedor en columnas separadas**, y **Estado** separado de **Motivo
@@ -277,10 +297,12 @@ Decisiones que conviene no reabrir:
 - **No hay columna de operación.** `AsignacionItem.idOperacion` guarda el document id de
   Firestore (`altaDesdeAsignacion` le asigna `db.generarId('operaciones')`), no el número
   visible, que es `Operacion.numeroOperacion`.
-- **Una fila por chofer Y vehículo** en la hoja 2: es lo que permite filtrar por categoría.
-  Un chofer sin vehículos propios aparece igual, con esas dos celdas vacías.
+- **Una fila por vehículo y causa** en la hoja 2 (no una celda con varios motivos): es lo
+  que permite filtrar por categoría, por causa o por motivo.
 - **`Hasta` sin valor va VACÍO** en el Excel ("—" en el PDF): un guión en una columna de
   fecha la vuelve de texto y rompe el filtro y el orden (regla de `valorParaTabla`, IE2).
+- ⚠️ Sin verificar en demo: que una Tabla de Excel con **cero filas** se genere bien (es el
+  caso normal de la tabla de choferes de proveedor).
 
 **Permiso `descargarAsignaciones`** → `leer`, con override `{ demo: false }`:
 dev/admin/user sí, demo y manager no. NO reusa `descargarTablero`, que desde IE1b gobierna
@@ -288,15 +310,6 @@ el tablero de OPERACIONES y quedó en dev/admin (IE2c) — este tablero es la pa
 principal del único empleado activo y el informe es de su propio trabajo del día. No
 necesita `user: true`: `leer` en `operaciones` ya lo da, y lo único de lo que hay que
 apartarse en la matriz es `demo`.
-
-**`shared/utils/no-disponibilidad.util.ts`:** la regla "¿está no operativo en esta fecha?"
-estaba escrita CUATRO veces —el par `calcularChoferesNoOperativosPorFecha` +
-`getMotivoNoDisponibilidad`, duplicado en `tablero-asignaciones` y en `carga-asignacion`, y
-en cada par con dos implementaciones distintas: `new Date(f + 'T00:00:00')` contra
-comparación de strings—. Queda UNA sola, por string (la convención del proyecto), y los dos
-componentes delegan conservando sus fallbacks en el caller. `carga-asignacion` entró al
-bloque solo por esto: dejar ahí la cuarta copia habría dejado el JSDoc del util afirmando
-"única definición" en falso.
 
 El bundle no se movió donde importa: **ninguna ruta pide `exceljs` ni `jspdf`**, pese a que
 la fachada inyecta los DOS renderers, porque los cargan con `import()`. El chunk de

@@ -18,6 +18,7 @@ export const COLECCIONES_REGISTRO_LOG = [
   'categoriasDocumentacion',
   'operaciones',
   'asignaciones',
+  'noDisponibilidades',
 ] as const;
 
 export type PaginaRegistroLog = PaginaResultado<RegistroLog>;
