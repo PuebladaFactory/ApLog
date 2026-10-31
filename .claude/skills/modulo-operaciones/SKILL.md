@@ -1,6 +1,6 @@
 ---
 name: modulo-operaciones
-description: Módulo Operaciones de ApLog — tipado con snapshots (RefCliente, RefChofer), el tablero de asignaciones (tablero-asignaciones), operaciones-editor y carga-asignacion con el contrato de altaDesdeAsignacion, el tablero de operaciones (tablero-op) y la no-disponibilidad, con su deuda abierta. Leer antes de trabajar sobre operaciones, su alta o edición, asignaciones, tableros o la no-disponibilidad de choferes.
+description: Módulo Operaciones de ApLog — tipado con snapshots (RefCliente, RefChofer), el tablero de asignaciones (tablero-asignaciones), operaciones-editor y carga-asignacion con el contrato de altaDesdeAsignacion, el tablero de operaciones (tablero-op) y la no disponibilidad de choferes, vehículos y proveedores, con su deuda abierta. Leer antes de trabajar sobre operaciones, su alta o edición, asignaciones, tableros o la no disponibilidad.
 ---
 
 ### Fase D: resolución de tipado Operaciones (objetos embebidos → snapshots)
@@ -245,13 +245,9 @@ sigue siendo la protección real) — es una advertencia temprana adicional.
 
 ~~**Informe Excel (`descargar`):** inerte, muestra aviso.~~ — el botón y su método se
 borraron en el frente Informes (IE4, D6), y el informe VOLVIÓ en AS1, reescrito de cero
-sobre `LibroTabular`, con Excel y PDF y una hoja de choferes no disponibles — ver la skill
+sobre `LibroTabular`, con Excel y PDF y una hoja de no disponibles — ver la skill
 `exportacion-excel-pdf`, subsección "Informe del tablero de asignaciones". El viejo quedó registrado en
 `claude/diseno-informes-excel-pdf.md` §7.
-
-**No-disponibilidad sin probar end-to-end:** la atenuación de vehículos de proveedor está
-correctamente ausente en el tablero (diferida a operaciones-editor), pero verificar la
-atenuación de directos al integrar con datos reales en operaciones-editor.
 
 **Persistencia del borrador en F5:** el borrador en curso vive en memoria del service; un F5 lo
 pierde. Si se requiere, persistir solo la fecha en localStorage y recuperar de Firestore (cubre
@@ -272,34 +268,48 @@ usan guarda `@if (objeto)` (no `[disabled]` + `!`): el `disabled` NO impide que 
 el binding, y el `!` revienta en runtime cuando el objeto es null. Patrón a respetar en
 cualquier template que bindee tarifas nullable.
 
-## Deuda abierta — no-disponibilidad y tablero
-
-**Rediseño de no-disponibilidad (frente propio):** modelo rico con sujeto discriminado
-(chofer-entidad / proveedor-entidad / vehiculo / chofer-de-proveedor), fecha desde +
-hasta|null, motivo, activa. Lógica derivada "si el único vehículo no está, la entidad
-no está". Rehace la interfaz `NoDisponibilidadChofer`, el modal completo y el consumo del
-tablero; toca `operaciones-editor` (no-disp de choferes de proveedor se resuelve allá).
-El modal actual quedó con arreglo mínimo hasta entonces.
-
-⚠️ **Desde AS1 la regla "¿está no operativo en esta fecha?" vive en
-`shared/utils/no-disponibilidad.util.ts`**, no en los componentes (antes estaba escrita
-cuatro veces entre `tablero-asignaciones` y `carga-asignacion`): el rediseño la cambia
-ahí. Y el informe del tablero deja dicho en una nota el límite del modelo actual —la
-no-disponibilidad es solo de choferes, no de proveedores ni de vehículos sueltos—, que es
-justo lo que este rediseño viene a levantar: al hacerlo hay que actualizar esa nota.
-
 **`clientesVisibles` getter "con trabajo"** (arma Map + ordena en cada acceso): candidato
 a cachear si hubiera cientos de clientes. Hoy trivial.
 
 **Item con cliente borrado** (papelera) sin columna: `// TODO: refactor Papelera`.
 
-**Cadena de dependencias — esta deuda es el primer eslabón:** `rehacer noDisponibilidad` → `eliminar el log viejo` → `eliminar el camino legado de la papelera`.
-La no-disponibilidad todavía se escribe con el mecanismo viejo: `modal-choferes-no-disponibles`
-usa `StorageService.addItem`/`updateItem` sobre `noOperativo`, que loguea con el `LogService`
-viejo (colección `logs`). Mientras no se rehaga sobre el modelo nuevo (con `LogRegistroService`),
-el log viejo no se puede eliminar. **No la bloquea ninguna de las otras dos; rehacerla destraba
-la eliminación del log viejo** (skill `subsistema-log`) y, detrás de esa, la del camino legado de
-la papelera (skill `subsistema-papelera`).
+## No disponibilidad
+
+Diseño completo, reglas y decisiones: `docs/disenos/no-disponibilidad.md`. Lo que hay que tener
+presente al tocar operaciones:
+
+- **Modelo:** `NoDisponibilidad` (`interfaces/no-disponibilidad.ts`) sobre un sujeto
+  discriminado — chofer (directo o de proveedor), vehículo (con su dueño en el snapshot) o
+  proveedor — con `desde`, `hasta | null` (sin fecha de fin prevista), `motivo` y `activa`
+  (false = anulada por error, con `anulacion`). Colección `noDisponibilidades`. La vigencia es
+  derivada (`cubreFecha`), nunca guardada.
+- **Servicios:** `NoDisponibilidadService` (listener de la colección completa, `init()` desde
+  `HomeComponent` con permiso de lectura de `operaciones`; alta/editar/anular con `commitBatch`
+  + `Resultado` + `LogRegistroService`), `NoDisponibilidadFactoryService`, y
+  `DisponibilidadService` (la resolución: `disponibilidadDe`, `vehiculosDisponiblesDe`,
+  `itemsNoDisponibles`, `motivosDeOperacion`, `motivosDe`, `datosCargados`).
+- **Funciones puras** en `shared/utils/no-disponibilidad.util.ts` (con tests): cascadas de
+  propiedad (vehículo / chofer directo / chofer de proveedor / proveedor) y **la regla única
+  de qué se pregunta**: `consultasDeAsignacion` (ítem de tablero) y `consultasDeOperacion`
+  (operación). La usan el tablero, la carga, el editor, el informe, el generador y las
+  guardas: **siempre la entidad y el vehículo por separado** — un chofer directo con todos sus
+  vehículos fuera está él mismo disponible.
+- **Consumidores**, siempre contra la fecha del tablero o de la operación:
+  `tablero-asignaciones` (pool atenuado y sin arrastre; ítems colocados con borde rojo),
+  `carga-asignacion` (categoría atenuada si no le queda vehículo; entidad bloqueada si ella no
+  está o no le queda ninguno; preselección de vehículo único entre los disponibles),
+  `operaciones-editor` (candidatos no disponibles deshabilitados con el motivo; autoselección
+  sólo del único disponible; confirmar bloquea), y el modal
+  `modal-no-disponibilidad` (botón "No disponibles" en tablero y carga, permiso
+  `operaciones.noDisponibilidad`).
+- **Guardas duras** (devuelven `Resultado`, no lanzan): botón "Alta de Op" del tablero,
+  `AsignacionService.guardarBorrador`, `OperacionService.altaDesdeAsignacion` (primer paso,
+  aborta el alta completa) y `OperacionService.editarOperacion` (sólo si cambia chofer,
+  vehículo o proveedor hacia uno no disponible).
+- **"No se pudo verificar" no es "disponible":** si `datosCargados()` da false, las pantallas
+  bloquean, las guardas rechazan y el informe lo dice.
+- `ResolucionTarifaOpService.choferesDisponibles` / `vehiculosDisponibles` **no miran
+  disponibilidad**: devuelven candidatos de tarifa (renombre pendiente, skill `modulo-tarifas`).
 
 ## Deuda abierta — Frente futuro — persistencia de filtros/rango de fechas vs. listener en background
 

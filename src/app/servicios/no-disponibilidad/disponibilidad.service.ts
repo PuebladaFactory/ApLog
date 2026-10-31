@@ -11,7 +11,7 @@ import { NoDisponibilidadService } from './no-disponibilidad.service';
 import {
   consultasDeAsignacion, consultasDeOperacion, DatosDisponibilidad, disponibilidadDe,
   unirMotivos, vehiculosDisponiblesDe,
-} from 'src/app/shared/utils/vigencia-no-disponibilidad.util';
+} from 'src/app/shared/utils/no-disponibilidad.util';
 
 /** Un ítem del tablero que no se puede usar en la fecha, con los registros que
  *  lo impiden. */
@@ -24,7 +24,7 @@ export interface ItemNoDisponible {
  *  docs/disenos/no-disponibilidad.md, "Servicio de resolución").
  *
  *  Capa fina: arma `DatosDisponibilidad` con el estado vivo y delega en las
- *  funciones puras de vigencia-no-disponibilidad.util.ts, que tienen toda la
+ *  funciones puras de no-disponibilidad.util.ts, que tienen toda la
  *  lógica (y los tests). Es la costura: mañana puede sumar documentación
  *  vencida o el flag `activo` sin que los consumidores se enteren.
  *
@@ -88,6 +88,14 @@ export class DisponibilidadService {
     if (!this.datosCargados()) return null;
     const consultas = consultasDeOperacion(op).filter(c => !soloConsultas || soloConsultas(c));
     return this.motivosDeConsultas(this.datos(), consultas, op.fecha);
+  }
+
+  /** Motivos de una lista de sujetos en la fecha, sin repetir registros (ej.
+   *  `consultasDeAsignacion` de un vehículo de la flota, para el informe).
+   *  `null` = no se pudo verificar. */
+  motivosDe(consultas: ConsultaSujeto[], fecha: string): MotivoNoDisponible[] | null {
+    if (!this.datosCargados()) return null;
+    return this.motivosDeConsultas(this.datos(), consultas, fecha);
   }
 
   private motivosDeConsultas(datos: DatosDisponibilidad, consultas: ConsultaSujeto[], fecha: string): MotivoNoDisponible[] {

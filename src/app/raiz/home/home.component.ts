@@ -1,10 +1,8 @@
 import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { Subject, filter, takeUntil } from 'rxjs';
-import { NoDisponibilidadChofer } from 'src/app/interfaces/no-disponibilidad-chofer';
 import { CategoriaDocumentacionService } from 'src/app/servicios/categoria-documentacion/categoria-documentacion.service';
 import { LegajoService } from 'src/app/servicios/legajos/legajo.service';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
 import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
@@ -48,7 +46,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   private alCambiarAncho = (e: MediaQueryListEvent) => this.aplicarModo(e.matches);
   private destroy$ = new Subject<void>();
 
-  constructor(private storageService: StorageService, private categoriaDocumentacionService: CategoriaDocumentacionService, private legajoService: LegajoService, private choferService: ChoferService, private proveedorService: ProveedorService, private clienteService: ClienteService, private tarifarioService: TarifarioService, private noDisponibilidadService: NoDisponibilidadService, private permisosService: PermisosService, private router: Router) { }
+  constructor(private categoriaDocumentacionService: CategoriaDocumentacionService, private legajoService: LegajoService, private choferService: ChoferService, private proveedorService: ProveedorService, private clienteService: ClienteService, private tarifarioService: TarifarioService, private noDisponibilidadService: NoDisponibilidadService, private permisosService: PermisosService, private router: Router) { }
 
   ngOnInit(): void {
     this.choferService.init();
@@ -64,7 +62,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     // (tarifasGral/Esp/PersCliente, tarifasGral/EspChofer,
     // tarifasGral/EspProveedor) — sin lectores desde TC-R1/TC-R2. Las
     // tarifas se cargan con tarifarioService.init().
-    this.storageService.listenForChangesField<NoDisponibilidadChofer>("noOperativo", "activa", true);
 
     this.aplicarModo(this.consultaAncho.matches);
     this.consultaAncho.addEventListener('change', this.alCambiarAncho);

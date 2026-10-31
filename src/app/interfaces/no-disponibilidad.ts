@@ -2,9 +2,8 @@ import { Anulacion } from './anulacion';
 import { ConId } from './conId';
 
 /** No disponibilidad de un chofer, un vehículo o un proveedor durante un
- *  período (diseño: docs/disenos/no-disponibilidad.md). Reemplaza a
- *  `NoDisponibilidadChofer` (colección vieja `noOperativo`), que convive hasta
- *  el bloque 7 del frente.
+ *  período (diseño: docs/disenos/no-disponibilidad.md). Colección
+ *  `noDisponibilidades`.
  *
  *  Tres casos, no cuatro: el chofer de proveedor es un `Chofer` con
  *  `contratacion.tipo === 'proveedor'` y entra por `{ tipo: 'chofer' }`.
@@ -72,7 +71,7 @@ export interface NoDisponibilidad {
   motivo: string;                  // Obligatorio.
   activa: boolean;                 // false = ANULADA (cargada por error).
                                    // NO expresa vigencia: la vigencia es derivada
-                                   // (ver vigencia-no-disponibilidad.util.ts).
+                                   // (ver no-disponibilidad.util.ts).
   anulacion?: Anulacion;           // presente sólo si activa === false: quién,
                                    // cuándo y por qué se anuló.
   timestamp: number;               // último guardado

@@ -4,7 +4,6 @@ import { AsignacionItem } from 'src/app/interfaces/asignacion';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { ConIdType } from 'src/app/interfaces/conId';
-import { NoDisponibilidadChofer } from 'src/app/interfaces/no-disponibilidad-chofer';
 import { DatosTarifaEventual, Operacion, armarAdExtra } from 'src/app/interfaces/operacion';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { Resultado as ResultadoAccion } from 'src/app/interfaces/resultado';
@@ -14,6 +13,8 @@ import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { LimpiezaDemoService } from 'src/app/servicios/desarrollo/limpieza-demo.service';
+import { DisponibilidadService } from 'src/app/servicios/no-disponibilidad/disponibilidad.service';
+import { NoDisponibilidadService } from 'src/app/servicios/no-disponibilidad/no-disponibilidad.service';
 import { toISODateString } from 'src/app/servicios/fechas/date-range.service';
 import { OperacionCreada, OperacionService } from 'src/app/servicios/operaciones/operacion.service';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
@@ -22,6 +23,7 @@ import { TarifarioService } from 'src/app/servicios/tarifario/tarifario.service'
 import { CandidatosLado, ValoresTarifaService } from 'src/app/servicios/tarifario/valores-tarifa.service';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 import { Azar } from 'src/app/shared/utils/azar.util';
+import { consultasDeAsignacion, sujetoAsignacionDeVehiculo } from 'src/app/shared/utils/no-disponibilidad.util';
 
 export interface ParametrosGenerador {
   desde: string;               // 'YYYY-MM-DD'
@@ -158,6 +160,8 @@ export class GeneradorOperacionesService {
   private valoresTarifa = inject(ValoresTarifaService);
   private tarifario = inject(TarifarioService);
   private db = inject(DbFirestoreService);
+  private disponibilidad = inject(DisponibilidadService);
+  private noDisponibilidadService = inject(NoDisponibilidadService);
   private usuarioSesion = inject(UsuarioSesionService);
 
   private readonly MAX_DIAS = 62;
@@ -183,9 +187,15 @@ export class GeneradorOperacionesService {
     if (clientes.length === 0 || vehiculos.length === 0) {
       throw new Error('No hay clientes activos o vehículos en memoria (¿se cargaron las entidades? Recargá la app).');
     }
-    const noDisponibles = (await this.db.obtenerTodosConId<NoDisponibilidadChofer>('noOperativo'))
-      .map(n => n.data)
-      .filter(n => n.activa);
+    // Disponibilidad: la misma resolución que la guarda de altaDesdeAsignacion
+    // (DisponibilidadService + consultasDeAsignacion), así un día planificado
+    // no puede fallar después por esa guarda. Sin datos cargados no se
+    // planifica: "no se pudo verificar" no es "disponible".
+    this.noDisponibilidadService.init();
+    if (!this.disponibilidad.datosCargados()) {
+      throw new Error('No se pudo verificar la disponibilidad de choferes, vehículos y proveedores ' +
+        '(los datos todavía no terminaron de cargar). Probá de nuevo en unos segundos.');
+    }
 
     // Reparto sesgado de clientes: orden aleatorio (con semilla) + pesos Zipf.
     const pesosClientes = azar.mezclar(clientes)
@@ -200,8 +210,8 @@ export class GeneradorOperacionesService {
 
     for (const { fecha, peso } of fechas) {
       const objetivo = Math.max(0, Math.round(p.cantidadTotal * (peso / sumaPesos) * (0.85 + 0.3 * azar.siguiente())));
-      const noDispDia = this.choferesNoDisponibles(noDisponibles, fecha);
-      const pool = this.poolDelDia(vehiculos, choferes, proveedores, noDispDia);
+      const noDispDia = this.choferesNoDisponibles(choferes, fecha);
+      const pool = this.poolDelDia(vehiculos, choferes, proveedores, noDispDia, fecha);
       // General vigente A LA FECHA del día (TC5): base de los valores eventuales.
       const general = this.tarifario.getTarifaGeneralVigente(fecha) ?? null;
 
@@ -585,21 +595,25 @@ export class GeneradorOperacionesService {
       && !usadosChofer.has(ch.id));
   }
 
-  /** Mismo criterio que el tablero: una no-disponibilidad cubre la fecha si
-   *  desde <= fecha y (sin hasta o fecha <= hasta). */
-  private choferesNoDisponibles(lista: NoDisponibilidadChofer[], fecha: string): Set<string> {
-    return new Set(lista
-      .filter(n => n.desde <= fecha && (!n.hasta || fecha <= n.hasta))
-      .map(n => n.idChofer));
+  /** Ids de los choferes no disponibles en la fecha, según DisponibilidadService
+   *  (incluye la cascada desde su proveedor). Los datos ya se verificaron
+   *  cargados al empezar a planificar. */
+  private choferesNoDisponibles(choferes: ConIdType<Chofer>[], fecha: string): Set<string> {
+    return new Set(choferes
+      .filter(ch => (this.disponibilidad.motivosDe([{ tipo: 'chofer', idChofer: ch.id }], fecha) ?? []).length > 0)
+      .map(ch => ch.id));
   }
 
-  /** Vehículos utilizables el día: de chofer directo activo y disponible, o de
-   *  proveedor activo con al menos un chofer activo disponible. */
+  /** Vehículos utilizables el día: de chofer directo activo, o de proveedor
+   *  activo con al menos un chofer activo disponible (capacidad), y además
+   *  disponibles según DisponibilidadService — él, su chofer directo o su
+   *  proveedor (la misma pregunta que la guarda de altaDesdeAsignacion). */
   private poolDelDia(
     vehiculos: ConIdType<Vehiculo>[],
     choferes: ConIdType<Chofer>[],
     proveedores: ConIdType<Proveedor>[],
     noDispDia: Set<string>,
+    fecha: string,
   ): ConIdType<Vehiculo>[] {
     const idsProveedoresActivos = new Set(proveedores.map(pr => pr.id));
     const proveedoresConChofer = new Set(choferes
@@ -609,9 +623,12 @@ export class GeneradorOperacionesService {
       .filter(ch => ch.contratacion.tipo === 'directo' && !noDispDia.has(ch.id))
       .map(ch => ch.id));
 
-    return vehiculos.filter(v => v.asignadoA.tipo === 'chofer'
-      ? idsChoferesDirectos.has(v.asignadoA.idChofer)
-      : idsProveedoresActivos.has(v.asignadoA.idProveedor) && proveedoresConChofer.has(v.asignadoA.idProveedor));
+    return vehiculos
+      .filter(v => v.asignadoA.tipo === 'chofer'
+        ? idsChoferesDirectos.has(v.asignadoA.idChofer)
+        : idsProveedoresActivos.has(v.asignadoA.idProveedor) && proveedoresConChofer.has(v.asignadoA.idProveedor))
+      .filter(v => (this.disponibilidad.motivosDe(
+        consultasDeAsignacion(sujetoAsignacionDeVehiculo(v)), fecha) ?? []).length === 0);
   }
 
   private resumir(p: ParametrosGenerador, dias: DiaPlan[], diasSinCapacidad: string[]): ResumenPlan {

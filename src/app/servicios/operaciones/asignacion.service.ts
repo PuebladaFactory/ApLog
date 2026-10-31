@@ -8,7 +8,7 @@ import { LogService } from 'src/app/servicios/log/log.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 import { DisponibilidadService } from 'src/app/servicios/no-disponibilidad/disponibilidad.service';
 import { Resultado } from 'src/app/interfaces/resultado';
-import { listarItemsNoDisponibles } from 'src/app/shared/utils/vigencia-no-disponibilidad.util';
+import { listarItemsNoDisponibles } from 'src/app/shared/utils/no-disponibilidad.util';
 
 interface BorradorEnCurso {
   fecha: string;

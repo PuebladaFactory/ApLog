@@ -27,7 +27,7 @@ import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-s
 import { AnulacionInformeOp } from 'src/app/interfaces/informe-op-nuevo';
 import { ConsultaSujeto } from 'src/app/interfaces/no-disponibilidad';
 import { DisponibilidadService } from 'src/app/servicios/no-disponibilidad/disponibilidad.service';
-import { resumirMotivos } from 'src/app/shared/utils/vigencia-no-disponibilidad.util';
+import { resumirMotivos } from 'src/app/shared/utils/no-disponibilidad.util';
 
 export interface OperacionCreada {
   item:      AsignacionItem;

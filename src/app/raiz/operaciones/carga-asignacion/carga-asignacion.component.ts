@@ -4,7 +4,7 @@ import { takeUntil } from 'rxjs/operators';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import Swal from 'sweetalert2';
 
-import { describirMotivos } from 'src/app/shared/utils/vigencia-no-disponibilidad.util';
+import { describirMotivos } from 'src/app/shared/utils/no-disponibilidad.util';
 import { textoAHtml } from 'src/app/shared/utils/texto-html.util';
 
 import { AsignacionItem } from 'src/app/interfaces/asignacion';

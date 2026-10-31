@@ -15,13 +15,13 @@ import {
 } from './no-disponibilidad-factory.service';
 import {
   mismoSujeto, nombreSujeto, periodosSeSolapan,
-} from 'src/app/shared/utils/vigencia-no-disponibilidad.util';
+} from 'src/app/shared/utils/no-disponibilidad.util';
 
 /** Dueño de la colección `noDisponibilidades` (diseño:
  *  docs/disenos/no-disponibilidad.md).
  *  - Lectura: listener vivo sobre la colección COMPLETA, sin filtro. La
  *    vigencia (y el historial) se derivan en memoria con
- *    vigencia-no-disponibilidad.util.ts. `init()` idempotente: lo llama quien
+ *    no-disponibilidad.util.ts. `init()` idempotente: lo llama quien
  *    lo necesite (nadie todavía, bloque 1).
  *  - Escritura: alta, edición y anulación, cada una en UN commitBatch con su
  *    log (LogRegistroService) y retorno Resultado<T>. Cerrar una no

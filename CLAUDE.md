@@ -479,6 +479,9 @@ Categorías especiales:
 - Instrucciones para Claude Code: entregar en un único bloque de código (con botón de
   copiar), incluyendo razonamiento y todos los archivos/ediciones BUSCAR-REEMPLAZAR — no
   repartidas en varios bloques separados dentro de la respuesta.
+- Acceso a datos de Firebase: lectura en **demo** permitida cuando hace falta para relevar o
+  verificar. **Producción (Vantruck): nada, ni lecturas.** Escrituras, migraciones o deploys
+  —reglas e índices incluidos—: **en ningún proyecto sin que se pida explícitamente.**
 
 ## Contexto adicional
 
@@ -697,11 +700,13 @@ Deuda técnica activa. Actualizar cuando se salda.
 - **Herramienta de recálculo de tarifas (sólo en `main`)** — existe en producción (`98edb35`) y no en `refactor`; hay que reimplementarla sobre el modelo nuevo porque `RefTarifaAplicada` queda congelada al cerrar y una tarifa con vigencia retroactiva no corrige las operaciones ya cerradas. Detalle: skill `migracion-vantruck`.
 - **Restaurar operaciones desde la Papelera legado** — `PapeleraLegadoComponent.addItem` sigue restaurando operaciones por `TableroService.altaOperacionYActualizarTablero`, que no es atómico y loguea con el `LogService` viejo; el resto de la deuda de callers está saldado. Detalle: skill `modulo-operaciones`.
 - **`editarOperacion` puede fallar sin devolver `Resultado`** — arma la escritura del tablero antes del `try`: si no hay tablero para la fecha, la excepción se escapa sin `Resultado` ni `registrarError` y el usuario no se entera. Detalle: skill `modulo-operaciones`.
-- **Deuda menor del tablero de asignaciones** — la no-disponibilidad no está probada end-to-end y el borrador del tablero se pierde con F5. Detalle: skill `modulo-operaciones`.
+- **Deuda menor del tablero de asignaciones** — el borrador del tablero se pierde con F5. Detalle: skill `modulo-operaciones`.
 - **operaciones-editor / Tarifas** — estilos SCSS de tarifa duplicados sin consolidar, y el patrón `@if` obligatorio para bindear tarifas nullable. Detalle: skill `modulo-operaciones`.
 - **Fix de altura del modal limitado a `tablero-op`** — el ajuste que estira `carga-asignacion` dentro del modal vive en `tablero-op.component.scss`: otro caller que abra ese modal tiene que replicarlo. Detalle: skill `modulo-operaciones`.
-- **No-disponibilidad y tablero** — falta el rediseño del modelo (hoy solo cubre choferes; la regla vive en `no-disponibilidad.util.ts`). Detalle: skill `modulo-operaciones`.
-- **Cadena: noDisponibilidad → log viejo → Papelera legado** — rehacer la no-disponibilidad (hoy escribe por `StorageService` con el `LogService` viejo) es requisito para eliminar el log viejo, y la Papelera legado se elimina junto con el log viejo: ninguna de las tres se puede encarar fuera de ese orden. Detalle: skills `modulo-operaciones`, `subsistema-log` y `subsistema-papelera`.
+- **Cadena: log viejo → Papelera legado (destrabada)** — la no disponibilidad ya no usa el log viejo. Lo único que sigue escribiendo en `logs` es la Papelera legado (`StorageService.addItem`/`deleteItem`, `TableroService.altaOperacionYActualizarTablero`, `AsignacionService.reactivarItem`), así que el log viejo y la Papelera legado se eliminan juntos. Detalle: skills `subsistema-log` y `subsistema-papelera`.
+- **Migración de `noOperativo`** — la colección anterior de no disponibilidad quedó sin lectores: 6 documentos en demo y los de producción (2 vigentes al relevar), con la forma y el trabajo de "Datos de la colección anterior" en `docs/disenos/no-disponibilidad.md`. **Va después de la migración de Choferes**: 3 de los 6 de demo tienen `idChofer` numéricos del modelo viejo que sólo resuelven con su mapeo; al revés, se pierden.
+- **Mapeo de `noOperativo` en `firestore.rules`** — se saca recién cuando termine esa migración.
+- **Cuatro copias de `escapar`** — en `modal-no-disponibilidad`, `operaciones-editor`, `vendedor-historial` y `shared/utils/texto-html.util.ts`: unificar sobre `escaparHtml`/`textoAHtml` del util.
 - **Filtros vs. listener en background (frente futuro)** — en `tablero-op` los datos pueden quedar congelados al volver de background mientras los filtros muestran otro período; las suscripciones a `operaciones$` no manejan errores. Detalle: skill `modulo-operaciones`.
 - **Permisos de UI dispersos** — quedan `*appRole`/`esRol()` puntuales sin migrar a `PermisosService`, con riesgo de mostrar acciones que las Security Rules rechazan. Detalle: skill `botones-y-permisos`.
 - **Tarifas tras el cierre** — quedan residuos inertes en datos de demo (`idTarifa`/`tarifaAsignada`, `adExtra: null`) y `tarifa-gral-cliente.ts` sigue vivo por la Liquidación vieja. Detalle: skill `modulo-tarifas`.

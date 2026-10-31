@@ -13,7 +13,7 @@ import { ConsultaSujeto, MotivoNoDisponible } from 'src/app/interfaces/no-dispon
 import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import { DisponibilidadService } from 'src/app/servicios/no-disponibilidad/disponibilidad.service';
 import { NoDisponibilidadService } from 'src/app/servicios/no-disponibilidad/no-disponibilidad.service';
-import { describirMotivos, idDeSujeto, resumirMotivos } from 'src/app/shared/utils/vigencia-no-disponibilidad.util';
+import { describirMotivos, idDeSujeto, resumirMotivos } from 'src/app/shared/utils/no-disponibilidad.util';
 import Swal from 'sweetalert2';
 
 /** Grupo de exhibición: una tabla por cliente. Viewmodel efímero del componente. */

@@ -27,7 +27,7 @@ de proyecto `claude/diseno-generador-operaciones.md`; instrucciones:
 - Allowlist `COLECCIONES_A_VACIAR` (operativas del modelo nuevo):
   operaciones, asignaciones, informesOp, informesLiq, informesLiqSnapshots,
   facturasVinculadas, informesVenta, comisionesVenta, liquidacionesVenta,
-  registrosOpEventuales,
+  registrosOpEventuales, noDisponibilidades,
   resumenOpMensual, resumenesOp, movimientos, movimientosFin, resumenFinanzas, registroLog,
   generacionesPrueba. Una colección que no está en la lista nunca se borra
   (fail-safe: el SDK web no puede listar colecciones).
@@ -61,9 +61,11 @@ chofer), `requiereSeleccionManual`. Sobre los métodos públicos de
 `ValoresTarifaService` / `OperacionFactoryService`.
 
 ### Generador (`servicios/desarrollo/generador-operaciones.service.ts`, `componentes/generador-operaciones/`)
-- Dos pasos: **Simular** (`planificar`: no escribe; solo lee
-  `noOperativo`) y **Generar** (`ejecutar`), habilitado solo si los
-  parámetros no cambiaron desde la simulación (`igualesPorContenido`).
+- Dos pasos: **Simular** (`planificar`: no escribe) y **Generar**
+  (`ejecutar`), habilitado solo si los parámetros no cambiaron desde la
+  simulación (`igualesPorContenido`). Planificar exige los datos de
+  disponibilidad cargados (`DisponibilidadService.datosCargados()`): sin
+  ellos no planifica.
 - Azar con semilla: `shared/utils/azar.util.ts` (`Azar`, mulberry32:
   `siguiente`, `entero`, `chance`, `elegir`, `elegirPonderado`, `mezclar`,
   `variar`). Misma semilla + mismos datos de demo = mismo plan (los idItem
@@ -71,7 +73,12 @@ chofer), `requiereSeleccionManual`. Sobre los métodos públicos de
 - Plan: días hábiles peso 1, sábado `pesoSabado`, domingos opcionales;
   objetivo por día = total × peso relativo ±15%. Por día, en cada vuelta se
   sortean solo vehículos con chofer libre (1 op por vehículo y por chofer
-  por día, G2; no-disponibilidad con el criterio del tablero); cliente con
+  por día, G2). El pool del día y los choferes de proveedor elegibles salen
+  de `DisponibilidadService` con `consultasDeAsignacion` — la misma regla que
+  la guarda de `altaDesdeAsignacion`, así que un día planificado no falla
+  después por disponibilidad (skill `modulo-operaciones`, "No
+  disponibilidad"). Además, regla de capacidad: un vehículo de proveedor
+  necesita un chofer activo, disponible y sin operación ese día. Cliente con
   reparto sesgado (orden al azar + pesos Zipf, `sesgoClientes`). Cada op se
   arma con las mismas piezas que la UI: `crearOperacionesDesdeAsignacion` +
   `ResolucionTarifaOpService`. Chofer de proveedor al azar (G11); candidato
@@ -94,8 +101,7 @@ chofer), `requiereSeleccionManual`. Sobre los métodos públicos de
   errores' | 'interrumpido'), `fin`, altas, cierres, errores (máx. 200),
   `idsOperacion` (best-effort). Aviso `beforeunload` mientras genera.
 - Reglas (deployadas SOLO en demo): módulo 'desarrollo' para
-  `generacionesPrueba` y `noOperativo` → 'operaciones' (ver "Security
-  Rules"). RaizModule importa FormsModule (el componente usa ngModel).
+  `generacionesPrueba` (ver "Security Rules"). RaizModule importa FormsModule (el componente usa ngModel).
 - Primer lote (demo, agosto 2026): 508 operaciones en 26 días, 408
   cerradas (816 InformeOp), 98 registros eventuales, 0 errores. Exclusiones
   restantes: solo Ofidirect (su tarifa Especial no cubre algunas categorías
@@ -119,10 +125,8 @@ chofer), `requiereSeleccionManual`. Sobre los métodos públicos de
 - Registradas durante el frente (diseño §10): ~~rutas viejas de tarifas
   (`clientes|choferes|proveedores/general|especial|personalizada|eventual`)
   activas y listeners de HomeComponent sobre las colecciones viejas~~ —
-  RESUELTO en el cierre de Tarifas; `LogService` viejo sigue escribiendo en `logs`
-  (`AsignacionService.reactivarItem`,
-  `TableroService.altaOperacionYActualizarTablero`, `StorageService`
-  add/update/deleteItem/logSimple); ~~la papelera vieja todavía recibe bajas
+  RESUELTO en el cierre de Tarifas; el `LogService` viejo sigue escribiendo en
+  `logs` sólo desde la Papelera legado (skill `subsistema-log`); ~~la papelera vieja todavía recibe bajas
   (vendedores con rol no dev vía `deleteItemPapelera`)~~ — resuelto en el
   Frente Vendedores (los vendedores se desactivan); ~~Finanzas lee/escribe
   colecciones purgadas en demo~~ — resuelto en el Frente Finanzas (módulo

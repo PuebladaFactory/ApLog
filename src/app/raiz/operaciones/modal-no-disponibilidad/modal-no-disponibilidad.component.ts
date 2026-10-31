@@ -19,7 +19,7 @@ import {
   NoDisponibilidadFactoryService, PeriodoNoDisponibilidad,
 } from 'src/app/servicios/no-disponibilidad/no-disponibilidad-factory.service';
 import { esFechaNegocio, fechaLegible, hoyNegocio, instanteLegible, sumarDias } from 'src/app/shared/utils/fecha.util';
-import { cubreFecha, idDeSujeto, nombreSujeto } from 'src/app/shared/utils/vigencia-no-disponibilidad.util';
+import { cubreFecha, idDeSujeto, nombreSujeto } from 'src/app/shared/utils/no-disponibilidad.util';
 
 type TipoSujeto = SujetoNoDisponibilidad['tipo'];
 

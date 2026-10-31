@@ -547,16 +547,28 @@ no recibe escrituras nuevas del mecanismo nuevo, solo se consulta.
 `RegistroLogComponent` (`registroLog`) arranca en blanco desde esa fecha.
 Sin fusión de pantallas ni migración de datos entre ambas colecciones.
 
+## No disponibilidad — en el log nuevo
+
+La no disponibilidad (colección `noDisponibilidades`, `NoDisponibilidadService`) escribe con
+`LogRegistroService.agregarAlBatch` dentro del mismo `commitBatch`: `ALTA`, `EDITAR` (también
+cerrar, que es escribir `hasta`) y `ANULAR`. El `anterior` del diff sale del estado en memoria
+del listener (no se lee del servidor), y el `registrarError` del `catch` no se espera. Este
+circuito **no pasa por `StorageService` ni por el `LogService` viejo**.
+
+⚠️ `noDisponibilidades` escribe en `registroLog` pero **no está en `COLECCIONES_REGISTRO_LOG`**
+(`registro-log-consulta.service.ts`), así que no aparece en el filtro de colección de
+`RegistroLogComponent`; sus entradas se ven sin filtrar. La lista tampoco tiene otras
+colecciones que ya escriben en el log nuevo: hay que revisarla entera.
+
 ## Deuda abierta — eliminar el log viejo (`LogService`, colección `logs`)
 
-**Cadena de dependencias — eslabón del medio:** `rehacer noDisponibilidad` → `eliminar el log viejo` → `eliminar el camino legado de la papelera`.
+**Cadena: `eliminar el log viejo` → `eliminar el camino legado de la papelera` — destrabada.**
+Lo único que sigue escribiendo en `logs` es la Papelera legado: `StorageService.addItem`/
+`deleteItem` (desde `PapeleraLegadoComponent`), `TableroService.altaOperacionYActualizarTablero`
+y `AsignacionService.reactivarItem`. Por eso el log viejo y la Papelera legado se eliminan
+juntos (skill `subsistema-papelera`, "Deuda abierta — eliminar el camino legado de la
+papelera").
 
-**Qué la bloquea:** la no-disponibilidad (`modal-choferes-no-disponibles`) sigue escribiendo por
-`StorageService.addItem`/`updateItem`, que loguea con el `LogService` viejo; el log viejo no se
-puede eliminar antes de rehacerla (skill `modulo-operaciones`, "Deuda abierta — no-disponibilidad y tablero").
-Otros usos vivos del `LogService` viejo hoy: `StorageService` add/update/delete,
-`TableroService.altaOperacionYActualizarTablero` y `AsignacionService.reactivarItem`, los dos
-últimos sólo desde la Papelera legado.
-
-**Qué destraba:** el camino legado de la papelera estaba previsto para eliminarse junto con el
-log viejo (skill `subsistema-papelera`, "Deuda abierta — eliminar el camino legado de la papelera").
+`StorageService.updateItem` sigue referenciando a `LogService`, pero su único caller vivo
+(`visibilidad-listados`) escribe con acción `'INTERNA'`, que `controlLog` no loguea: no escribe
+en `logs`, aunque hay que sacar esa referencia al eliminar `LogService`.

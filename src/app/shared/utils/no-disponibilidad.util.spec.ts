@@ -4,8 +4,9 @@ import {
   MotivoNoDisponible, NoDisponibilidad, ResultadoDisponibilidad, SujetoNoDisponibilidad,
 } from 'src/app/interfaces/no-disponibilidad';
 import {
-  cubreFecha, DatosDisponibilidad, disponibilidadDe, vehiculosDisponiblesDe,
-} from './vigencia-no-disponibilidad.util';
+  consultasDeAsignacion, consultasDeOperacion, cubreFecha, DatosDisponibilidad,
+  disponibilidadDe, vehiculosDisponiblesDe,
+} from './no-disponibilidad.util';
 
 /** Registro de prueba: chofer, del 2026-11-10 al 2026-11-20, activo. */
 function nd(cambios: Partial<NoDisponibilidad> = {}): NoDisponibilidad {
@@ -21,7 +22,7 @@ function nd(cambios: Partial<NoDisponibilidad> = {}): NoDisponibilidad {
   };
 }
 
-describe('vigencia-no-disponibilidad.util', () => {
+describe('no-disponibilidad.util', () => {
 
   describe('cubreFecha', () => {
 
@@ -130,7 +131,7 @@ function motivos(r: ResultadoDisponibilidad): [MotivoNoDisponible['origen'], str
   return r.disponible ? [] : r.motivos.map(m => [m.origen, m.noDisponibilidad.id]);
 }
 
-describe('vigencia-no-disponibilidad.util — cascadas', () => {
+describe('no-disponibilidad.util — cascadas', () => {
 
   describe('las cuatro filas de la tabla', () => {
 
@@ -312,6 +313,70 @@ describe('vigencia-no-disponibilidad.util — cascadas', () => {
       expect(disponibilidadDe(datos(), ve('borrado'), F)).toEqual({ disponible: true });
       const d = datos(registro('nd', sujetoVehiculo('borrado')));
       expect(motivos(disponibilidadDe(d, ve('borrado'), F))).toEqual([['propia', 'nd']]);
+    });
+  });
+});
+
+// ── Qué se pregunta en cada caso ──────────────────────────────────
+//
+// La regla que usan el tablero, el informe y las cuatro guardas. Si se cae la
+// pregunta por el vehículo (o por la entidad), las guardas siguen pasando y
+// dejan de servir: el compilador no lo ve.
+
+describe('no-disponibilidad.util — consultas', () => {
+
+  describe('consultasDeAsignacion', () => {
+
+    it('un ítem de chofer directo pregunta por su vehículo y por él', () => {
+      expect(consultasDeAsignacion({ tipo: 'directo', idChofer: 'D1', idVehiculo: 'V1' })).toEqual([
+        { tipo: 'vehiculo', idVehiculo: 'V1' },
+        { tipo: 'chofer', idChofer: 'D1' },
+      ]);
+    });
+
+    it('un ítem de proveedor sin chofer elegido pregunta por su vehículo y por el proveedor', () => {
+      expect(consultasDeAsignacion({ tipo: 'proveedor', idProveedor: 'P1', idChofer: null, idVehiculo: 'VP1' })).toEqual([
+        { tipo: 'vehiculo', idVehiculo: 'VP1' },
+        { tipo: 'proveedor', idProveedor: 'P1' },
+      ]);
+    });
+
+    it('un ítem de proveedor con chofer ya elegido pregunta también por ese chofer', () => {
+      expect(consultasDeAsignacion({ tipo: 'proveedor', idProveedor: 'P1', idChofer: 'P1C1', idVehiculo: 'VP1' })).toEqual([
+        { tipo: 'vehiculo', idVehiculo: 'VP1' },
+        { tipo: 'proveedor', idProveedor: 'P1' },
+        { tipo: 'chofer', idChofer: 'P1C1' },
+      ]);
+    });
+
+    it('un ítem sin vehículo resuelto no pregunta por vehículo (pero sí por la entidad)', () => {
+      expect(consultasDeAsignacion({ tipo: 'directo', idChofer: 'D1', idVehiculo: null }))
+        .toEqual([{ tipo: 'chofer', idChofer: 'D1' }]);
+      expect(consultasDeAsignacion({ tipo: 'proveedor', idProveedor: 'P1', idChofer: null, idVehiculo: null }))
+        .toEqual([{ tipo: 'proveedor', idProveedor: 'P1' }]);
+    });
+  });
+
+  describe('consultasDeOperacion', () => {
+
+    it('una operación de proveedor pregunta por los tres: chofer, vehículo y proveedor', () => {
+      expect(consultasDeOperacion({ chofer: { id: 'P1C1' }, vehiculo: { id: 'VP1' }, proveedor: { id: 'P1' } })).toEqual([
+        { tipo: 'chofer', idChofer: 'P1C1' },
+        { tipo: 'vehiculo', idVehiculo: 'VP1' },
+        { tipo: 'proveedor', idProveedor: 'P1' },
+      ]);
+    });
+
+    it('una operación de chofer directo pregunta por el chofer y el vehículo', () => {
+      expect(consultasDeOperacion({ chofer: { id: 'D1' }, vehiculo: { id: 'V1' }, proveedor: null })).toEqual([
+        { tipo: 'chofer', idChofer: 'D1' },
+        { tipo: 'vehiculo', idVehiculo: 'V1' },
+      ]);
+    });
+
+    it('lo que todavía está pendiente (id vacío) no se pregunta', () => {
+      expect(consultasDeOperacion({ chofer: { id: '' }, vehiculo: { id: '' }, proveedor: { id: 'P1' } }))
+        .toEqual([{ tipo: 'proveedor', idProveedor: 'P1' }]);
     });
   });
 });

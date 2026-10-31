@@ -29,13 +29,12 @@ service cloud.firestore {
 
         'operaciones': 'operaciones',
         'informesVenta': 'operaciones',
-        // No-disponibilidad de choferes: la gestiona quien opera el tablero
-        // (modal de choferes no disponibles: alta/edición/desactivación por
-        // update, sin delete). Faltaba en el mapa → quedaba denegada a todos.
+        // EN DESUSO: colección anterior de no disponibilidad (sólo choferes).
+        // Ningún código la lee ni la escribe; el mapeo queda hasta que se
+        // migren sus datos a 'noDisponibilidades' (deuda en CLAUDE.md).
         'noOperativo': 'operaciones',
-        // Frente No disponibilidad: colección nueva (chofer, vehículo o
-        // proveedor; anulación por update, sin delete). Mismo perfil que
-        // 'noOperativo', que queda sin lectores hasta retirarse.
+        // No disponibilidad de choferes, vehículos y proveedores (alta,
+        // edición y anulación por update, sin delete).
         'noDisponibilidades': 'operaciones',
 
         // Herramientas de desarrollo (solo demo): registro de lotes del

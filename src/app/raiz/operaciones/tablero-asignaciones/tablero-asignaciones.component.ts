@@ -9,7 +9,7 @@ import { ModalObjetosActivosComponent } from 'src/app/raiz/operaciones/modal-obj
 import { sumarDias } from 'src/app/shared/utils/fecha.util';
 import {
   consultasDeAsignacion, describirMotivos, idDeSujeto, listarItemsNoDisponibles, unirMotivos,
-} from 'src/app/shared/utils/vigencia-no-disponibilidad.util';
+} from 'src/app/shared/utils/no-disponibilidad.util';
 import { textoAHtml } from 'src/app/shared/utils/texto-html.util';
 import { preguntarFormatoDescarga } from 'src/app/shared/utils/preguntar-descarga.util';
 
@@ -17,7 +17,6 @@ import { Asignacion, AsignacionItem, AsignacionRef, SujetoAsignacion } from 'src
 import { Categoria, Vehiculo, Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { ConIdType } from 'src/app/interfaces/conId';
-import { NoDisponibilidadChofer } from 'src/app/interfaces/no-disponibilidad-chofer';
 import { ConsultaSujeto, MotivoNoDisponible } from 'src/app/interfaces/no-disponibilidad';
 
 import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
@@ -728,7 +727,6 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
         estado: this.modo === 'edicion' ? 'borrador' : 'confirmado',
         items,
         clientes: this.clientesVisibles.map(c => ({ id: c.idCliente, razonSocial: c.razonSocial })),
-        noDisponibilidades: this.noDisponibilidadesParaInforme(),
       }, formato);
     } catch (e) {
       error = e;
@@ -876,14 +874,11 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
     return motivos;
   }
 
-  /** Tarjeta del pool: el vehículo y su dueño. */
+  /** Tarjeta del pool: lo mismo que se preguntaría por un ítem con ese
+   *  vehículo (él y su dueño) — la misma regla que el informe y las guardas. */
   motivosPool(v: VehiculoPool): MotivoNoDisponible[] | null {
     if (!this.puedeVerificar()) return null;
-    const a = v.asignadoA;
-    const entidad: ConsultaSujeto = a.tipo === 'chofer'
-      ? { tipo: 'chofer', idChofer: a.idChofer }
-      : { tipo: 'proveedor', idProveedor: a.idProveedor };
-    return unirMotivos(this.motivosDe({ tipo: 'vehiculo', idVehiculo: v.idVehiculo }), this.motivosDe(entidad));
+    return unirMotivos(...consultasDeAsignacion(this.derivarSujeto(v)).map(c => this.motivosDe(c)));
   }
 
   /** Ítem ya colocado: lo que ya se sabe de su sujeto (resolución
@@ -925,26 +920,6 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
     const motivos = this.motivosItem(item);
     if (motivos && motivos.length > 0) return `No disponible en la fecha:\n${describirMotivos(motivos)}`;
     return item.ref.dominio;
-  }
-
-  /** PUENTE HASTA EL BLOQUE 7. El informe del tablero sigue tipado contra el
-   *  modelo viejo (sólo choferes). Se le pasan los registros activos de
-   *  CHOFER del modelo nuevo con la forma vieja; los de vehículo y proveedor
-   *  todavía no van a la hoja "No disponibles". El util filtra por fecha. */
-  private noDisponibilidadesParaInforme(): NoDisponibilidadChofer[] {
-    const resultado: NoDisponibilidadChofer[] = [];
-    for (const nd of this.noDisponibilidadService.getNoDisponibilidadesActuales()) {
-      if (!nd.activa || nd.sujeto.tipo !== 'chofer') continue;
-      resultado.push({
-        idNoDisponibilidad: nd.id,
-        idChofer: nd.sujeto.idChofer,
-        desde: nd.desde,
-        hasta: nd.hasta,
-        motivo: nd.motivo,
-        activa: true,
-      });
-    }
-    return resultado;
   }
 
   // ---------------------------------------------------------------------------

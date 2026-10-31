@@ -1,11 +1,39 @@
 import { ColumnaDoc, HojaDoc, LibroTabular, TablaDoc, ValorCeldaDoc } from 'src/app/interfaces/documento-tabular';
 import { AsignacionItem } from 'src/app/interfaces/asignacion';
-import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
+import { Chofer } from 'src/app/interfaces/chofer';
 import { ConIdType } from 'src/app/interfaces/conId';
-import { NoDisponibilidadChofer } from 'src/app/interfaces/no-disponibilidad-chofer';
+import { MotivoNoDisponible } from 'src/app/interfaces/no-disponibilidad';
 import { fechaLegible } from './fecha.util';
-import { motivoNoDisponibilidad, noDisponibilidadesEnFecha } from './no-disponibilidad.util';
+import { causaMotivo, resumirMotivos } from './no-disponibilidad.util';
 import { sanearNombreArchivo } from './nombre-archivo.util';
+
+/** Un vehículo de la flota (los que lista el pool del tablero) que no está
+ *  disponible en la fecha, con los registros que lo impiden. */
+export interface VehiculoNoDisponibleInforme {
+  duenio: string;                       // 'Apellido, Nombre' o razón social
+  tipoDuenio: 'Chofer directo' | 'Proveedor';
+  dominio: string;
+  categoria: string;
+  motivos: MotivoNoDisponible[];
+}
+
+/** Un chofer de proveedor no disponible en la fecha. No tiene vehículo propio
+ *  (los vehículos son del proveedor), así que no aparece en el pool: va aparte. */
+export interface ChoferProveedorNoDisponibleInforme {
+  chofer: string;
+  proveedor: string;
+  motivos: MotivoNoDisponible[];
+}
+
+/** La disponibilidad de la fecha, YA RESUELTA por la fachada con
+ *  DisponibilidadService y `consultasDeAsignacion` — la misma regla que marca
+ *  el tablero y que aplican las guardas. El util sólo la presenta. */
+export interface DisponibilidadInforme {
+  /** Ítems ACTIVOS del tablero no disponibles, por idItem. */
+  porItem: Readonly<Record<string, MotivoNoDisponible[]>>;
+  vehiculos: VehiculoNoDisponibleInforme[];
+  choferesDeProveedor: ChoferProveedorNoDisponibleInforme[];
+}
 
 /** Lo que necesita el informe del tablero de asignaciones. `items` viene
  *  EXACTAMENTE como está en pantalla (el borrador en modo edición, el tablero
@@ -13,18 +41,16 @@ import { sanearNombreArchivo } from './nombre-archivo.util';
  *
  *  `clientes` resuelve la razón social de `item.idCliente` sin que el util
  *  conozca ningún servicio. `choferes` resuelve el nombre del chofer de un
- *  item de proveedor (`sujeto.idChofer`, que se elige después de asignar) y el
- *  de cada no-disponibilidad. `vehiculosPorChofer` sale de
- *  `agruparVehiculosPorDuenio` (la misma función pura que usan los listados). */
+ *  item de proveedor (`sujeto.idChofer`, que se elige después de asignar).
+ *  `disponibilidad` null = no se pudo verificar (datos sin cargar): el informe
+ *  lo dice, no lo omite ni lo da por disponible. */
 export interface DatosLibroAsignaciones {
   fecha: string;                    // 'YYYY-MM-DD' del tablero
   estado: 'borrador' | 'confirmado';
   items: AsignacionItem[];
   clientes: { id: string; razonSocial: string }[];
-  /** Activas; el tablero las filtra al suscribirse. */
-  noDisponibilidades: NoDisponibilidadChofer[];
   choferes: ConIdType<Chofer>[];
-  vehiculosPorChofer: Readonly<Record<string, Vehiculo[]>>;
+  disponibilidad: DisponibilidadInforme | null;
 }
 
 /** Hoja 1 — una fila por asignación.
@@ -39,6 +65,8 @@ export interface DatosLibroAsignaciones {
  *  "Anulada: el cliente canceló" sería un valor distinto de "Anulada" para el
  *  filtro de la Tabla, y la columna dejaría de servir para filtrar.
  *
+ *  `No disponible`: lo mismo que el borde rojo del ítem en el tablero.
+ *
  *  NO hay columna de operación: `AsignacionItem.idOperacion` guarda el
  *  document id de Firestore, no el número de operación (ese es
  *  `Operacion.numeroOperacion`), y resolverlo pediría leer cada operación. */
@@ -52,31 +80,42 @@ const COLUMNAS_ASIGNACIONES: ColumnaDoc[] = [
   col('Hoja de ruta', 'texto', 24),
   col('Estado', 'texto', 10),
   col('Motivo anulación', 'texto', 26),
+  col('No disponible', 'texto', 34),
 ];
 
-/** Hoja 2 — una fila por chofer no disponible Y VEHÍCULO. Un chofer con dos
- *  camiones aparece dos veces; uno sin vehículos aparece igual, con Dominio y
- *  Categoría vacías. Es lo que permite filtrar por categoría: con los
- *  vehículos en renglones dentro de una celda no se podría. */
-const COLUMNAS_NO_DISPONIBLES: ColumnaDoc[] = [
-  col('Chofer', 'texto', 24),
+/** Hoja 2, tabla 1 — una fila por vehículo Y CAUSA: un vehículo que cae por
+ *  dos registros (taller y licencia del chofer) aparece dos veces, para poder
+ *  filtrar por causa o por motivo. */
+const COLUMNAS_VEHICULOS: ColumnaDoc[] = [
+  col('Dueño', 'texto', 24),
+  col('Tipo', 'texto', 14),
   col('Dominio', 'texto', 11),
   col('Categoría', 'texto', 14),
+  col('Causa', 'texto', 26),
+  col('Desde', 'fecha', 12),
+  col('Hasta', 'fecha', 12),
+  col('Motivo', 'texto', 28),
+];
+
+/** Hoja 2, tabla 2 — una fila por chofer de proveedor Y CAUSA. */
+const COLUMNAS_CHOFERES_PROVEEDOR: ColumnaDoc[] = [
+  col('Chofer', 'texto', 24),
+  col('Proveedor', 'texto', 24),
+  col('Causa', 'texto', 26),
   col('Desde', 'fecha', 12),
   col('Hasta', 'fecha', 12),
   col('Motivo', 'texto', 28),
 ];
 
 /** QUÉ dice el informe del tablero de asignaciones de UNA fecha: las
- *  asignaciones del día y los choferes que ese día no estaban disponibles. Las
- *  dos hojas son Tabla de Excel (informes de TRABAJO: se filtran y se ordenan)
- *  y ninguna lleva fila de totales — no hay columnas numéricas que sumar. */
+ *  asignaciones del día y lo que ese día no estaba disponible. Las tablas son
+ *  Tabla de Excel (informes de TRABAJO: se filtran y se ordenan) y ninguna
+ *  lleva fila de totales — no hay columnas numéricas que sumar. */
 export function armarLibroAsignaciones(d: DatosLibroAsignaciones): LibroTabular {
   const razonSocial = new Map(d.clientes.map(c => [c.id, c.razonSocial]));
   const nombresChofer = new Map(d.choferes.map(c => [c.id, nombreChofer(c)]));
 
-  const filasAsignaciones = d.items.map(it => filaAsignacion(it, razonSocial, nombresChofer));
-  const filasNoDisponibles = armarFilasNoDisponibles(d, nombresChofer);
+  const filasAsignaciones = d.items.map(it => filaAsignacion(it, razonSocial, nombresChofer, d.disponibilidad));
 
   const etiquetaEstado = d.estado === 'borrador' ? 'Borrador (sin dar de alta)' : 'Confirmado';
   const activas = d.items.filter(it => it.estado.estado === 'activa').length;
@@ -88,47 +127,84 @@ export function armarLibroAsignaciones(d: DatosLibroAsignaciones): LibroTabular 
       `${etiquetaEstado} · ${plural(d.items.length, 'asignación', 'asignaciones')}` +
         (activas === d.items.length ? '' : ` (${activas} activas)`),
     ],
-    tablas: [tabla('Asignaciones', COLUMNAS_ASIGNACIONES, filasAsignaciones)],
+    tablas: [tabla('Asignaciones', null, COLUMNAS_ASIGNACIONES, filasAsignaciones)],
     notas: [
       'Las asignaciones salen del tablero tal como está en pantalla: el borrador en modo edición, el tablero confirmado en modo visor.',
       'Chofer y Proveedor son excluyentes: un vehículo de proveedor deja Chofer vacía hasta que se elige el chofer al dar de alta las operaciones.',
       'Un tablero confirmado conserva las asignaciones anuladas, para no perder el registro de lo que se asignó ese día.',
-    ],
-  };
-
-  const hojaNoDisponibles: HojaDoc = {
-    nombre: 'No disponibles',
-    titulo: `Choferes no disponibles — ${fechaLegible(d.fecha)}`,
-    subtitulos: [
-      plural(filasNoDisponibles.length, 'registro', 'registros'),
-    ],
-    tablas: [tabla('NoDisponibles', COLUMNAS_NO_DISPONIBLES, filasNoDisponibles)],
-    notas: [
-      'Solo las no-disponibilidades vigentes en la fecha del tablero, no todas las cargadas.',
-      'Una fila por chofer y vehículo: un chofer con dos vehículos aparece dos veces, y uno sin vehículos propios aparece con Dominio y Categoría vacías.',
-      'Hasta sin valor (celda vacía en el Excel, "—" en el PDF) significa sin fecha de fin definida.',
-      'La no-disponibilidad del sistema es solo de choferes: no se puede marcar como no disponible a un proveedor ni a un vehículo suelto.',
+      'No disponible: las asignaciones activas cuyo vehículo, chofer o proveedor no está disponible en la fecha (las que el tablero marca con borde rojo).',
+      ...(d.disponibilidad === null ? [SIN_VERIFICAR] : []),
     ],
   };
 
   return {
     nombreArchivo: sanearNombreArchivo(`Asignaciones_${d.fecha}`),
-    hojas: [hojaAsignaciones, hojaNoDisponibles],
+    hojas: [hojaAsignaciones, hojaNoDisponibles(d)],
   };
 }
 
 // ── internos ────────────────────────────────────────────────────────
 
-/** Una hoja, una tabla, sin fila de totales y como Tabla de Excel real.
+const SIN_VERIFICAR =
+  'NO SE PUDO VERIFICAR LA DISPONIBILIDAD: los datos todavía no habían terminado de cargar al '
+  + 'generar el informe. Volvé a descargarlo en unos segundos.';
+
+function hojaNoDisponibles(d: DatosLibroAsignaciones): HojaDoc {
+  const disp = d.disponibilidad;
+  const filasVehiculos: ValorCeldaDoc[][] = [];
+  const filasChoferes: ValorCeldaDoc[][] = [];
+  for (const v of disp?.vehiculos ?? []) {
+    for (const m of v.motivos) {
+      filasVehiculos.push([v.duenio, v.tipoDuenio, v.dominio, v.categoria, ...columnasMotivo(m)]);
+    }
+  }
+  for (const c of disp?.choferesDeProveedor ?? []) {
+    for (const m of c.motivos) {
+      filasChoferes.push([c.chofer, c.proveedor, ...columnasMotivo(m)]);
+    }
+  }
+
+  return {
+    nombre: 'No disponibles',
+    titulo: `No disponibles — ${fechaLegible(d.fecha)}`,
+    subtitulos: disp === null
+      ? ['Disponibilidad sin verificar']
+      : [
+          `${plural(disp.vehiculos.length, 'vehículo', 'vehículos')} · ` +
+          `${plural(disp.choferesDeProveedor.length, 'chofer de proveedor', 'choferes de proveedor')}`,
+        ],
+    tablas: [
+      tabla('NoDisponiblesVehiculos', 'Vehículos', COLUMNAS_VEHICULOS, filasVehiculos),
+      tabla('NoDisponiblesChoferesProv', 'Choferes de proveedor', COLUMNAS_CHOFERES_PROVEEDOR, filasChoferes),
+    ],
+    notas: [
+      ...(disp === null ? [SIN_VERIFICAR] : []),
+      'Se cuenta con la misma regla que marca el tablero y que aplican las guardas: un vehículo no está disponible por un registro propio, por uno de su chofer directo, por uno de su proveedor, o si a su proveedor no le queda ningún chofer disponible.',
+      'Causa: el chofer, vehículo o proveedor que tiene la no disponibilidad cargada. Un vehículo que cae por dos causas aparece en dos filas.',
+      'Vehículos: los de choferes directos y proveedores activos, como el pool del tablero.',
+      'Choferes de proveedor: aparte, porque no tienen vehículo propio; se eligen al dar de alta las operaciones.',
+      'Solo lo que está no disponible en la fecha del tablero, no todo lo cargado.',
+      'Hasta sin valor (celda vacía en el Excel, "—" en el PDF) significa sin fecha de fin prevista.',
+    ],
+  };
+}
+
+function columnasMotivo(m: MotivoNoDisponible): ValorCeldaDoc[] {
+  const nd = m.noDisponibilidad;
+  return [causaMotivo(m), nd.desde, nd.hasta, nd.motivo];
+}
+
+/** Una tabla sin fila de totales y como Tabla de Excel real.
  *  `nombre` es el nombre del ListObject: único en el LIBRO y sin espacios. */
-function tabla(nombre: string, columnas: ColumnaDoc[], filas: ValorCeldaDoc[][]): TablaDoc {
-  return { titulo: null, grupos: [], columnas, filas, filaTotal: null, excel: { nombre } };
+function tabla(nombre: string, titulo: string | null, columnas: ColumnaDoc[], filas: ValorCeldaDoc[][]): TablaDoc {
+  return { titulo, grupos: [], columnas, filas, filaTotal: null, excel: { nombre } };
 }
 
 function filaAsignacion(
   it: AsignacionItem,
   razonSocial: Map<string, string>,
   nombresChofer: Map<string, string>,
+  disponibilidad: DisponibilidadInforme | null,
 ): ValorCeldaDoc[] {
   const duenio = it.ref.asignadoA;
   // Chofer directo: el nombre congelado en el snapshot (verdad histórica del
@@ -152,7 +228,14 @@ function filaAsignacion(
     it.hojaDeRuta ?? '',
     anulada ? 'Anulada' : 'Activa',
     motivoAnulacion,
+    anulada ? '' : celdaDisponibilidad(it, disponibilidad),
   ];
+}
+
+function celdaDisponibilidad(it: AsignacionItem, disponibilidad: DisponibilidadInforme | null): string {
+  if (disponibilidad === null) return 'Sin verificar';
+  const motivos = disponibilidad.porItem[it.idItem];
+  return motivos && motivos.length > 0 ? resumirMotivos(motivos) : '';
 }
 
 /** El chofer elegido para un item de proveedor. '' si todavía no se eligió;
@@ -162,26 +245,6 @@ function nombreChoferDeSujeto(it: AsignacionItem, nombresChofer: Map<string, str
   const id = it.sujeto.idChofer;
   if (!id) return '';
   return nombresChofer.get(id) ?? 'Sin resolver';
-}
-
-function armarFilasNoDisponibles(
-  d: DatosLibroAsignaciones,
-  nombresChofer: Map<string, string>,
-): ValorCeldaDoc[][] {
-  const filas: ValorCeldaDoc[][] = [];
-  for (const nd of noDisponibilidadesEnFecha(d.noDisponibilidades, d.fecha)) {
-    const nombre = nombresChofer.get(nd.idChofer) ?? 'Sin resolver';
-    const motivo = motivoNoDisponibilidad(nd);
-    const vehiculos = d.vehiculosPorChofer[nd.idChofer] ?? [];
-    if (vehiculos.length === 0) {
-      filas.push([nombre, '', '', nd.desde, nd.hasta, motivo]);
-      continue;
-    }
-    for (const v of vehiculos) {
-      filas.push([nombre, v.dominio ?? '', v.categoria?.nombre ?? '', nd.desde, nd.hasta, motivo]);
-    }
-  }
-  return filas;
 }
 
 /** 'Apellido, Nombre' — el mismo formato que usa la celda del tablero. */
