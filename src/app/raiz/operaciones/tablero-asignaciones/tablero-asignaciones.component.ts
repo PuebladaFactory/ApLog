@@ -7,7 +7,7 @@ import Swal from 'sweetalert2';
 
 import { ModalObjetosActivosComponent } from 'src/app/raiz/operaciones/modal-objetos-activos/modal-objetos-activos.component';
 import { sumarDias } from 'src/app/shared/utils/fecha.util';
-import { choferesNoOperativos, motivoNoDisponibilidadDe } from 'src/app/shared/utils/no-disponibilidad.util';
+import { describirMotivos, idDeSujeto, unirMotivos } from 'src/app/shared/utils/vigencia-no-disponibilidad.util';
 import { preguntarFormatoDescarga } from 'src/app/shared/utils/preguntar-descarga.util';
 
 import { Asignacion, AsignacionItem, AsignacionRef, SujetoAsignacion } from 'src/app/interfaces/asignacion';
@@ -15,6 +15,7 @@ import { Categoria, Vehiculo, Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { ConIdType } from 'src/app/interfaces/conId';
 import { NoDisponibilidadChofer } from 'src/app/interfaces/no-disponibilidad-chofer';
+import { ConsultaSujeto, MotivoNoDisponible } from 'src/app/interfaces/no-disponibilidad';
 
 import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
@@ -23,7 +24,8 @@ import { AsignacionService } from 'src/app/servicios/operaciones/asignacion.serv
 import { AsignacionesExportService } from 'src/app/servicios/operaciones/asignaciones-export.service';
 import { OperacionService, OperacionCreada, ResultadoCreacionOps, ErrorCreacionOp } from 'src/app/servicios/operaciones/operacion.service';
 import { OperacionesEditorComponent } from 'src/app/raiz/operaciones/operaciones-editor/operaciones-editor.component';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { DisponibilidadService } from 'src/app/servicios/no-disponibilidad/disponibilidad.service';
+import { NoDisponibilidadService } from 'src/app/servicios/no-disponibilidad/no-disponibilidad.service';
 import { TarifarioService } from 'src/app/servicios/tarifario/tarifario.service';
 import { ModalNoDisponibilidadComponent } from '../modal-no-disponibilidad/modal-no-disponibilidad.component';
 
@@ -87,9 +89,12 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
     'bg-dark text-white',
   ];
 
-  // ---- No-disponibilidad ----
-  noDisponibilidades: NoDisponibilidadChofer[] = [];
-  noOperativosSet = new Set<string>();
+  // ---- No disponibilidad ----
+  // Memo de la resolución por sujeto para la fecha del tablero: el template
+  // pregunta por cada tarjeta e ítem en cada ciclo. Se vacía al cambiar de
+  // fecha o al llegar datos nuevos (no disponibilidades, choferes, vehículos).
+  private memoDisponibilidad = new Map<string, MotivoNoDisponible[]>();
+  private memoFecha = '';
 
   // ---- RxJS ----
   destroy$ = new Subject<void>();
@@ -102,7 +107,8 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
     private asignacionService: AsignacionService,
     private asignacionesExport: AsignacionesExportService,
     private operacionService: OperacionService,
-    private storageService: StorageService,
+    private disponibilidadService: DisponibilidadService,
+    private noDisponibilidadService: NoDisponibilidadService,
     private tarifarioService: TarifarioService,
     private modal: NgbModal,
   ) {}
@@ -126,7 +132,7 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
       this.modo             = 'edicion';
       this.borradorSucio    = true;
       this.tablero          = null;
-      this.calcularChoferesNoOperativosPorFecha(enCurso.fecha);
+      this.invalidarDisponibilidad();
     } else {
       // NO hay borrador local. ¿Había una fecha vista (persistido o alta)?
       const ultima = this.asignacionService.getUltimaFechaVista();
@@ -156,24 +162,15 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
     .pipe(takeUntil(this.destroy$))
     .subscribe(([vehiculos, choferes, proveedores]) => {
       this.gruposPool = this.construirPool(vehiculos, choferes, proveedores);
+      this.invalidarDisponibilidad();
     });
 
-    // No-disponibilidad por fecha
-    this.storageService
-      .getObservable<NoDisponibilidadChofer>('noOperativo')
+    // No disponibilidad: idempotente (normalmente ya lo arrancó HomeComponent).
+    // Cada emisión del listener invalida la resolución de la fecha.
+    this.noDisponibilidadService.init();
+    this.noDisponibilidadService.noDisponibilidades$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(data => {
-        if (!data) return;
-        this.noDisponibilidades = data
-          .filter(n => n.activa)
-          .map(n => {
-            const { id, type, ...clean } = n as any;
-            return clean as NoDisponibilidadChofer;
-          });
-        if (this.fechaSeleccionada) {
-          this.calcularChoferesNoOperativosPorFecha(this.fechaSeleccionada);
-        }
-      });
+      .subscribe(() => this.invalidarDisponibilidad());
   }
 
   ngOnDestroy(): void {
@@ -242,7 +239,7 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
     this.borradorSucio = false;
     this.tablero = null;
 
-    this.calcularChoferesNoOperativosPorFecha(this.fechaSeleccionada);
+    this.invalidarDisponibilidad();
     await this.cargarTablero(this.fechaSeleccionada);
   }
 
@@ -365,11 +362,16 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
     const pool = event.item.data as VehiculoPool;
     if (!pool) return;
 
-    // Guarda no-operativo: solo aplica a choferes directos.
-    const a = pool.asignadoA;
-    if (a.tipo === 'chofer' && this.isChoferNoOperativo(a.idChofer)) {
-      Swal.fire({ icon: 'warning', title: 'Chofer no disponible',
-        text: 'El chofer no está disponible para la fecha seleccionada.' });
+    // Guarda de disponibilidad (el arrastre ya está deshabilitado; esto cubre
+    // cualquier otro camino). Sin datos cargados no se asume disponible.
+    const motivos = this.motivosPool(pool);
+    if (motivos === null) {
+      Swal.fire({ icon: 'warning', title: 'No se pudo verificar la disponibilidad',
+        text: 'Todavía se están cargando los datos. Probá de nuevo en unos segundos.' });
+      return;
+    }
+    if (motivos.length > 0) {
+      Swal.fire({ icon: 'warning', title: 'No disponible en la fecha', text: describirMotivos(motivos) });
       return;
     }
 
@@ -696,7 +698,7 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
         estado: this.modo === 'edicion' ? 'borrador' : 'confirmado',
         items,
         clientes: this.clientesVisibles.map(c => ({ id: c.idCliente, razonSocial: c.razonSocial })),
-        noDisponibilidades: this.noDisponibilidades,
+        noDisponibilidades: this.noDisponibilidadesParaInforme(),
       }, formato);
     } catch (e) {
       error = e;
@@ -812,31 +814,115 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
   }
 
   // ---------------------------------------------------------------------------
-  // No-disponibilidad
+  // No disponibilidad (DisponibilidadService, contra la FECHA DEL TABLERO)
   // ---------------------------------------------------------------------------
+  //
+  // Se pregunta por los dos lados: el vehículo y la entidad dueña (chofer
+  // directo o proveedor). Un chofer directo con todos sus vehículos fuera está
+  // él mismo disponible (no tiene registro propio): con una sola pregunta se
+  // colaría. `null` = no se pudo verificar (sin fecha o sin datos cargados):
+  // NO se asume disponible.
 
-  // La regla "¿está no operativo en esta fecha?" vive en
-  // shared/utils/no-disponibilidad.util.ts: acá estaba escrita dos veces, con
-  // dos implementaciones distintas (Date vs. comparación de strings), y el
-  // informe del tablero la habría triplicado.
-  private calcularChoferesNoOperativosPorFecha(fecha: string): void {
-    this.noOperativosSet = choferesNoOperativos(this.noDisponibilidades, fecha);
+  private invalidarDisponibilidad(): void {
+    this.memoDisponibilidad.clear();
   }
 
-  isChoferNoOperativo(idChofer: string): boolean {
-    return this.noOperativosSet.has(idChofer);
+  private puedeVerificar(): boolean {
+    return !!this.fechaSeleccionada && this.disponibilidadService.datosCargados();
   }
 
-  getMotivoNoDisponibilidad(idChofer: string): string {
-    return motivoNoDisponibilidadDe(this.noDisponibilidades, idChofer, this.fechaSeleccionada)
-      || 'No disponible';
+  private motivosDe(consulta: ConsultaSujeto): MotivoNoDisponible[] {
+    if (this.memoFecha !== this.fechaSeleccionada) {
+      this.memoDisponibilidad.clear();
+      this.memoFecha = this.fechaSeleccionada;
+    }
+    const clave = `${consulta.tipo}:${idDeSujeto(consulta)}`;
+    let motivos = this.memoDisponibilidad.get(clave);
+    if (!motivos) {
+      const r = this.disponibilidadService.disponibilidadDe(consulta, this.fechaSeleccionada);
+      motivos = r.disponible ? [] : r.motivos;
+      this.memoDisponibilidad.set(clave, motivos);
+    }
+    return motivos;
   }
 
-  // La no-disponibilidad solo aplica a vehículos de chofer DIRECTO.
-  // Los vehículos de proveedor no se marcan: el chofer asignado al proveedor
-  // se elige en operaciones-table, y su disponibilidad se gestiona allí.
-  vehiculoNoOperativo(v: VehiculoPool): boolean {
-    return v.asignadoA.tipo === 'chofer' && this.isChoferNoOperativo(v.asignadoA.idChofer);
+  /** Tarjeta del pool: el vehículo y su dueño. */
+  motivosPool(v: VehiculoPool): MotivoNoDisponible[] | null {
+    if (!this.puedeVerificar()) return null;
+    const a = v.asignadoA;
+    const entidad: ConsultaSujeto = a.tipo === 'chofer'
+      ? { tipo: 'chofer', idChofer: a.idChofer }
+      : { tipo: 'proveedor', idProveedor: a.idProveedor };
+    return unirMotivos(this.motivosDe({ tipo: 'vehiculo', idVehiculo: v.idVehiculo }), this.motivosDe(entidad));
+  }
+
+  /** Ítem ya colocado: lo que ya se sabe de su sujeto (resolución
+   *  progresiva). El vehículo si ya está resuelto; la entidad siempre; y en
+   *  uno de proveedor, también el chofer si ya se eligió. */
+  motivosItem(item: AsignacionItem): MotivoNoDisponible[] | null {
+    if (!this.puedeVerificar()) return null;
+    const s = item.sujeto;
+    const listas: MotivoNoDisponible[][] = [];
+    if (s.idVehiculo) listas.push(this.motivosDe({ tipo: 'vehiculo', idVehiculo: s.idVehiculo }));
+    if (s.tipo === 'directo') {
+      listas.push(this.motivosDe({ tipo: 'chofer', idChofer: s.idChofer }));
+    } else {
+      listas.push(this.motivosDe({ tipo: 'proveedor', idProveedor: s.idProveedor }));
+      if (s.idChofer) listas.push(this.motivosDe({ tipo: 'chofer', idChofer: s.idChofer }));
+    }
+    return unirMotivos(...listas);
+  }
+
+  /** Atenuada y sin arrastre: no disponible, o no se pudo verificar. */
+  poolBloqueado(v: VehiculoPool): boolean {
+    const motivos = this.motivosPool(v);
+    return motivos === null || motivos.length > 0;
+  }
+
+  tituloPool(v: VehiculoPool, clientes: string[]): string {
+    const motivos = this.motivosPool(v);
+    if (motivos === null) {
+      return this.fechaSeleccionada
+        ? 'No se pudo verificar la disponibilidad: todavía se están cargando los datos.'
+        : 'Elegí una fecha para ver la disponibilidad.';
+    }
+    if (motivos.length > 0) return `No disponible en la fecha:\n${describirMotivos(motivos)}`;
+    return clientes.join(', ');
+  }
+
+  /** Un ítem colocado se marca sólo si se pudo verificar y NO está
+   *  disponible. Sin datos no se marca ni se da por bueno: las guardas duras
+   *  (bloque 6) son las que rechazan cuando no pueden verificar. */
+  itemNoDisponible(item: AsignacionItem): boolean {
+    const motivos = this.motivosItem(item);
+    return motivos !== null && motivos.length > 0;
+  }
+
+  tituloItem(item: AsignacionItem): string {
+    if (this.esAnulado(item)) return 'Anulado: ' + this.motivoAnulado(item);
+    const motivos = this.motivosItem(item);
+    if (motivos && motivos.length > 0) return `No disponible en la fecha:\n${describirMotivos(motivos)}`;
+    return item.ref.dominio;
+  }
+
+  /** PUENTE HASTA EL BLOQUE 7. El informe del tablero sigue tipado contra el
+   *  modelo viejo (sólo choferes). Se le pasan los registros activos de
+   *  CHOFER del modelo nuevo con la forma vieja; los de vehículo y proveedor
+   *  todavía no van a la hoja "No disponibles". El util filtra por fecha. */
+  private noDisponibilidadesParaInforme(): NoDisponibilidadChofer[] {
+    const resultado: NoDisponibilidadChofer[] = [];
+    for (const nd of this.noDisponibilidadService.getNoDisponibilidadesActuales()) {
+      if (!nd.activa || nd.sujeto.tipo !== 'chofer') continue;
+      resultado.push({
+        idNoDisponibilidad: nd.id,
+        idChofer: nd.sujeto.idChofer,
+        desde: nd.desde,
+        hasta: nd.hasta,
+        motivo: nd.motivo,
+        activa: true,
+      });
+    }
+    return resultado;
   }
 
   // ---------------------------------------------------------------------------

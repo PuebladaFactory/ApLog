@@ -75,6 +75,13 @@
         </div>
     </div>
 
+    @if (sinVerificar) {
+        <div class="alert alert-warning py-2 mb-2" role="status">
+            Verificando la disponibilidad de choferes, vehículos y proveedores… La selección se
+            habilita cuando terminen de cargar los datos.
+        </div>
+    }
+
     <div class="row g-2 flex-grow-1" style="min-height: 0">
         <!-- Choferes directos disponibles -->
         <div class="col-6 d-flex flex-column h-100">
@@ -103,7 +110,7 @@
                                             x.chofer.idChofer
                                         )
                                     "
-                                    [disabled]="bloqueadoPorBorrador"
+                                    [disabled]="bloqueadoPorBorrador || sinVerificar"
                                     (change)="
                                         toggleChofer(
                                             x.chofer.idChofer,
@@ -120,16 +127,15 @@
                                 </label>
                             </div>
                             <div>
-                                @for (v of x.vehiculos; track v.id) {
-                                    @let estilo =
-                                        getEstiloCategoria(
-                                            v.categoria.catOrden
-                                        );
+                                @for (c of estadoChofer(x).categorias; track c.catOrden) {
+                                    @let estilo = getEstiloCategoria(c.catOrden);
                                     <span
                                         class="badge categoria-badge ms-1"
+                                        [class.categoria-no-disponible]="!c.disponible"
                                         [ngClass]="estilo.clase"
                                         [ngStyle]="estilo.estilo"
-                                        >{{ v.categoria.nombre }}</span
+                                        [title]="c.titulo"
+                                        >{{ c.nombre }}</span
                                     >
                                 }
                             </div>
@@ -145,7 +151,7 @@
             @if (choferesDirectosNoOperativos.length > 0) {
                 <div class="card mt-2 flex-grow-1" style="min-height: 0">
                     <div class="card-header fw-bold">
-                        Choferes directos no operativos
+                        Choferes directos no disponibles
                     </div>
                     <div
                         class="card-body flex-grow-1"
@@ -157,9 +163,7 @@
                         ) {
                             <div
                                 class="form-check d-flex align-items-center justify-content-between mb-1 opacity-50"
-                                [title]="
-                                    getMotivoNoDisponibilidad(x.chofer.idChofer)
-                                "
+                                [title]="estadoChofer(x).motivo"
                             >
                                 <div class="form-check">
                                     <input
@@ -172,9 +176,24 @@
                                         {{ x.chofer.datosPersonales.nombre }}
                                     </label>
                                 </div>
-                                <span class="small text-muted fs-5"
-                                    >No disponible</span
-                                >
+                                <div class="d-flex align-items-center">
+                                    <span class="small text-muted fs-5"
+                                        >No disponible</span
+                                    >
+                                    <div>
+                                        @for (c of estadoChofer(x).categorias; track c.catOrden) {
+                                            @let estilo = getEstiloCategoria(c.catOrden);
+                                            <span
+                                                class="badge categoria-badge ms-1"
+                                                [class.categoria-no-disponible]="!c.disponible"
+                                                [ngClass]="estilo.clase"
+                                                [ngStyle]="estilo.estilo"
+                                                [title]="c.titulo"
+                                                >{{ c.nombre }}</span
+                                            >
+                                        }
+                                    </div>
+                                </div>
                             </div>
                         }
                     </div>
@@ -191,8 +210,11 @@
                     style="overflow-y: auto; min-height: 0"
                 >
                     @for (x of proveedoresBase; track x.proveedor.idProveedor) {
+                        @let estadoProv = estadoProveedor(x);
                         <div
                             class="form-check d-flex align-items-center justify-content-between mb-1"
+                            [class.opacity-50]="estadoProv.bloqueada"
+                            [title]="estadoProv.motivo"
                         >
                             <div class="form-check">
                                 <input
@@ -206,7 +228,11 @@
                                             x.proveedor.idProveedor
                                         )
                                     "
-                                    [disabled]="bloqueadoPorBorrador"
+                                    [disabled]="
+                                        bloqueadoPorBorrador ||
+                                        sinVerificar ||
+                                        estadoProv.bloqueada
+                                    "
                                     (change)="
                                         toggleProveedor(
                                             x.proveedor.idProveedor,
@@ -222,18 +248,22 @@
                                 >
                                     {{ x.proveedor.razonSocial }}
                                 </label>
+                                @if (estadoProv.bloqueada) {
+                                    <span class="small text-muted fs-5 ms-2"
+                                        >No disponible</span
+                                    >
+                                }
                             </div>
                             <div>
-                                @for (v of x.vehiculos; track v.id) {
-                                    @let estilo =
-                                        getEstiloCategoria(
-                                            v.categoria.catOrden
-                                        );
+                                @for (c of estadoProveedor(x).categorias; track c.catOrden) {
+                                    @let estilo = getEstiloCategoria(c.catOrden);
                                     <span
                                         class="badge categoria-badge ms-1"
+                                        [class.categoria-no-disponible]="!c.disponible"
                                         [ngClass]="estilo.clase"
                                         [ngStyle]="estilo.estilo"
-                                        >{{ v.categoria.nombre }}</span
+                                        [title]="c.titulo"
+                                        >{{ c.nombre }}</span
                                     >
                                 }
                             </div>
@@ -266,7 +296,7 @@
         type="button"
         class="btn btn-primary"
         (click)="altaOp()"
-        [disabled]="isLoading || bloqueadoPorBorrador"
+        [disabled]="isLoading || bloqueadoPorBorrador || sinVerificar"
     >
         Crear y dar de alta
     </button>

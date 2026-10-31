@@ -169,6 +169,18 @@ Esta regla **ya existe implementada** en `GeneradorOperacionesService.poolDelDia
 de proveedor entra si el proveedor tiene al menos un chofer disponible"), que es el único lugar
 del código que hoy la aplica a choferes de proveedor.
 
+### Dos invariantes que hacen que estas reglas cierren
+
+- **Un vehículo se asigna a un chofer directo o a un proveedor, nunca a un chofer de
+  proveedor.** Los choferes de proveedor dependen de su proveedor tanto para los vehículos
+  como para las tarifas. Por eso `vehiculosDisponiblesDe(proveedor)` contando sólo los
+  vehículos con `asignadoA.idProveedor` está completo: no hay vehículos de la flota de un
+  proveedor colgando de sus choferes.
+- **El dueño de un vehículo es inmutable.** El vehículo se crea bajo una entidad y para
+  moverlo a otra habría que darlo de baja y crear uno nuevo, con distinto `idVehiculo`. Así
+  que las cascadas no se desplazan con el tiempo: un vehículo que hoy cae con su chofer
+  directo va a seguir cayendo con él.
+
 ### Resolución transitiva
 
 Un vehículo con `asignadoA.tipo === 'chofer'` donde ese chofer es de proveedor hereda la cadena
@@ -375,8 +387,11 @@ a propósito**: "Activas" es la vista de trabajo y el historial es el registro c
 las activas del historial dejaría sin ninguna vista que muestre todo.
 
 **Un sujeto de tipo vehículo muestra en los listados a quién pertenecía**, tomado del snapshot
-y no resuelto en vivo: si el vehículo cambia de dueño o se borra, el historial tiene que seguir
-diciendo de quién era entonces. Va como texto complementario en la misma celda, no como
+y no resuelto en vivo, por dos motivos. Uno: un vehículo se puede **dar de baja**, y entonces
+resolver en vivo no devuelve nada y el historial mostraría el dominio sin dueño; el snapshot
+sobrevive a la baja de la entidad que describe. Dos: es el principio de **denormalizar la
+contraparte** que ya rige el proyecto, que evita resolver contra otro servicio en cada fila de
+cada listado. Va como texto complementario en la misma celda, no como
 columna, que quedaría vacía para los otros dos tipos de sujeto. El selector, en cambio, muestra
 el dueño actual: ahí se elige entre entidades que existen hoy.
 

@@ -219,6 +219,14 @@ nav.navbar {
   cursor: not-allowed;
 }
 
+// Ítem ya colocado cuyo sujeto no está disponible en la fecha (además de
+// .no-operativo): el borde lo distingue de un ítem anulado, que se ve igual
+// de apagado. El motivo va en el title.
+.no-disponible {
+  outline: 2px dashed var(--bs-danger);
+  outline-offset: -2px;
+}
+
 @media (min-width: 1400px) {
   ::ng-deep .modal-super-xl .modal-dialog {
     max-width: 80vw;     // Casi ancho total del viewport

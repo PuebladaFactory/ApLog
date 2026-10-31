@@ -21,7 +21,8 @@ export type SujetoProveedor = { tipo: 'proveedor'; idProveedor: string; razonSoc
 
 /** `asignadoA`: de quién era el vehículo AL CARGARSE (snapshot de
  *  `Vehiculo.asignadoA` con sus datos de exhibición), para que el historial
- *  lo siga diciendo aunque cambie de dueño o se borre. Opcional: los
+ *  lo siga diciendo aunque el vehículo se dé de baja (el dueño de un vehículo
+ *  no cambia: moverlo es baja + alta con otro id). Opcional: los
  *  registros anteriores a este campo no lo tienen, y se omite si el dueño no
  *  se pudo resolver al cargar. */
 export type SujetoVehiculo = {

@@ -4,21 +4,22 @@ import { takeUntil } from 'rxjs/operators';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import Swal from 'sweetalert2';
 
-import { choferesNoOperativos, motivoNoDisponibilidadDe } from 'src/app/shared/utils/no-disponibilidad.util';
+import { describirMotivos } from 'src/app/shared/utils/vigencia-no-disponibilidad.util';
 
 import { AsignacionItem } from 'src/app/interfaces/asignacion';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { ConIdType } from 'src/app/interfaces/conId';
-import { NoDisponibilidadChofer } from 'src/app/interfaces/no-disponibilidad-chofer';
+import { EntidadConVehiculos } from 'src/app/interfaces/no-disponibilidad';
 
 import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
 import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
 import { OperacionService, OperacionCreada, ResultadoCreacionOps, ErrorCreacionOp } from 'src/app/servicios/operaciones/operacion.service';
 import { AsignacionService } from 'src/app/servicios/operaciones/asignacion.service';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { DisponibilidadService } from 'src/app/servicios/no-disponibilidad/disponibilidad.service';
+import { NoDisponibilidadService } from 'src/app/servicios/no-disponibilidad/no-disponibilidad.service';
 import { TarifarioService } from 'src/app/servicios/tarifario/tarifario.service';
 import { OperacionesEditorComponent } from 'src/app/raiz/operaciones/operaciones-editor/operaciones-editor.component';
 import { ModalObjetosActivosComponent } from '../modal-objetos-activos/modal-objetos-activos.component';
@@ -42,6 +43,24 @@ interface EstiloCategoria {
   estilo: { [k: string]: string };
 }
 
+/** Una categoría de vehículo de la entidad en la fecha: disponible si le
+ *  queda al menos un vehículo disponible. `titulo`: dominios, o los motivos. */
+interface CategoriaEntidad {
+  catOrden: number;
+  nombre: string;
+  disponible: boolean;
+  titulo: string;
+}
+
+/** Disponibilidad de una entidad (chofer directo o proveedor) en la fecha.
+ *  Bloqueada sólo si ella misma no está disponible o si no le queda NINGÚN
+ *  vehículo disponible. Uno roto de varios no la bloquea: atenúa su categoría. */
+interface EstadoEntidad {
+  bloqueada: boolean;
+  motivo: string;
+  categorias: CategoriaEntidad[];
+}
+
 @Component({
   selector: 'app-carga-asignacion',
   templateUrl: './carga-asignacion.component.html',
@@ -60,9 +79,13 @@ export class CargaAsignacionComponent implements OnInit, OnDestroy {
   choferesSeleccionadosIds = new Set<string>();
   proveedoresSeleccionadosIds = new Set<string>();
 
-  // ---- No-disponibilidad ----
-  noDisponibilidades: NoDisponibilidadChofer[] = [];
-  noOperativosSet = new Set<string>();
+  // ---- No disponibilidad (contra la fecha seleccionada) ----
+  /** Por 'chofer:<id>' / 'proveedor:<id>'. Se recalcula al cambiar la fecha o
+   *  al llegar datos; el template sólo lee. */
+  private estadoEntidades = new Map<string, EstadoEntidad>();
+  /** Hay fecha pero los datos de disponibilidad todavía no cargaron: no se
+   *  asume disponible, se bloquea la selección. */
+  sinVerificar = false;
 
   // Lista ordenada de categorías del sistema, construida desde la tarifa general.
   // Fuente de verdad para el color de los badges (mismo criterio que tablero-asignaciones).
@@ -88,7 +111,8 @@ export class CargaAsignacionComponent implements OnInit, OnDestroy {
     private clienteService: ClienteService,
     private operacionService: OperacionService,
     private asignacionService: AsignacionService,
-    private storageService: StorageService,
+    private disponibilidadService: DisponibilidadService,
+    private noDisponibilidadService: NoDisponibilidadService,
     private tarifarioService: TarifarioService,
     private modal: NgbModal,
     public activeModal: NgbActiveModal,
@@ -119,23 +143,14 @@ export class CargaAsignacionComponent implements OnInit, OnDestroy {
     .pipe(takeUntil(this.destroy$))
     .subscribe(([choferes, vehiculos, proveedores]) => {
       this.construirListasSeleccionables(choferes, vehiculos, proveedores);
+      this.recalcularDisponibilidad();
     });
 
-    this.storageService
-      .getObservable<NoDisponibilidadChofer>('noOperativo')
+    // Idempotente (normalmente ya lo arrancó HomeComponent).
+    this.noDisponibilidadService.init();
+    this.noDisponibilidadService.noDisponibilidades$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(data => {
-        if (!data) return;
-        this.noDisponibilidades = data
-          .filter(n => n.activa)
-          .map(n => {
-            const { id, type, ...clean } = n as any;
-            return clean as NoDisponibilidadChofer;
-          });
-        if (this.fechaSeleccionada) {
-          this.calcularChoferesNoOperativosPorFecha(this.fechaSeleccionada);
-        }
-      });
+      .subscribe(() => this.recalcularDisponibilidad());
   }
 
   ngOnDestroy(): void {
@@ -177,13 +192,11 @@ export class CargaAsignacionComponent implements OnInit, OnDestroy {
   }
 
   get choferesDirectosDisponibles(): ChoferDirectoSeleccionable[] {
-    return this.choferesDirectosBase.filter(
-      x => !this.noOperativosSet.has(x.chofer.idChofer));
+    return this.choferesDirectosBase.filter(x => !this.estadoChofer(x).bloqueada);
   }
 
   get choferesDirectosNoOperativos(): ChoferDirectoSeleccionable[] {
-    return this.choferesDirectosBase.filter(
-      x => this.noOperativosSet.has(x.chofer.idChofer));
+    return this.choferesDirectosBase.filter(x => this.estadoChofer(x).bloqueada);
   }
 
   // ---------------------------------------------------------------------------
@@ -191,11 +204,7 @@ export class CargaAsignacionComponent implements OnInit, OnDestroy {
   // ---------------------------------------------------------------------------
 
   async onFechaChange(): Promise<void> {
-    if (this.fechaSeleccionada) {
-      this.calcularChoferesNoOperativosPorFecha(this.fechaSeleccionada);
-    } else {
-      this.noOperativosSet.clear();
-    }
+    this.recalcularDisponibilidad();
     this.choferesSeleccionadosIds.clear();
     this.proveedoresSeleccionadosIds.clear();
 
@@ -209,18 +218,102 @@ export class CargaAsignacionComponent implements OnInit, OnDestroy {
     }
   }
 
-  // La regla "¿está no operativo en esta fecha?" vive en
-  // shared/utils/no-disponibilidad.util.ts: estaba escrita acá y otras dos
-  // veces en TableroAsignacionesComponent, con dos implementaciones distintas
-  // (Date vs. comparación de strings).
-  private calcularChoferesNoOperativosPorFecha(fecha: string): void {
-    this.noOperativosSet = choferesNoOperativos(this.noDisponibilidades, fecha);
+  // ---------------------------------------------------------------------------
+  // No disponibilidad (DisponibilidadService, contra la fecha seleccionada)
+  // ---------------------------------------------------------------------------
+
+  estadoChofer(x: ChoferDirectoSeleccionable): EstadoEntidad {
+    return this.estadoEntidades.get(`chofer:${x.chofer.idChofer}`) ?? this.estadoSinFecha(x.vehiculos);
   }
 
-  getMotivoNoDisponibilidad(idChofer: string): string {
-    if (!this.fechaSeleccionada) return 'No disponible';
-    return motivoNoDisponibilidadDe(this.noDisponibilidades, idChofer, this.fechaSeleccionada)
-      || 'No disponible';
+  estadoProveedor(x: ProveedorSeleccionable): EstadoEntidad {
+    return this.estadoEntidades.get(`proveedor:${x.proveedor.idProveedor}`) ?? this.estadoSinFecha(x.vehiculos);
+  }
+
+  /** Recalcula el estado de cada entidad para la fecha. Sin fecha no hay qué
+   *  verificar (todavía no se puede dar de alta). Con fecha pero sin datos
+   *  cargados, `sinVerificar`: no se asume disponible. Las entidades que
+   *  quedan bloqueadas salen de la selección. */
+  private recalcularDisponibilidad(): void {
+    this.estadoEntidades.clear();
+    const fecha = this.fechaSeleccionada;
+    this.sinVerificar = !!fecha && !this.disponibilidadService.datosCargados();
+    if (!fecha || this.sinVerificar) return;
+
+    for (const x of this.choferesDirectosBase) {
+      const estado = this.calcularEstado({ tipo: 'chofer', idChofer: x.chofer.idChofer }, x.vehiculos, fecha);
+      this.estadoEntidades.set(`chofer:${x.chofer.idChofer}`, estado);
+      if (estado.bloqueada) this.choferesSeleccionadosIds.delete(x.chofer.idChofer);
+    }
+    for (const x of this.proveedoresBase) {
+      const estado = this.calcularEstado({ tipo: 'proveedor', idProveedor: x.proveedor.idProveedor }, x.vehiculos, fecha);
+      this.estadoEntidades.set(`proveedor:${x.proveedor.idProveedor}`, estado);
+      if (estado.bloqueada) this.proveedoresSeleccionadosIds.delete(x.proveedor.idProveedor);
+    }
+  }
+
+  private calcularEstado(
+    entidad: EntidadConVehiculos,
+    vehiculos: ConIdType<Vehiculo>[],
+    fecha: string,
+  ): EstadoEntidad {
+    const propia = this.disponibilidadService.disponibilidadDe(entidad, fecha);
+    const { disponibles, noDisponibles } = this.disponibilidadService.vehiculosDisponiblesDe(entidad, fecha);
+    const idsDisponibles = new Set(disponibles.map(v => v.idVehiculo));
+    const motivosVehiculo = new Map(noDisponibles.map(n => [n.vehiculo.idVehiculo, n.motivos]));
+
+    const categorias = this.agruparPorCategoria(vehiculos).map(g => {
+      const libres = g.vehiculos.filter(v => idsDisponibles.has(v.idVehiculo));
+      return {
+        catOrden: g.catOrden,
+        nombre: g.nombre,
+        disponible: libres.length > 0,
+        titulo: libres.length > 0
+          ? libres.map(v => v.dominio).join(', ')
+          : g.vehiculos
+              .map(v => `${v.dominio}:\n${describirMotivos(motivosVehiculo.get(v.idVehiculo) ?? [])}`)
+              .join('\n'),
+      };
+    });
+
+    if (!propia.disponible) {
+      return { bloqueada: true, motivo: describirMotivos(propia.motivos), categorias };
+    }
+    // Sin vehículos: caso válido para un proveedor (se resuelve en el editor);
+    // no hay vehículo "que le quede", así que no se bloquea por esta vía.
+    if (vehiculos.length > 0 && disponibles.length === 0) {
+      return { bloqueada: true, motivo: 'Ningún vehículo disponible en la fecha.', categorias };
+    }
+    return { bloqueada: false, motivo: '', categorias };
+  }
+
+  /** Sin fecha (o sin verificar): las categorías tal cual, sin bloqueos. */
+  private estadoSinFecha(vehiculos: ConIdType<Vehiculo>[]): EstadoEntidad {
+    return {
+      bloqueada: false,
+      motivo: '',
+      categorias: this.agruparPorCategoria(vehiculos).map(g => ({
+        catOrden: g.catOrden,
+        nombre: g.nombre,
+        disponible: true,
+        titulo: g.vehiculos.map(v => v.dominio).join(', '),
+      })),
+    };
+  }
+
+  /** Una entrada por categoría (antes, un badge por vehículo: un chofer con
+   *  dos del mismo tipo mostraba dos badges iguales), en el orden del catálogo. */
+  private agruparPorCategoria(
+    vehiculos: ConIdType<Vehiculo>[],
+  ): { catOrden: number; nombre: string; vehiculos: ConIdType<Vehiculo>[] }[] {
+    const grupos = new Map<number, { catOrden: number; nombre: string; vehiculos: ConIdType<Vehiculo>[] }>();
+    for (const v of vehiculos) {
+      const g = grupos.get(v.categoria.catOrden)
+        ?? { catOrden: v.categoria.catOrden, nombre: v.categoria.nombre, vehiculos: [] };
+      g.vehiculos.push(v);
+      grupos.set(v.categoria.catOrden, g);
+    }
+    return [...grupos.values()].sort((a, b) => a.catOrden - b.catOrden);
   }
 
   // ---------------------------------------------------------------------------
@@ -333,6 +426,11 @@ export class CargaAsignacionComponent implements OnInit, OnDestroy {
     }
     if (!this.clienteSeleccionado) {
       Swal.fire({ icon: 'warning', title: 'Sin cliente', text: 'Debe seleccionar un cliente' });
+      return;
+    }
+    if (this.sinVerificar) {
+      Swal.fire({ icon: 'warning', title: 'No se pudo verificar la disponibilidad',
+        text: 'Todavía se están cargando los datos. Probá de nuevo en unos segundos.' });
       return;
     }
     if (this.choferesSeleccionadosIds.size + this.proveedoresSeleccionadosIds.size === 0) {

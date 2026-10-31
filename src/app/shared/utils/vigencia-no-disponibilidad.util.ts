@@ -4,7 +4,7 @@ import {
   ConsultaSujeto, EntidadConVehiculos, MotivoNoDisponible, NoDisponibilidad,
   ResultadoDisponibilidad, SujetoNoDisponibilidad, VehiculosDisponibles,
 } from 'src/app/interfaces/no-disponibilidad';
-import { FechaNegocio } from './fecha.util';
+import { FechaNegocio, fechaLegible } from './fecha.util';
 
 /** Reglas puras de fechas sobre el modelo NUEVO de no disponibilidad
  *  (`NoDisponibilidad`, colección `noDisponibilidades`). Sin estado.
@@ -66,6 +66,34 @@ export function nombreSujeto(s: SujetoNoDisponibilidad): string {
     case 'vehiculo':  return s.dominio;
     case 'proveedor': return s.razonSocial;
   }
+}
+
+// ── Presentación de motivos ───────────────────────────────────────
+
+const ETIQUETA_TIPO: Record<SujetoNoDisponibilidad['tipo'], string> = {
+  chofer: 'Chofer', vehiculo: 'Vehículo', proveedor: 'Proveedor',
+};
+
+/** Junta los motivos de varias consultas (ej. el vehículo y su entidad) sin
+ *  repetir registros: un mismo registro llega siempre con el mismo origen. */
+export function unirMotivos(...listas: MotivoNoDisponible[][]): MotivoNoDisponible[] {
+  const vistos = new Set<string>();
+  return listas.flat().filter(m => {
+    if (vistos.has(m.noDisponibilidad.id)) return false;
+    vistos.add(m.noDisponibilidad.id);
+    return true;
+  });
+}
+
+/** Una línea por motivo, nombrando el sujeto DEL REGISTRO — así se distingue
+ *  "Vehículo AB123CD: En taller" de "Chofer Pérez Juan: Licencia" —, con su
+ *  período. Para el `title` de tarjetas, ítems y badges. */
+export function describirMotivos(motivos: MotivoNoDisponible[]): string {
+  return motivos.map(({ noDisponibilidad: nd }) => {
+    const hasta = nd.hasta ? `hasta el ${fechaLegible(nd.hasta)}` : 'sin fecha de fin';
+    return `${ETIQUETA_TIPO[nd.sujeto.tipo]} ${nombreSujeto(nd.sujeto)}: ${nd.motivo} `
+      + `(desde el ${fechaLegible(nd.desde)}, ${hasta})`;
+  }).join('\n');
 }
 
 // ── Resolución y cascadas ─────────────────────────────────────────

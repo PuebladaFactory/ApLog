@@ -6,6 +6,14 @@ input, select, option, label{
   font-size: 1.2rem;
 }
 
+// Categoría sin ningún vehículo disponible en la fecha: atenuada; el motivo
+// va en el title. La entidad sigue seleccionable si le queda otra.
+.categoria-no-disponible {
+  opacity: 0.4;
+  filter: grayscale(1);
+  text-decoration: line-through;
+}
+
 .botonera{
   width: 12rem;
   color: white;

@@ -218,26 +218,17 @@
             @for (v of grupo.vehiculos; track v.idVehiculo) {
                 @let veces = vecesAsignado(v.idVehiculo);
                 @let clientes = clientesAsignados(v.idVehiculo);
+                @let bloqueado = poolBloqueado(v);
                 <div
                     class="chofer-card mb-1 position-relative"
-                    [class.no-operativo]="vehiculoNoOperativo(v)"
+                    [class.no-operativo]="bloqueado"
                     [class.opacity-50]="estaAsignado(v.idVehiculo)"
                     [ngClass]="estiloGrupo.clase"
                     [ngStyle]="estiloGrupo.estilo"
-                    [title]="
-                        vehiculoNoOperativo(v)
-                            ? getMotivoNoDisponibilidad(
-                                  v.asignadoA.tipo === 'chofer'
-                                      ? v.asignadoA.idChofer
-                                      : ''
-                              )
-                            : clientes.join(', ')
-                    "
+                    [title]="tituloPool(v, clientes)"
                     cdkDrag
                     [cdkDragData]="v"
-                    [cdkDragDisabled]="
-                        modo !== 'edicion' || vehiculoNoOperativo(v)
-                    "
+                    [cdkDragDisabled]="modo !== 'edicion' || bloqueado"
                 >
                     @if (veces > 1) {
                         <span
@@ -296,14 +287,15 @@
                             <!-- nombre/razón arriba (principal), dominio abajo (secundario) -->
                             <div
                                 class="mb-1 p-1 rounded chofer-ubicado d-flex justify-content-between align-items-center"
-                                [class.no-operativo]="esAnulado(item)"
+                                [class.no-operativo]="
+                                    esAnulado(item) || itemNoDisponible(item)
+                                "
+                                [class.no-disponible]="
+                                    !esAnulado(item) && itemNoDisponible(item)
+                                "
                                 [ngClass]="estiloItem.clase"
                                 [ngStyle]="estiloItem.estilo"
-                                [title]="
-                                    esAnulado(item)
-                                        ? 'Anulado: ' + motivoAnulado(item)
-                                        : item.ref.dominio
-                                "
+                                [title]="tituloItem(item)"
                                 (dblclick)="
                                     abrirEdicionItem(item, modalEditarItem)
                                 "
