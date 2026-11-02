@@ -14,6 +14,10 @@ proyecto `claude/diseno-facturacion-nueva.md`; instrucciones por bloque:
 `claude/instruccion-f0…f5-facturacion.md`.
 
 ### Estados y gestos
+> **Estado de la operación:** qué hace cada gesto sobre `op.estado` (y sobre la baja y la
+> restauración) está en la skill `modulo-operaciones`, sección "Máquina de estados de la
+> operación". Esa es la fuente; esta skill no la copia.
+
 
     borrador ──emitir──▶ emitido ──vincularFactura──▶ facturado
                           │  ▲                          │
@@ -160,7 +164,15 @@ proyecto `claude/diseno-facturacion-nueva.md`; instrucciones por bloque:
   `origen: 'manual'` ya previsto en el tipo).
 - ~~Cascada de Finanzas sobre InformeLiqNuevo~~ — RESUELTO en el Frente
   Finanzas: cobros/pagos sobre 'facturado', incobrable como ajuste; revertir
-  y desvincular exigen `totalCobrado === 0` y `totalAjustado === 0`.
+  y desvincular exigen `totalCobrado === 0`, y desvincular además
+  `totalAjustado === 0` (revertir no: ver la entrada siguiente).
+- **`revertirEmitido` no chequea `totalAjustado`; `desvincularFactura` sí.**
+  Es plata: un emitido con ajustes imputados se puede revertir y sus
+  InformeOp vuelven a 'activo' para liquidarse de nuevo, con el ajuste
+  colgando del informe revertido. Sale de la auditoría
+  `docs/auditorias/baja-y-restauracion-de-operacion.md` (hallazgo 11), sin
+  investigar más. Decidir si `revertirEmitido` exige lo mismo que
+  `desvincularFactura`.
 - `'anulado'` + `anulacion` reservados sin escritor (ver "Frente
   Facturación → Estados y gestos").
 - Prueba con una factura REAL que coincida en importe y CUIT con un emitido

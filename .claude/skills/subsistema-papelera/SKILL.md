@@ -65,13 +65,18 @@ que lo generó, y una pantalla de listado genérica sobre los eventos.
   solo `commitBatch` por cascada completa.
 - **Operación:** `bajaOperacion`/`restaurarOperacion` en `OperacionService` dejan de
   construir un `LogDoc` a mano y de depender de `LogService`/`LogDoc` — usan
-  `PapeleraService` + `LogRegistroService.agregarAlBatch`, dentro del mismo
-  `commitBatch` que ya escribía operaciones/informes/tablero. `restaurarOperacion`
+  `PapeleraService` + `LogRegistroService.agregarAlBatch`, dentro de la misma
+  escritura atómica que operaciones/informes/tablero (hoy las tres —las dos bajas y
+  la restauración— con `commitEnTransaccion`; la restauración usa
+  `PapeleraService.prepararRestauracionEnTransaccion`, variante transaccional de
+  `prepararRestauracionEnBatch`, que sigue igual para Cliente/Chofer/Proveedor).
+  `restaurarOperacion`
   cambió de firma: de `(logDoc: LogDoc)` a `(idEvento: string)`. **Sin
   secundarios** — la baja no archiva InformeOp: una op abierta no los tiene (se crean al
   cerrar) y en la de una cerrada (`bajaOperacionCerrada`) se ANULAN y quedan en `informesOp` (deliberado: los InformeOp no se
   reconstruyen al restaurar, `restaurarOperacion` siempre deja la op `'abierta'`
-  con `km: 0`, ver "Coordinadores bajaOperacion / restaurarOperacion" en CLAUDE.md).
+  conservando los datos cargados; contrato y máquina de estados en la skill
+  `modulo-operaciones`).
 - **`VisualizadorObjetoService.verObjeto`** gana un tercer parámetro opcional
   `snapshot?: any` — cuando viene con valor, se usa en vez de `getById` contra la
   colección viva (el objeto principal de un evento `'activo'` ya no existe ahí) y

@@ -1,6 +1,6 @@
 ---
 name: modulo-operaciones
-description: Módulo Operaciones de ApLog — tipado con snapshots (RefCliente, RefChofer), el tablero de asignaciones (tablero-asignaciones), operaciones-editor y carga-asignacion con el contrato de altaDesdeAsignacion, el tablero de operaciones (tablero-op) y la no disponibilidad de choferes, vehículos y proveedores, con su deuda abierta. Leer antes de trabajar sobre operaciones, su alta o edición, asignaciones, tableros o la no disponibilidad.
+description: Módulo Operaciones de ApLog — tipado con snapshots (RefCliente, RefChofer), el tablero de asignaciones (tablero-asignaciones), operaciones-editor y carga-asignacion con el contrato de altaDesdeAsignacion, el tablero de operaciones (tablero-op) y la no disponibilidad de choferes, vehículos y proveedores, con su deuda abierta, más la máquina de estados de la operación (abierta, cerrada, proforma, liquidada, eliminada) y el contrato de la baja y la restauración. Leer antes de trabajar sobre operaciones, su estado, bajas o restauraciones, su alta o edición, asignaciones, tableros o la no disponibilidad.
 ---
 
 ### Fase D: resolución de tipado Operaciones (objetos embebidos → snapshots)
@@ -135,6 +135,132 @@ cargados.
 
 > El primer uso real de `overrides` en `tablero-asignaciones` está documentado en la skill `botones-y-permisos`.
 
+## Máquina de estados de la operación
+
+Fuente única de esta máquina. Las skills `modulo-liquidacion`, `modulo-facturacion` y
+`subsistema-papelera` apuntan acá; no la copian. Antes de cambiar qué hace un método que toca
+`op.estado`, ubicarlo en esta tabla: la semántica de cada gesto sale de acá, no de leer el
+método suelto.
+
+### Estados
+
+El estado vive en el documento de la operación, `op.estado: EstadoOp`
+(`interfaces/operacion.ts`):
+
+```ts
+ciclo: 'abierta' | 'cerrada' | 'liquidada';
+liquidacion: { cliente: boolean; chofer: boolean };
+proforma: { cliente: boolean; chofer: boolean };
+```
+
+`chofer` cubre también al proveedor (proveedor es variante de chofer). A esos tres ejes se suma
+un estado que no está en el documento: **eliminada** — no existe `operaciones/{id}`, hay un
+`papeleraEventos` con `estado: 'activo'` y la copia en `objetosEliminados` (skill
+`subsistema-papelera`).
+
+Combinaciones que el código produce, con la etiqueta de la UI (`etiquetaEstadoOp`,
+`shared/utils/estado-op.util.ts`; la prioridad de la etiqueta es el orden de la tabla):
+
+| Estado | `ciclo` | `proforma` (cl / ch) | `liquidacion` (cl / ch) | Etiqueta |
+|---|---|---|---|---|
+| E1 Abierta | abierta | F / F | F / F | Abierta |
+| E2 Cerrada | cerrada | F / F | F / F | Cerrada |
+| E3 Proforma de un lado (o de los dos) | cerrada | al menos uno T | sin cambio | Proforma CH / Proforma CL |
+| E4 Liquidada de un lado | cerrada | F en ese lado | uno T | Liq CL / Liq CH |
+| E5 Liquidada total | liquidada | F / F | T / T | Liquidada |
+| E6 Eliminada | — (sin doc) | — | — | — |
+
+- **E3 y E4 se combinan:** un lado liquidado y el otro en proforma es alcanzable
+  (`crearBorrador` no mira el otro lado). La etiqueta muestra la proforma.
+- **Las dos proformas pueden coexistir** si primero se arma el borrador del cliente y después
+  el del chofer. Al revés no: el borrador del chofer marca `bloqueadoPorContraparte` en el
+  InformeOp del cliente y la liquidación lo rechaza (regla de bloqueo de proformas, CLAUDE.md).
+- Los InformeOp acompañan con su propio `estado: 'activo' | 'proforma' | 'liquidado' |
+  'anulado'`, uno por lado. Existen desde E2. Lado X en proforma ⇔ InformeOp X `'proforma'`;
+  lado X liquidado ⇔ InformeOp X `'liquidado'`; en los dos casos con `idInfLiq`.
+
+### Transiciones
+
+| De → A | Método (archivo) | Qué la habilita | Qué la impide |
+|---|---|---|---|
+| (nada) → E1 | alta: `OperacionFactoryService.crearOperacionBase` con `estadoInicial()` (`operacion-factory.service.ts`), vía `OperacionService.altaDesdeAsignacion` | — | — |
+| E1 → E2 | `OperacionService.cerrarOperacion`: `ciclo: 'cerrada'`, crea el par de InformeOp `'activo'`, `resumenProcesado: true`, suma `resumenesOp` y `comisionesVenta`, en transacción | — | Antes de la transacción: ya existe un InformeOp no anulado para la op (`InformeOpService.existeParaOperacion`). En la transacción: `ciclo !== 'abierta'` o `resumenProcesado: true` |
+| E2 → E3 (lado X) | `InformeLiqService.crearBorrador`: `proforma.X = true`; InformeOp X → `'proforma'` + `idInfLiq`; si X ≠ cliente, InformeOp del cliente → `bloqueadoPorContraparte: true` | permiso `liquidaciones.liquidar` | InformeOp no `'activo'`, `bloqueadoPorContraparte`, otro tipo/entidad, fuera del período, op repetida |
+| E3 (lado X) → estado previo de ese lado | `InformeLiqService.eliminarBorrador`: `proforma.X = false`, InformeOp X → `'activo'`, `idInfLiq: null`, borra el InformeLiq | permiso `liquidaciones.eliminar` | InformeLiq no `'borrador'`; InformeOp no `'proforma'` con ese `idInfLiq` |
+| E3 (lado X) → E4 o E5 | `InformeLiqService.emitirBorrador` (`camposLiquidacion`): `proforma.X = false`, `liquidacion.X = true`, `ciclo: 'liquidada'` si el otro lado ya estaba liquidado; InformeOp X → `'liquidado'`; desbloquea al cliente | permiso `liquidaciones.liquidar` | InformeLiq no `'borrador'`; InformeOp no `'proforma'` con ese `idInfLiq` |
+| E2/E4 (lado X activo) → E4 o E5 | `InformeLiqService.emitir` (emisión directa, `camposLiquidacion`): ídem; InformeOp X → `'liquidado'` + `idInfLiq`. No toca `bloqueadoPorContraparte` | permiso `liquidaciones.liquidar` | las mismas que el borrador |
+| E4/E5 (lado X) → E2/E4 | `InformeLiqService.revertirEmitido` (`camposReversion`): `liquidacion.X = false` y `ciclo 'liquidada' → 'cerrada'`; InformeOp X → `'activo'`, `idInfLiq: null`; InformeLiq → `'revertido'` | permiso `facturacion.revertir`; motivo no vacío | InformeLiq no `'emitido'` (uno facturado pasa antes por `desvincularFactura`); `totalCobrado !== 0`; InformeOp no `'liquidado'` con ese `idInfLiq` |
+| E1 → E6 | `OperacionService.bajaOperacion` (desde `tablero-op`) | `operaciones.eliminar`; botón habilitado si la etiqueta es `'Abierta'` | En transacción: `validarBaja(op, 'abierta')`; no hay tablero para la fecha |
+| E2 → E6 | `OperacionService.bajaOperacionCerrada` (desde `informe-op-listado`, tacho por InformeOp) | `liquidaciones.eliminar`. `darDeBaja` corre `validarBaja(op, 'cerrada')` antes de pedir el motivo y muestra su mensaje tal cual | En transacción: `validarBaja(op, 'cerrada')`; alguno de los dos InformeOp no `'activo'` o con `idInfLiq`; falta la contraparte o es de otra op; no hay tablero |
+| E3/E4/E5 → E6 | **No hay transición directa** (ver abajo) | — | `validarBaja` rechaza cualquier flag de liquidación o proforma |
+| E6 → E1 | `OperacionService.restaurarOperacion` (desde `PapeleraComponent`). Ver "Contrato vigente — `restaurarOperacion`". También el camino legado `TableroService.altaOperacionYActualizarTablero` (Papelera legado, deuda) | evento `'activo'`; rol distinto de `demo` | ver el contrato |
+
+**Los dos hechos que más cuestan de descubrir leyendo el código:**
+
+- **No hay ningún camino de cerrada a abierta salvo dar de baja y restaurar.** Los únicos
+  escritores de `estadoInicial()` son el alta, `restaurarOperacion` y el camino legado de
+  `TableroService`. Ningún gesto "reabre" una op cerrada: si hay que corregir algo de una
+  cerrada, se edita su InformeOp o se da de baja y se restaura.
+- **Una op en proforma o liquidada no se puede dar de baja directamente.** Primero hay que
+  volverla a E2 **en cada lado**: `eliminarBorrador` para un lado en proforma,
+  `revertirEmitido` para uno liquidado (y antes `desvincularFactura` si está facturado).
+  Revertir un solo lado de una E5 deja `ciclo: 'cerrada'` con `liquidacion.<otro>: true` —
+  la misma forma que E4 — y la baja se sigue rechazando. No existe "anular InformeLiq": el
+  `'anulado'` de InformeLiq está reservado sin escritor.
+
+Escritores de `ciclo`, por relevamiento: `'cerrada'` sólo `cerrarOperacion` y
+`camposReversion` (`informe-liq.service.ts`); `'liquidada'` sólo `camposLiquidacion`.
+
+## Contrato vigente — `restaurarOperacion`
+
+`OperacionService.restaurarOperacion(idEvento)`, transición E6 → E1 de la máquina de estados.
+Caller único: `PapeleraComponent.restaurar`.
+
+**Semántica.** La restauración devuelve la operación a **abierta** —su propósito es que se
+pueda volver a trabajar— y **no descarta información que el usuario cargó**. Los campos quedan
+como estaban al momento de la baja (`km`, acompañantes, multiplicadores, tarifa base manual,
+`adExtra`, `tarifaAplicada*`, `datosTarifaEventual`, snapshots): se precargan y el usuario los
+ajusta en el nuevo cierre. `valoresNuevos` se recalcula con `ValoresTarifaService.calcularCierre`
+sobre esos datos y la tarifa congelada; sus errores van al texto del log `RESTAURAR`, no abortan.
+
+**Resetea exactamente tres cosas, y ninguna se puede sacar:**
+
+| Campo | Valor | Por qué no se puede sacar |
+|---|---|---|
+| `estado` | `estadoInicial()` | Es el propósito de la restauración. |
+| `resumenProcesado` | `false` | `cerrarOperacion` rechaza cualquier op que llegue con `true`: conservarlo deja la op restaurada **sin poder volver a cerrarse nunca**. Además es correcto: la baja ya restó su aporte de `resumenesOp`. |
+| `informeOpCliente` / `informeOpChofer` | `''` | Los InformeOp quedaron `'anulado'` en la baja y el próximo cierre crea un par nuevo: conservarlos dejaría referencias muertas. |
+
+El código tiene el mismo comentario al lado de cada reset. Agregar un reset (volver `km` a 0,
+los multiplicadores a 1, etc.) es descartar datos del usuario, no "terminar la limpieza".
+Historia: antes reseteaba 13 campos para "volver al estado del alta", que no se persiste en
+ningún lado; eso perdía datos cargados en el alta (auditoría
+`docs/auditorias/baja-y-restauracion-de-operacion.md`).
+
+**Transaccional** (`commitEnTransaccion`). Lee dentro de la transacción el evento y la copia
+archivada (`PapeleraService.prepararRestauracionEnTransaccion`, variante transaccional de
+`prepararRestauracionEnBatch` con las mismas validaciones), la operación y el tablero
+(`AsignacionService.leerTableroEnTransaccion`). Escribe todo en la misma transacción: borrado
+de la copia, evento → `'restaurado'`, la op (`'crear'`), el tablero con el item reactivado y el
+log `RESTAURAR`. Dos restauraciones simultáneas del mismo evento no pueden pasar las dos, y el
+`set` del tablero entero no pisa ediciones concurrentes.
+
+**Aborta sin escribir nada** —todo vuelve como `Resultado` con `exito: false` y pasa por
+`registrarError`; ninguna falla se escapa como excepción— si:
+
+- el evento no existe o ya fue restaurado, o falta la copia archivada;
+- el evento no es de `'operaciones'`;
+- **ya existe `operaciones/{id}`**: `'crear'` es un `set` plano y lo pisaría;
+- no existe el tablero de la fecha de la op;
+- **el tablero no tiene ningún item con ese `idOperacion`**: `reactivarItemEnLista` no hace
+  nada si no lo encuentra, así que la op restaurada quedaría fuera de todo tablero, en
+  silencio. El mensaje nombra la fecha y el `idOperacion`. Falla cerrada a propósito: abortar
+  cuesta un mensaje; una op fuera de todo tablero no se ve. Sin probar con datos reales (ver
+  deuda abajo).
+
+No toca `resumenesOp`, `comisionesVenta`, `informesOp` ni `registrosOpEventuales`: quedan con
+la resta o anulación de la baja, y el próximo cierre vuelve a sumar.
+
 ## Contratos vigentes — operaciones-editor y altaDesdeAsignacion
 
 ### `operaciones-editor`
@@ -191,9 +317,9 @@ arrastra la fusión. `ref` del item también se reconstruye en este mismo paso (
 `sujeto`) desde los datos finales de la op — idempotente para `tablero-asignaciones`,
 corrige el placeholder de `carga-asignacion`.
 
-Callers con `'bloquear'`: `carga-asignacion` (`carga-asignacion.component.ts:383-384`) y el
-generador de operaciones de demo (`servicios/desarrollo/generador-operaciones.service.ts:305-307`),
-que da de alta día por día. Con el default `'reemplazar'`: `tablero-asignaciones`.
+Callers con `'bloquear'`: `carga-asignacion` (`carga-asignacion.component.ts`, `altaOp`) y el
+generador de operaciones de demo (`servicios/desarrollo/generador-operaciones.service.ts`,
+`ejecutar`, en el alta de cada día), que da de alta día por día. Con el default `'reemplazar'`: `tablero-asignaciones`.
 
 ## Conducta vigente — `carga-asignacion`
 
@@ -235,11 +361,16 @@ sigue siendo la protección real) — es una advertencia temprana adicional.
 
 ## Deuda abierta — integración de callers para bajaOperacion/restaurarOperacion
 
-- `PapeleraComponent.addItem` (caso `'operaciones'`): hoy llama a
-  `TableroService.altaOperacionYActualizarTablero` (no atómico) — migrar a
-  `OperacionService.restaurarOperacion(logDoc)`. Requiere resolver el id real del doc de
-  papelera vía `getByField('papelera','idDoc',...)` porque `PapeleraComponent` solo tiene
-  `LogDoc` plano, no el id de Firestore.
+- `PapeleraLegadoComponent.addItem` (caso `'operaciones'`) sigue restaurando por
+  `TableroService.altaOperacionYActualizarTablero`: no atómico, loguea con el `LogService`
+  viejo y no aplica el contrato de `restaurarOperacion` (ver "Contrato vigente —
+  `restaurarOperacion`"). El resto de la deuda de callers está saldado.
+- **Remedio sin decidir.** Esta entrada proponía migrar el caller a `restaurarOperacion`,
+  pero esa firma ya no existe para este caso: `restaurarOperacion(idEvento)` restaura
+  desde `papeleraEventos`/`objetosEliminados`, y la Papelera legado tiene un `LogDoc` en
+  la colección `papelera`. Migrar exigiría convertir cada `LogDoc` a un evento + copia
+  archivada. La alternativa es la de CLAUDE.md ("Cadena: log viejo → Papelera legado"):
+  eliminar la Papelera legado junto con el log viejo.
 
 ## Deuda abierta — tablero-asignaciones (menor)
 
@@ -361,64 +492,69 @@ para que el host del componente se estire dentro del modal y el footer quede peg
 también se beneficia por compartir módulo lazy-loaded, pero no fue verificado a fondo, solo
 visualmente de paso.
 
-## Deuda abierta — `restaurarOperacion` aproxima el estado del alta con una lista manual (BLOQUEANTE para la promoción)
+## Deuda abierta — guarda del item del tablero sin probar
 
-`restaurarOperacion` promete devolver la operación "al estado del ALTA", pero **el estado del
-alta no se persiste en ninguna parte**. El método lo aproxima con una lista escrita a mano:
-algunos campos se fuerzan al default y otros se conservan.
+La guarda "el tablero no tiene el item de la op" de `restaurarOperacion` no se pudo probar:
+dependía de encontrar un evento viejo con ese problema. Falla cerrada. Probablemente aparezca
+en la migración (ops viejas, o restauradas por el camino legado sobre otro tablero). Si
+aparece, el mensaje dice exactamente qué no encontró y se decide si relajarla.
 
-Esa lista es correcta para los campos que sólo escribe el cierre, e **incorrecta para
-cualquier campo escribible tanto en el alta como en el cierre**. Hay al menos dos:
+## Deuda abierta — tablero: `timestamp` sin actualizar al anular o reactivar
 
-- **`acompaniante` / `acompanianteCant`.** El comentario del código los da como "datos que se
-  cargan al cerrar o al editar el InformeOp" y los fuerza a `false` / `0`. Pero el editor del
-  alta también los carga (`operaciones-editor.component.html:186,199`) y el editor de InformeOp
-  también (commit `897dfee`). Forzarlos a cero **pierde el dato del alta**; conservarlos
-  guardaría el del cierre. Ninguna de las dos opciones es "el estado del alta".
-- **`tarifaAplicadaCliente` / `tarifaAplicadaChofer`.** Se conservan, lo que equivale al valor
-  del alta salvo que se hayan cambiado después en el flujo Personalizada
-  (`modal-detalle-op.component.ts:125-133`), caso en que se conserva el del cierre.
+El camino nuevo (`AsignacionService.agregarEscrituraAnularItem` en la baja y el reactivado de
+`restaurarOperacion`) reescribe el tablero sin tocar su `timestamp`; el legado
+(`AsignacionService.reactivarItem`) sí lo actualiza. **Antes de arreglarlo, verificar qué lee
+ese `timestamp`:** si algo lo usa para invalidar caché o detectar cambios, una baja o una
+restauración son invisibles para ese mecanismo.
 
-**Impacto: los dos afectan montos.** El acompañante entra en la valorización y la tarifa
-aplicada define los valores enteros. El cambio es silencioso: nadie se entera hasta que
-alguien compara contra el remito.
+## Deuda abierta — `resumenProcesado` falsy en ops cerradas
 
-**Por qué no se arregla re-resolviendo.** El encabezado de `ValoresTarifaService` documenta que
-la elección de la tarifa de cada lado la hace el usuario sobre los candidatos, y que con dos o
-más "no hay forma automática de saber cuál corresponde y se elige a mano". Un re-resolver
-automático en la restauración no puede reproducir una elección manual.
+El campo es opcional y puede haber ops cerradas de legado sin él. En ésas la baja no resta de
+`resumenesOp` (sólo revierte si `op.resumenProcesado`) pero el recierre después de restaurar
+suma: el resumen queda inflado. Verificar si existen; se corrige con el Recálculo de
+resúmenes de `/migracion` (skill `modulo-reportes`).
 
-**Por qué no se arregla parcheando los dos campos.** Un parche en acompañante deja la tarifa
-mal, y uno en la tarifa no es implementable (arriba). Y sobre todo deja la clase de bug
-intacta: el próximo campo que se vuelva escribible en los dos momentos repite el problema sin
-que nadie lo note.
+## Deuda abierta — detalles de UI de la baja
 
-**Dirección de la solución.** Persistir el snapshot del alta: congelar al alta lo que el alta
-definió, que es el mismo patrón de snapshot que el proyecto ya usa en `RefCliente`,
-`RefChofer` y el `titulo` de `CategoriaDocumentacion`. Con ese snapshot, `restaurarOperacion`
-deja de aproximar y vuelve literalmente al alta, y la lista escrita a mano desaparece.
+- Dos títulos para el mismo gesto: el éxito de la baja se titula "Operación eliminada" en
+  `tablero-op` y "Operación dada de baja" en `informe-op-listado`.
+- El tacho de `informe-op-listado` no se deshabilita mientras `guardando`; sólo lo tapa el
+  overlay del spinner.
 
-**Estado.** No urgente mientras `refactor` no esté en producción. **Bloqueante antes de la
-promoción:** es cambio silencioso de montos en el camino de restaurar. Necesita su propio
-frente de diseño, no un parche.
+## Preguntas abiertas — baja y restauración
+
+De la auditoría `docs/auditorias/baja-y-restauracion-de-operacion.md`, sin investigar:
+
+1. **`firestore.rules`:** ¿alguna regla impide borrar o reescribir `operaciones` o
+   `informesOp` según su estado, o la única guarda de negocio es la del coordinador? No se
+   relevó.
+2. **Coherencia entre `op.estado` y los InformeOp:** el código los mantiene en las mismas
+   transacciones, pero no se verificó en datos si hay ops con flags que no coinciden con el
+   estado de sus InformeOp. Las dos guardas de `bajaOperacionCerrada` cubren cualquiera de
+   las dos divergencias.
+3. **`lockLiquidacion`:** está en la interfaz `Operacion` y la restauración lo conserva. No se
+   sabe si algo lo escribe o lo lee: puede ser un campo muerto.
+4. **Tablero con items sin `idOperacion` coincidente** (ops viejas, o restauradas por el
+   camino legado sobre otro tablero): la baja reescribe el tablero sin cambios y sin aviso
+   (la restauración ahora aborta, ver arriba). No se sabe si el caso existe en datos.
 
 ## Deuda abierta — `editarOperacion` puede fallar sin devolver `Resultado`
 
-`editarOperacion` (`operacion.service.ts:665`) arma la escritura del ítem del tablero
-(`:670`) **antes** del `try`. Si no existe tablero de asignaciones para la fecha de la
-operación, la excepción se escapa: el método no devuelve `Resultado` y el error no pasa por
-`registrarError`. El usuario queda sin saber qué ocurrió.
+`OperacionService.editarOperacion` arma la escritura del ítem del tablero **antes** del
+`try`. Si no existe tablero de asignaciones para la fecha de la operación, la excepción se
+escapa: el método no devuelve `Resultado` y el error no pasa por `registrarError`. El usuario
+queda sin saber qué ocurrió.
 
 Viola el invariante de que toda operatoria compleja devuelve `Resultado<T>` y registra el
 error.
 
-**La forma correcta ya existe dos métodos más abajo:** `restaurarOperacion`
-(`operacion.service.ts:622-629`) consulta el tablero antes y, si no existe, devuelve
+**La forma correcta está en `restaurarOperacion` y en las dos bajas:** las lecturas y los
+chequeos van dentro del `try` y un tablero inexistente se devuelve como
 `{ exito: false, mensaje: ... }` con el detalle de la inconsistencia. El arreglo es replicar
-esa forma: o mover el armado de la escritura dentro del `try`, o hacer el chequeo temprano con
-retorno de `Resultado` como hace la restauración.
+esa forma: mover el armado de la escritura dentro del `try`, o hacer el chequeo temprano con
+retorno de `Resultado`.
 
-Caller único: `modal-detalle-op.component.ts:246`.
+Caller único: `modal-detalle-op.component.ts`.
 
 ## Deuda abierta — renombre de `modalCargaMultiple()` (cosmética)
 

@@ -34,6 +34,10 @@ decisiones: doc de proyecto `claude/diseno-informe-liq-nuevo.md`.
   escrituras por commit, sin chunking).
 
 ### Transiciones (InformeLiqService)
+> **Estado de la operación:** qué hace cada gesto sobre `op.estado` (y sobre la baja y la
+> restauración) está en la skill `modulo-operaciones`, sección "Máquina de estados de la
+> operación". Esa es la fuente; esta skill no la copia.
+
 | Acción | InformeLiqNuevo | InformeOp (este lado) | Contraparte | Operación.estado |
 |---|---|---|---|---|
 | crearBorrador | set 'borrador' | activo → 'proforma', idInfLiq | tipo ≠ cliente: bloqueadoPorContraparte = true | proforma.<lado> = true |

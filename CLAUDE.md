@@ -482,6 +482,11 @@ Categorías especiales:
 - Acceso a datos de Firebase: lectura en **demo** permitida cuando hace falta para relevar o
   verificar. **Producción (Vantruck): nada, ni lecturas.** Escrituras, migraciones o deploys
   —reglas e índices incluidos—: **en ningún proyecto sin que se pida explícitamente.**
+- Documentación (CLAUDE.md, skills, docs/): **no citar números de línea.** Se rompen con
+  cada edición y una cita falsa manda a leer el código equivocado. Citar el archivo y el
+  nombre del método (o del componente, la función, la sección del template).
+- Antes de cambiar qué hace un gesto sobre una operación, ubicarlo en la máquina de
+  estados (skill `modulo-operaciones`); no inferir la semántica leyendo el método suelto.
 
 ## Contexto adicional
 
@@ -656,9 +661,13 @@ dispara ni por las entidades secundarias que toca.
   Operaciones y podía no restar nada, en silencio). Si el doc del resumen no
   existía, el merge lo crea en negativo y el Recálculo lo detecta (antes se
   omitía en silencio).
-- **restaurarOperacion** SIEMPRE deja la op en 'abierta' (`estadoInicial()`,
-  `km: 0`, `resumenProcesado: false`, `informeOpCliente/Chofer: ''`). Los
-  InformeOp no se reconstruyen.
+- **restaurarOperacion** (transaccional) deja la op en 'abierta' y NO descarta
+  datos cargados por el usuario. Resetea exactamente tres cosas, ninguna
+  removible: `estado` (`estadoInicial()`), `resumenProcesado: false` (si no,
+  `cerrarOperacion` la rechaza para siempre) e `informeOpCliente/Chofer: ''`
+  (los InformeOp quedaron anulados). Aborta si ya existe la op o si el tablero
+  no tiene su item. Los InformeOp no se reconstruyen. Contrato completo y
+  máquina de estados: skill `modulo-operaciones`.
 - **Item de asignación:** nunca se borra, se anula/reactiva
   (`anularItemEnLista`/`reactivarItemEnLista`).
 - ~~Fuera de alcance: InformeVenta del cierre (comisiones) quedan sin tocar
@@ -694,12 +703,14 @@ este archivo. Antes de trabajar sobre un módulo, leer su skill.
 
 Deuda técnica activa. Actualizar cuando se salda.
 
-- **BLOQUEANTE para la promoción — `restaurarOperacion` aproxima el estado del alta** — el estado del alta no se persiste y la lista manual de campos pierde el acompañante cargado en el alta y puede conservar una tarifa elegida después: cambio silencioso de montos. Necesita frente de diseño (snapshot del alta), no un parche. Detalle: skills `modulo-operaciones` y `migracion-vantruck`.
 - **Región de Cloud Functions en Vantruck** — las funciones de `pf-logistics` siguen en la región default: alinearlas a `southamerica-east1` exige delete + recreate (corte en producción) y agregar `functionsRegion` a `environment.vantruck.ts`. Detalle: skill `migracion-vantruck`.
 - **Bucket de Storage de `pf-logistics`** — antes de llevar Legajos a producción hay que confirmar que el bucket existe, tiene CORS y tiene `storage.rules` desplegadas. Detalle: skill `migracion-vantruck`.
 - **Herramienta de recálculo de tarifas (sólo en `main`)** — existe en producción (`98edb35`) y no en `refactor`; hay que reimplementarla sobre el modelo nuevo porque `RefTarifaAplicada` queda congelada al cerrar y una tarifa con vigencia retroactiva no corrige las operaciones ya cerradas. Detalle: skill `migracion-vantruck`.
 - **Restaurar operaciones desde la Papelera legado** — `PapeleraLegadoComponent.addItem` sigue restaurando operaciones por `TableroService.altaOperacionYActualizarTablero`, que no es atómico y loguea con el `LogService` viejo; el resto de la deuda de callers está saldado. Detalle: skill `modulo-operaciones`.
 - **`editarOperacion` puede fallar sin devolver `Resultado`** — arma la escritura del tablero antes del `try`: si no hay tablero para la fecha, la excepción se escapa sin `Resultado` ni `registrarError` y el usuario no se entera. Detalle: skill `modulo-operaciones`.
+- **Baja y restauración de operaciones — pendientes chicos** — la guarda "el tablero no tiene el item" de `restaurarOperacion` quedó sin probar (falla cerrada; probablemente aparezca en la migración); ops cerradas con `resumenProcesado` falsy (legado) no restan en la baja pero suman al recerrar (verificar si existen, se corrige con el Recálculo de `/migracion`); dos títulos distintos para el éxito de la baja y el tacho de `informe-op-listado` sin deshabilitar mientras `guardando`. Detalle: skill `modulo-operaciones`.
+- **`timestamp` del tablero al anular o reactivar un item** — el camino nuevo no lo actualiza, el legado sí. **Antes de arreglarlo, verificar qué lee ese `timestamp`:** si algo lo usa para invalidar caché, una baja o una restauración son invisibles para ese mecanismo. Detalle: skill `modulo-operaciones`.
+- **Preguntas abiertas de baja y restauración** — si `firestore.rules` impone algo según el estado de la op; coherencia en datos entre `op.estado` y los InformeOp; `lockLiquidacion` (en la interfaz, la restauración lo conserva, nadie sabe si se lee o escribe: posible campo muerto); items del tablero sin `idOperacion` coincidente. Detalle: skill `modulo-operaciones`.
 - **Deuda menor del tablero de asignaciones** — el borrador del tablero se pierde con F5. Detalle: skill `modulo-operaciones`.
 - **operaciones-editor / Tarifas** — estilos SCSS de tarifa duplicados sin consolidar, y el patrón `@if` obligatorio para bindear tarifas nullable. Detalle: skill `modulo-operaciones`.
 - **Fix de altura del modal limitado a `tablero-op`** — el ajuste que estira `carga-asignacion` dentro del modal vive en `tablero-op.component.scss`: otro caller que abra ese modal tiene que replicarlo. Detalle: skill `modulo-operaciones`.
@@ -712,6 +723,7 @@ Deuda técnica activa. Actualizar cuando se salda.
 - **Permisos de UI dispersos** — quedan `*appRole`/`esRol()` puntuales sin migrar a `PermisosService`, con riesgo de mostrar acciones que las Security Rules rechazan. Detalle: skill `botones-y-permisos`.
 - **Tarifas tras el cierre** — quedan residuos inertes en datos de demo (`idTarifa`/`tarifaAsignada`, `adExtra: null`) y `tarifa-gral-cliente.ts` sigue vivo por la Liquidación vieja. Detalle: skill `modulo-tarifas`.
 - **Migración conjunta Choferes/Vehículos/Legajos** — los IDs legacy se resuelven por relación cruzada, así que esas colecciones no se pueden migrar aisladas; revisar también las `fechaVto` en milisegundos. Detalle: skill `migracion-vantruck`.
+- **Plata — `revertirEmitido` no chequea `totalAjustado`** — `desvincularFactura` sí; un emitido con ajustes imputados se puede revertir y sus InformeOp vuelven a liquidarse con el ajuste colgando del revertido. Detalle: skill `modulo-facturacion`.
 - **Facturación (InformeLiqNuevo)** — falta la carga manual de facturas sin QR, `'anulado'` no tiene escritor, queda un `console.log` del QR y hay que rotar las anon keys de Supabase. Detalle: skill `modulo-facturacion`.
 - **Reportes (`resumenesOp`)** — checklist de migración pendiente; `app-filtro-periodo` puede dar 11 meses los días 29–31; un listener por mes y clave. Detalle: skill `modulo-reportes`.
 - **Vendedores** — checklist de migración pendiente; pagar una liquidación no genera movimiento financiero y restaurar un cliente no revalida vendedores desactivados. Detalle: skill `modulo-vendedores`.

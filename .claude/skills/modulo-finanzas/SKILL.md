@@ -65,8 +65,9 @@ y `g1…g4b`.
 | Recibo / Orden de pago | PDF (`ReciboPdfService`, jsPDF): datos de la empresa, monto en letras, medios, aplicado a, saldo a cuenta, firma, marca ANULADO | REIMPRIMIR |
 
 Contrato con Facturación: 'facturado' es la puerta de cobros y pagos;
-revertir y desvincular exigen `totalCobrado === 0` y `totalAjustado === 0`
-(un ajuste ata el informe a Finanzas igual que un cobro).
+revertir y desvincular exigen `totalCobrado === 0`; `totalAjustado === 0` lo exige sólo
+desvincular, no revertir. Un ajuste ata el informe a Finanzas igual que un cobro, así que
+revertir también debería exigirlo (deuda en la skill `modulo-facturacion`).
 
 ### Consultas y pantallas (`raiz/finanzas-nueva/`, ruta `finanzas`, dev/admin/demo; lazy, fuera de RaizModule)
 - `FinanzasConsultaService`: informes abiertos y movimientos con saldo en

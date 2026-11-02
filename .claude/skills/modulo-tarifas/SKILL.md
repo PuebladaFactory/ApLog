@@ -207,15 +207,16 @@ esas reglas (siguen vigentes); el editor ya no inyecta `ChoferService` /
 
 **Resolución de pendientes:**
 - Chofer (caso proveedor): la detección del pendiente (`op.chofer.id === ''`) la hacen los
-  callers, no el servicio (`operaciones-editor.component.ts:148`,
-  `generador-operaciones.service.ts:397`). Selector con
+  callers, no el servicio (`operaciones-editor.component.ts`, `choferPendiente`;
+  `generador-operaciones.service.ts`, `planificarOperacion`, en el paso que elige un
+  chofer al azar del proveedor). Selector con
   `ChoferService.getChoferesPorProveedor(idProveedor)`. Al resolver,
   `ResolucionTarifaOpService.asignarChofer` recalcula si la op es eventual con las
   tarifas habilitadas del PROVEEDOR (`resolverTarifasHabilitadasChofer`) y devuelve
   `eventualRecalculado`.
 - Vehículo: la detección del pendiente (`op.vehiculo.id === ''`) la hace el editor, no el
-  servicio (`operaciones-editor.component.ts:191`); `ResolucionTarifaOpService` sólo lo
-  usa en `candidatosOp` (`resolucion-tarifa-op.service.ts:127`), para devolver
+  servicio (`operaciones-editor.component.ts`, `vehiculoPendiente`);
+  `ResolucionTarifaOpService` sólo lo usa en `candidatosOp`, para devolver
   `{ estado: 'pendiente' }`. Selector con vehículos del dueño (proveedor si
   `op.proveedor`, chofer si directo), filtro síncrono sobre `getVehiculosActuales()`.
 

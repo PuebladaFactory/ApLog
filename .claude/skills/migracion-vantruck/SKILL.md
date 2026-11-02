@@ -20,9 +20,9 @@ Nada de lo que sigue asume una de las dos. Cuando se decida, revisar esta skill 
 
 Deuda que no puede llegar a producción. Revisar esta lista antes de cualquier switch.
 
-| Qué | Dónde está el detalle |
-|---|---|
-| `restaurarOperacion` aproxima el estado del alta con una lista manual: pierde el acompañante cargado en el alta y puede conservar una elección de tarifa posterior. Cambio silencioso de montos. | skill `modulo-operaciones` |
+Hoy no hay ninguno. (El último, "`restaurarOperacion` aproxima el estado del alta", se
+cerró al cambiar la semántica de la restauración: ver la skill `modulo-operaciones`,
+"Contrato vigente — `restaurarOperacion`".)
 
 ## Lo que existe sólo en `main`
 
