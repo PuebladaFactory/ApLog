@@ -1,4 +1,5 @@
 import { inject, Injectable } from '@angular/core';
+import { Transaction } from '@angular/fire/firestore';
 import { ConId } from 'src/app/interfaces/conId';
 import { PapeleraEvento, RefObjetoPapelera } from 'src/app/interfaces/registro-papelera';
 import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
@@ -114,7 +115,33 @@ export class PapeleraService {
     escrituras: EscrituraBatch[],
     idEvento: string,
   ): Promise<{ evento: ConId<PapeleraEvento>; objetos: ObjetoRestaurado[] }> {
-    const eventoData = await this.db.getById<PapeleraEvento>(this.COLECCION_EVENTOS, idEvento);
+    return this.armarRestauracion(escrituras, idEvento, (coleccion, id) => this.db.getById<any>(coleccion, id));
+  }
+
+  /** Variante TRANSACCIONAL de prepararRestauracionEnBatch — mismo contrato y
+   *  mismas validaciones, pero lee el evento y los objetos archivados con
+   *  leerEnTransaccion, para el callback `armar` de commitEnTransaccion (el
+   *  evento queda bajo la transacción: dos restauraciones simultáneas no
+   *  pueden pasar las dos el chequeo de 'activo'). Caller:
+   *  OperacionService.restaurarOperacion. */
+  async prepararRestauracionEnTransaccion(
+    tx: Transaction,
+    escrituras: EscrituraBatch[],
+    idEvento: string,
+  ): Promise<{ evento: ConId<PapeleraEvento>; objetos: ObjetoRestaurado[] }> {
+    return this.armarRestauracion(
+      escrituras, idEvento, (coleccion, id) => this.db.leerEnTransaccion<any>(tx, coleccion, id),
+    );
+  }
+
+  /** Cuerpo común de las dos variantes de restauración: sólo cambia cómo se
+   *  lee (`leer`). */
+  private async armarRestauracion(
+    escrituras: EscrituraBatch[],
+    idEvento: string,
+    leer: (coleccion: string, id: string) => Promise<any | null>,
+  ): Promise<{ evento: ConId<PapeleraEvento>; objetos: ObjetoRestaurado[] }> {
+    const eventoData: PapeleraEvento | null = await leer(this.COLECCION_EVENTOS, idEvento);
     if (!eventoData) {
       throw new Error(`No se encontró el evento de papelera ${idEvento}.`);
     }
@@ -125,7 +152,7 @@ export class PapeleraService {
     const objetos: ObjetoRestaurado[] = [];
     for (const ref of eventoData.refs) {
       const idArchivado = this.idObjetoEliminado(ref.coleccion, ref.idOriginal);
-      const data = await this.db.getById<any>(this.COLECCION_OBJETOS, idArchivado);
+      const data = await leer(this.COLECCION_OBJETOS, idArchivado);
       if (!data) {
         throw new Error(
           `Inconsistencia: falta el objeto archivado ${ref.coleccion}/${ref.idOriginal} (evento ${idEvento}).`,

@@ -340,6 +340,14 @@ export class InformeOpListadoComponent implements OnInit, OnDestroy {
       Swal.fire({ icon: 'error', text: `No se encontró la operación ${informe.idOperacion}.` });
       return;
     }
+    // Aviso anticipado, para no pedir un motivo en vano: misma regla y mismo
+    // mensaje que bajaOperacionCerrada, que sigue siendo la fuente de verdad
+    // (vuelve a validar fresco en la transacción).
+    const rechazo = this.operacionServ.validarBaja(op, 'cerrada');
+    if (rechazo) {
+      Swal.fire({ icon: 'error', title: 'No se puede dar de baja', text: rechazo });
+      return;
+    }
 
     const modalRef = this.modalService.open(BajaObjetoComponent, {
       windowClass: 'myCustomModalClass', centered: true, scrollable: true, size: 'sm',

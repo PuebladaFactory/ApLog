@@ -604,90 +604,112 @@ export class OperacionService implements OnDestroy {
     }
   }
 
-  /** Restaura una operación desde papelera. SIEMPRE queda 'abierta'. Si la
-   *  op estaba 'cerrada' antes de la baja, sus InformeOp quedaron
-   *  'anulados' (no se reconstruyen, ver bajaOperacionCerrada) — hay que
-   *  volver a cerrarla manualmente después de restaurar, lo que genera un
-   *  par de InformeOp nuevo.
-   *  Vuelve al estado del ALTA: se descarta todo lo cargado al cerrar o al
-   *  editar el InformeOp (km, acompañantes, multiplicadores, adicional extra,
-   *  tarifa base manual) y se recalcula valoresNuevos con la
-   *  tarifa congelada del alta (calcularCierre: sin resolver jerarquía). Se
-   *  conservan tarifaAplicada*, datosTarifaEventual y el snapshot de
-   *  comisiones (cliente.comisiones). */
+  /** Restaura una operación desde papelera. SIEMPRE queda 'abierta': el
+   *  propósito es que se pueda volver a trabajar. Si la op estaba 'cerrada'
+   *  antes de la baja, sus InformeOp quedaron 'anulados' (no se reconstruyen,
+   *  ver bajaOperacionCerrada) — hay que volver a cerrarla después de
+   *  restaurar, lo que genera un par de InformeOp nuevo.
+   *  NO descarta datos que cargó el usuario: km, acompañantes,
+   *  multiplicadores, tarifa base manual y adicional extra quedan como
+   *  estaban al momento de la baja; se precargan y el usuario los ajusta en
+   *  el nuevo cierre. Sólo se resetea lo que es consecuencia del cambio de
+   *  estado (ver comentarios abajo). valoresNuevos se recalcula con
+   *  calcularCierre sobre esos datos y la tarifa congelada (sin resolver
+   *  jerarquía).
+   *  Transacción: relee el evento, la copia archivada, la operación y el
+   *  tablero. Aborta (Resultado, sin escribir nada) si el evento no existe o
+   *  ya fue restaurado, si falta la copia, si ya existe operaciones/{id}, si
+   *  no hay tablero para la fecha o si el tablero no tiene el item de la op. */
   async restaurarOperacion(idEvento: string): Promise<Resultado<void>> {
-
-    const escrituras: EscrituraBatch[] = [];
-    const { evento, objetos } = await this.papeleraService.prepararRestauracionEnBatch(escrituras, idEvento);
-    if (evento.coleccionPrincipal !== 'operaciones') {
-      return {
-        exito: false,
-        mensaje: `El evento de papelera ${idEvento} no corresponde a una Operación ` +
-                 `(coleccionPrincipal: ${evento.coleccionPrincipal}).`,
-      };
-    }
-    const principal = objetos.find(o => o.principal)!;
-
-    const op: ConId<Operacion> = { ...principal.data, idOperacion: principal.idOriginal, id: principal.idOriginal };
-    op.estado = this.operacionFactory.estadoInicial();
-    op.km = 0;
-    // Una op que estaba cerrada vuelve sin rastro del cierre anterior: sin
-    // esto, cerrarOperacion la rechaza por resumenProcesado y los ids de
-    // InformeOp apuntan a informes anulados.
-    op.resumenProcesado = false;
-    op.informeOpCliente = '';
-    op.informeOpChofer = '';
-
-    // Datos que se cargan al cerrar o al editar el InformeOp: vuelven al
-    // valor del alta (mismos defaults que OperacionFactoryService). Sin esto,
-    // el próximo cierre repetía la tarifa manual, los acompañantes, el
-    // multiplicador y el adicional extra de antes de la baja.
-    op.acompaniante = false;
-    op.acompanianteCant = 0;
-    op.multiplicadorCliente = 1;
-    op.multiplicadorChofer = 1;
-    op.tarifaBaseManualCliente = null;
-    op.tarifaBaseManualChofer = null;
-    op.adExtra = null;
-    // Valores del alta con la tarifa congelada (sin volver a resolver la
-    // jerarquía).
-    const recalculo = this.valoresTarifaServ.calcularCierre(op);
-
-    const tablero = await this.asignacionService.getTableroPorFecha(op.fecha);
-    if (!tablero) {
-      return {
-        exito: false,
-        mensaje: `Inconsistencia: no existe tablero de asignaciones para la fecha ` +
-                 `${op.fecha} de la operación ${op.idOperacion}. Restauración abortada.`,
-      };
-    }
-    const items = this.asignacionService.reactivarItemEnLista(tablero.items, op.idOperacion);
-
-    escrituras.push(
-      { coleccion: 'operaciones', id: op.idOperacion, data: this.opToFirestore(op), modo: 'crear' },
-      {
-        coleccion: 'asignaciones', id: op.fecha,
-        data: this.asignacionService.asignacionToFirestore({ ...tablero, items }),
-        modo: 'reemplazar',
-      },
-    );
-
-    await this.logRegistro.agregarAlBatch(
-      escrituras, 'RESTAURAR', 'operaciones', op.idOperacion,
-      `Operación ${op.idOperacion} restaurada desde papelera (valores del alta)` +
-        (recalculo.errores.length > 0 ? ` — recálculo: ${recalculo.errores.join(' | ')}` : ''),
-    );
-
+    // Para el registrarError: el id de la op si se llegó a leer el evento.
+    let idParaError = idEvento;
     try {
-      await this.db.commitBatch(escrituras);
+      const idOperacion = await this.db.commitEnTransaccion<string>(async (tx) => {
+        const escrituras: EscrituraBatch[] = [];
+
+        const { evento, objetos } =
+          await this.papeleraService.prepararRestauracionEnTransaccion(tx, escrituras, idEvento);
+        if (evento.coleccionPrincipal !== 'operaciones') {
+          throw new Error(
+            `El evento de papelera ${idEvento} no corresponde a una Operación ` +
+            `(coleccionPrincipal: ${evento.coleccionPrincipal}).`,
+          );
+        }
+        const principal = objetos.find(o => o.principal)!;
+        idParaError = principal.idOriginal;
+
+        const existente = await this.db.leerEnTransaccion<Operacion>(tx, 'operaciones', principal.idOriginal);
+        if (existente) {
+          throw new Error(
+            `Ya existe la operación ${principal.idOriginal} (operaciones/${principal.idOriginal}). ` +
+            `Restaurar la pisaría. Restauración abortada.`,
+          );
+        }
+
+        const op: ConId<Operacion> = { ...principal.data, idOperacion: principal.idOriginal, id: principal.idOriginal };
+
+        const tablero = await this.asignacionService.leerTableroEnTransaccion(tx, op.fecha);
+        if (!tablero) {
+          throw new Error(
+            `Inconsistencia: no existe tablero de asignaciones para la fecha ` +
+            `${op.fecha} de la operación ${op.numeroOperacion ?? op.idOperacion}. Restauración abortada.`,
+          );
+        }
+        if (!tablero.items.some(it => it.idOperacion === op.idOperacion)) {
+          throw new Error(
+            `Inconsistencia: el tablero de asignaciones del ${op.fecha} no tiene ningún item con ` +
+            `idOperacion ${op.idOperacion} (operación ${op.numeroOperacion ?? op.idOperacion}). ` +
+            `Restaurada quedaría fuera de todo tablero. Restauración abortada.`,
+          );
+        }
+        // — fin de lecturas —
+
+        // Resets que son CONSECUENCIA del cambio de estado, no datos del
+        // usuario. No sacarlos: el resto de los campos (km, acompañantes,
+        // multiplicadores, tarifa base manual, adExtra) se conservan a
+        // propósito, y estos tres se quedan a propósito.
+        // 1) El propósito de la restauración: la op vuelve a 'abierta'.
+        op.estado = this.operacionFactory.estadoInicial();
+        // 2) Imprescindible: cerrarOperacion rechaza toda op con
+        //    resumenProcesado: true, así que conservarlo deja la op sin poder
+        //    volver a cerrarse nunca. Y es correcto: la baja ya restó su
+        //    aporte de resumenesOp.
+        op.resumenProcesado = false;
+        // 3) Los InformeOp del cierre anterior quedaron 'anulado' en la baja y
+        //    el próximo cierre crea un par nuevo: conservar los ids dejaría
+        //    referencias muertas.
+        op.informeOpCliente = '';
+        op.informeOpChofer = '';
+
+        const recalculo = this.valoresTarifaServ.calcularCierre(op);
+        const items = this.asignacionService.reactivarItemEnLista(tablero.items, op.idOperacion);
+
+        escrituras.push(
+          { coleccion: 'operaciones', id: op.idOperacion, data: this.opToFirestore(op), modo: 'crear' },
+          {
+            coleccion: 'asignaciones', id: op.fecha,
+            data: this.asignacionService.asignacionToFirestore({ ...tablero, items }),
+            modo: 'reemplazar',
+          },
+        );
+
+        await this.logRegistro.agregarAlBatch(
+          escrituras, 'RESTAURAR', 'operaciones', op.idOperacion,
+          `Operación ${op.idOperacion} restaurada desde papelera (datos al momento de la baja, abierta)` +
+            (recalculo.errores.length > 0 ? ` — recálculo: ${recalculo.errores.join(' | ')}` : ''),
+        );
+
+        return { escrituras, resultado: op.idOperacion };
+      });
+
+      return { exito: true, mensaje: `Operación ${idOperacion} restaurada correctamente.` };
     } catch (e: any) {
       await this.logRegistro.registrarError(
-        'RESTAURAR', 'operaciones', op.idOperacion, `Error al restaurar operación ${op.idOperacion}: ${e?.message ?? e}`,
+        'RESTAURAR', 'operaciones', idParaError,
+        `Error al restaurar operación (evento de papelera ${idEvento}): ${e?.message ?? e}`,
       );
-      return { exito: false, mensaje: `Error al restaurar la operación: ${e?.message ?? e}.` };
+      return { exito: false, mensaje: e?.message ?? String(e) };
     }
-
-    return { exito: true, mensaje: `Operación ${op.idOperacion} restaurada correctamente.` };
   }
 
   /** Edita una operación de forma atómica: doc de la operación + su log EDITAR +
