@@ -37,6 +37,11 @@ decisiones: doc de proyecto `claude/diseno-informe-liq-nuevo.md`.
 > **Estado de la operación:** qué hace cada gesto sobre `op.estado` (y sobre la baja y la
 > restauración) está en la skill `modulo-operaciones`, sección "Máquina de estados de la
 > operación". Esa es la fuente; esta skill no la copia.
+>
+> **Estado del InformeLiq** (todas las transiciones, de borrador a revertido, con sus guardas
+> y el contrato con Finanzas): skill `modulo-facturacion`, sección "Máquina de estados del
+> InformeLiq". La tabla de abajo es el efecto de los gestos de Liquidación sobre las demás
+> entidades.
 
 | Acción | InformeLiqNuevo | InformeOp (este lado) | Contraparte | Operación.estado |
 |---|---|---|---|---|

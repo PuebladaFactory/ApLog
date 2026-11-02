@@ -549,7 +549,7 @@ export class InformeLiqService {
   }
 
   /** Revierte un InformeLiq EMITIDO (gesto de Facturación). Transacción:
-   *  relee el informe (debe seguir 'emitido' y sin nada cobrado), sus
+   *  relee el informe (debe seguir 'emitido', sin nada cobrado ni ajustado), sus
    *  InformeOp (deben estar 'liquidado' y apuntar a este informe) y las
    *  Operaciones. Escribe:
    *   - InformeLiq: estado 'revertido' + reversion {motivo, usuario, fecha}.
@@ -560,7 +560,9 @@ export class InformeLiqService {
    *  La contraparte no cambia. Un log REVERTIR con diff.
    *  FC1: las compensaciones aplicadas se LIBERAN (cada movimiento pierde su
    *  imputación 'compensacion' a este informe y recupera el saldo sin
-   *  imputar). Quedan en el informe revertido como historia.
+   *  imputar). Quedan en `compensaciones` del revertido como historia, pero
+   *  valoresFinancieros.totalCompensado vuelve a 0
+   *  (valoresFinancierosRevertido): ya no las consume.
    *  Presupuesto: 2 por InformeOp + informe + copia + log (≤ 303) + 1 por
    *  compensación (≤ MAX_COMPENSACIONES). */
   async revertirEmitido(idInfLiq: string, motivo: string): Promise<Resultado<void>> {
@@ -584,6 +586,18 @@ export class InformeLiqService {
             `La liquidación ${liq.numeroInterno} tiene importes cobrados/pagados imputados: no se puede revertir.`,
           );
         }
+        // Guarda DEFENSIVA: hoy es inalcanzable. Un ajuste solo se imputa a un
+        // informe 'facturado' (validarDocumentoImputable en registrarAjuste) y la
+        // única salida de 'facturado' (desvincularFactura) ya exige
+        // totalAjustado === 0, así que un emitido no puede tener ajustes. Va igual
+        // porque si ese invariante se rompe el daño no tiene vuelta: anular()
+        // exige 'facturado', y un ajuste sobre un revertido no lo quita ningún
+        // camino.
+        if ((liq.valoresFinancieros?.totalAjustado ?? 0) !== 0) {
+          throw new Error(
+            `La liquidación ${liq.numeroInterno} tiene ajustes de Finanzas imputados: anulalos antes de revertir.`,
+          );
+        }
         const informes = await this.leerInformesOp(tx, liq.informesOp);
         this.validarInformesDelEmitido(informes, idInfLiq);
         const operaciones = await this.leerOperaciones(tx, informes);
@@ -591,7 +605,13 @@ export class InformeLiqService {
         const movimientos = await this.leerMovimientosFin(tx, compensaciones.map(c => c.idMovimiento));
         // — fin de lecturas —
 
-        this.agregarEscrituraInformeLiqParcial(escrituras, idInfLiq, { estado: 'revertido', reversion });
+        const vf = this.factory.valoresFinancierosRevertido(liq.valoresFinancieros, liq.valores.total);
+        this.agregarEscrituraInformeLiqParcial(escrituras, idInfLiq, {
+          estado: 'revertido',
+          reversion,
+          valoresFinancieros: vf,
+          estadoFinanciero: estadoFinancieroDe(vf, liq.estadoFinanciero),
+        });
         for (const [idMov, mov] of movimientos) {
           if (!mov) throw new Error(`Inconsistencia: no existe el movimiento ${idMov} compensado en esta liquidación.`);
           escrituras.push(escrituraMovimientoParcial(idMov, quitarCompensacion(mov, idInfLiq)));

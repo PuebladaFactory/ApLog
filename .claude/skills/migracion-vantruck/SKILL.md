@@ -24,6 +24,18 @@ Hoy no hay ninguno. (El último, "`restaurarOperacion` aproxima el estado del al
 cerró al cambiar la semántica de la restauración: ver la skill `modulo-operaciones`,
 "Contrato vigente — `restaurarOperacion`".)
 
+## Restricción — saldos de apertura de Finanzas
+
+Cuando se diseñe la apertura (skill `modulo-finanzas`, checklist de migración, punto 4): **los
+ajustes de motivo `'apertura'` tienen que imputarse sobre InformeLiq en `'facturado'`, o nacen
+atrapados.** Un ajuste sólo se quita anulando el movimiento, y `anular` exige que el informe
+siga en 'facturado'; sobre cualquier otro estado no lo quita ningún camino ("El ajuste
+atrapado", skill `modulo-finanzas`). El motivo `'apertura'` no se elige en la UI: la
+herramienta de `/migracion` que cree esos AJ tiene que pasar por
+`MovimientoFinService.registrarAjuste` o reproducir su guarda (`validarDocumentoImputable`).
+Al verificar la migración: ningún AJ vigente puede tener imputado un informe que no esté en
+'facturado'.
+
 ## Lo que existe sólo en `main`
 
 `refactor` no se va a fusionar con `main`: el código de `main` está escrito contra campos que

@@ -14,6 +14,22 @@ import {
  *  cuentan (son propuestas); los revertidos y anulados son historia.
  *  Diseño: claude/diseno-finanzas.md §4.5 (pantalla 3) y §18. */
 
+/** Qué estados de InformeLiq aportan cifras a los totales: los vigentes
+ *  (emitido, facturado). Los demás se listan como registro y no suman.
+ *  Record exhaustivo a propósito: un estado nuevo no compila hasta decidir
+ *  si suma. */
+const APORTA_A_TOTALES: Readonly<Record<InformeLiqNuevo['estado'], boolean>> = {
+  borrador: false,
+  emitido: true,
+  facturado: true,
+  revertido: false,
+  anulado: false,
+};
+
+export function informeLiqAportaATotales(estado: InformeLiqNuevo['estado']): boolean {
+  return APORTA_A_TOTALES[estado];
+}
+
 /** Sección visible de la cuenta (recordada en la sesión). */
 export type SeccionCuentaEntidad = 'comprobantes' | 'movimientos' | 'mayor';
 

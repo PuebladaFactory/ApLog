@@ -64,10 +64,12 @@ y `g1…g4b`.
 | `cerrarSaldo` / `registrarDevolucion` | Saldo sin imputar que no se va a aplicar: AJ (incobrable / redondeo / otro) o devolución en sentido inverso (OPG a un cliente, RC de un chofer/proveedor) | AJUSTAR / PAGAR / COBRAR |
 | Recibo / Orden de pago | PDF (`ReciboPdfService`, jsPDF): datos de la empresa, monto en letras, medios, aplicado a, saldo a cuenta, firma, marca ANULADO | REIMPRIMIR |
 
-Contrato con Facturación: 'facturado' es la puerta de cobros y pagos;
-revertir y desvincular exigen `totalCobrado === 0`; `totalAjustado === 0` lo exige sólo
-desvincular, no revertir. Un ajuste ata el informe a Finanzas igual que un cobro, así que
-revertir también debería exigirlo (deuda en la skill `modulo-facturacion`).
+Contrato con Facturación: 'facturado' es la puerta de cobros, pagos y ajustes
+(`validarDocumentoImputable`, dentro de la transacción) y también de su anulación (`anular`
+exige 'facturado'); revertir y desvincular exigen `totalCobrado === 0` y `totalAjustado === 0`.
+`totalAjustado` es un acumulado vivo (suma de los ajustes vigentes imputados). Estados,
+transiciones y el invariante "un emitido no puede tener ajustes": skill `modulo-facturacion`,
+"Máquina de estados del InformeLiq".
 
 ### Consultas y pantallas (`raiz/finanzas-nueva/`, ruta `finanzas`, dev/admin/demo; lazy, fuera de RaizModule)
 - `FinanzasConsultaService`: informes abiertos y movimientos con saldo en
@@ -112,6 +114,10 @@ Movimientos y la cuenta de la entidad con 4 hojas) para `generarLibro`
 rango). El PDF va apaisado si las columnas superan el ancho vertical; los
 totales del pie se alinean como su columna (jspdf-autotable no aplica
 `columnStyles` al foot). Solo caracteres WinAnsi.
+Hoja Comprobantes de la cuenta: los no vigentes (revertidos; la regla es
+`informeLiqAportaATotales`) se listan pero no suman; si hay alguno, la fila
+dice "Total vigentes" y una nota nombra los estados que no suman (mismo
+criterio que "Total vigentes" de Movimientos con los anulados).
 
 ### Generadores de demo (`/migracion`, solo demo + rol dev)
 - **Generador de circuito** (`GeneradorCircuitoService`): sobre los
@@ -159,7 +165,11 @@ sus mapeos en `firestore.rules` (ver "Deuda — Finanzas").
      (`DatosLiquidacion.fechaEmision` ya lo permite); si no, el Mayor
      muestra los cobros antes que sus liquidaciones.
   4. Apertura (§9.4 del diseño): fecha de corte, AJ con motivo 'apertura'
-     para lo resuelto antes del corte, saldos reales de lo impago;
+     para lo resuelto antes del corte, saldos reales de lo impago.
+     **Los AJ de 'apertura' tienen que imputarse sobre informes en
+     'facturado', o nacen atrapados** (ver "El ajuste atrapado" abajo);
+     ese motivo no se elige en la UI, así que la herramienta que los cree
+     tiene que pasar por `registrarAjuste` o reproducir su guarda;
      documento `saldoInicial` para deudas anteriores a la app (hoy
      `TipoDocumentoImputable` es 'informeLiq' | 'movimientoFin': agregarlo);
      importador desde Excel en `/migracion`. Conciliar saldos por entidad
@@ -177,6 +187,17 @@ sus mapeos en `firestore.rules` (ver "Deuda — Finanzas").
   vendedores como movimiento (V-a); plazo de pago por entidad (hoy la
   antigüedad cuenta desde la factura); antigüedad "a una fecha pasada"
   (hoy al día de hoy).
+- **El ajuste atrapado.** Un ajuste imputado sólo se puede quitar anulando
+  el movimiento (`anular`; no hay desimputación parcial ni edición), y sólo
+  mientras el informe siga en 'facturado' (`anular` lo exige dentro de la
+  transacción). Un ajuste vigente sobre un informe en cualquier otro estado
+  no se puede quitar por ningún camino existente. Hoy la app no puede
+  producirlo (invariante en la skill `modulo-facturacion`, "Máquina de
+  estados del InformeLiq"; `revertirEmitido` tiene además una guarda
+  defensiva); el riesgo está en datos escritos por fuera de
+  `registrarAjuste` — en particular los AJ de 'apertura' de la migración
+  (checklist, punto 4). Auditoría:
+  `docs/auditorias/reversion-informe-liq-emitido-y-ajustes.md`.
 - Las cuentas se calculan en memoria desde los informes abiertos y los
   movimientos con saldo (sin agregado): si el volumen abierto crece mucho,
   evaluar un agregado por entidad con 'fusionar' + increment.

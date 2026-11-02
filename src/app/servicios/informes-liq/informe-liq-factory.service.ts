@@ -133,6 +133,17 @@ export class InformeLiqFactoryService {
     return aplicarImporte(base, 'totalCompensado', totalCompensado);
   }
 
+  /** Valores financieros de un informe REVERTIDO. `totalCompensado` → 0: las
+   *  compensaciones se liberaron en los movimientos (si quedara, la misma
+   *  compensación contaría dos veces). `total` queda (hecho histórico).
+   *  `totalCobrado` y `totalAjustado` ya son 0 (revertirEmitido lo exige).
+   *  `saldo` sale de la invariante (= total): que no se deba nada lo dice el
+   *  estado, y los lectores lo fuerzan a 0 fuera de emitido/facturado. */
+  valoresFinancierosRevertido(actual: ValoresFinancierosLiq | null | undefined, total: number): ValoresFinancierosLiq {
+    const base = normalizarValoresFinancieros(actual, total);
+    return normalizarValoresFinancieros({ ...base, totalCompensado: 0 }, base.total);
+  }
+
   /** Recalcula total/saldo SIN pisar lo imputado (compensado, cobrado,
    *  ajustado) — para cuando cambia el total de un informe existente
    *  (edición, B3). Normaliza docs anteriores al Frente Finanzas. */

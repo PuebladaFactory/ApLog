@@ -2,7 +2,8 @@ import { ColumnaDoc, HojaDoc, LibroTabular, TablaDoc, ValorCeldaDoc } from 'src/
 import { InformeLiqNuevo } from 'src/app/interfaces/informe-liq-nuevo';
 import { MovimientoFin, TipoEntidadFin } from 'src/app/interfaces/movimiento-fin';
 import {
-  FilaComprobanteCuenta, LineaMayor, MayorCuenta, ResumenCuentaEntidad, presentarSaldo, textoPeriodoCorto,
+  FilaComprobanteCuenta, LineaMayor, MayorCuenta, ResumenCuentaEntidad, informeLiqAportaATotales, presentarSaldo,
+  textoPeriodoCorto,
 } from 'src/app/shared/utils/cuenta-entidad.util';
 import {
   CuentaEntidadFin, DIAS_ALERTA_ANTIGUEDAD, EstadoAntiguedad, LadoCuenta, UMBRALES_ANTIGUEDAD, estadoCuenta, etiquetaEstadoAntiguedad,
@@ -300,19 +301,29 @@ export function armarLibroCuenta(d: DatosExportCuenta): LibroTabular {
     col('Total', 'moneda', 15), col('Compensado', 'moneda', 14), col(cobrado, 'moneda', 15),
     col('Ajustado', 'moneda', 13), col('Saldo', 'moneda', 15), col('Días', 'numero', 6),
   ];
-  const filasComp: ValorCeldaDoc[][] = d.comprobantes.map(f => [
+  const filaComp = (f: FilaComprobanteCuenta): ValorCeldaDoc[] => [
     f.liq.numeroInterno ?? '—',
     textoPeriodoCorto(f.liq.periodo),
     ETIQUETA_ESTADO_LIQ[f.estado] + (f.estadoFinanciero === 'incobrable' ? ' · incobrable' : ''),
     f.fechaEmision, f.fechaFactura,
     f.total, f.compensado, f.cobrado, f.ajustado, f.saldo, f.dias,
-  ]);
+  ];
+  const filasComp = d.comprobantes.map(filaComp);
+  // Totales SOLO de los vigentes: un revertido se lista (es un hecho) pero no
+  // suma; sus operaciones pueden estar en otra liquidación de la lista.
+  const filasVigentes = d.comprobantes.filter(f => informeLiqAportaATotales(f.estado)).map(filaComp);
+  const estadosQueNoSuman = [...new Set(d.comprobantes.filter(f => !informeLiqAportaATotales(f.estado))
+    .map(f => `'${ETIQUETA_ESTADO_LIQ[f.estado]}'`))];
+  const hayNoVigentes = estadosQueNoSuman.length > 0;
   const hojaComp: HojaDoc = {
     nombre: 'Comprobantes',
     titulo: `Comprobantes — ${d.nombre}`,
     subtitulos: [encabezado, `${fecha} · ${d.soloAbiertos ? 'solo abiertos' : 'todos'} · ${d.comprobantes.length} comprobante(s)`],
-    tablas: [tabla(null, colsComp, filasComp, filaTotal(colsComp, filasComp, [5, 6, 7, 8, 9]))],
-    notas: [],
+    tablas: [tabla(null, colsComp, filasComp,
+      filaTotal(colsComp, filasVigentes, [5, 6, 7, 8, 9], hayNoVigentes ? 'Total vigentes' : 'Total'))],
+    notas: hayNoVigentes
+      ? [`Los totales suman solo los comprobantes vigentes (emitidos y facturados). Los que están en estado ${estadosQueNoSuman.join(' o ')} se listan como registro y no suman.`]
+      : [],
   };
 
   // --- Mayor ---

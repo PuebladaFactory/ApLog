@@ -684,7 +684,7 @@ este archivo. Antes de trabajar sobre un módulo, leer su skill.
 | Operaciones: al tocar operaciones, tableros, operaciones-editor, carga-asignacion o no-disponibilidad | `modulo-operaciones` |
 | Legajos: al tocar legajos, vencimientos o Storage | `modulo-legajos` |
 | Liquidación: al tocar liquidaciones o `InformeLiqNuevo` | `modulo-liquidacion` |
-| Facturación: al tocar emitidos, facturados, revertidos o vinculación de facturas | `modulo-facturacion` |
+| Facturación: al tocar emitidos, facturados, revertidos, vinculación de facturas o el estado de un InformeLiq (máquina de estados) | `modulo-facturacion` |
 | Tarifas: al tocar tarifas, tarifas habilitadas o el cálculo de valores | `modulo-tarifas` |
 | Reportes: al tocar reportes o `resumenesOp` | `modulo-reportes` |
 | Vendedores: al tocar vendedores o comisiones | `modulo-vendedores` |
@@ -722,7 +722,7 @@ Deuda técnica activa. Actualizar cuando se salda.
 - **Permisos de UI dispersos** — quedan `*appRole`/`esRol()` puntuales sin migrar a `PermisosService`, con riesgo de mostrar acciones que las Security Rules rechazan. Detalle: skill `botones-y-permisos`.
 - **Tarifas tras el cierre** — quedan residuos inertes en datos de demo (`idTarifa`/`tarifaAsignada`, `adExtra: null`) y `tarifa-gral-cliente.ts` sigue vivo por la Liquidación vieja. Detalle: skill `modulo-tarifas`.
 - **Migración conjunta Choferes/Vehículos/Legajos** — los IDs legacy se resuelven por relación cruzada, así que esas colecciones no se pueden migrar aisladas; revisar también las `fechaVto` en milisegundos. Detalle: skill `migracion-vantruck`.
-- **Plata — `revertirEmitido` no chequea `totalAjustado`** — `desvincularFactura` sí; un emitido con ajustes imputados se puede revertir y sus InformeOp vuelven a liquidarse con el ajuste colgando del revertido. Detalle: skill `modulo-facturacion`.
+- **El ajuste atrapado** — un ajuste imputado sólo se puede quitar anulando el movimiento, y sólo mientras el informe siga en `'facturado'`; un ajuste vigente sobre un informe en cualquier otro estado no se puede quitar por ningún camino existente. La app hoy no lo produce; los ajustes de `'apertura'` de la migración tienen que imputarse sobre informes `'facturado'` o nacen atrapados. Detalle: skill `modulo-finanzas` (y `migracion-vantruck`).
 - **Facturación (InformeLiqNuevo)** — falta la carga manual de facturas sin QR, `'anulado'` no tiene escritor, queda un `console.log` del QR y hay que rotar las anon keys de Supabase. Detalle: skill `modulo-facturacion`.
 - **Reportes (`resumenesOp`)** — checklist de migración pendiente; `app-filtro-periodo` puede dar 11 meses los días 29–31; un listener por mes y clave. Detalle: skill `modulo-reportes`.
 - **Vendedores** — checklist de migración pendiente; pagar una liquidación no genera movimiento financiero y restaurar un cliente no revalida vendedores desactivados. Detalle: skill `modulo-vendedores`.
