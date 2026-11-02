@@ -187,14 +187,30 @@ el objeto vivo para `'restaurado'`.
 
 ## Deuda abierta — eliminar el camino legado de la papelera
 
-**Cadena de dependencias — último eslabón:** `rehacer noDisponibilidad` → `eliminar el log viejo` → `eliminar el camino legado de la papelera`.
+**Dirección decidida: se elimina, no se migra.** El camino legado (`PapeleraLegadoComponent`,
+colección `papelera` con `LogDoc`, `ObjetoPapeleraComponent`) sale junto con el log viejo. No
+se reabre la opción de migrar `PapeleraLegadoComponent.addItem` a
+`OperacionService.restaurarOperacion`: está descartada (además, `restaurarOperacion(idEvento)`
+restaura desde `papeleraEventos`/`objetosEliminados`, no desde un `LogDoc`).
 
-**Qué la bloquea:** el camino legado (`PapeleraLegadoComponent`, colección `papelera` con `LogDoc`,
-`ObjetoPapeleraComponent`) estaba previsto para eliminarse junto con el log viejo, y el log viejo
-no se puede eliminar antes de rehacer la no-disponibilidad (skills `subsistema-log` y
-`modulo-operaciones`). El propio camino legado usa el log viejo: restaura con
-`StorageService.addItem` y, para operaciones, con `TableroService.altaOperacionYActualizarTablero`.
+**Por qué eliminar y no migrar:**
 
-**Qué destraba:** con él se van la restauración no atómica de operaciones desde la Papelera legado
-(skill `modulo-operaciones`, "Deuda abierta — integración de callers…") y los residuos de
-`objeto-papelera` (skills `exportacion-excel-pdf` y `lazy-loading-y-fechas`).
+- **Restaura peor que el camino nuevo.** Para operaciones
+  (`TableroService.altaOperacionYActualizarTablero`) hace cinco escrituras sueltas sin
+  atomicidad, escribe en el log viejo, borra de `papelera` sin `await`, no chequea rol en TS
+  (sólo una clase CSS para `demo` en el template) y deja la op con los campos del cierre
+  (`resumenProcesado`, ids de InformeOp, multiplicadores, etc.), sin el contrato de
+  `restaurarOperacion` (skill `modulo-operaciones`, "Contrato vigente —
+  `restaurarOperacion`"). Migrarlo conservaría una capacidad que hace daño.
+- **Es el último escritor de `logs`.** La no disponibilidad ya no usa el log viejo; lo único
+  que sigue escribiendo ahí es la Papelera legado (`StorageService.addItem`/`deleteItem`,
+  `TableroService.altaOperacionYActualizarTablero`, `AsignacionService.reactivarItem`). Por
+  eso salen en **un solo frente**: la Papelera legado, `LogService`, la colección `logs` y
+  `AsignacionService.reactivarItem` (skill `subsistema-log`).
+
+**Precondición del frente: relevar la colección `papelera` de producción antes de eliminar el
+camino.** Eliminarlo no borra los `LogDoc`, que quedan en Firestore; lo que se pierde es poder
+restaurarlos desde la pantalla. Si hay algo reciente que podría necesitarse, se resuelve antes.
+
+**Qué más se va con él:** los residuos de `objeto-papelera` (skills `exportacion-excel-pdf` y
+`lazy-loading-y-fechas`).

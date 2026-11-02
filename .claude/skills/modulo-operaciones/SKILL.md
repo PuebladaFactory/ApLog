@@ -359,19 +359,6 @@ alerta persistente en el body (no solo un Swal transitorio) indicando que debe r
 desde el Tablero de Asignaciones. No reemplaza la validación de `altaDesdeAsignacion` (que
 sigue siendo la protección real) — es una advertencia temprana adicional.
 
-## Deuda abierta — integración de callers para bajaOperacion/restaurarOperacion
-
-- `PapeleraLegadoComponent.addItem` (caso `'operaciones'`) sigue restaurando por
-  `TableroService.altaOperacionYActualizarTablero`: no atómico, loguea con el `LogService`
-  viejo y no aplica el contrato de `restaurarOperacion` (ver "Contrato vigente —
-  `restaurarOperacion`"). El resto de la deuda de callers está saldado.
-- **Remedio sin decidir.** Esta entrada proponía migrar el caller a `restaurarOperacion`,
-  pero esa firma ya no existe para este caso: `restaurarOperacion(idEvento)` restaura
-  desde `papeleraEventos`/`objetosEliminados`, y la Papelera legado tiene un `LogDoc` en
-  la colección `papelera`. Migrar exigiría convertir cada `LogDoc` a un evento + copia
-  archivada. La alternativa es la de CLAUDE.md ("Cadena: log viejo → Papelera legado"):
-  eliminar la Papelera legado junto con el log viejo.
-
 ## Deuda abierta — tablero-asignaciones (menor)
 
 ~~**Informe Excel (`descargar`):** inerte, muestra aviso.~~ — el botón y su método se

@@ -70,7 +70,7 @@ migradas.
 - `OperacionService.bajaOperacion`/`restaurarOperacion` (papelera) y
   `AsignacionService.marcarItemAnulado` (eliminado — frente Baja de Operación, C3)/`reactivarItem` (usados hoy solo por
   `TableroService`, facade vieja intacta) — sin cambios, ver CHANGELOG.md, sección "Deuda — integración de
-  callers para bajaOperacion/restaurarOperacion": está saldada salvo la restauración desde la Papelera legado (`PapeleraLegadoComponent.addItem` → `TableroService.altaOperacionYActualizarTablero` → `reactivarItem`), que sigue abierta en la skill `modulo-operaciones`.
+  callers para bajaOperacion/restaurarOperacion": está saldada salvo la restauración desde la Papelera legado (`PapeleraLegadoComponent.addItem` → `TableroService.altaOperacionYActualizarTablero` → `reactivarItem`), que se elimina junto con el log viejo (skill `subsistema-papelera`, "Deuda abierta — eliminar el camino legado de la papelera").
 - Cualquier módulo sin `XxxService` propio confirmado (Vendedores, Tarifas,
   Facturación, Liquidaciones, Finanzas) — sin tocar. ⚠️ **Corrección (Frente 2):** esta
   entrada agrupaba a Legajos junto a estos módulos por error — `LegajoService` SÍ tiene
