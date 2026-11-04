@@ -52,7 +52,7 @@
                     @for (e of eventos; track e.id) {
                         <tr>
                             <td>{{ getFecha(e.timestamp) }}</td>
-                            <td>{{ getUsuario(e.userEmail) }}</td>
+                            <td>{{ usuariosConsulta.nombreDe(e.userId, e.userEmail) }}</td>
                             <td>{{ e.coleccionPrincipal }}</td>
                             <td>{{ e.motivoBaja }}</td>
                             <td>{{ e.idPrincipal }}</td>

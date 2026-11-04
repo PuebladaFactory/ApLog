@@ -19,10 +19,18 @@ Relevá el estado actual de **$ARGUMENTS** en el proyecto y dejá el resultado c
 3. **Usá subagentes `Explore`** para el relevamiento, de forma que la lectura de archivos no
    consuma el contexto principal. Podés lanzar varios en paralelo para áreas distintas.
 4. **No infieras: verificá.** Cada afirmación de la auditoría tiene que estar respaldada por
-   un archivo y una línea concretos. Si algo no lo pudiste confirmar, decilo como pregunta
-   abierta en vez de afirmarlo.
+   un archivo y el nombre del método, del componente, de la función o de la sección del
+   template —nunca por número de línea. Es la convención de CLAUDE.md: los números se rompen
+   con cada edición y una cita falsa manda a leer el código equivocado. Si algo no lo pudiste
+   confirmar, decilo como pregunta abierta en vez de afirmarlo.
 5. Si el tema resulta más grande de lo que parecía, no lo recortes en silencio: relevá todo y
    marcá en "Alcance" qué quedó fuera y por qué.
+6. **Si el código contradice la documentación o la premisa, eso va primero.** CLAUDE.md, las
+   skills y el contexto que viene en la instrucción son afirmaciones *sobre* el código, no el
+   código: cuando una no se sostiene, es el hallazgo más valioso de la auditoría. Va en la
+   sección "Contradicciones con la documentación vigente" del archivo y en la primera línea de
+   la respuesta del chat, con la cita que lo prueba. No corrijas la documentación acá: la
+   corrección se decide en el diseño y se aplica en el frente que la invalidó.
 
 ## Pasos
 
@@ -31,10 +39,11 @@ Relevá el estado actual de **$ARGUMENTS** en el proyecto y dejá el resultado c
 2. Rastreá los puntos de consumo: quién importa qué, desde dónde se invoca cada método,
    qué componentes lo usan.
 3. Revisá CLAUDE.md y las skills del módulo correspondiente por deuda ya registrada sobre
-   el tema.
+   el tema, y contrastá lo que afirman contra el código (regla 6).
 4. Escribí el archivo `docs/auditorias/<tema-en-kebab-case>.md` con la plantilla de abajo.
-5. En el chat devolvé sólo la ruta del archivo y entre 3 y 5 líneas con los hallazgos más
-   relevantes. El detalle va en el archivo, no en la respuesta.
+5. En el chat devolvé la ruta del archivo y entre 3 y 5 líneas con los hallazgos más
+   relevantes; si hubo contradicciones (regla 6), van antes de esas líneas. El detalle va en
+   el archivo, no en la respuesta.
 
 ## Plantilla del archivo
 
@@ -47,6 +56,11 @@ Fecha: <YYYY-MM-DD> · Rama: <rama actual>
 
 Qué se relevó y qué quedó explícitamente afuera.
 
+## Contradicciones con la documentación vigente
+
+Afirmaciones de CLAUDE.md, de una skill o de la instrucción que el código no sostiene, con la
+cita que lo prueba. Si no hubo ninguna, decirlo explícitamente.
+
 ## Inventario de archivos
 
 | Archivo | Tipo | Rol |
@@ -54,7 +68,7 @@ Qué se relevó y qué quedó explícitamente afuera.
 
 ## Interfaces y tipos
 
-Definiciones actuales, transcriptas, con su archivo y línea.
+Definiciones actuales, transcriptas, con su archivo y el nombre del tipo.
 
 ## Servicios y métodos
 

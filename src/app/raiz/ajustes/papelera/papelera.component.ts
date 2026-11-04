@@ -13,7 +13,7 @@ import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
 import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
 import { OperacionService } from 'src/app/servicios/operaciones/operacion.service';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { UsuariosConsultaService } from 'src/app/servicios/gestion-usuarios/usuarios-consulta.service';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 
 /** Pantalla nueva de papelera, basada en el mecanismo por referencia
@@ -40,7 +40,8 @@ export class PapeleraComponent implements OnInit {
   hayMas = false;
   cargando = false;
 
-  private usuariosTodos: any[] = [];
+  /** Lectura de usuarios para la columna Usuario: ninguna consulta pinta filas antes de que termine. */
+  private usuariosListos: Promise<void> = Promise.resolve();
 
   /** Deep link ?evento=<id>: se muestra solo ese evento. */
   eventoFiltrado: string | null = null;
@@ -53,14 +54,14 @@ export class PapeleraComponent implements OnInit {
     private choferService: ChoferService,
     private proveedorService: ProveedorService,
     private operacionService: OperacionService,
-    private storageService: StorageService,
+    public usuariosConsulta: UsuariosConsultaService,
     public usuarioSesion: UsuarioSesionService,
     private route: ActivatedRoute,
     private router: Router,
   ) {}
 
   ngOnInit(): void {
-    this.usuariosTodos = this.storageService.loadInfo('users');
+    this.usuariosListos = this.usuariosConsulta.cargar();
     this.calcularRangoDefault();
     const idEvento = this.route.snapshot.queryParamMap.get('evento');
     if (idEvento) {
@@ -100,6 +101,7 @@ export class PapeleraComponent implements OnInit {
     this.hayMas = false;
     this.cargando = true;
     try {
+      await this.usuariosListos;
       const evento = await this.consultaServ.obtenerEvento(id);
       if (!evento) {
         Swal.fire('No encontrado', `No existe el evento de papelera ${id}.`, 'warning');
@@ -124,6 +126,7 @@ export class PapeleraComponent implements OnInit {
     if (this.cargando || !this.fechaDesde || !this.fechaHasta) return;
     this.cargando = true;
     try {
+      await this.usuariosListos;
       const desde = new Date(`${this.fechaDesde}T00:00:00`).getTime();
       const hasta = new Date(`${this.fechaHasta}T23:59:59.999`).getTime();
       const pagina = await this.consultaServ.cargarPagina(desde, hasta, this.cursor, this.estadoFiltro);
@@ -135,11 +138,6 @@ export class PapeleraComponent implements OnInit {
     } finally {
       this.cargando = false;
     }
-  }
-
-  getUsuario(email: string): string {
-    const usuario = this.usuariosTodos.find(u => u.email === email);
-    return usuario ? (usuario.name !== '' ? usuario.name : usuario.email) : email;
   }
 
   getFecha(timestamp: number): string {

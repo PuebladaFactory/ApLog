@@ -113,7 +113,7 @@
                                 }
                             </td>
                             <td>{{ getFecha(r.timestamp) }}</td>
-                            <td>{{ getUsuario(r.userEmail) }}</td>
+                            <td>{{ usuariosConsulta.nombreDe(r.userId, r.userEmail) }}</td>
                             <td>{{ r.action }}</td>
                             <td>{{ r.coleccion }}</td>
                             <td class="celda-larga">{{ r.details }}</td>

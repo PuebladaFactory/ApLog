@@ -4,7 +4,7 @@ import { distinctUntilChanged, Subject, takeUntil } from 'rxjs';
 import { LogEntry } from 'src/app/interfaces/log-entry';
 import { fechaNegocioDe, hoyNegocio, sumarDias } from 'src/app/shared/utils/fecha.util';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { UsuariosConsultaService } from 'src/app/servicios/gestion-usuarios/usuarios-consulta.service';
 
 @Component({
     selector: 'app-registro',
@@ -15,13 +15,14 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 export class RegistroComponent implements OnInit {
  
   searchText: string = "";
-  $usuariosTodos: any[] = [];
   $usuario!: any;
   limite:number = 100;
   registros: LogEntry [] = [];
   registrosOrdenados: LogEntry [] = [];
   private destroy$ = new Subject<void>();
   idObjConsulta: any
+  /** Lectura de usuarios para la columna Usuario: ninguna consulta pinta filas antes de que termine. */
+  private usuariosListos: Promise<void> = Promise.resolve();
 
 
   fechasConsulta: any = {
@@ -46,35 +47,28 @@ export class RegistroComponent implements OnInit {
   sortDirection: 'asc' | 'desc' = 'asc';
 
 
-  constructor(private dbFirebase: DbFirestoreService, private storageService: StorageService){}
+  constructor(private dbFirebase: DbFirestoreService, public usuariosConsulta: UsuariosConsultaService){}
   
   ngOnInit(): void {
     
-      this.$usuariosTodos = this.storageService.loadInfo('users')
-      //console.log("usuarios REGISTRO todos: ", this.$usuariosTodos); 
+    this.usuariosListos = this.usuariosConsulta.cargar();
 
     this.calcularDiaActual()
     //this.storageService.syncChangesUsers("users");
-  }
-
-  getUsuario(email:string){
-    let usuario = this.$usuariosTodos.find(u => u.email === email)
-    //console.log("usuario encontrado: ",usuario);
-    return usuario ?  usuario.name !== '' ? usuario.name : usuario.email : ''
-    
   }
 
   getFecha(date:number){
     return new Date(date).toLocaleDateString(undefined, {year: 'numeric', month: '2-digit', day: '2-digit', weekday:"long", hour: '2-digit', hour12: false, minute:'2-digit', second:'2-digit'});
   }
 
-  consultarRegistro(){
+  async consultarRegistro(){
     // FE4 (lazy-fechas): los logs viejos guardan `timestamp` en ms. El rango va
     // de las 00:00 (hora local) de "desde" a las 00:00 del día siguiente a
     // "hasta", así incluye completo el último día. Antes se parseaba el string
     // solo-fecha, que da las 00:00 UTC (21:00 del día anterior en Argentina).
     let desde = new Date(this.fechasConsulta.fechaDesde + 'T00:00:00').getTime();
     let hasta = new Date(sumarDias(this.fechasConsulta.fechaHasta, 1) + 'T00:00:00').getTime();
+    await this.usuariosListos;
     this.dbFirebase.getAllColectionRangeLimit<LogEntry>('logs', desde, hasta, this.limite)
     .pipe(
       takeUntil(this.destroy$),
@@ -170,9 +164,10 @@ export class RegistroComponent implements OnInit {
 		);
 	}
 
-  consultarId(){
+  async consultarId(){
     
     this.idObjConsulta = Number(this.idObjConsulta)
+    await this.usuariosListos;
     console.log(this.idObjConsulta);
     this.dbFirebase.getObjIdg<any>("logs", "idObjet", this.idObjConsulta).subscribe((data)=>{
       console.log(data);

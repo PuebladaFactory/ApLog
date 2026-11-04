@@ -12,6 +12,11 @@ export class GestionUsuariosService {
    * Lectura puntual (no listener) de toda la colección `users`: getDocs
    * directo sobre la colección, sin ConId (el doc ya trae su propio
    * campo `uid`, que coincide con el id de Firestore).
+   *
+   * Sin filtro por rol a propósito: `UsuariosConsultaService` la reusa para
+   * resolver nombres en las pantallas de auditoría, incluidas las entradas
+   * de un `dev`. El filtro `role !== 'dev'` de Gestión de usuarios lo aplica
+   * el componente.
    */
   async obtenerUsuarios(): Promise<Usuario[]> {
     const usersRef = collection(this.firestore, 'users');

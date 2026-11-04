@@ -10,7 +10,7 @@ import {
   RegistroLogConsultaService,
 } from 'src/app/servicios/log-registro/registro-log-consulta.service';
 import { VisualizadorObjetoService } from 'src/app/servicios/visualizador-objeto/visualizador-objeto.service';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { UsuariosConsultaService } from 'src/app/servicios/gestion-usuarios/usuarios-consulta.service';
 
 @Component({
   selector: 'app-registro-log',
@@ -48,16 +48,17 @@ export class RegistroLogComponent implements OnInit {
   idObjConsulta = '';
   modoConsultaPorId = false;
 
-  private usuariosTodos: any[] = [];
+  /** Lectura de usuarios para la columna Usuario: ninguna consulta pinta filas antes de que termine. */
+  private usuariosListos: Promise<void> = Promise.resolve();
 
   constructor(
     private consultaServ: RegistroLogConsultaService,
-    private storageService: StorageService,
+    public usuariosConsulta: UsuariosConsultaService,
     public visualizador: VisualizadorObjetoService,
   ) {}
 
   ngOnInit(): void {
-    this.usuariosTodos = this.storageService.loadInfo('users');
+    this.usuariosListos = this.usuariosConsulta.cargar();
     this.calcularRangoDefault();
     this.buscar();
   }
@@ -88,6 +89,7 @@ export class RegistroLogComponent implements OnInit {
     if (this.cargando || !this.fechaDesde || !this.fechaHasta) return;
     this.cargando = true;
     try {
+      await this.usuariosListos;
       const desde = new Date(`${this.fechaDesde}T00:00:00`).getTime();
       const hasta = new Date(`${this.fechaHasta}T23:59:59.999`).getTime();
       const pagina = await this.consultaServ.cargarPagina(
@@ -107,6 +109,7 @@ export class RegistroLogComponent implements OnInit {
     if (!this.idObjConsulta) return;
     this.cargando = true;
     try {
+      await this.usuariosListos;
       this.registros = await this.consultaServ.consultarPorIdObjet(this.idObjConsulta);
       this.modoConsultaPorId = true;
       this.cursor = null;
@@ -141,11 +144,6 @@ export class RegistroLogComponent implements OnInit {
 
   estaExpandida(r: ConId<RegistroLog>): boolean {
     return this.filaExpandidaId === r.id;
-  }
-
-  getUsuario(email: string): string {
-    const usuario = this.usuariosTodos.find(u => u.email === email);
-    return usuario ? (usuario.name !== '' ? usuario.name : usuario.email) : email;
   }
 
   getFecha(timestamp: number): string {
