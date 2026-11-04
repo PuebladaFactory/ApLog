@@ -91,30 +91,6 @@ export class LegajoService implements OnDestroy {
     return { legajo, escritura: { coleccion: 'legajos', id, data: null, modo: 'eliminar' } };
   }
 
-  async toggleVisibilidad(idLegajo: string): Promise<void> {
-    const legajo = this.getLegajosActuales().find(l => l.idLegajo === idLegajo || l.id === idLegajo);
-    if (!legajo) {
-      throw new Error(`No se encontró el legajo ${idLegajo} al intentar cambiar visibilidad`);
-    }
-    const paraGuardar = this.toFirestore({ ...legajo, visible: !legajo.visible });
-    const escrituras: EscrituraBatch[] = [
-      { coleccion: 'legajos', id: legajo.id, data: paraGuardar, modo: 'reemplazar' },
-    ];
-    await this.logRegistro.agregarAlBatch(
-      escrituras, 'EDITAR', 'legajos', legajo.id,
-      `Visibilidad de legajo actualizada (legajo ${legajo.idLegajo})`,
-    );
-    try {
-      await this.db.commitBatch(escrituras);
-    } catch (e: any) {
-      await this.logRegistro.registrarError(
-        'EDITAR', 'legajos', legajo.id,
-        `Error al actualizar visibilidad del legajo ${legajo.idLegajo}: ${e?.message ?? e}`,
-      );
-      throw e;
-    }
-  }
-
   /**
    * Guarda uno o más documentos nuevos/reemplazados en el legajo. Para cada documento
    * cuya idCategoria YA existe en legajo.documentacion, archiva la versión vieja completa

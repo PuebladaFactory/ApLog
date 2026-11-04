@@ -16,7 +16,7 @@
                                         class="form-check-input"
                                         type="checkbox"
                                         [checked]="obj.activo"
-                                        (change)="toggleActivo(obj)"
+                                        (change)="toggleActivo(obj, $event)"
                                     />
                                     <label style="font-size: 1.25rem;">
                                         {{ getNombre(obj) }}

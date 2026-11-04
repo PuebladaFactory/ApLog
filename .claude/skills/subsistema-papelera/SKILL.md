@@ -213,4 +213,12 @@ camino.** Eliminarlo no borra los `LogDoc`, que quedan en Firestore; lo que se p
 restaurarlos desde la pantalla. Si hay algo reciente que podría necesitarse, se resuelve antes.
 
 **Qué más se va con él:** los residuos de `objeto-papelera` (skills `exportacion-excel-pdf` y
-`lazy-loading-y-fechas`).
+`lazy-loading-y-fechas`), y `StorageService.updateItem`, que quedó sin callers y es lo
+único fuera de la Papelera legado que todavía referencia a `LogService`.
+
+**Ya fuera del alcance (2026-11-03):** los dos gestos que mutaban sin rastro y no eran de la
+Papelera legado dejaron de serlo, cada uno por su lado. Activar / desactivar un cliente, chofer
+o proveedor ahora loguea EDITAR (`ActivacionEntidadService.cambiarActivo`). Mostrar / ocultar en
+los listados (`VisibilidadListadosComponent`) dejó `StorageService.updateItem` y sigue sin log,
+**por decisión**: es preferencia de presentación, mientras que `activo` decide quién se puede
+asignar. Detalle y motivo: skill `subsistema-log`, "Asimetría `activo` / `visible`".

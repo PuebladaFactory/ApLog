@@ -123,8 +123,11 @@ Aplicado en `ModalObjetosActivosComponent`.
 
 **CRUD-con-Resultado en la capa de datos:** las escrituras CRUD directas a DbFirestore
 devuelven `Resultado` (éxito/error) para alimentar el log, reemplazando progresivamente
-las escrituras vía StorageService. `updateConResultado` es el primer caso. El caller
-loguea según el Resultado (TODO: refactor Log). Familia futura: `createConResultado`,
+las escrituras vía StorageService. `updateConResultado` es el primer caso. **Actualizado
+(2026-11-03):** `ModalObjetosActivosComponent` ya no lo usa: `activo` pasa por
+`ActivacionEntidadService.cambiarActivo` (batch con log EDITAR). Hoy lo usa
+`VisibilidadListadosComponent`, sin log por decisión (skill `subsistema-log`, "Asimetría
+`activo` / `visible`"). Familia futura: `createConResultado`,
 `deleteConResultado`. La interfaz `Resultado` local de db-firestore ({exito, mensaje})
 difiere de la genérica `Resultado<T>` de interfaces — deuda de unificación pendiente.
 

@@ -8,7 +8,7 @@ import { ConIdType } from 'src/app/interfaces/conId';
 import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { ActivacionEntidadService } from 'src/app/servicios/entidades/activacion-entidad.service';
 
 @Component({
   selector: 'app-modal-objetos-activos',
@@ -30,7 +30,7 @@ export class ModalObjetosActivosComponent implements OnInit, OnDestroy {
     private choferService: ChoferService,
     private clienteService: ClienteService,
     private proveedorService: ProveedorService,
-    private db: DbFirestoreService,
+    private activacion: ActivacionEntidadService,
   ) {}
 
   ngOnInit(): void {
@@ -63,17 +63,17 @@ export class ModalObjetosActivosComponent implements OnInit, OnDestroy {
     return `${obj.datosPersonales.apellido}, ${obj.datosPersonales.nombre}`;
   }
 
-  async toggleActivo(obj: ConIdType<any>): Promise<void> {
+  async toggleActivo(obj: ConIdType<any>, evento: Event): Promise<void> {
     this.isLoading = true;
-    const nuevoValor = !obj.activo;
-    const r = await this.db.updateConResultado(this.modo, obj.id, { activo: nuevoValor });
-    // TODO: refactor Log — loguear según r.exito (accion 'INTERNA', coleccion=this.modo,
-    //       id=obj.id, mensaje r.mensaje). El log centralizado no aplica acá todavía.
-    if (!r.exito) {
-      Swal.fire({ icon: 'error', title: 'Error', text: r.mensaje });
-    }
+    const r = await this.activacion.cambiarActivo(this.modo, obj.id, !obj.activo, this.getNombre(obj));
     this.isLoading = false;
     // La fuente de verdad es el observable: si la escritura tuvo éxito, el listener
-    // re-emite con el valor actualizado. No se muta obj.activo a mano.
+    // re-emite con el valor actualizado. No se muta obj.activo a mano. Si falló, el
+    // checkbox ya quedó invertido en el DOM ([checked] no cambió, así que Angular no
+    // lo repinta solo): se restaura a mano.
+    if (!r.exito) {
+      (evento.target as HTMLInputElement).checked = !!obj.activo;
+      Swal.fire({ icon: 'error', title: 'Error', text: r.mensaje });
+    }
   }
 }

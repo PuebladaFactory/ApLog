@@ -6,8 +6,7 @@ import { Cliente } from "src/app/interfaces/cliente";
 import { ConId } from "src/app/interfaces/conId";
 import { Proveedor } from "src/app/interfaces/proveedor";
 import { ChoferService } from "src/app/servicios/choferes/chofer.service";
-import { StorageService } from "src/app/servicios/storage/storage.service";
-import { LegajoService } from "src/app/servicios/legajos/legajo.service";
+import { DbFirestoreService } from "src/app/servicios/database/db-firestore.service";
 import Swal from "sweetalert2";
 
 @Component({
@@ -27,12 +26,15 @@ export class VisibilidadListadosComponent implements OnInit, OnDestroy {
 
   constructor(
     public activeModal: NgbActiveModal,
-    private storageService: StorageService,
+    private db: DbFirestoreService,
     private choferService: ChoferService,
-    private legajoService: LegajoService,
   ) {}
 
   ngOnInit(): void {
+    // Clon superficial: el switch invierte `visible` en el objeto que muestra; sin
+    // clonar sería la misma referencia que emite el BehaviorSubject del servicio y
+    // una escritura fallida dejaría la memoria invertida en silencio.
+    this.info = { ...this.info, objetos: this.info.objetos.map((o) => ({ ...o })) };
     console.log("this.objetos: ", this.info.objetos);
     console.log("this.tipo: ", this.info.tipo);
     this.choferService.choferes$
@@ -122,54 +124,19 @@ export class VisibilidadListadosComponent implements OnInit, OnDestroy {
     return proveedor.razonSocial;
   }
 
-  /*   getLegajo(id:number):ConIdType<Legajo> {
-    let legajo: ConIdType<Legajo>[] = this.legajos.filter(l=> l.idChofer=== id);
-    return legajo[0];
-  }
-
-  actualizarLegajo(legajo:ConIdType<Legajo>){
-    console.log("legajo antes", legajo);
-    legajo.visible = !legajo.visible;
-    console.log("legajo desp", legajo);
-    let {id, type, ...leg} = legajo
-    this.storageService.updateItem("legajos", leg, legajo.idLegajo, "INTERNA", "", legajo.id);
-  } */
-
-  actualizarObjeto(obj: any) {
+  /** Visibilidad = preferencia de presentación: escritura parcial de `visible`,
+   *  SIN log, en ninguna entidad (decisión deliberada, ver la skill
+   *  subsistema-log). `obj` es un clon (ver ngOnInit): si la escritura falla se
+   *  revierte el clon y se avisa; la memoria del servicio nunca se toca, el valor
+   *  nuevo llega por su listener. El (click) corre antes que el (change) del
+   *  ngModel, que después escribe el mismo valor: no hay doble cambio. */
+  async actualizarObjeto(obj: any) {
     obj.visible = !obj.visible;
-    switch (this.info.tipo) {
-      case "choferes": {
-        this.updateItem(obj, this.info.tipo, obj.idChofer);
-        break;
-      }
-      case "legajos": {
-        this.legajoService.toggleVisibilidad(obj.idLegajo);
-        break;
-      }
-      case "clientes": {
-        this.updateItem(obj, this.info.tipo, obj.idCliente);
-        break;
-      }
-      case "proveedores": {
-        this.updateItem(obj, this.info.tipo, obj.idProveedor);
-        break;
-      }
-      default:
-        this.mensajesError("Error en la actualización del objeto");
-        break;
+    const r = await this.db.updateConResultado(this.info.tipo, obj.id, { visible: obj.visible });
+    if (!r.exito) {
+      obj.visible = !obj.visible;
+      this.mensajesError(r.mensaje);
     }
-  }
-
-  updateItem(item: any, coleccion: string, idObj: number) {
-    let { id, ...obj } = item;
-    this.storageService.updateItem(
-      coleccion,
-      obj,
-      idObj,
-      "INTERNA",
-      "",
-      item.id,
-    );
   }
 
   mensajesError(msj: string) {

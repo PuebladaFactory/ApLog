@@ -122,11 +122,9 @@ export class TableroLegajosComponent implements OnInit, OnDestroy {
 
     const info = {
       tipo: 'legajos',
-      // Clon superficial: evita que el toggle optimista del modal
-      // (obj.visible = !obj.visible, ver VisibilidadListadosComponent.actualizarObjeto)
-      // mute el objeto real que LegajoService.toggleVisibilidad() vuelve a leer de
-      // memoria — sin el clon, ambos pisos se pisarían entre sí (doble flip: se
-      // terminaría persistiendo el valor original en vez del nuevo).
+      // Clon superficial: el modal invierte `visible` en el objeto que muestra
+      // (VisibilidadListadosComponent.actualizarObjeto). Hoy el modal también clona
+      // en su ngOnInit, para todos los tipos; este clon queda redundante.
       objetos: this.legajos.map(l => ({ ...l })),
     };
 

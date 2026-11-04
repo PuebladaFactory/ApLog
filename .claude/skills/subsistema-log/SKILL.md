@@ -53,44 +53,87 @@ migradas.
   `registrarLog` después, sin atomicidad entre ambas) a `EscrituraBatch[]` de una sola
   escritura + `agregarAlBatch` + `commitBatch`.
 
-**Explícitamente NO migrado en este frente (queda en el mecanismo viejo,
-`LogService`/colección `logs`):**
-- **Toda baja que pase por la colección `papelera`** — no solo las de Operaciones. Al
-  revisar el código real se confirmó que la baja "simple" de Cliente NO existe como tal
-  (`ClienteService.eliminarCliente` siempre usa
-  `StorageService.deleteItemPapeleraCompuestoAsync`), y que la baja principal de
-  Chofer/Proveedor (aunque sus vehículos sí tienen baja simple, migrada) también pasa
-  siempre por ahí. El mecanismo nuevo no tiene forma de escribir el objeto compuesto
-  de papelera (`LogDoc` con `objeto`/`motivoBaja`) — eso es del frente de Papelera,
-  aparte, no de este. Consecuencia real: **hoy ningún BAJA de Cliente llega a
-  `registroLog`** (todo Cliente-BAJA sigue en `logs`); Chofer/Proveedor si tienen algo
-  en `registroLog` para BAJA, pero solo por sus vehículos, nunca por la entidad
-  principal. Marcado con comentarios en `eliminarCliente`/`eliminarChoferConVehiculos`/
-  `eliminarProveedorConVehiculos` señalando el motivo puntual en cada sitio.
-- `OperacionService.bajaOperacion`/`restaurarOperacion` (papelera) y
-  `AsignacionService.marcarItemAnulado` (eliminado — frente Baja de Operación, C3)/`reactivarItem` (usados hoy solo por
-  `TableroService`, facade vieja intacta) — sin cambios, ver CHANGELOG.md, sección "Deuda — integración de
-  callers para bajaOperacion/restaurarOperacion": está saldada salvo la restauración desde la Papelera legado (`PapeleraLegadoComponent.addItem` → `TableroService.altaOperacionYActualizarTablero` → `reactivarItem`), que se elimina junto con el log viejo (skill `subsistema-papelera`, "Deuda abierta — eliminar el camino legado de la papelera").
-- Cualquier módulo sin `XxxService` propio confirmado (Vendedores, Tarifas,
-  Facturación, Liquidaciones, Finanzas) — sin tocar. ⚠️ **Corrección (Frente 2):** esta
-  entrada agrupaba a Legajos junto a estos módulos por error — `LegajoService` SÍ tiene
-  su propio `XxxService` con escritura propia desde la reconstrucción completa del
-  módulo (ver la skill `modulo-legajos`), el mismo patrón
-  que Cliente/Chofer/Proveedor. La exclusión de este Frente 1 fue una omisión, no una
-  decisión de alcance — corregida en el Frente 2 (Legajos migrado completo, ver abajo).
-- `RegistroComponent` (pantalla de log) sigue leyendo de `logs` sin cambios — la
-  colección vieja pasa a ser, de hecho, el histórico de lo no migrado. Rediseño de la
-  pantalla, frente aparte y posterior.
+Lo que este Frente 1 dejó afuera (bajas con papelera, Vendedores, Tarifas, Facturación,
+Liquidaciones, Finanzas) se migró en frentes posteriores. El estado vigente es el
+inventario de abajo, no la lista de exclusiones original.
 
-**Pendiente natural para el frente de Papelera** (cuando se aborde): decidir cómo el
-nuevo mecanismo (o una extensión de `LogRegistroService`) va a cubrir la escritura a
-`papelera`, para poder migrar de una vez las bajas reales de Cliente/Chofer/Proveedor
-que hoy quedan fuera por este motivo — no es solo el caso de Operaciones ya anotado
-abajo. ✅ **Resuelto — ver la skill `subsistema-papelera`:**
-Cliente/Chofer/Proveedor/Operación (BAJA y RESTAURAR, entidad principal y
-sub-entidades) ya llegan a `registroLog`, vía `PapeleraService` + `LogRegistroService`
-dentro del mismo `commitBatch`. Vendedores/Facturación/Liquidación siguen fuera,
-igual que el resto de este Frente 1.
+### Cobertura de `registroLog` — qué llega y qué no (relevado 2026-11-03)
+
+Relevado desde el código (callers de `agregarAlBatch`, `registrarMutacionSuelta`,
+`registrarAccion` y `registrarError`, y todo escritor de `DbFirestoreService`,
+`StorageService` y del SDK de Firestore). **Revisar antes de tocar el log y antes del corte
+a Vantruck** (ver "Decisión — sin migración de `logs` a `registroLog`").
+
+Regla transversal: **nada que haga el rol `dev` llega a `registroLog`**
+(`construirEntrada` devuelve `null`). Incluye todo `/migracion`, que es sólo `dev`.
+
+**Lo que sí llega.** Una entrada por gesto, con la colección de la entidad dueña. Las
+escrituras derivadas del mismo gesto van en el mismo batch o transacción y no tienen
+entrada propia.
+
+| Módulo | Colección del log | Acciones | Dónde (servicio, método) | Derivadas sin entrada propia |
+|---|---|---|---|---|
+| Clientes | `clientes` | ALTA, EDITAR, BAJA, RESTAURAR | `ClienteService.guardarCliente` / `eliminarCliente` / `restaurarCliente` | papelera |
+| Choferes | `choferes`, `vehiculos`, `legajos` | ALTA, EDITAR, BAJA, RESTAURAR (una entrada por escritura de la cascada) | `ChoferService.guardarChoferConVehiculos` / `eliminarChoferConVehiculos` / `restaurarChofer` | papelera |
+| Proveedores | `proveedores`, `vehiculos`, `choferes`, `legajos` | ALTA, EDITAR, BAJA, RESTAURAR | `ProveedorService.guardarProveedorConVehiculos` / `eliminarProveedorConVehiculos` / `restaurarProveedor` (la baja arrastra a sus choferes y legajos) | papelera |
+| Activar / desactivar | `clientes`, `choferes`, `proveedores` | EDITAR (el diff muestra `activo` anterior → nuevo) | `ActivacionEntidadService.cambiarActivo` (desde `ModalObjetosActivosComponent`, que abren `carga-asignacion` y `tablero-asignaciones`) | — |
+| Legajos | `legajos`, `documentacionHistorial` | EDITAR (documentación), ALTA (archivado al historial) | `LegajoService.guardarDocumentacion` | — |
+| Categorías de documentación | `categoriasDocumentacion` | ALTA, EDITAR | `CategoriaDocumentacionService` | — |
+| Operaciones | `operaciones` | ALTA, EDITAR, CERRAR, BAJA (abierta y cerrada), RESTAURAR | `OperacionService.altaDesdeAsignacion` / `editarOperacion` / `cerrarOperacion` / `bajaOperacion` / `bajaOperacionCerrada` / `restaurarOperacion` | `asignaciones` (item), `informesOp`, `resumenesOp`, `comisionesVenta`, `registrosOpEventuales`, numerador, papelera |
+| Asignaciones | `asignaciones` | ALTA, EDITAR, BAJA | `AsignacionService.guardarBorrador` / `agregarEscrituraActualizarItem` / `descartarBorrador` | — |
+| No disponibilidad | `noDisponibilidades` | ALTA, EDITAR, ANULAR | `NoDisponibilidadService` | — |
+| InformeOp | `informesOp` (+ `operaciones`) | EDITAR | `InformeOpService.armarEscriturasEdicion` (vía `editar` o `InformeLiqService.editarInformeOp`) | — |
+| Liquidación / Facturación | `informesLiq` | ALTA (borrador), EMITIR, EDITAR, BAJA (eliminar borrador), REVERTIR, FACTURAR, DESVINCULAR | `InformeLiqService` (todos sus orquestadores) | `informesOp`, `operaciones`, `informesLiqSnapshots`, `facturasVinculadas`, compensaciones en `movimientosFin`, numerador |
+| Tarifas | `tarifas`, `tarifasEspeciales` | ALTA, EDITAR (versión nueva), BAJA | `TarifarioService.crearTarifa` / `crearTarifaEspecial` / `versionarEnTransaccion` / `darDeBajaEnTransaccion` | — |
+| Eventuales | `registrosOpEventuales` | ALTA | `TarifarioService.crearRegistroEventual`: **sólo la usa la migración del historial** (`TarifaMigrationService`, `/migracion`, rol `dev`), así que en la práctica no genera entradas. El alta y la anulación reales van como derivadas del CERRAR y la BAJA de la operación | — |
+| Vendedores | `vendedores` | ALTA, EDITAR, BAJA (desactivar), RESTAURAR (reactivar) | `VendedorService.guardarVendedor` / `desactivar` / `reactivar` | asignaciones en `clientes` |
+| Comisiones | `liquidacionesVenta` | EMITIR, PAGAR, REVERTIR, ANULAR | `LiquidacionVentaService` | `comisionesVenta`, numerador |
+| Finanzas | `movimientosFin` | COBRAR / PAGAR (`registrar`, `registrarDevolucion`), AJUSTAR (`registrarAjuste`, `cerrarSaldo`), IMPUTAR, ANULAR | `MovimientoFinService` | `informesLiq` (valores financieros), numerador |
+| Datos de la empresa | `configuracion` | ALTA, EDITAR | `ConfiguracionEmpresaService` | — |
+| Usuarios | `users` | ALTA, EDITAR, BAJA (con `registrarMutacionSuelta`, después de la Cloud Function, best-effort y no atómico); LOGIN, LOGOUT | `ModalUsuarioComponent`, `GestionUsuariosComponent`, `AuthService` | — |
+| Sin mutación | `informesLiq`, `movimientosFin` | REIMPRIMIR (Excel/PDF de una liquidación; PDF de un recibo u orden de pago). `DESCARGAR` existe en `AccionLog` sin uso | `LiquidacionExportService`, `ReciboPdfService` | — |
+
+**Lo que muta y no deja rastro en `registroLog`:**
+
+| Mutación | Dónde | Qué escribe | Rastro |
+|---|---|---|---|
+| Mostrar / ocultar en los listados (clientes, choferes, proveedores, legajos) | `VisibilidadListadosComponent.actualizarObjeto` | Sólo `visible`, con `DbFirestoreService.updateConResultado` | **Ninguno, por decisión** (ver "Asimetría `activo` / `visible`" abajo) |
+| Papelera legado: borrar o restaurar un objeto | `PapeleraLegadoComponent` → `StorageService.addItem` / `deleteItem` | La colección del objeto + `papelera` | Sólo en `logs` (log viejo). La ruta `ajustes/papelera-legado` existe pero su pestaña está comentada: se llega escribiendo la URL |
+| Restaurar una operación por el camino legado | `TableroService.altaOperacionYActualizarTablero` → `AsignacionService.reactivarItem` | `operaciones`, `asignaciones` | Sólo en `logs` |
+| Recalcular el estado de los legajos y la colección `vencimientos` | Cloud Function `verificarVencimientosDocumentacion` (programada) | `legajos` (estado), `vencimientos` (se reconstruye entera) | Ninguno: escritura del servidor, sin usuario |
+| Reservar números de operación | `NumeradorService.reservarRangoOperaciones` (transacción propia, antes del alta) | `numeradores/OPER` | Ninguno, por diseño: contador técnico. Los demás numeradores van dentro del batch del gesto |
+| Herramientas de `/migracion` | `servicios/desarrollo/*` (generadores, limpieza, recálculos, normalización) y `servicios/migracion/*` (SDK de Firestore directo) | Varias | Ninguno: son sólo `dev`, que está excluido igual |
+| Cualquier mutación hecha por un usuario `dev` | — | — | Ninguno, por diseño |
+| LOGIN fallido | `AuthService.iniciarSesion` | — | Ninguno: sin usuario autenticado, las reglas rechazan la escritura (ver "Limitación conocida" en el complemento de login/logout) |
+
+**Asimetría `activo` / `visible` — decidida, no es un olvido (2026-11-03).** Los dos son
+un switch por entidad sobre un campo booleano del mismo documento, y sólo uno loguea:
+
+- **`activo` loguea** (EDITAR, en el mismo batch, `ActivacionEntidadService.cambiarActivo`)
+  porque **decide quién puede ser asignado**: el pool de `tablero-asignaciones` y
+  `carga-asignacion` sacan al inactivo. Filtra al leer, **no escribe cascada**: los
+  vehículos de un chofer o proveedor inactivo salen del pool porque se filtran, no porque
+  se les escriba algo. Una asignación ya cargada **sobrevive** a la desactivación a
+  propósito (`fb9e6bf`: "activar para un solo viaje"). EDITAR y no BAJA/RESTAURAR: para
+  estas entidades BAJA es la baja con papelera, y reusarla mezclaría dos gestos en el
+  Registro (en Vendedores sí es BAJA porque ahí desactivar *es* la baja).
+- **`visible` no loguea, en ninguna entidad**, porque es preferencia de presentación de
+  los listados: no cambia qué se puede hacer con la entidad. **Los legajos sí logueaban**
+  (`LegajoService.toggleVisibilidad`, EDITAR): ese log se sacó a propósito, junto con el
+  método, para que el mismo switch no tenga dos políticas. No es una regresión: no lo
+  "arregles".
+
+Antes de esto, los dos gestos escribían sin rastro: `activo` con un TODO que proponía
+`'INTERNA'` (o sea, ningún log) y `visible` por `StorageService.updateItem(…, 'INTERNA', …)`,
+que además escribía el objeto en memoria entero, incluido `idXxx`.
+
+Código muerto que escribiría sin log, sin caller desde ningún template:
+`ProveedoresListadoComponent.actualizarActivos` (`actualizarMultiple` sobre `proveedores`
+con datos de prueba).
+
+**Pantallas:** `RegistroLogComponent` (Frente 3, más abajo) lee `registroLog`.
+`RegistroComponent` sigue leyendo `logs`. Su pestaña en Ajustes está comentada y la ruta
+`ajustes/registro` sigue viva: es el histórico del log viejo.
 
 ### Frente 2 — consolidación de cascadas en batch (Chofer/Proveedor/Legajos, Agosto 2026)
 
@@ -161,11 +204,16 @@ pliegue a su propio `EscrituraBatch[]`:
   que sumarse ahí, ver Frente 1). Lo que SÍ se consolida es el resto: vehículos + legajo
   (chofer) o vehículos + legajos de todos los choferes (proveedor), todos "sin papelera
   propia", en un único `commitBatch` después de la baja compuesta del dueño.
+  **Vencido (Frente Papelera):** hoy la baja de chofer o proveedor es UN solo
+  `commitBatch` con la entidad, los vehículos, los legajos, la papelera por referencia y
+  sus logs; `deleteItemPapeleraCompuestoAsync` ya no se usa para estas entidades (skill
+  `subsistema-papelera`).
 
 **Resto del CRUD de Legajos** (fuera de las cascadas de alta/baja de Chofer/Proveedor),
 migrado con el mismo patrón que Cliente/Chofer/Proveedor:
 - `LegajoService.toggleVisibilidad`: `EscrituraBatch[]` de 1 + `agregarAlBatch('EDITAR', ...)`
-  + `commitBatch`.
+  + `commitBatch`. **Retirado (2026-11-03):** la visibilidad dejó de loguearse en todas
+  las entidades; ver "Asimetría `activo` / `visible`".
 - `LegajoService.guardarDocumentacion`: antes hacía 1 `addItemAndGetId` a
   `documentacionHistorial` POR CADA documento reemplazado que ya tenía categoría, más 1
   `updateItemAsync` final a `legajos` — mismo problema de cascada no atómica que
@@ -182,8 +230,8 @@ migrado con el mismo patrón que Cliente/Chofer/Proveedor:
 
 **`StorageService` queda sin ningún uso en `LegajoService`/`CategoriaDocumentacionService`**
 tras este frente — import y constructor param eliminados de ambos (ya no había ningún
-método que lo necesitara). Sigue en uso en `ClienteService`/`ChoferService`/
-`ProveedorService` únicamente para las bajas compuestas con papelera (Frente 1).
+método que lo necesitara). Después del Frente Papelera tampoco lo usan
+`ClienteService`/`ChoferService`/`ProveedorService`.
 
 **Verificado:** árbol compila limpio (`tsc --noEmit` + `ng build`); el error de budget de
 bundle (8.65 MB vs. 7 MB) es el mismo preexistente de siempre, confirmado por
@@ -230,15 +278,20 @@ CLAUDE.md (ver "Cloud Functions" → orden de deploy).
 ### Frente 3 — pantalla `RegistroLogComponent` (Agosto 2026)
 
 Pantalla nueva e independiente que lee exclusivamente de `registroLog` — NO toca
-`RegistroComponent`/`LogService`/`logs` (siguen funcionando igual, se eliminan recién
-cuando termine la migración completa de módulos al mecanismo nuevo). Las dos fuentes
-de datos no se normalizan ni se mezclan a propósito.
+`RegistroComponent`/`LogService`/`logs`. Las dos fuentes de datos no se normalizan ni se
+mezclan a propósito. (Al cerrar este frente se pensaba eliminar la pantalla vieja al
+terminar la migración de módulos. **Vencido:** la decisión vigente es "Decisión — sin
+migración de `logs` a `registroLog`", más abajo: `RegistroComponent` queda como histórico
+congelado; lo que se elimina es `LogService` junto con la Papelera legado.)
 
 **Ubicación:** `raiz/ajustes/registro-log/` (mismo nivel que `registro/`/`papelera/`),
 ruta `ajustes/registro-log` en `ajustes-routing.module.ts`, mismo `RoleGuard` que
 `registro`/`papelera` (`dev`/`admin`/`demo` — sin `user`, mismo criterio ya establecido
 para pantallas de auditoría). 4ta pestaña ("Registro Log") agregada al tab bar propio
-de `AjustesControlComponent` (`tab4`), junto a Usuarios/Registro/Papelera.
+de `AjustesControlComponent` (`tab4`), junto a Usuarios/Registro/Papelera. Hoy las
+pestañas de Ajustes son Usuarios, Registro Log, Papelera y Datos de la empresa: las de
+Registro (`RegistroComponent`) y Papelera (legado) están comentadas en el template, y sus
+rutas (`ajustes/registro`, `ajustes/papelera-legado`) siguen vivas, sólo por URL.
 
 **Query y paginación:**
 - `DbFirestoreService.getPaginado<T>(coleccion, campoFecha, desde, hasta, pageSize,
@@ -262,7 +315,9 @@ de `AjustesControlComponent` (`tab4`), junto a Usuarios/Registro/Papelera.
   de log**). ⚠️ Incompleta: otras 10 colecciones ya escriben en `registroLog` y no están
   (users, informesOp, informesLiq, movimientosFin, tarifas, tarifasEspeciales,
   registrosOpEventuales, vendedores, liquidacionesVenta, configuracion); deuda en
-  CLAUDE.md. El selector muestra el nombre crudo de la colección (no hay mapa de
+  CLAUDE.md. Las 10 tienen escritor en el código (ver "Cobertura de `registroLog`");
+  `registrosOpEventuales` sólo desde la migración del historial de eventuales, que corre
+  `dev`, así que en la práctica no aparece. El selector muestra el nombre crudo de la colección (no hay mapa de
   etiquetas).
 - **Filtros client-side** (sobre `registros` ya cargado en memoria, sin ida a
   Firestore): acción, usuario (por email, texto libre), status. El componente avisa en
@@ -289,9 +344,10 @@ cada `CambioCampo`.
 **`VisualizadorObjetoService`** (`servicios/visualizador-objeto/`, nuevo — UI-layer a
 propósito, `LogRegistroService` no lo conoce, mantiene ese servicio "tonto respecto al
 dominio"): dispatcher `coleccion -> handler` (`Record` simple, sin abstraer más),
-pensado para reusarse en Papelera más adelante (frente aparte, **no conectado
-todavía** — `PapeleraComponent.modalObjeto` sigue con su mecanismo propio,
-`ObjetoPapeleraComponent`, ver abajo).
+pensado para reusarse en Papelera más adelante. **Ya conectado (Frente Papelera):**
+`PapeleraComponent` abre el objeto con `verObjeto(coleccion, id, snapshot)` (el
+parámetro `snapshot` muestra la copia archivada de un objeto dado de baja).
+`ObjetoPapeleraComponent` sólo lo usa `PapeleraLegadoComponent`.
 - `verObjeto(coleccion, idObjet)`: `DbFirestoreService.getById` para el objeto ACTUAL
   (no un snapshot del momento del log — el diff de la fila EDITAR ya cubre eso), abre
   el modal de alta/edición REAL de esa entidad vía `NgbModal` con
@@ -301,8 +357,9 @@ todavía** — `PapeleraComponent.modalObjeto` sigue con su mecanismo propio,
   `ObjetoPapeleraComponent` (ver hallazgo abajo).
 - **Colecciones mapeadas hoy** (tienen modal de alta/edición real con `modo: 'vista'`
   confirmado): `clientes` → `ClienteAltaComponent`, `choferes` → `ChoferesAltaComponent`,
-  `proveedores` → `ProveedoresAltaComponent`, `operaciones` → `ModalResumenOpComponent`
-  (usa `modo: 'vista'` también, confirmado en `tablero-op.modalDetalle`).
+  `proveedores` → `ProveedoresAltaComponent`, `operaciones` → `ModalDetalleOpComponent`
+  (al cerrar este frente era `ModalResumenOpComponent`; el mapa vigente está en
+  `VisualizadorObjetoService`).
 - **Sin mapear, confirmado antes de excluir (no asumido):** `vehiculos` (el único modal,
   `ModalVehiculoComponent`, es de alta/edición DENTRO del array de un chofer/proveedor,
   no abre por id suelto), `legajos` (sin modal `NgbModal`-abrible por id — el módulo
@@ -317,8 +374,9 @@ todavía** — `PapeleraComponent.modalObjeto` sigue con su mecanismo propio,
   modal (costoso tocar 4 componentes ajenos por una sola línea de aclaración) — en
   cambio, un `Swal` informativo no bloqueante (`timer`, sin botón de confirmar) se
   dispara justo antes de abrir el modal.
-- ⚠️ **Hallazgo real, documentado, no corregido (fuera de alcance):**
-  `PapeleraComponent.modalObjeto` NO usa el patrón "modal real en modo vista" — abre
+- ~~Hallazgo, no corregido en este frente~~ — **resuelto en el Frente Papelera**
+  (`PapeleraComponent` usa `VisualizadorObjetoService`). Historia:
+  `PapeleraComponent.modalObjeto` NO usaba el patrón "modal real en modo vista" — abre
   `ObjetoPapeleraComponent` (`shared/modales/objeto-papelera/`), un componente bespoke
   con markup propio por colección (`@switch` gigante sobre campos legacy, ya señalado
   en otras partes de este archivo; el shim de tarifas que usaba se retiró en el cierre de Tarifas). Por eso
@@ -336,7 +394,9 @@ todavía** — `PapeleraComponent.modalObjeto` sigue con su mecanismo propio,
   dinámicamente vía `NgbModal`. Funciona sin problema bajo Ivy (la resolución de
   pipes/directivas de cada componente queda resuelta en su propia compilación, no
   depende de que su NgModule esté "activo" en runtime) — confirmado con `ng build`
-  real, no solo `tsc`. Costo real, medido: bundle inicial +~90 KB (7.65 MB → 7.74 MB;
+  real, no solo `tsc`. Costo medido en su momento (antes del frente Lazy loading +
+  fechas, que llevó Ajustes y todos los módulos a chunks lazy y el bundle inicial a
+  ≈ 1,5 MB: estos números ya no describen el bundle actual): bundle inicial +~90 KB (7.65 MB → 7.74 MB;
   el budget ya estaba excedido antes de este frente, ver "Deuda abierta" en CLAUDE.md si aplica) —
   antes esas piezas de Clientes/Choferes/Proveedores/Operaciones vivían enteras en sus
   chunks lazy; ahora una porción se comparte con el chunk de Ajustes. Aceptado a
@@ -551,6 +611,21 @@ no recibe escrituras nuevas del mecanismo nuevo, solo se consulta.
 `RegistroLogComponent` (`registroLog`) arranca en blanco desde esa fecha.
 Sin fusión de pantallas ni migración de datos entre ambas colecciones.
 
+**Consecuencia del corte.** `registroLog` arranca **en blanco** en Vantruck el día del
+corte, y `RegistroComponent` queda congelado como histórico. Consecuencia: toda mutación
+que no escriba en `registroLog` ese día queda **sin rastro en producción de forma
+permanente** — no aparece en otra pantalla, no existe. Antes del corte, revisar el
+inventario de "Cobertura de `registroLog` — qué llega y qué no" de esta skill.
+
+**La capa de eventos no condiciona la migración.** Los campos de un flujo de eventos
+tipado —entidad afectada, severidad, requiere acción— son derivables de lo que
+`registroLog` ya guarda: la entidad es `coleccion` + `idObjet`, y severidad y
+requiere-acción salen de una tabla central sobre `(accion, coleccion)`, aplicable también
+al leer entradas anteriores. El único que no se deriva, "atendido", es estado del usuario
+que se escribe después del evento y arranca vacío para todo. Así que la capa de eventos se
+puede construir como derivación sobre `registroLog` en cualquier momento, sin backfill y
+sin una segunda colección. No hay ventana que se cierre con el corte.
+
 ## No disponibilidad — en el log nuevo
 
 La no disponibilidad (colección `noDisponibilidades`, `NoDisponibilidadService`) escribe con
@@ -571,6 +646,5 @@ y `AsignacionService.reactivarItem`. Por eso el log viejo y la Papelera legado s
 juntos (skill `subsistema-papelera`, "Deuda abierta — eliminar el camino legado de la
 papelera").
 
-`StorageService.updateItem` sigue referenciando a `LogService`, pero su único caller vivo
-(`visibilidad-listados`) escribe con acción `'INTERNA'`, que `controlLog` no loguea: no escribe
-en `logs`, aunque hay que sacar esa referencia al eliminar `LogService`.
+`StorageService.updateItem` quedó sin callers (su último, `visibilidad-listados`, pasó a
+`DbFirestoreService.updateConResultado`). Sigue referenciando a `LogService`: se va con él.

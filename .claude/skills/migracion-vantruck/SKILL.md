@@ -205,6 +205,15 @@ convierte una `fechaVto` vieja en milisegundos con `toISOString()` (fecha UTC). 
 solo si el valor era medianoche de Argentina; revisarlo contra los datos reales de Vantruck
 antes de migrar (el Legajos viejo guardaba `new Date(fecha).getTime()`, 00:00 UTC).
 
+**Campo `idCliente` / `idChofer` / `idProveedor` guardado dentro del documento.** Hasta
+2026-11-03, el switch de visibilidad de los listados escribía el objeto en memoria entero
+(`StorageService.updateItem`), incluido el `idXxx` que la convención nunca persiste. En
+demo, relevado ese día: 1 de 61 choferes tiene `idChofer` (igual a su id de documento),
+0 de 41 clientes y 0 de 16 proveedores. Producción no se relevó. Es inofensivo, porque el
+listener lo pisa con el id del documento y cualquier edición posterior lo borra al
+reemplazar con `toFirestore`, pero conviene quitarlo en la migración (o al menos
+verificar que no sea distinto del id del documento).
+
 **No es deuda del modelo de datos de Legajos en sí** (ese frente ya resuelve el modelo
 correcto hacia adelante) — es deuda del PROCESO de migración de datos legacy de
 producción, que corre aparte y más adelante, cuando se aborde el traspaso completo a
