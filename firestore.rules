@@ -116,9 +116,11 @@ service cloud.firestore {
         'numeradores': 'numeradores',
         // Configuración de la app (F8b): datos de la empresa (doc 'empresa').
         'configuracion': 'configuracion',
-        'logs': 'logs',
+        // Colecciones viejas de log y papelera: histórico congelado, sin
+        // escritores (ver 'historicoSoloLectura' en permitido()).
+        'logs': 'historicoSoloLectura',
         'registroLog': 'logs',
-        'papelera': 'papelera',
+        'papelera': 'historicoSoloLectura',
 
         // Frente Papelera (mecanismo por referencia, Cliente/Chofer/Proveedor/
         // Operación): reusa el bucket de permisos 'papelera' ya existente, mismo
@@ -188,6 +190,16 @@ service cloud.firestore {
           (r == 'demo' && accion == 'leer')
         )) ||
         (modulo == 'legacySoloLectura' && accion == 'leer') ||
+        // Histórico congelado: 'logs' (log viejo) y 'papelera' (Papelera
+        // legado). Sin escritores en código desde que se eliminaron LogService
+        // y la Papelera legado; se niega toda escritura, 'dev' incluido, para
+        // que una escritura remanente falle visible. Se separa de
+        // 'legacySoloLectura' porque esa deja leer a cualquier rol autenticado,
+        // y 'manager' está denegado en todos los módulos a propósito: acá leen
+        // sólo dev/admin/user/demo, los mismos que leían antes del congelamiento.
+        (modulo == 'historicoSoloLectura' && (
+          accion == 'leer' && r in ['dev','admin','user','demo']
+        )) ||
         (modulo == 'numeradores' && (
           r in ['dev','admin','user'] && accion in ['leer','crear','editar']
         )) ||
@@ -206,11 +218,13 @@ service cloud.firestore {
           // fallaban para 'admin' (único rol no-dev con acceso real a la pantalla de
           // Papelera). Ver CLAUDE.md → "Frente Papelera".
           (r == 'admin' && accion in ['leer','crear','editar','eliminar']) ||
-          // 'leer' agregado para user: PapeleraService.getObjetoEliminado (fallback
-          // de getChoferPorId/getTipoContratacion cuando la entidad está en
-          // papelera, ver tablero.service.ts / liquidaciones-op.component.ts) hace
-          // un getById sobre 'objetosEliminados' — alcanzable por 'user' en flujos
-          // de Operaciones/Liquidaciones que no pasan por la pantalla de Papelera.
+          // 'leer' para user: se agregó por PapeleraService.getObjetoEliminado,
+          // que era fallback de la resolución de choferes en flujos de
+          // Operaciones/Liquidaciones (código ya eliminado). Hoy su único caller
+          // es PapeleraComponent (detalle con snapshot), en la ruta
+          // ajustes/papelera, que admite sólo dev/admin/demo: ningún camino de
+          // 'user' lee papeleraEventos ni objetosEliminados. Grant sin camino
+          // alcanzable, pendiente de decisión (no retirado).
           (r == 'user' && accion in ['leer','crear']) ||
           (r == 'demo' && accion == 'leer')
         ));

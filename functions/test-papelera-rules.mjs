@@ -12,12 +12,15 @@
  *          restaurarCliente/Chofer/Proveedor/Operacion puedan marcar el
  *          PapeleraEvento como 'restaurado', Firestore evalúa ese set() sobre un
  *          doc existente como 'update')
- *   user:  leer/crear                  ('leer' agregado — PapeleraService.
- *          getObjetoEliminado es un getById alcanzable desde flujos de
- *          Operaciones/Liquidaciones sin pasar por la pantalla de Papelera)
+ *   user:  leer/crear                  (hoy sin camino alcanzable: el único caller
+ *          de PapeleraService.getObjetoEliminado es PapeleraComponent, en la
+ *          ruta ajustes/papelera, que admite sólo dev/admin/demo; y 'user' no
+ *          tiene 'eliminar' en entidades ni operaciones, así que no llega a una
+ *          baja con papelera. Los dos grants quedan pendientes de decidirse
+ *          junto con PermisosService.matrizBase.papelera)
  *   demo:  leer                        (bug encontrado y corregido en este frente:
  *          antes 'demo' no tenía ningún permiso pese a poder navegar
- *          ajustes/papelera y ajustes/papelera-legado)
+ *          ajustes/papelera)
  *
  * Cómo correrlo (con el emulador ya levantado en otra terminal):
  *   firebase emulators:start --only firestore,auth

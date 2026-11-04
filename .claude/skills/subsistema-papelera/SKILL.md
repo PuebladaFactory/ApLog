@@ -209,9 +209,20 @@ era el último escritor de `logs`, así que salió en el mismo frente que el log
 - Interfaz `LogDoc` (`interfaces/log-doc.ts`): sin consumidores al irse la pantalla.
 
 **Qué queda:** la colección `papelera` en Firestore, con sus `LogDoc`, sin tocar y sin pantalla:
-lo único que se perdió es poder restaurarlos. Las entradas `'papelera'` de `moduloDe()` en
-`firestore.rules` siguen porque el bucket `papelera` lo comparten `papeleraEventos` y
-`objetosEliminados`.
+lo único que se perdió es poder restaurarlos.
+
+**Congelada también en las reglas (después del frente):** en `moduloDe()`, `'papelera'` pasó al
+bucket `historicoSoloLectura`: lectura para `dev`/`admin`/`user`/`demo`, ninguna escritura
+para nadie, `dev` incluido. El bucket `papelera` sigue existiendo para `papeleraEventos` y
+`objetosEliminados`, sin cambios. Verificado con `functions/test-historico-rules.mjs` contra
+el emulador. Sin desplegar: el deploy lo hace Nico.
+
+**Grants del bucket `papelera` sin camino alcanzable (no tocados, pendiente de decisión):**
+`user` tiene `leer` y `crear`. El `leer` se agregó por `PapeleraService.getObjetoEliminado`,
+que era fallback de la resolución de choferes en código ya eliminado; hoy su único caller es
+`PapeleraComponent` (ruta `ajustes/papelera`, sólo `dev`/`admin`/`demo`). El `crear` lo
+necesitan las bajas con papelera, y `user` no tiene `eliminar` en `entidades` ni en
+`operaciones`, así que tampoco llega.
 
 **Producción:** la colección `papelera` de `pf-logistics` ya está relevada (por Nico, en la
 consola) y no bloquea nada: es tema de la estrategia de migración. Datos y criterio en la skill

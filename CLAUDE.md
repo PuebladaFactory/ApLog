@@ -397,6 +397,19 @@ Categorías especiales:
   que cualquier escritura remanente falle visiblemente en `demo` y se
   detecte antes de llegar a producción, en vez de heredar permisos
   amplios "por las dudas". Ver deuda abajo.
+- `historicoSoloLectura`: `logs` (log viejo) y `papelera` (Papelera legado),
+  histórico congelado sin escritores en código desde que se eliminaron
+  `LogService` y la Papelera legado. Lectura para `dev`/`admin`/`user`/`demo`
+  (los mismos que leían antes); `crear`/`editar`/`eliminar` denegados a todos,
+  **`dev` incluido**, para que cualquier escritura remanente falle visible.
+  Separado de `legacySoloLectura` porque esa deja leer a cualquier rol
+  autenticado y `manager` está denegado en todos los módulos a propósito.
+  Los buckets `logs` y `papelera` siguen existiendo para `registroLog` y
+  `papeleraEventos`/`objetosEliminados`. Si en la migración hay que limpiar
+  esos documentos, se hace por consola, igual que con las otras colecciones
+  legadas. Verificado con `functions/test-historico-rules.mjs` contra el
+  emulador (100/100, incluida la regresión de las tres colecciones nuevas).
+  Sin desplegar.
 - `_backup_*` (prefijo dinámico de colecciones de migración): solo
   `dev`, ni lectura para el resto.
 - `/users/{uid}`: excepción de path (no vive bajo `/Vantruck/datos/`).

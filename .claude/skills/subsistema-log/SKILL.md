@@ -653,9 +653,13 @@ pestaña) sigue vivo como **histórico congelado** del log viejo. Nunca dependi�
 `getObjIdg` (búsqueda por `idObjet`, en `consultarId`)—, con la interfaz `LogEntry`
 (`interfaces/log-entry.ts`). Esos dos métodos y `LogEntry` se quedan por eso.
 
-**Qué no se tocó:** la colección `logs` en Firestore (sus documentos quedan donde están) y
-`firestore.rules`: la entrada `'logs'` de `moduloDe()` sigue, porque el bucket `logs` lo
-comparte `registroLog`.
+**Qué no se tocó:** la colección `logs` en Firestore (sus documentos quedan donde están).
+
+**Congelada también en las reglas (después del frente):** en `moduloDe()`, `'logs'` pasó al
+bucket `historicoSoloLectura`: lectura para `dev`/`admin`/`user`/`demo`, ninguna escritura
+para nadie, `dev` incluido. Así una escritura remanente falla visible en vez de pasar. El
+bucket `logs` sigue existiendo para `registroLog`, sin cambios. Verificado con
+`functions/test-historico-rules.mjs` contra el emulador. Sin desplegar: el deploy lo hace Nico.
 
 ## Deuda abierta — `RegistroComponent.consultarId` no encuentra ids string
 
