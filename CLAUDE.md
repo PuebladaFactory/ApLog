@@ -172,8 +172,8 @@ contraseña de un usuario existente) es independiente y se mantiene.
 
 ### State management
 
-El refactor arquitectónico está migrando el manejo de estado desde un store central
-único hacia servicios por entidad. Conviven dos esquemas según el módulo:
+El refactor arquitectónico migró el manejo de estado desde un store central único
+(`StorageService`) hacia servicios por entidad:
 
 **Módulos refactorizados** (Choferes, Proveedores, Clientes; Operaciones en progreso — subsistema Asignaciones: capa de servicios y fachada completas; switch completo de `tablero-diario` → `tablero-asignaciones` (tablero-diario, carga-tablero-diario y operaciones-table eliminados); `carga-multiple` migrado a `carga-asignacion` y switch completado (carga-multiple eliminado), con caller confirmado en tablero-op (`modalCargaMultiple()`); coordinadores `bajaOperacion`/`restaurarOperacion` en OperacionService completos (atómicos,
 batch + log único), con `tablero-op` ya usando `bajaOperacion` como caller para la baja
@@ -183,17 +183,18 @@ en memoria (NO en localStorage). El `init()` del servicio abre el listener de Fi
 y se llama al arrancar la app. Los componentes se suscriben directamente al observable
 del servicio.
 
-**Módulos no migrados:** todavía dependen de `StorageService`
-(`servicios/storage/storage.service.ts`), que expone múltiples BehaviorSubjects y
-sincroniza con localStorage.
+**`StorageService`** (`servicios/storage/storage.service.ts`): ya no mantiene estado de
+ningún módulo ni escribe en Firestore. Queda vivo sólo: `clearAllLocalStorage` (login y
+logout), `initializerAdmin` (cachea `users` en localStorage, con el subject privado
+`_users$`), `setInfo`/`loadInfo` (clave `ruta` en `CargaComponent`/`SidebarComponent`;
+`loadInfo('users')` en `RegistroComponent`, `RegistroLogComponent` y `PapeleraComponent`)
+y `proveedores$` (`ModalVehiculoComponent`, que lo asigna sin usarlo). Ver "Deuda abierta".
 
-`StorageService` NO desaparece: sigue manteniendo el estado de los módulos viejos.
-**Actualizado (Frente Papelera, ver la skill `subsistema-papelera`):** la baja con papelera de
-Cliente/Chofer/Proveedor/Operación (los 4 módulos ya migrados) YA NO pasa por
-`StorageService.deleteItemPapeleraCompuestoAsync()` — escribe atómico vía
-`DbFirestoreService.commitBatch` + `PapeleraService` + `LogRegistroService`, igual que
-el resto de sus escrituras. `StorageService` sigue siendo el único camino de papelera
-para Vendedores/Facturación/Liquidación, fuera de alcance de ese frente.
+**Papelera:** el único mecanismo es `PapeleraService` sobre `papeleraEventos`/
+`objetosEliminados` (skill `subsistema-papelera`), escrito atómico vía
+`DbFirestoreService.commitBatch`/`commitEnTransaccion` + `LogRegistroService`, igual que el
+resto de las escrituras. La colección vieja `papelera` queda en Firestore sin escritores
+ni lectores (la Papelera legado se eliminó).
 
 Flujo de datos en módulos refactorizados:
 ```
@@ -275,8 +276,7 @@ Por eso `Proforma CH` tiene mayor prioridad visual que `Proforma CL` en el badge
 | `autentificacion/` | Firebase Auth, sesión de usuario |
 | `usuario-sesion/` | Fuente única de la sesión en memoria (rol, uid, email del usuario logueado). Sin listener — no reactivo en vivo. |
 | `database/` | CRUD Firestore |
-| `storage/` | Estado de módulos no migrados (BehaviorSubjects + localStorage) y capa de escritura/logging centralizada para todos los módulos |
-| `log/` | Log de actividad viejo (colección `logs`) — sigue activo para lo no migrado (ver la skill `subsistema-log`) |
+| `storage/` | Resto del store central viejo: caché en localStorage (`ruta`, `users`) y `clearAllLocalStorage`. No escribe en Firestore ni loguea (ver "State management") |
 | `log-registro/` | `LogRegistroService` (escritura, dentro del batch atómico de negocio) + `RegistroLogConsultaService` (lectura/paginación, para `RegistroLogComponent`) sobre `registroLog` — ver la skill `subsistema-log` |
 | `papelera/` | `PapeleraService` (preparación de escrituras de baja/restauración por referencia, dentro del batch atómico de negocio) + `PapeleraConsultaService` (lectura/paginación, para `PapeleraComponent`) sobre `papeleraEventos`/`objetosEliminados` — ver la skill `subsistema-papelera` |
 | `visualizador-objeto/` | `VisualizadorObjetoService` — dispatcher `coleccion -> modal de vista real`, usado por `RegistroLogComponent` y (desde el Frente Papelera) por `PapeleraComponent` vía el parámetro `snapshot` de `verObjeto` |
@@ -458,7 +458,7 @@ Categorías especiales:
 ## Convenciones
 
 - **Interfaces:** definidas en `src/app/interfaces/`. Usar siempre interfaces tipadas, nunca `any`.
-- **Logging:** toda mutación de datos debe quedar registrada con acción (`ALTA`, `EDITAR`, `BAJA`, `RESTAURAR`), nombre de colección e ID del registro. El rol `dev` queda excluido del log. Dos mecanismos conviven: el nuevo `LogRegistroService` (colección `registroLog`, log como escritura dentro del mismo batch atómico de negocio — usar este para código nuevo en los módulos ya migrados) y el viejo `LogService` (colección `logs`, log como llamada separada después del write — sigue vigente para lo no migrado). Ver la skill `subsistema-log` para el detalle de qué está migrado y qué no.
+- **Logging:** toda mutación de datos debe quedar registrada con acción (`ALTA`, `EDITAR`, `BAJA`, `RESTAURAR`), nombre de colección e ID del registro. Un solo mecanismo: `LogRegistroService` sobre la colección `registroLog`, con `agregarAlBatch` como una escritura más dentro del mismo batch o transacción atómica del negocio (y `registrarError` en el `catch`). El rol `dev` queda excluido del log. La colección vieja `logs` es histórico congelado, sin escritores: la lee sólo `RegistroComponent`, directo por `DbFirestoreService`. Detalle y cobertura: skill `subsistema-log`.
 - **IDs secuenciales:** usar `NumeradorService` al crear operaciones o facturas — nunca generar IDs manualmente.
 - **Locale argentino:** fechas en `dd/MM/yyyy`, miles con `.` y decimales con `,`. Hay servicios de formateo para ambos.
 - **Fechas:** todo pasa por `shared/utils/fecha.util.ts`. Fecha de negocio = string 'YYYY-MM-DD', operada como string o por partes; nunca `new Date('YYYY-MM-DD')` (medianoche UTC = 21:00 del día anterior en Argentina) ni `toISOString()` para obtenerla (desde las 21:00 da mañana). "Hoy" = `hoyNegocio()` (huso fijo de Argentina, igual en el cliente y en las Cloud Functions). Instantes = ISO UTC completo (`new Date().toISOString()`), mostrados con `instanteLegible`. Detalle en la skill `lazy-loading-y-fechas`, subsección "Fechas".
@@ -591,19 +591,19 @@ Cada módulo tiene su XxxMigrationService con:
 
 ### Operatoria compleja atómica (Operaciones en adelante)
 
-Los módulos con operatorias que afectan varias entidades de forma atómica (alta de N ops + tablero) no pasan por el esquema "una acción a la vez vía StorageService". Su servicio escribe **directo a `DbFirestoreService`** mediante un batch atómico (`commitBatch`), e informa al log llamando directo a `LogService`.
+Los módulos con operatorias que afectan varias entidades de forma atómica (alta de N ops + tablero) escriben **directo a `DbFirestoreService`** mediante un batch o transacción atómica (`commitBatch` / `commitEnTransaccion`), con el log como una escritura más dentro de ese mismo batch (`LogRegistroService.agregarAlBatch`).
 
-**Distinción clave:**
-- *CRUD por entidad* (Choferes/Clientes/Proveedores): escritura vía `StorageService`, log acoplado a cada escritura.
-- *Operatoria compleja atómica* (Operaciones en adelante): escritura directa + batch + log en el coordinador.
+**Distinción clave (cuántas entradas de log deja un gesto, tal como está en el código):**
+- *CRUD por entidad y sus cascadas* (Choferes/Clientes/Proveedores con vehículos y legajo, y sus bajas/restauraciones con papelera): **una entrada por escritura real** (un `agregarAlBatch` por cada entidad tocada), todas en el mismo batch — atomicidad sin perder granularidad (skill `subsistema-log`, "Granularidad de LOG preservada" y Frente 2).
+- *Operatoria compleja de Operaciones* (`altaDesdeAsignacion`, `bajaOperacion`, `bajaOperacionCerrada`, `cerrarOperacion`, `restaurarOperacion`): **una entrada por gesto** (la acción principal del usuario), puesta por el coordinador; los movimientos derivados (tablero, InformeOp, resúmenes, comisiones) no loguean por separado y las piezas no loguean. Excepción vigente: `editarOperacion` deja dos entradas, EDITAR de la operación y EDITAR del tablero (`AsignacionService.agregarEscrituraActualizarItem` agrega la suya).
 
 **Reglas:**
-- **Log:** una transacción atómica = UN registro (la acción principal del usuario). Los movimientos derivados no loguean por separado. El log vive en el método coordinador, no en las piezas.
+- **Log:** según el caso de arriba. En Operaciones, el log vive en el método coordinador, no en las piezas.
 - **Coordinación entre servicios:** el servicio primario (`OperacionService`) inyecta al secundario (`AsignacionService`), nunca al revés. El coordinador decide el CONTENIDO del batch (negocio); `DbFirestoreService` EJECUTA el batch (mecánica Firestore).
 - **Pre-generación de id:** para que un documento referencie el id de otro dentro de un batch, se pre-genera el doc id (`generarId`) antes del commit.
 - **Punto de entrada único:** el componente llama al coordinador (`altaDesdeAsignacion`), no a los servicios parciales por separado.
 
-> Candidato a retro-aplicarse a los casos compuestos de módulos ya refactorizados (ej. alta de chofer + legajo + vehículos, hoy hecha acción por acción) cuando se revise `StorageService`.
+> Ya retro-aplicado a los casos compuestos de Choferes/Proveedores (chofer + vehículos + legajo): un único `commitBatch` por cascada desde el Frente 2 (skill `subsistema-log`).
 
 ### Ownership por entidad primaria (acciones que encadenan varias entidades)
 
@@ -708,14 +708,14 @@ Deuda técnica activa. Actualizar cuando se salda.
 - **Herramienta de recálculo de tarifas (sólo en `main`)** — existe en producción (`98edb35`) y no en `refactor`; hay que reimplementarla sobre el modelo nuevo porque `RefTarifaAplicada` queda congelada al cerrar y una tarifa con vigencia retroactiva no corrige las operaciones ya cerradas. Detalle: skill `migracion-vantruck`.
 - **`editarOperacion` puede fallar sin devolver `Resultado`** — arma la escritura del tablero antes del `try`: si no hay tablero para la fecha, la excepción se escapa sin `Resultado` ni `registrarError` y el usuario no se entera. Detalle: skill `modulo-operaciones`.
 - **Baja y restauración de operaciones — pendientes chicos** — la guarda "el tablero no tiene el item" de `restaurarOperacion` quedó sin probar (falla cerrada; probablemente aparezca en la migración); ops cerradas con `resumenProcesado` falsy (legado) no restan en la baja pero suman al recerrar (verificar si existen, se corrige con el Recálculo de `/migracion`); dos títulos distintos para el éxito de la baja y el tacho de `informe-op-listado` sin deshabilitar mientras `guardando`. Detalle: skill `modulo-operaciones`.
-- **`timestamp` del tablero al anular o reactivar un item** — el camino nuevo no lo actualiza, el legado sí. **Antes de arreglarlo, verificar qué lee ese `timestamp`:** si algo lo usa para invalidar caché, una baja o una restauración son invisibles para ese mecanismo. Detalle: skill `modulo-operaciones`.
+- **`timestamp` del tablero al anular o reactivar un item** — el camino nuevo no lo actualiza (el legado, `AsignacionService.reactivarItem`, ya eliminado, sí lo hacía). **Antes de arreglarlo, verificar qué lee ese `timestamp`:** si algo lo usa para invalidar caché, una baja o una restauración son invisibles para ese mecanismo. Detalle: skill `modulo-operaciones`.
 - **Preguntas abiertas de baja y restauración** — si `firestore.rules` impone algo según el estado de la op; coherencia en datos entre `op.estado` y los InformeOp; `lockLiquidacion` (en la interfaz, la restauración lo conserva, nadie sabe si se lee o escribe: posible campo muerto); items del tablero sin `idOperacion` coincidente. Detalle: skill `modulo-operaciones`.
 - **Deuda menor del tablero de asignaciones** — el borrador del tablero se pierde con F5. Detalle: skill `modulo-operaciones`.
 - **operaciones-editor / Tarifas** — estilos SCSS de tarifa duplicados sin consolidar, y el patrón `@if` obligatorio para bindear tarifas nullable. Detalle: skill `modulo-operaciones`.
 - **Fix de altura del modal limitado a `tablero-op`** — el ajuste que estira `carga-asignacion` dentro del modal vive en `tablero-op.component.scss`: otro caller que abra ese modal tiene que replicarlo. Detalle: skill `modulo-operaciones`.
-- **Eliminar la Papelera legado junto con el log viejo (decidido: se elimina, no se migra)** — la no disponibilidad ya no usa el log viejo. Lo único que sigue escribiendo en `logs` es la Papelera legado (`StorageService.addItem`/`deleteItem`, `TableroService.altaOperacionYActualizarTablero`, `AsignacionService.reactivarItem`), que además restaura operaciones peor que `restaurarOperacion` (no atómico, sin el contrato de la restauración). Un solo frente: Papelera legado, `LogService`, colección `logs` y `reactivarItem`. Precondición: relevar la colección `papelera` de producción antes. Detalle: skill `subsistema-papelera`.
 - **Migración de `noOperativo`** — la colección anterior de no disponibilidad quedó sin lectores: 6 documentos en demo y los de producción (2 vigentes al relevar), con la forma y el trabajo de "Datos de la colección anterior" en `docs/disenos/no-disponibilidad.md`. **Va después de la migración de Choferes**: 3 de los 6 de demo tienen `idChofer` numéricos del modelo viejo que sólo resuelven con su mapeo; al revés, se pierden.
 - **Mapeo de `noOperativo` en `firestore.rules`** — se saca recién cuando termine esa migración.
+- **Lo que queda de `StorageService` (frente chico propio)** — `loadInfo('users')` en `RegistroComponent`, `RegistroLogComponent` y `PapeleraComponent` (nombre en vez de email); la clave `ruta` en `CargaComponent` y `SidebarComponent`; `clearAllLocalStorage` en login/logout; `proveedores$` en `ModalVehiculoComponent`, asignado sin usarse. **Mover las tres pantallas a `GestionUsuariosService` no es reemplazo directo:** `firestore.rules` permite leer `/users` sólo a `dev`/`admin` o al propio usuario, y las tres rutas admiten `demo`; hoy falla en silencio (`loadInfo` vacío, columna en blanco) y con una lectura en vivo pasaría a ser un error visible. Hay que resolver nombres sólo para `dev`/`admin` y mostrar el email para el resto. Además `obtenerUsuarios()` filtra `role !== 'dev'` siempre, y en `logs` hay entradas escritas por `dev`.
 - **Filtro por colección del Registro de actividad incompleto** — `COLECCIONES_REGISTRO_LOG` (`registro-log-consulta.service.ts`) no tiene 10 colecciones que ya escriben en `registroLog`: `users`, `informesOp`, `informesLiq`, `movimientosFin`, `tarifas`, `tarifasEspeciales`, `registrosOpEventuales`, `vendedores`, `liquidacionesVenta` y `configuracion`. Sus entradas se ven sin filtrar, pero no se pueden filtrar por colección. Detalle: skill `subsistema-log`.
 - **Cuatro copias de `escapar`** — en `modal-no-disponibilidad`, `operaciones-editor`, `vendedor-historial` y `shared/utils/texto-html.util.ts`: unificar sobre `escaparHtml`/`textoAHtml` del util.
 - **Filtros vs. listener en background (frente futuro)** — en `tablero-op` los datos pueden quedar congelados al volver de background mientras los filtros muestran otro período; las suscripciones a `operaciones$` no manejan errores. Detalle: skill `modulo-operaciones`.
@@ -727,8 +727,7 @@ Deuda técnica activa. Actualizar cuando se salda.
 - **Reportes (`resumenesOp`)** — checklist de migración pendiente; `app-filtro-periodo` puede dar 11 meses los días 29–31; un listener por mes y clave. Detalle: skill `modulo-reportes`.
 - **Vendedores** — checklist de migración pendiente; pagar una liquidación no genera movimiento financiero y restaurar un cliente no revalida vendedores desactivados. Detalle: skill `modulo-vendedores`.
 - **Finanzas** — checklist de migración pendiente (incluida la apertura de saldos); las cuentas se calculan en memoria sin agregado y los generadores de demo no son idempotentes. Detalle: skill `modulo-finanzas`.
-- **Generador y datos de demo** — en eventuales el pago al chofer puede superar el cobro, la limpieza no toca Storage y el `LogService` viejo sigue escribiendo en `logs`. Detalle: skill `herramientas-demo`.
+- **Generador y datos de demo** — en eventuales el pago al chofer puede superar el cobro y la limpieza no toca Storage. Detalle: skill `herramientas-demo`.
 - **Tras Lazy loading + fechas** — el `<h1>` sin cerrar de `index.html` envuelve toda la app y `src/test.ts` quedó como resto sin uso. Detalle: skill `lazy-loading-y-fechas`.
 - **Tras Ficha de entidad** — ng-bootstrap 15 sobre Angular 20 falla en runtime con `hostDirectives` (NG0309) y quedan anonimizadores de prueba sin uso. Detalle: skill `ficha-entidad`.
-- **Tras Informes Excel/PDF** — `arrayFacOp` y `$choferes` de `objeto-papelera` se cargan sin consumidor (se van con la Papelera legado). Detalle: skill `exportacion-excel-pdf`.
 - **Nombre de entidad como enlace a la ficha (frente futuro)** — el pedido F7 del cliente, ampliado a ≈ 34 plantillas, con análisis de riesgos y etapas ya hecho. Detalle: skill `ficha-entidad`.

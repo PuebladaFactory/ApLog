@@ -330,9 +330,9 @@ la fachada inyecta los DOS renderers, porque los cargan con `import()`. El chunk
   separarlos pediría una columna por lado y filtros compuestos, que no se justifica para
   este dato. La pantalla no filtra por el badge, así que ahí el doble dato no cuesta
   nada.
-- **`arrayFacOp` y `$choferes` de `objeto-papelera`** se siguen cargando sin ningún
-  consumidor desde que se fue la columna "Reimpresión" (IE4). Se van con la Papelera
-  legado (frente Ajustes).
+- ~~`arrayFacOp` y `$choferes` de `objeto-papelera` se cargaban sin consumidor~~ —
+  SALDADO (2026-11-04): `ObjetoPapeleraComponent` se eliminó con la Papelera legado
+  (skill `subsistema-papelera`).
 - ~~El informe del tablero de asignaciones quedó sin botón (IE4)~~ — REPUESTO en AS1
   (20/10), reescrito de cero sobre `LibroTabular`, con Excel y PDF: ver "Informe del
   tablero de asignaciones".

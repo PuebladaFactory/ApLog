@@ -125,8 +125,9 @@ chofer), `requiereSeleccionManual`. Sobre los métodos públicos de
 - Registradas durante el frente (diseño §10): ~~rutas viejas de tarifas
   (`clientes|choferes|proveedores/general|especial|personalizada|eventual`)
   activas y listeners de HomeComponent sobre las colecciones viejas~~ —
-  RESUELTO en el cierre de Tarifas; el `LogService` viejo sigue escribiendo en
-  `logs` sólo desde la Papelera legado (skill `subsistema-log`); ~~la papelera vieja todavía recibe bajas
+  RESUELTO en el cierre de Tarifas; ~~el `LogService` viejo sigue escribiendo en
+  `logs` sólo desde la Papelera legado~~ — eliminados los dos el 2026-11-04 (skill
+  `subsistema-log`); ~~la papelera vieja todavía recibe bajas
   (vendedores con rol no dev vía `deleteItemPapelera`)~~ — resuelto en el
   Frente Vendedores (los vendedores se desactivan); ~~Finanzas lee/escribe
   colecciones purgadas en demo~~ — resuelto en el Frente Finanzas (módulo

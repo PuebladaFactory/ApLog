@@ -641,3 +641,13 @@ la fila y `*appPermiso="'operaciones.agregar'"` al botón de alta — el botón 
 Operación para `user` ahora refleja el resultado correcto en la UI (oculto, no solo
 bloqueado al escribir). Detalle completo en "Frente Botones y Permisos" → Bloque 6. El
 resto de los `*appRole`/`esRol()` puntuales sigue sin migrar, ver "Pendiente" ahí.
+
+## Deuda abierta — `matrizBase.papelera` desactualizada contra `firestore.rules`
+
+`PermisosService.matrizBase.papelera` tiene en `false` tres permisos que `firestore.rules`
+(rama `papelera` de `permitido()`) sí da: `admin.editar`, `user.leer` y `demo.leer`. Es UI
+desactualizada contra una regla que permite **más**, no un agujero: el efecto posible es una
+acción oculta o deshabilitada que la regla dejaría hacer (clic perdido), nunca una acción
+mostrada que la regla rechace. `matrizBase.logs` sí coincide con las reglas. Al corregirlo,
+tener en cuenta que el bucket `papelera` cubre `papeleraEventos` y `objetosEliminados` (la
+colección vieja `papelera` ya no tiene pantalla).

@@ -25,7 +25,6 @@ import { SoloLetrasDirective } from './directives/solo-letras.directive';
 import { PermisoDirective } from './directives/permiso.directive';
 
 import { BajaObjetoComponent } from './modales/baja-objeto/baja-objeto.component';
-import { ObjetoPapeleraComponent } from './modales/objeto-papelera/objeto-papelera.component';
 
 
 import { ScrollToTopComponent } from './scroll-to-top/scroll-to-top.component';
@@ -80,7 +79,6 @@ import { FichaTarifaDetalleComponent } from './ficha-entidad/ficha-tarifa-detall
     SoloLetrasDirective,
 
     PermisoDirective, BajaObjetoComponent,
-    ObjetoPapeleraComponent,
     ScrollToTopComponent, 
     CalcularPorcentajePipe, 
     SpinnerComponent, 

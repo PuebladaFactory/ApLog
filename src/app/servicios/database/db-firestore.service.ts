@@ -2,10 +2,8 @@ import { Injectable } from "@angular/core";
 /* import { AngularFirestore } from '@angular/fire/compat/firestore'; */
 
 import {
-  addDoc,
   collection,
   collectionData,
-  deleteDoc,
   doc,
   docData,
   DocumentData,
@@ -205,40 +203,6 @@ export class DbFirestoreService {
       
     } */
 
-  getMostRecentLimit<T>(
-    componente: string,
-    field: string,
-    limite: number,
-  ): Observable<ConId<T>[]> {
-    const dataCollectionPath = `/Vantruck/datos/${componente}`;
-    const colRef = collection(this.firestore, dataCollectionPath);
-    const q = query(
-      colRef,
-      orderBy(field, "desc"),
-      limit(limite), // Ordenar por id descendente y limitar a 1
-    );
-
-    return new Observable<ConIdType<T>[]>((observer) => {
-      const unsubscribe = onSnapshot(
-        q,
-        (snapshot) => {
-          const changes: ConIdType<T>[] = snapshot
-            .docChanges()
-            .map((change) => ({
-              id: change.doc.id,
-              ...(change.doc.data() as T),
-              type: change.type, // 'added', 'modified', 'removed'
-            }));
-          observer.next(changes);
-        },
-        (error) => observer.error(error),
-      );
-
-      // Cleanup
-      return { unsubscribe };
-    });
-  }
-
   getMostRecentLimitId<T>(
     componente: string,
     field: string,
@@ -365,46 +329,6 @@ export class DbFirestoreService {
  */
   }
 
-  getAllColectionRangeIdValue<T>(
-    componente: string,
-    range1: any,
-    range2: any,
-    campo: string,
-    filtro: string,
-    valor: number,
-  ): Observable<ConId<T>[]> {
-    const dataCollectionPath = `/Vantruck/datos/${componente}`;
-    const colRef = collection(this.firestore, dataCollectionPath);
-    const q = query(
-      colRef,
-      where(filtro, "==", valor),
-      where(campo, ">=", range1),
-      where(campo, "<=", range2),
-    );
-
-    return from(getDocs(q)).pipe(
-      map((snapshot) =>
-        snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...(doc.data() as T),
-        })),
-      ),
-    );
-    /* return new Observable<ConIdType<T>[]>(observer => {
-          const unsubscribe = onSnapshot(q, snapshot => {
-            const changes: ConIdType<T>[] = snapshot.docChanges().map(change => ({
-              id: change.doc.id,
-              ...change.doc.data() as T,
-              type: change.type // 'added', 'modified', 'removed'
-            }));
-            observer.next(changes);
-          }, error => observer.error(error));
-
-          // Cleanup
-          return { unsubscribe };
-        }); */
-  }
-
   getAllStateChanges<T>(componente: string): Observable<ConIdType<T>[]> {
     const dataCollectionPath = `/Vantruck/datos/${componente}`;
     const colRef = collection(this.firestore, dataCollectionPath);
@@ -426,37 +350,6 @@ export class DbFirestoreService {
       );
 
       // Cleanup callback
-      return { unsubscribe };
-    });
-  }
-
-  getAllStateChangesByField<T>(
-    componente: string,
-    campo: string,
-    valor: any,
-  ): Observable<ConIdType<T>[]> {
-    const dataCollectionPath = `/Vantruck/datos/${componente}`;
-    const colRef = collection(this.firestore, dataCollectionPath);
-
-    const q = query(colRef, where(campo, "==", valor));
-
-    return new Observable<ConIdType<T>[]>((observer) => {
-      const unsubscribe = onSnapshot(
-        q,
-        (snapshot) => {
-          const changes: ConIdType<T>[] = snapshot
-            .docChanges()
-            .map((change) => ({
-              id: change.doc.id,
-              ...(change.doc.data() as T),
-              type: change.type,
-            }));
-
-          observer.next(changes);
-        },
-        (error) => observer.error(error),
-      );
-
       return { unsubscribe };
     });
   }
@@ -710,18 +603,6 @@ export class DbFirestoreService {
     return snap.docs.map(d => ({ id: d.id, ...(d.data() as T) }));
   }
 
-  create(componente: string, item: any) {
-    console.log("db.service, metodo create: ", this.coleccion);
-
-    let dataCollection = collection(
-      this.firestore,
-      `/Vantruck/datos/${componente}`,
-    );
-    return addDoc(dataCollection, item).then(() =>
-      console.log("Create. Escritura en la base de datos en: ", componente),
-    );
-  }
-
   update(componente: string, item: any, uid: any) {
     //this.dataCollection = collection(this.firestore, `/estacionamiento/datos/${componente}`);
     const estacionamiento1DocumentReference = doc(
@@ -746,17 +627,6 @@ export class DbFirestoreService {
     } catch (e: any) {
       return { exito: false, mensaje: `Error al actualizar ${coleccion}/${id}: ${e?.message ?? e}` };
     }
-  }
-
-  delete(componente: string, id: string) {
-    //this.dataCollection = collection(this.firestore, `/estacionamiento/datos/${componente}`);
-    const estacionamiento1DocumentReference = doc(
-      this.firestore,
-      `/Vantruck/datos/${componente}/${id}`,
-    );
-    return deleteDoc(estacionamiento1DocumentReference).then(() =>
-      console.log("Delete. borrado en la base de datos en: ", componente),
-    );
   }
 
   async actualizarMultiple(

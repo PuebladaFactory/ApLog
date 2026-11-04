@@ -4,7 +4,6 @@ import { BehaviorSubject, firstValueFrom, merge, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Asignacion, AsignacionItem, EstadoAsignacion } from 'src/app/interfaces/asignacion';
 import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
-import { LogService } from 'src/app/servicios/log/log.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 import { DisponibilidadService } from 'src/app/servicios/no-disponibilidad/disponibilidad.service';
 import { Resultado } from 'src/app/interfaces/resultado';
@@ -32,7 +31,6 @@ export class AsignacionService implements OnDestroy {
 
   constructor(
     private db:          DbFirestoreService,
-    private logService:  LogService,
     private logRegistro: LogRegistroService,
     private disponibilidad: DisponibilidadService,
   ) {}
@@ -162,27 +160,6 @@ export class AsignacionService implements OnDestroy {
     );
   }
 
-  /** Reactiva un item anulado (estado → 'activa') por idOperacion. Inverso de
-   *  anularItemEnLista. Usado al restaurar una op desde papelera: el item nunca se
-   *  borró, solo se marcó anulado, así que restaurar lo vuelve a activo. Log: EDITAR.
-   *  TODO: refactor Log — si la reactivación es parte de una restauración de op
-   *  atómica (coordinada por OperacionService.restaurarOperacion en el futuro), el
-   *  log debería emitirse una sola vez en el coordinador, no acá. */
-  async reactivarItem(fecha: string, idOperacion: string): Promise<void> {
-    const actual = await this.getTableroPorFecha(fecha);
-    if (!actual) throw new Error(`No existe tablero para la fecha ${fecha}`);
-
-    const items = this.reactivarItemEnLista(actual.items, idOperacion);
-    const asignacion: Asignacion = { ...actual, items, timestamp: Date.now() };
-    try {
-      await this.db.setDocSinId(this.COLECCION, fecha, this.toFirestore(asignacion));
-      this.registrarLog('EDITAR', `Item reactivado (op ${idOperacion}) en tablero ${fecha}`, fecha, true);
-    } catch (e) {
-      this.registrarLog('EDITAR', `Error al reactivar item en tablero ${fecha}`, fecha, false);
-      throw e;
-    }
-  }
-
   /** Arma (sin comitear) la escritura de actualización de observacion/hojaDeRuta
    *  de un item por idOperacion + su propio log EDITAR, y los agrega a
    *  `escrituras`, para que un caller externo (ej.
@@ -231,13 +208,6 @@ export class AsignacionService implements OnDestroy {
   }
 
   // ---- Helpers privados ----
-
-  private registrarLog(accion: string, detalle: string, idTablero: string, exito: boolean): void {
-    // TODO: refactor Roles — la exclusión del rol 'dev' del log vivía en StorageService
-    // y se pierde al llamar directo a LogService. Redefinir (probablemente en LogService)
-    // al refactorizar roles. Por ahora se loguea todo, incluido dev.
-    this.logService.logEvent(accion, this.COLECCION, detalle, idTablero, exito);
-  }
 
   /** Excluye idAsignacion antes de escribir (el id es el doc id, no se persiste). */
   asignacionToFirestore(a: Asignacion): Omit<Asignacion, 'idAsignacion'> {

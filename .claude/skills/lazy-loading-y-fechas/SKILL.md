@@ -53,8 +53,17 @@ Vantruck (ver la skill `migracion-vantruck`, subsección "Checklist — migraci�
 - **CI2:** archivos que nadie importaba (`constants/` duplicada, `FacturaReal`,
   interfaces de `informes-tabla`, `SupabaseStorageService`) y `@supabase/supabase-js`.
 - **Se quedan** (decisión D5; retirarlos es decisión de producto del frente Ajustes):
-  - Registro viejo (`logs`) y `LogService`;
-  - Papelera legado + `ObjetoPapelera`;
+  - Registro viejo (`logs`) y `LogService` — `LogService` se eliminó (2026-11-04);
+    `RegistroComponent` se conserva como histórico congelado (skill `subsistema-log`);
+  - ~~Papelera legado + `ObjetoPapelera`~~ — eliminados (2026-11-04, skill
+    `subsistema-papelera`). `ObjetoPapeleraComponent` estaba declarado en `SharedModule`
+    (no exportado, abierto con `NgbModal`); aun así, en el build de producción su código
+    viajaba en el chunk de Ajustes y no en uno común: en AOT las `declarations` de un
+    NgModule no retienen código, el componente va donde se importa, y su único importador
+    era `PapeleraLegadoComponent`. Medido en `build:demo`: chunk de Ajustes de 103,20 a
+    64,47 kB, inicial de 1.525.476 a 1.520.653 B (−4,8 kB, `LogService` y los miembros
+    retirados de `StorageService`/`DbFirestoreService`), ningún otro chunk con cambios
+    relevantes;
   - ~~`exportToExcelInforme` / `exportToPdfInforme`~~ — se fueron antes que la Papelera,
     con su botón y sus servicios (frente Informes, IE4 e IE5).
 - **Excepción a no borrar:** el import de `appVersion` en `app.component.ts`. Parece sin
@@ -133,11 +142,11 @@ en `fechaLegible`.
   (`app-root.parentElement` es el `H1`). Todo texto sin tamaño propio hereda 24 px,
   peso 500 y `line-height` 1,2. Sacarlo cambia la tipografía global: hace falta
   revisión visual pantalla por pantalla.
-- **Ajustes / Papelera legado:** `clientes$`, `choferes$` y `proveedores$` de
-  `StorageService` siempre emiten `[]`: nadie escribe esas claves de `localStorage` y
-  `clearAllLocalStorage()` las borra en cada login. Era lo que vaciaba las listas del
-  Excel/PDF de documentos viejos de `objeto-papelera`, retirado en el frente Informes
-  (IE4). `modal-vehiculo` asigna `$proveedores` sin usarlo. Se va con la Papelera legado.
+- **`StorageService.proveedores$`:** siempre emite `[]` (nadie escribe esa clave de
+  `localStorage` y `clearAllLocalStorage()` la borra en cada login), y su único consumidor,
+  `modal-vehiculo`, asigna `$proveedores` sin usarlo. `clientes$`/`choferes$` y
+  `objeto-papelera`, que tenían el mismo problema, se fueron con la Papelera legado
+  (2026-11-04).
 - **Bundle:** ~~`pdfmake` (~2,5 MB) en el chunk de Ajustes~~ y ~~`exceljs` en `/op`~~ —
   RESUELTOS en el frente Informes: `pdfmake` salió del proyecto y ninguna ruta descarga
   una librería de exportación al entrar.

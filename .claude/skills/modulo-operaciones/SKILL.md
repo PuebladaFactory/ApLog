@@ -16,7 +16,7 @@ Tras el rediseño de `Operacion` (objetos embebidos → snapshots `RefCliente`/`
    - `getTipoContratacion(idChofer): 'directo' | 'proveedor' | undefined`
    - `getContratacionChofer(idChofer): ContratacionChofer | undefined`
 
-   **No usar helper genérico de resolución** ni inyectar XxxService en la capa de datos (`DbFirestoreService`) — produce dependencia circular. Cuando la capa de datos necesita un dato resuelto, recibe el valor ya resuelto como parámetro desde la capa de negocio (ver `eliminarInformesPorIdOperacion` (eliminado — frente Baja de Operación, C3): TableroService resuelve `tipoContratacion` y lo pasa).
+   **No usar helper genérico de resolución** ni inyectar XxxService en la capa de datos (`DbFirestoreService`) — produce dependencia circular. Cuando la capa de datos necesita un dato resuelto, recibe el valor ya resuelto como parámetro desde la capa de negocio (ver `eliminarInformesPorIdOperacion` (eliminado — frente Baja de Operación, C3): TableroService resuelve `tipoContratacion` y lo pasa; `TableroService` también se eliminó, con la Papelera legado).
 
 **Regla práctica:** antes de meter un `getXxxPorId`, verificar si el dato ya está en el snapshot de la op (`op.proveedor`, `op.vehiculo`). Si está, leerlo de ahí.
 
@@ -196,13 +196,13 @@ Combinaciones que el código produce, con la etiqueta de la UI (`etiquetaEstadoO
 | E1 → E6 | `OperacionService.bajaOperacion` (desde `tablero-op`) | `operaciones.eliminar`; botón habilitado si la etiqueta es `'Abierta'` | En transacción: `validarBaja(op, 'abierta')`; no hay tablero para la fecha |
 | E2 → E6 | `OperacionService.bajaOperacionCerrada` (desde `informe-op-listado`, tacho por InformeOp) | `liquidaciones.eliminar`. `darDeBaja` corre `validarBaja(op, 'cerrada')` antes de pedir el motivo y muestra su mensaje tal cual | En transacción: `validarBaja(op, 'cerrada')`; alguno de los dos InformeOp no `'activo'` o con `idInfLiq`; falta la contraparte o es de otra op; no hay tablero |
 | E3/E4/E5 → E6 | **No hay transición directa** (ver abajo) | — | `validarBaja` rechaza cualquier flag de liquidación o proforma |
-| E6 → E1 | `OperacionService.restaurarOperacion` (desde `PapeleraComponent`). Ver "Contrato vigente — `restaurarOperacion`". También el camino legado `TableroService.altaOperacionYActualizarTablero` (Papelera legado, deuda) | evento `'activo'`; rol distinto de `demo` | ver el contrato |
+| E6 → E1 | `OperacionService.restaurarOperacion` (desde `PapeleraComponent`). Ver "Contrato vigente — `restaurarOperacion`". Es el único camino: el legado (`TableroService.altaOperacionYActualizarTablero`, Papelera legado) se eliminó | evento `'activo'`; rol distinto de `demo` | ver el contrato |
 
 **Los dos hechos que más cuestan de descubrir leyendo el código:**
 
 - **No hay ningún camino de cerrada a abierta salvo dar de baja y restaurar.** Los únicos
-  escritores de `estadoInicial()` son el alta, `restaurarOperacion` y el camino legado de
-  `TableroService`. Ningún gesto "reabre" una op cerrada: si hay que corregir algo de una
+  escritores de `estadoInicial()` son el alta y `restaurarOperacion` (el camino legado de
+  `TableroService` se eliminó con la Papelera legado). Ningún gesto "reabre" una op cerrada: si hay que corregir algo de una
   cerrada, se edita su InformeOp o se da de baja y se restaura.
 - **Una op en proforma o liquidada no se puede dar de baja directamente.** Primero hay que
   volverla a E2 **en cada lado**: `eliminarBorrador` para un lado en proforma,
@@ -493,7 +493,7 @@ aparece, el mensaje dice exactamente qué no encontró y se decide si relajarla.
 
 El camino nuevo (`AsignacionService.agregarEscrituraAnularItem` en la baja y el reactivado de
 `restaurarOperacion`) reescribe el tablero sin tocar su `timestamp`; el legado
-(`AsignacionService.reactivarItem`) sí lo actualiza. **Antes de arreglarlo, verificar qué lee
+(`AsignacionService.reactivarItem`, eliminado con la Papelera legado) sí lo actualizaba. **Antes de arreglarlo, verificar qué lee
 ese `timestamp`:** si algo lo usa para invalidar caché o detectar cambios, una baja o una
 restauración son invisibles para ese mecanismo.
 

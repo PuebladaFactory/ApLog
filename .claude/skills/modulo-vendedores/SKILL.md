@@ -121,8 +121,8 @@ cachés `vendedores$` / `informesVenta$` / `resumenVenta$` de
 `StorageService` y el listener de `vendedores` en Home. Se conservan: las
 colecciones `informesVenta` / `resumenVenta` en Vantruck y sus mapeos en
 `firestore.rules`, `'informesVenta'` en `LimpiezaDemoService`,
-`Cliente.vendedor` / `RefCliente.vendedor` y el caso `'vendedores'` de
-`papelera-legado` (ver "Deuda — Vendedores").
+`Cliente.vendedor` / `RefCliente.vendedor`. (El caso `'vendedores'` de
+`papelera-legado` se fue con la Papelera legado, eliminada el 2026-11-04.)
 
 ## Deuda abierta — Vendedores (`comisionesVenta` / `liquidacionesVenta`)
 - Migración a Vantruck, checklist de Vendedores (después del backup
@@ -154,8 +154,8 @@ colecciones `informesVenta` / `resumenVenta` en Vantruck y sus mapeos en
   movimiento de Finanzas: V-a, frente aparte; ver la skill `modulo-finanzas`, subsección "Deuda abierta — Finanzas").
 - `.col-numero` está repetida en el tablero, el historial y el detalle de
   liquidación (y en `tabla-listado`) → consolidar en un estilo global.
-- Sin uso, no tocados: caso `"vendedores"` de la lista de logueables de
-  `StorageService` (~~`storageService` inyectado en `PdfService`~~ y
-  ~~`tablero-calendario`~~: retirados en el frente Lazy loading + fechas). El caso `'vendedores'` de
-  `papelera-legado` se conserva a propósito (vendedores viejos de Vantruck;
-  `VendedorService` normaliza el formato).
+- ~~Sin uso, no tocados: caso `"vendedores"` de la lista de logueables de
+  `StorageService` y el caso `'vendedores'` de `papelera-legado`~~ — eliminados con la
+  Papelera legado y el log viejo (2026-11-04): `controlLog` y `PapeleraLegadoComponent` ya
+  no existen. Los vendedores viejos de Vantruck que estén en la colección `papelera` ya no
+  se restauran desde la UI (skill `migracion-vantruck`).

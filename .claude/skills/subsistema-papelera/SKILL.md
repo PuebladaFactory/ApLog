@@ -1,6 +1,6 @@
 ---
 name: subsistema-papelera
-description: Papelera por referencia (soft delete) de ApLog — PapeleraService, colección papeleraEventos, baja y restauración atómicas de clientes, choferes, proveedores y operaciones (bajaOperacion, restaurarOperacion), la pantalla PapeleraComponent y la Papelera legado (PapeleraLegadoComponent, colección papelera). Leer antes de trabajar sobre bajas, eliminar o dar de baja, restaurar, la papelera o soft delete.
+description: Papelera por referencia (soft delete) de ApLog — PapeleraService, colección papeleraEventos, baja y restauración atómicas de clientes, choferes, proveedores y operaciones (bajaOperacion, restaurarOperacion), la pantalla PapeleraComponent y la colección vieja papelera (Papelera legado, retirada: sin pantalla). Leer antes de trabajar sobre bajas, eliminar o dar de baja, restaurar, la papelera o soft delete.
 ---
 
 ## Frente Papelera — mecanismo de referencia (Agosto 2026)
@@ -89,34 +89,31 @@ que lo generó, y una pantalla de listado genérica sobre los eventos.
   (eliminada en el frente Baja de Operación, C3) y la baja de operación cerrada de
   `liquidaciones-op.component.ts` (componente eliminado; esa baja hoy es
   `OperacionService.bajaOperacionCerrada`, ver más abajo). Hoy `getObjetoEliminado`
-  lo usan `PapeleraComponent` (snapshot del detalle) y `objeto-papelera`.
-  **`objeto-papelera.component.ts` resuelto distinto:** `getTarifaLabel`
-  corre síncrono desde el template, y `PapeleraService.getObjetoEliminado` es
-  async — se resuelve en `ngOnInit` (fire-and-forget, popula un campo que
-  `getTarifaLabel` lee) en vez de adentro del getter. **`proveedor.service.ts`
+  lo usa `PapeleraComponent` (snapshot del detalle); el otro consumidor,
+  `objeto-papelera`, se retiró con la Papelera legado. **`proveedor.service.ts`
   (`resolverTarifasHabilitadasChofer`) NO resuelto, TODO se mantiene a
   propósito:** corre síncrono dentro de factories puras sin I/O por convención
   (`OperacionFactoryService`, `operaciones-editor`) — el fallback async no encaja
   ahí sin romper esa convención; documentado en el propio comentario, no forzado.
 
 **Pantallas (PASO 6):** la pantalla vieja (`raiz/ajustes/papelera/`) se renombró a
-`raiz/ajustes/papelera-legado/` (`PapeleraLegadoComponent`, ruta nueva
-`ajustes/papelera-legado`) SIN tocar su lógica interna — sigue siendo el único
-camino de papelera para Vendedores/Facturación/Liquidación. `raiz/ajustes/papelera/`
+`raiz/ajustes/papelera-legado/` (`PapeleraLegadoComponent`, ruta
+`ajustes/papelera-legado`) SIN tocar su lógica interna. Después se eliminó (ver "Hecho —
+eliminación del camino legado de la papelera"). `raiz/ajustes/papelera/`
 (la ruta `ajustes/papelera` ya existente) pasa a ser la pantalla NUEVA
 (`PapeleraComponent`), sobre `PapeleraConsultaService`/`PapeleraEvento` — mismo
 look&feel que la vieja, filtro `estado` (`'activo'` por default, con opción de ver
 `'restaurado'`), detalle vía `VisualizadorObjetoService.verObjeto` (con snapshot
 para eventos `'activo'`), objetos secundarios listados en línea sin modal propio, y
-Restaurar deshabilitado si `estado !== 'activo'`. Tab nuevo ("Papelera (legado)") en
-`AjustesControlComponent`, mismo patrón que el tab de Registro Log.
+Restaurar deshabilitado si `estado !== 'activo'`. El tab "Papelera (legado)" de
+`AjustesControlComponent` (que ya estaba comentado) se retiró con la pantalla.
 
 **Módulos que quedaron fuera de este frente — estado actual:** cuando se hizo el frente,
 Facturación, Liquidación y Vendedores siguieron escribiendo en la colección vieja `papelera`
 vía `StorageService`. Hoy ninguno lo hace: `StorageService.deleteItemPapelera*`/
 `addSimpleLogPapelera`/`deleteItemPapeleraCompuestoAsync` ya no existen (quitados como código
 muerto en LR2a, `6f350b5`), ningún componente de esos tres módulos usa `StorageService`, y la
-colección `papelera` sólo la lee `PapeleraLegadoComponent`. La baja de una operación cerrada,
+colección `papelera` no la lee ni la escribe nadie desde que se retiró la Papelera legado. La baja de una operación cerrada,
 que era el motivo puntual de Liquidación, ya está unificada: `liquidaciones-op.component.ts` y
 `eliminarOperacionEInformes` no existen, y la baja se hace desde `InformeOpListadoComponent`
 con `OperacionService.bajaOperacionCerrada`, en una sola transacción que usa el mismo
@@ -129,8 +126,8 @@ clientes y proveedores, `tablero-op` e `informe-op-listado`.
 
 **Fix de permisos encontrado (Security Rules):** la rama `papelera` de
 `permitido()` en `firestore.rules` no le daba a `demo` NINGÚN permiso, pese a que
-TANTO la ruta nueva (`ajustes/papelera`) como la vieja (`ajustes/papelera-legado`)
-permiten navegar como `demo` (mismo `RoleGuard` que `registro`/`registro-log`) —
+TANTO la ruta nueva (`ajustes/papelera`) como la vieja (`ajustes/papelera-legado`, hoy
+retirada) permitían navegar como `demo` (mismo `RoleGuard` que `registro`/`registro-log`) —
 bug preexistente al mecanismo nuevo, corregido de paso. Agregada
 `(r == 'demo' && accion == 'leer')`, mismo criterio que `logs`/`registroLog`.
 **Dos fixes más, encontrados al implementar el mecanismo nuevo (no en el
@@ -174,10 +171,10 @@ tipado estructural, así que el fix cubre ambos casos sin tocar ningún call sit
 
 **Verificado:** `tsc --noEmit` limpio (0 errores fuera de los preexistentes de
 archivos `.spec.ts`, sin type defs de test runner cargados — no relacionado con
-este frente). `ng build --configuration=demo` limpio, mismo error de budget de
-bundle preexistente (8.76 MB vs. 7 MB — línea consistente con el crecimiento ya
-documentado en frentes anteriores, delta real de este frente no medido por
-separado). Security Rules verificadas contra el emulador (ver arriba). **Prueba
+este frente). `ng build --configuration=demo` limpio. (La medición de budget que se anotó acá en
+2026-08-21, "8.76 MB vs. 7 MB", es anterior al frente Lazy loading + fechas, que hizo lazy
+los módulos de feature y cambió los budgets de demo: no vale para hoy. Budget y tamaño
+vigentes del bundle inicial: `CLAUDE.md`, "Entornos de build".) Security Rules verificadas contra el emulador (ver arriba). **Prueba
 manual del desarrollador contra `demo`, en curso:** baja simple (Operación) y baja
 en cascada (Chofer, con vehículos + legajo) probadas — ambas OK. Pendiente todavía:
 baja de Cliente y de Proveedor (cascada N-choferes), restaurar cada caso, confirmar
@@ -185,38 +182,51 @@ entradas BAJA/RESTAURAR en `RegistroLogComponent`, y confirmar en la pantalla de
 Papelera nueva que el detalle abre el snapshot correcto para eventos `'activo'` y
 el objeto vivo para `'restaurado'`.
 
-## Deuda abierta — eliminar el camino legado de la papelera
+## Hecho — eliminación del camino legado de la papelera (2026-11-04)
 
-**Dirección decidida: se elimina, no se migra.** El camino legado (`PapeleraLegadoComponent`,
-colección `papelera` con `LogDoc`, `ObjetoPapeleraComponent`) sale junto con el log viejo. No
-se reabre la opción de migrar `PapeleraLegadoComponent.addItem` a
-`OperacionService.restaurarOperacion`: está descartada (además, `restaurarOperacion(idEvento)`
-restaura desde `papeleraEventos`/`objetosEliminados`, no desde un `LogDoc`).
+**Se eliminó, no se migró.** Restauraba peor que el camino nuevo: para operaciones
+(`TableroService.altaOperacionYActualizarTablero`) hacía cinco escrituras sueltas sin
+atomicidad, borraba de `papelera` sin `await` y dejaba la op con los campos del cierre, sin el
+contrato de `restaurarOperacion` (skill `modulo-operaciones`); para el resto restauraba con
+`addDoc` (id de documento nuevo, distinto del que referencian operaciones y tarifas). Además
+era el último escritor de `logs`, así que salió en el mismo frente que el log viejo (skill
+`subsistema-log`). Auditoría previa: `docs/auditorias/eliminacion-papelera-legado-y-log-viejo.md`.
 
-**Por qué eliminar y no migrar:**
+**Qué se eliminó:**
 
-- **Restaura peor que el camino nuevo.** Para operaciones
-  (`TableroService.altaOperacionYActualizarTablero`) hace cinco escrituras sueltas sin
-  atomicidad, escribe en el log viejo, borra de `papelera` sin `await`, no chequea rol en TS
-  (sólo una clase CSS para `demo` en el template) y deja la op con los campos del cierre
-  (`resumenProcesado`, ids de InformeOp, multiplicadores, etc.), sin el contrato de
-  `restaurarOperacion` (skill `modulo-operaciones`, "Contrato vigente —
-  `restaurarOperacion`"). Migrarlo conservaría una capacidad que hace daño.
-- **Es el último escritor de `logs`.** La no disponibilidad ya no usa el log viejo; lo único
-  que sigue escribiendo ahí es la Papelera legado (`StorageService.addItem`/`deleteItem`,
-  `TableroService.altaOperacionYActualizarTablero`, `AsignacionService.reactivarItem`). Por
-  eso salen en **un solo frente**: la Papelera legado, `LogService`, la colección `logs` y
-  `AsignacionService.reactivarItem` (skill `subsistema-log`).
+- Pantallas: `PapeleraLegadoComponent` (`raiz/ajustes/papelera-legado/`, su ruta
+  `ajustes/papelera-legado` y la entrada `tab5` de `AjustesControlComponent`) y
+  `ObjetoPapeleraComponent` (`shared/modales/objeto-papelera/`, declarado en `SharedModule`).
+- Servicios: `TableroService` (`servicios/tablero/`) y `LogService` (`servicios/log/`)
+  completos; `AsignacionService.reactivarItem` y su privado `registrarLog` (se conserva
+  `reactivarItemEnLista`, puro, que usa `restaurarOperacion`).
+- `StorageService`: `addItem`, `deleteItem`, `updateItem`, `syncChangesLimit`,
+  `listenForChangesField`, `controlLog`, los observables `users$`, `clientes$` y `choferes$`
+  (y los subjects de clientes/choferes). Queda el subject privado de `users` porque lo usa
+  `getAllColection` (vía `initializerAdmin`); los lectores de usuarios usan `loadInfo('users')`.
+- `DbFirestoreService`: `create`, `delete`, `getMostRecentLimit`,
+  `getAllColectionRangeIdValue`, `getAllStateChangesByField`.
+- Interfaz `LogDoc` (`interfaces/log-doc.ts`): sin consumidores al irse la pantalla.
 
-**Precondición del frente: relevar la colección `papelera` de producción antes de eliminar el
-camino.** Eliminarlo no borra los `LogDoc`, que quedan en Firestore; lo que se pierde es poder
-restaurarlos desde la pantalla. Si hay algo reciente que podría necesitarse, se resuelve antes.
+**Qué queda:** la colección `papelera` en Firestore, con sus `LogDoc`, sin tocar y sin pantalla:
+lo único que se perdió es poder restaurarlos. Las entradas `'papelera'` de `moduloDe()` en
+`firestore.rules` siguen porque el bucket `papelera` lo comparten `papeleraEventos` y
+`objetosEliminados`.
 
-**Qué más se va con él:** los residuos de `objeto-papelera` (skills `exportacion-excel-pdf` y
-`lazy-loading-y-fechas`), y `StorageService.updateItem`, que quedó sin callers y es lo
-único fuera de la Papelera legado que todavía referencia a `LogService`.
+**Producción:** la colección `papelera` de `pf-logistics` ya está relevada (por Nico, en la
+consola) y no bloquea nada: es tema de la estrategia de migración. Datos y criterio en la skill
+`migracion-vantruck`, "Checklist — migración a Vantruck: eliminación de la Papelera legado y
+del log viejo".
 
-**Ya fuera del alcance (2026-11-03):** los dos gestos que mutaban sin rastro y no eran de la
+**Correcciones a lo que decía esta skill antes del frente:**
+
+- `StorageService.deleteItem('papelera', …)` **no** escribía en `logs`: la Papelera legado lo
+  llamaba con acción `'INTERNA'` y `controlLog('papelera', …)` caía en `default` (false). En la
+  rama de no-operaciones el que escribía en `logs` era `addItem`.
+- `StorageService.updateItem` no tenía callers: no había ninguna escritura viva de `logs`
+  fuera de la Papelera legado (la referencia a `LogService` existía, la escritura no).
+
+**Ya fuera del alcance antes del frente (2026-11-03):** los dos gestos que mutaban sin rastro y no eran de la
 Papelera legado dejaron de serlo, cada uno por su lado. Activar / desactivar un cliente, chofer
 o proveedor ahora loguea EDITAR (`ActivacionEntidadService.cambiarActivo`). Mostrar / ocultar en
 los listados (`VisibilidadListadosComponent`) dejó `StorageService.updateItem` y sigue sin log,

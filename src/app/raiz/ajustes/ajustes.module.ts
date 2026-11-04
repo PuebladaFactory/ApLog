@@ -9,7 +9,6 @@ import { SharedModule } from 'src/app/shared/shared.module';
 import { RegistroComponent } from './registro/registro.component';
 import { NgbDatepickerModule } from '@ng-bootstrap/ng-bootstrap';
 import { PapeleraComponent } from './papelera/papelera.component';
-import { PapeleraLegadoComponent } from './papelera-legado/papelera-legado.component';
 import { RegistroLogComponent } from './registro-log/registro-log.component';
 import { DatosEmpresaComponent } from './datos-empresa/datos-empresa.component';
 
@@ -22,7 +21,6 @@ import { DatosEmpresaComponent } from './datos-empresa/datos-empresa.component';
     ModalUsuarioComponent,
     RegistroComponent,
     PapeleraComponent,
-    PapeleraLegadoComponent,
     RegistroLogComponent,
     DatosEmpresaComponent,
   ],

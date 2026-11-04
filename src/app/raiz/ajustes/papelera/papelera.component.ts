@@ -19,8 +19,8 @@ import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-s
 /** Pantalla nueva de papelera, basada en el mecanismo por referencia
  *  (PapeleraEvento/objetosEliminados, ver CLAUDE.md → "Frente Papelera") — SOLO
  *  para Cliente/Chofer/Proveedor/Operación, los 4 módulos ya migrados. El resto
- *  (Vendedores/Facturación/Liquidación) sigue en PapeleraLegadoComponent, sin
- *  cambios. */
+ *  (Vendedores/Facturación/Liquidación) no tiene pantalla de restauración: la
+ *  Papelera legado se retiró; sus documentos quedan en la colección `papelera`. */
 @Component({
   selector: 'app-papelera',
   templateUrl: './papelera.component.html',

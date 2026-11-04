@@ -111,6 +111,30 @@ Después del backup completo y de migrar `choferes` (incluida la papelera):
    `pf-logistics`) y corregir a mano los que queden en "revisar" (editando el chofer).
 2. Sin reglas ni índices nuevos: la ficha solo lee colecciones que ya están mapeadas.
 
+### Checklist — migración a Vantruck: eliminación de la Papelera legado y del log viejo
+
+El frente (2026-11-04, skills `subsistema-papelera` y `subsistema-log`) sacó la pantalla de la
+Papelera legado y todo escritor de `logs`.
+
+**Primera verificación del día del corte:** abrir `ajustes/registro` (`RegistroComponent`) en
+Vantruck y confirmar que lista el histórico real de `logs`. Motivo: en demo la colección `logs`
+está vacía, así que la pantalla sólo se probó sin filas (abre y consulta sin errores de
+consola); el render con datos nunca se pudo ejercitar antes de la promoción.
+
+Antes del corte:
+
+- **Colección `papelera` de `pf-logistics` — relevada por Nico en la consola, no se volvió a
+  leer.** Tiene muchos documentos, en su mayoría operaciones; en los últimos 2 meses hay 4,
+  todas operaciones. Las viejas no preocupan. Las recientes, si hacen falta, se resuelven
+  generando la operación como nueva y dándola de baja a mano con el camino nuevo
+  (`bajaOperacion`); las entidades (clientes, choferes, proveedores) son recreables. Los
+  documentos quedan en Firestore: lo único que se perdió es poder restaurarlos desde la UI.
+  **Decidido: es tema de la estrategia de migración, no bloquea nada antes.**
+- **Devolverle a `RegistroComponent` su pestaña en Ajustes.** Es el histórico congelado del
+  log viejo (colección `logs`), pero hoy sólo se llega por URL (`ajustes/registro`): en
+  `AjustesControlComponent` la entrada `tab2` sigue en el array `tabs` y el bloque de la
+  pestaña "Registro" del template está comentado.
+
 ## Deuda abierta — alinear región de Cloud Functions en `pf-logistics`/Vantruck
 
 Al agregar `verificarVencimientosDocumentacion` (ver "Cloud Functions"), todo el

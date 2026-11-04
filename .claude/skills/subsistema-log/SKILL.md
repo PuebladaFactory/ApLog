@@ -1,6 +1,6 @@
 ---
 name: subsistema-log
-description: Mecanismo unificado de log de ApLog (LogRegistroService, colección registroLog, agregarAlBatch dentro del commitBatch) — cómo se loguean ALTA/EDITAR/BAJA/RESTAURAR en el mismo batch atómico, las cascadas, la pantalla RegistroLogComponent, login/logout, gestión de usuarios y la convivencia con el LogService viejo (colección logs). Leer antes de trabajar sobre cualquier escritura que deba loguearse, el registro de actividad o la auditoría de cambios.
+description: Mecanismo unificado de log de ApLog (LogRegistroService, colección registroLog, agregarAlBatch dentro del commitBatch) — cómo se loguean ALTA/EDITAR/BAJA/RESTAURAR en el mismo batch atómico, las cascadas, la pantalla RegistroLogComponent, login/logout, gestión de usuarios y el log viejo (colección logs, LogService retirado; RegistroComponent como histórico). Leer antes de trabajar sobre cualquier escritura que deba loguearse, el registro de actividad o la auditoría de cambios.
 ---
 
 ## Frente Log — mecanismo unificado (Frente 1, Agosto 2026)
@@ -13,7 +13,8 @@ después. Si el batch no commitea, no hay log; si commitea, el log está garanti
 adentro — estructuralmente imposible tener log duplicado o faltante en las mutaciones
 migradas.
 
-**Piezas nuevas, conviven con las viejas (no las reemplazan):**
+**Piezas nuevas, convivían con las viejas** (hasta que `LogService` y `log-doc.ts` se
+eliminaron, ver "Hecho — eliminación del log viejo"):
 - `interfaces/registro-log.ts` (`RegistroLog`, `AccionLog`, `CambioCampo`) — nueva,
   no reemplaza a `log-entry.ts`/`log-doc.ts`.
 - `LogRegistroService` (`servicios/log-registro/`) — nuevo, no reemplaza a `LogService`
@@ -98,8 +99,6 @@ entrada propia.
 | Mutación | Dónde | Qué escribe | Rastro |
 |---|---|---|---|
 | Mostrar / ocultar en los listados (clientes, choferes, proveedores, legajos) | `VisibilidadListadosComponent.actualizarObjeto` | Sólo `visible`, con `DbFirestoreService.updateConResultado` | **Ninguno, por decisión** (ver "Asimetría `activo` / `visible`" abajo) |
-| Papelera legado: borrar o restaurar un objeto | `PapeleraLegadoComponent` → `StorageService.addItem` / `deleteItem` | La colección del objeto + `papelera` | Sólo en `logs` (log viejo). La ruta `ajustes/papelera-legado` existe pero su pestaña está comentada: se llega escribiendo la URL |
-| Restaurar una operación por el camino legado | `TableroService.altaOperacionYActualizarTablero` → `AsignacionService.reactivarItem` | `operaciones`, `asignaciones` | Sólo en `logs` |
 | Recalcular el estado de los legajos y la colección `vencimientos` | Cloud Function `verificarVencimientosDocumentacion` (programada) | `legajos` (estado), `vencimientos` (se reconstruye entera) | Ninguno: escritura del servidor, sin usuario |
 | Reservar números de operación | `NumeradorService.reservarRangoOperaciones` (transacción propia, antes del alta) | `numeradores/OPER` | Ninguno, por diseño: contador técnico. Los demás numeradores van dentro del batch del gesto |
 | Herramientas de `/migracion` | `servicios/desarrollo/*` (generadores, limpieza, recálculos, normalización) y `servicios/migracion/*` (SDK de Firestore directo) | Varias | Ninguno: son sólo `dev`, que está excluido igual |
@@ -132,8 +131,9 @@ Código muerto que escribiría sin log, sin caller desde ningún template:
 con datos de prueba).
 
 **Pantallas:** `RegistroLogComponent` (Frente 3, más abajo) lee `registroLog`.
-`RegistroComponent` sigue leyendo `logs`. Su pestaña en Ajustes está comentada y la ruta
-`ajustes/registro` sigue viva: es el histórico del log viejo.
+`RegistroComponent` sigue leyendo `logs` (directo por `DbFirestoreService`, ver "Hecho —
+eliminación del log viejo"). Su pestaña en Ajustes está comentada y la ruta
+`ajustes/registro` sigue viva: es el histórico congelado del log viejo.
 
 ### Frente 2 — consolidación de cascadas en batch (Chofer/Proveedor/Legajos, Agosto 2026)
 
@@ -282,7 +282,7 @@ Pantalla nueva e independiente que lee exclusivamente de `registroLog` — NO to
 mezclan a propósito. (Al cerrar este frente se pensaba eliminar la pantalla vieja al
 terminar la migración de módulos. **Vencido:** la decisión vigente es "Decisión — sin
 migración de `logs` a `registroLog`", más abajo: `RegistroComponent` queda como histórico
-congelado; lo que se elimina es `LogService` junto con la Papelera legado.)
+congelado; `LogService` se eliminó junto con la Papelera legado.)
 
 **Ubicación:** `raiz/ajustes/registro-log/` (mismo nivel que `registro/`/`papelera/`),
 ruta `ajustes/registro-log` en `ajustes-routing.module.ts`, mismo `RoleGuard` que
@@ -290,8 +290,8 @@ ruta `ajustes/registro-log` en `ajustes-routing.module.ts`, mismo `RoleGuard` qu
 para pantallas de auditoría). 4ta pestaña ("Registro Log") agregada al tab bar propio
 de `AjustesControlComponent` (`tab4`), junto a Usuarios/Registro/Papelera. Hoy las
 pestañas de Ajustes son Usuarios, Registro Log, Papelera y Datos de la empresa: las de
-Registro (`RegistroComponent`) y Papelera (legado) están comentadas en el template, y sus
-rutas (`ajustes/registro`, `ajustes/papelera-legado`) siguen vivas, sólo por URL.
+Registro (`RegistroComponent`) está comentada en el template y su ruta (`ajustes/registro`)
+sigue viva, sólo por URL. La Papelera legado (pestaña, ruta y pantalla) se eliminó.
 
 **Query y paginación:**
 - `DbFirestoreService.getPaginado<T>(coleccion, campoFecha, desde, hasta, pageSize,
@@ -347,7 +347,7 @@ dominio"): dispatcher `coleccion -> handler` (`Record` simple, sin abstraer más
 pensado para reusarse en Papelera más adelante. **Ya conectado (Frente Papelera):**
 `PapeleraComponent` abre el objeto con `verObjeto(coleccion, id, snapshot)` (el
 parámetro `snapshot` muestra la copia archivada de un objeto dado de baja).
-`ObjetoPapeleraComponent` sólo lo usa `PapeleraLegadoComponent`.
+`ObjetoPapeleraComponent` se eliminó con la Papelera legado.
 - `verObjeto(coleccion, idObjet)`: `DbFirestoreService.getById` para el objeto ACTUAL
   (no un snapshot del momento del log — el diff de la fila EDITAR ya cubre eso), abre
   el modal de alta/edición REAL de esa entidad vía `NgbModal` con
@@ -382,8 +382,8 @@ parámetro `snapshot` muestra la copia archivada de un objeto dado de baja).
   en otras partes de este archivo; el shim de tarifas que usaba se retiró en el cierre de Tarifas). Por eso
   "reusar el mismo mecanismo que ya usa Papelera" en la consigna de este frente se
   interpretó como reusar el PATRÓN de bajo nivel (`NgbModal.open` + `fromParent =
-  {modo, item}`), no literalmente `ObjetoPapeleraComponent` — que sigue existiendo tal
-  cual, sin relación con `VisualizadorObjetoService`. Cuando se aborde el frente de
+  {modo, item}`), no literalmente `ObjetoPapeleraComponent` (que después se eliminó con
+  la Papelera legado). Cuando se aborde el frente de
   Papelera, ahí se decide si conviene migrar `PapeleraComponent` a
   `VisualizadorObjetoService` (ganando los modales reales en vez del bespoke) o
   mantenerlos separados.
@@ -637,14 +637,31 @@ circuito **no pasa por `StorageService` ni por el `LogService` viejo**.
 `noDisponibilidades` está en `COLECCIONES_REGISTRO_LOG`: se puede filtrar por colección en
 `RegistroLogComponent`.
 
-## Deuda abierta — eliminar el log viejo (`LogService`, colección `logs`)
+## Hecho — eliminación del log viejo (`LogService`) (2026-11-04)
 
-**Cadena: `eliminar el log viejo` → `eliminar el camino legado de la papelera` — destrabada.**
-Lo único que sigue escribiendo en `logs` es la Papelera legado: `StorageService.addItem`/
-`deleteItem` (desde `PapeleraLegadoComponent`), `TableroService.altaOperacionYActualizarTablero`
-y `AsignacionService.reactivarItem`. Por eso el log viejo y la Papelera legado se eliminan
-juntos (skill `subsistema-papelera`, "Deuda abierta — eliminar el camino legado de la
-papelera").
+Se eliminó el camino de **escritura** de `logs`, junto con la Papelera legado (skill
+`subsistema-papelera`, "Hecho — eliminación del camino legado de la papelera"), que era su
+último escritor. Salieron `LogService` (`servicios/log/`, con `logEvent` y `createLogEntry`),
+`StorageService.addItem`/`deleteItem`/`updateItem`/`controlLog`,
+`TableroService.altaOperacionYActualizarTablero` y `AsignacionService.reactivarItem` con su
+privado `registrarLog`, más la interfaz `LogDoc`. Hoy **nadie escribe en `logs`**.
 
-`StorageService.updateItem` quedó sin callers (su último, `visibilidad-listados`, pasó a
-`DbFirestoreService.updateConResultado`). Sigue referenciando a `LogService`: se va con él.
+**El camino de lectura se conserva.** `RegistroComponent` (ruta `ajustes/registro`, sin
+pestaña) sigue vivo como **histórico congelado** del log viejo. Nunca dependió de
+`LogService` (que sólo escribía): lee `logs` directo por `DbFirestoreService` —
+`getAllColectionRangeLimit` (listener por rango de `timestamp`, en `consultarRegistro`) y
+`getObjIdg` (búsqueda por `idObjet`, en `consultarId`)—, con la interfaz `LogEntry`
+(`interfaces/log-entry.ts`). Esos dos métodos y `LogEntry` se quedan por eso.
+
+**Qué no se tocó:** la colección `logs` en Firestore (sus documentos quedan donde están) y
+`firestore.rules`: la entrada `'logs'` de `moduloDe()` sigue, porque el bucket `logs` lo
+comparte `registroLog`.
+
+## Deuda abierta — `RegistroComponent.consultarId` no encuentra ids string
+
+`RegistroComponent.consultarId` hace `Number()` sobre el id buscado antes de llamar a
+`DbFirestoreService.getObjIdg('logs', 'idObjet', …)`: viene del modelo viejo de ids
+numéricos. En `logs` quedaron entradas con `idObjet` string, escritas por la restauración
+legada de clientes, choferes y proveedores (`StorageService.addItem`, ya eliminado): por ese
+buscador no se encuentran nunca. Pantalla congelada (histórico), impacto cosmético; el
+listado por rango de fechas (`consultarRegistro`) sí las muestra.
