@@ -381,6 +381,7 @@ La secuencia de arranque no está documentada en ningún lado:
    `getAllColectionUsers` puede salir antes de que Firebase Auth restaure el usuario de
    forma asíncrona y fallar como no autenticado? El SDK normalmente espera el estado
    inicial de Auth, pero el repo no lo confirma.
+   → Respondida en `docs/auditorias/eje-de-sesion-auth-rehidratacion-y-guard.md`, "Orden real en cada camino de entrada", hechos de librería 4 y 5: Firestore encola detrás del primer evento de token de Auth, que llega después de restaurar la persistencia; sigue abierto confirmarlo en ejecución.
 2. **Claim y documento desalineados.** ¿Existen hoy, en demo o en producción, dev/admin con
    el Custom Claim ausente o desactualizado respecto de `role` en `/users`? En ese caso
    `esRol` da true y la query de `initializerAdmin` falla con `permission-denied`, en

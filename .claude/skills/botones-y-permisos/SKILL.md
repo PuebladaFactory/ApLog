@@ -1,6 +1,6 @@
 ---
 name: botones-y-permisos
-description: Permisos de UI de ApLog — PermisosService, matrizBase por rol (dev/admin/manager/user/demo) y por acción, overrides, la directiva *appPermiso, los botones app-btn-* y AccionGenericaComponent, y su relación con firestore.rules. Leer antes de trabajar sobre botones de acción, visibilidad u ocultamiento por rol, *appRole/esRol o los permisos de cualquier módulo.
+description: Permisos de UI de ApLog — PermisosService, matrizBase por rol (dev/admin/manager/user/demo) y por acción, overrides, la directiva *appPermiso, los botones app-btn-* y AccionGenericaComponent, y su relación con firestore.rules. Leer antes de trabajar sobre botones de acción, visibilidad u ocultamiento por rol, esRol o los permisos de cualquier módulo.
 ---
 
 ### Frente Botones y Permisos (en progreso)
@@ -498,7 +498,9 @@ son los 6 sitios de Tarifas (`cliente`/`choferes`/`proveedores` × `gral`/`espec
 excluidos a propósito — pertenecen al frente de Tarifas, pendiente y separado de este.
 (`facturacion/modal-detalle` — legacy y comentado; eliminado en el frente Facturación, F0 — y `acciones-cell-renderer`, wrapper sin
 caller activo, también usan `*appRole` pero están fuera de alcance por ser código muerto
-u orfandad ya documentada, no por pertenecer a Tarifas.)
+u orfandad ya documentada, no por pertenecer a Tarifas.) Hoy no queda ningún `*appRole`:
+los 6 sitios de Tarifas salieron con TC-R1/TC-R2, `acciones-cell-renderer` con LZ3 y la
+directiva misma con LZ5b.
 
 ### Bloque 7 (ÚLTIMO del frente) — `tablero-asignaciones`, primer uso real de `overrides`
 
@@ -584,9 +586,9 @@ acciones de alta, edición, cierre y anulación del modal. Propia y no `operacio
 para que cambiar quién administra no disponibilidades no arrastre a la edición de
 operaciones. Detalle: skill `modulo-operaciones`, "No disponibilidad".
 
-**Estado final:** único `*appRole` restante en toda la app: los 6 sitios de Tarifas
-(cliente/choferes/proveedores × gral/especial), excluidos a propósito — frente de Tarifas
-aparte, no iniciado. `AccionesCellRendererComponent` (wrapper de AG Grid sin caller activo,
+**Estado final:** único `*appRole` restante en toda la app al cerrar el frente: los 6 sitios
+de Tarifas (cliente/choferes/proveedores × gral/especial), excluidos a propósito — frente de
+Tarifas aparte. Hoy la directiva `*appRole` ya no existe (ver la nota del Bloque 6). `AccionesCellRendererComponent` (wrapper de AG Grid sin caller activo,
 detectado en la auditoría original) queda sin consumidor real — no se le asignó uno en
 este frente porque no lo necesitaba, no es deuda nueva. Pendiente real, fuera de este
 frente: conectar `modulo`/`accion` en el resto de los ~90 sitios de uso directo de los 4
@@ -616,8 +618,8 @@ disponibles (ej. botón de baja de Operación/Cliente visible y clickeable
 para rol `user`, que la regla rechaza — comportamiento seguro, pero mala
 UX: el usuario ve un error de permisos en vez de no ver la opción).
 
-Causa: el control de qué se muestra vive disperso en `*appRole` puntual
-por template, sin relación con la matriz real de Security Rules — son
+Causa: el control de qué se muestra vivía disperso en `*appRole` puntual
+(directiva hoy retirada; quedan `esRol()` puntuales) por template, sin relación con la matriz real de Security Rules — son
 dos fuentes de verdad independientes, mantenidas a mano, que ya
 divergieron al menos en los dos casos detectados (sin auditoría
 exhaustiva del resto de los módulos).
@@ -644,7 +646,10 @@ ya daba el resultado correcto (`false`) en `PermisosService` sin necesitar ning�
 la fila y `*appPermiso="'operaciones.agregar'"` al botón de alta — el botón de baja de
 Operación para `user` ahora refleja el resultado correcto en la UI (oculto, no solo
 bloqueado al escribir). Detalle completo en "Frente Botones y Permisos" → Bloque 6. El
-resto de los `*appRole`/`esRol()` puntuales sigue sin migrar, ver "Pendiente" ahí.
+resto de los `esRol()` puntuales sigue sin migrar (`*appRole` ya no existe): `esRol('demo')`
+en los templates de `ChoferesListadoComponent`, `ClientesListadoComponent`,
+`ProveedoresListadoComponent`, `TableroLegajosComponent` y el `ControlComponent` de Legajos,
+más `PapeleraComponent.puedeRestaurar` e `InformeOpAnuladosComponent.puedeVerPapelera`.
 
 ## Deuda abierta — `matrizBase.papelera` desactualizada contra `firestore.rules`
 

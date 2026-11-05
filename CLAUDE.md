@@ -114,7 +114,7 @@ la sesión sale de la rehidratación de `UsuarioSesionService` y
 `RoleGuard` decide con eso. Ver "Deuda abierta" → sesión que sobrevive a
 la pantalla de login.
 
-**`RoleGuard`/`*appRole`**: comparación plana contra `usuario.role`
+**`RoleGuard`/`esRol()`**: comparación plana contra `usuario.role`
 (`rolesEsperados.includes(usuario.role)` / `esRol(...)`), sin jerarquía.
 Sin sesión → `/unauthorized`. Con sesión pero sin acceso a la ruta →
 `/limbo` (misma pantalla que antes esperaba verificación de email; hoy
@@ -751,7 +751,7 @@ Deuda técnica activa. Actualizar cuando se salda.
 - **Filtro por colección del Registro de actividad incompleto** — `COLECCIONES_REGISTRO_LOG` (`registro-log-consulta.service.ts`) no tiene 10 colecciones que ya escriben en `registroLog`: `users`, `informesOp`, `informesLiq`, `movimientosFin`, `tarifas`, `tarifasEspeciales`, `registrosOpEventuales`, `vendedores`, `liquidacionesVenta` y `configuracion`. Sus entradas se ven sin filtrar, pero no se pueden filtrar por colección. Detalle: skill `subsistema-log`.
 - **Cuatro copias de `escapar`** — en `modal-no-disponibilidad`, `operaciones-editor`, `vendedor-historial` y `shared/utils/texto-html.util.ts`: unificar sobre `escaparHtml`/`textoAHtml` del util.
 - **Filtros vs. listener en background (frente futuro)** — en `tablero-op` los datos pueden quedar congelados al volver de background mientras los filtros muestran otro período; las suscripciones a `operaciones$` no manejan errores. Detalle: skill `modulo-operaciones`.
-- **Permisos de UI dispersos** — quedan `*appRole`/`esRol()` puntuales sin migrar a `PermisosService`, con riesgo de mostrar acciones que las Security Rules rechazan. Detalle: skill `botones-y-permisos`.
+- **Permisos de UI dispersos** — quedan `esRol()` puntuales sin migrar a `PermisosService`, con riesgo de mostrar acciones que las Security Rules rechazan: `esRol('demo')` en los templates de `ChoferesListadoComponent`, `ClientesListadoComponent`, `ProveedoresListadoComponent`, `TableroLegajosComponent` y el `ControlComponent` de Legajos, más `PapeleraComponent.puedeRestaurar` e `InformeOpAnuladosComponent.puedeVerPapelera`. Detalle: skill `botones-y-permisos`.
 - **Tarifas tras el cierre** — quedan residuos inertes en datos de demo (`idTarifa`/`tarifaAsignada`, `adExtra: null`) y `tarifa-gral-cliente.ts` sigue vivo por la Liquidación vieja. Detalle: skill `modulo-tarifas`.
 - **Migración conjunta Choferes/Vehículos/Legajos** — los IDs legacy se resuelven por relación cruzada, así que esas colecciones no se pueden migrar aisladas; revisar también las `fechaVto` en milisegundos. Detalle: skill `migracion-vantruck`.
 - **El ajuste atrapado** — un ajuste imputado sólo se puede quitar anulando el movimiento, y sólo mientras el informe siga en `'facturado'`; un ajuste vigente sobre un informe en cualquier otro estado no se puede quitar por ningún camino existente. La app hoy no lo produce; los ajustes de `'apertura'` de la migración tienen que imputarse sobre informes `'facturado'` o nacen atrapados. Detalle: skill `modulo-finanzas` (y `migracion-vantruck`).
