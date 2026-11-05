@@ -75,7 +75,7 @@
         {{ resultado.numeradoresReiniciados }} numeradores reiniciados.
         <ul class="mb-0 mt-2">
           <li>Borrá a mano en la consola de Firebase Storage las carpetas <code>facturas/</code> y <code>operaciones/</code> (no <code>legajos/</code>).</li>
-          <li>Borrá los datos del sitio en el navegador (DevTools → Application → Clear storage) y volvé a iniciar sesión: StorageService guarda copias de colecciones en localStorage.</li>
+          <li>Recargá la página. El tablero de operaciones y el listado de informes guardan sus filtros en el navegador: si quedan filtrando por un cliente o chofer que ya no existe, limpiá los filtros (o borrá los datos del sitio en DevTools → Application → Clear storage, que además cierra la sesión).</li>
         </ul>
       </div>
     }

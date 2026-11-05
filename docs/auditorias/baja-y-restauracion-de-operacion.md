@@ -1,5 +1,7 @@
 # Auditoría — baja y restauración de una operación
 
+> **Superada (2026-11-04, `30526b9`):** el camino legado de restauración que §3.b da por "vivo" (`PapeleraLegadoComponent` → `TableroService.altaOperacionYActualizarTablero`) y las filas de las tablas con `TableroService`, `AsignacionService.reactivarItem` y `PapeleraLegadoComponent` ya no existen: la única restauración es `restaurarOperacion`. Estado actual: skill `modulo-operaciones` ("Máquina de estados de la operación", "Contrato vigente — `restaurarOperacion`") y skill `subsistema-papelera`.
+
 Fecha: 2026-11-01 · Rama: refactor
 
 ## Alcance

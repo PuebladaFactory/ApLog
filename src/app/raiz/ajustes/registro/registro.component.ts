@@ -54,7 +54,6 @@ export class RegistroComponent implements OnInit {
     this.usuariosListos = this.usuariosConsulta.cargar();
 
     this.calcularDiaActual()
-    //this.storageService.syncChangesUsers("users");
   }
 
   getFecha(date:number){
@@ -100,7 +99,6 @@ export class RegistroComponent implements OnInit {
     //console.log("consulta: ", this.fechasConsulta);        
     this.fechaDesdeString = this.fechasConsulta.fechaDesde;
     this.fechaHastaString = this.fechasConsulta.fechaHasta;
-    //this.storageService.setInfo("fechasConsulta",this.fechasConsulta)
 
   }
 

@@ -101,22 +101,7 @@ export class ValidarService implements Validators {
 
 
 
- /* constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router) {
-    form = this.fb.group({                             //formulario para el perfil 
-      nombre: ["", [Validators.required, Validators.maxLength(30)]], 
-      apellido: ["",[Validators.required, Validators.maxLength(30)]], 
-      cuit: ["",[Validators.required, Validators.minLength(11), Validators.maxLength(11)]],            
-      fechaNac: ["",Validators.required],
-      email: ["",[Validators.required, Validators.email]],
-      celularContacto: ["",[Validators.required,Validators.minLength(10), Validators.maxLength(10)]],
-      celularEmergencia: ["",[Validators.required,Validators.minLength(10), Validators.maxLength(10)]],
-      domicilio: ["", [Validators.required, Validators.maxLength(50)]],
-});
-    vehiculoForm = this.fb.group({
-      dominio: ["",[Validators.required,Validators.minLength(6), Validators.maxLength(8)]], 
-    });
 
-} ultimo no valido */
 
 /* valdominio(): Validator{
   return (control) => {
@@ -130,63 +115,4 @@ export class ValidarService implements Validators {
     }; */
 
 
-/*import { Injectable } from '@angular/core';
-import { Component } from '@angular/core';
-import {
-  AbstractControl,
-  ValidationErrors,
-  Validator,
-  ValidatorFn,
-  Validators,
-} from '@angular/forms';
-import { Chofer } from 'src/app/interfaces/chofer';
-import { Cliente } from 'src/app/interfaces/cliente';
-import { Legajo } from 'src/app/interfaces/legajo';
-import { Proveedor } from 'src/app/interfaces/proveedor';
-import { Router } from '@angular/router';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
 
-@Injectable({
-  providedIn: 'root'
-})
-export class ValidarService implements Validators{
-
- 
-  dominio: any = {
-    patentesViejas: /^[a-zA-Z]{3}[\d]{3}$/,
-    patentesNuevas: /^[a-zA-Z]{2}[0-9]{3}[a-zA-Z]{2}$/,
-    patentesMotosViejas: /^[0-9]{3}[a-zA-Z]{3}$/,
-    patentesMotosNuevas: /^[a-zA-Z]{1}[0-9]{3}[a-zA-Z]{3}$/,
-    
-  };
-  
-  constructor(private storage: StorageService) {
-    this.dominio.data$.subscribe(
-      (data: any) => (this.dominio = data));
-  }
-  validate(control: AbstractControl<any, any>): ValidationErrors | null {
-    throw new Error('Method not implemented.');
-  }
-  registerOnValidatorChange?(fn: () => void): void {
-    throw new Error('Method not implemented.');
-  }
-  evaluarFormatoPatente(): ValidatorFn {
-    return (control: AbstractControl): { [key: string]: any } | null =>
-      this.validarPatente(control.value)
-        ? null
-        : { patenteErronea: control.value };
-  }
-
-// patente -> booolea
-validarPatente(patente: string) {
-  return (
-    this.dominio.patentesViejas.test(patente) ||
-    this.dominio.patentesNuevas.test(patente) ||
-    this.dominio.patentesMotosViejas.test(patente) ||
-    this.dominio.patentesMotosNuevas.test(patente) ||
-    this.dominio.barCode.test(patente)
-  );
-
-
-   }
-  } */

@@ -1,5 +1,7 @@
 # Auditoría — No disponibilidad de choferes, vehículos y choferes de proveedor
 
+> **Superada (frente No disponibilidad, `30526b9` y el frente remanente de StorageService, 2026-11-04):** todo lo que releva de `StorageService` y `LogService` (`listenForChangesField`, `addItem`, `updateItem`, `controlLog`, el listener de Home sobre `noOperativo`) ya no existe; `noOperativo` quedó sin lectores ni escritores, reemplazada por `noDisponibilidades`. Estado actual: skill `modulo-operaciones` ("No disponibilidad") y `docs/disenos/no-disponibilidad.md`.
+
 Fecha: 2026-10-29 · Rama: `refactor`
 
 ## Alcance

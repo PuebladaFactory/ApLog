@@ -1,5 +1,7 @@
 # Auditoría — remanente de StorageService, localStorage y la secuencia de arranque
 
+> **Superada (2026-11-04, frente remanente de StorageService, SS1–SS3):** `StorageService` y `getAllColectionUsers` ya no existen, las tres pantallas resuelven el nombre con `UsuariosConsultaService`, `clearAllLocalStorage` y la clave `ruta` se fueron, y la contradicción 1 (el filtro `role !== 'dev'`) ya está corregida en CLAUDE.md. Estado actual: CLAUDE.md ("Autenticación y roles", "State management", "Deuda abierta") y skill `subsistema-log` ("Nombre de usuario en las pantallas de auditoría").
+
 Fecha: 2026-11-04 · Rama: refactor (árbol limpio, sobre `beb4d26`)
 
 Relevamiento para decidir si `StorageService` desaparece o queda reducido a un helper de

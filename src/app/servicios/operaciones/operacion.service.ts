@@ -715,9 +715,7 @@ export class OperacionService implements OnDestroy {
   /** Edita una operación de forma atómica: doc de la operación + su log EDITAR +
    *  sincronización de observaciones/hoja de ruta en el tablero de asignaciones
    *  (item por idOperacion) + el log EDITAR de esa sincronización — un solo
-   *  commitBatch. Reemplaza al viejo StorageService.updateItem +
-   *  TableroService.actualizarAsignacionDesdeOperacion (dos escrituras separadas,
-   *  no atómicas). */
+   *  commitBatch. */
   async editarOperacion(op: ConId<Operacion>, msj: string = 'Edición de Operación'): Promise<Resultado<void>> {
     const guarda = await this.guardaDisponibilidadEdicion(op);
     if (guarda) return guarda;

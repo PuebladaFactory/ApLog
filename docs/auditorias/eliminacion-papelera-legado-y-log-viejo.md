@@ -1,5 +1,7 @@
 # Auditoría — Eliminación del camino legado de la papelera y del log viejo
 
+> **Superada (2026-11-04, `30526b9`, `beb4d26` y el frente remanente de StorageService):** las §5 (lo que sigue vivo de `StorageService` y los métodos de `DbFirestoreService` sin caller), §7 (`papelera-legado` como ruta y pestaña vivas) y §8 (`'logs'` y `'papelera'` mapeados a sus buckets con escritura) describen código y reglas que ya no existen: `StorageService` se eliminó entero y las dos colecciones viejas están en `historicoSoloLectura`. Estado actual: skills `subsistema-papelera` y `subsistema-log`, y CLAUDE.md → "Security Rules".
+
 Fecha: 2026-11-04 · Rama: `refactor`
 
 ## Alcance

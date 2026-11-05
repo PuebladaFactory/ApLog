@@ -43,8 +43,10 @@ de proyecto `claude/diseno-generador-operaciones.md`; instrucciones:
   progreso). `obtenerTodosConId<T>` también es nuevo (P1).
 - Storage no se toca: los adjuntos de `facturas/` y `operaciones/` quedan
   huérfanos (borrar a mano desde la consola si hace falta; `legajos/` se
-  conserva). Después de limpiar conviene borrar el almacenamiento local del
-  sitio (StorageService cachea colecciones en localStorage).
+  conserva). Después de limpiar alcanza con recargar: ninguna colección se
+  cachea en `localStorage`. Lo único que puede quedar viejo son los filtros
+  guardados de `tablero-op` e `informe-op-listado` (pueden apuntar a un
+  cliente o chofer borrado); se limpian desde la pantalla.
 - Purga única del legado (28 colecciones del modelo viejo + `_backup_*`),
   hecha UNA vez con Firebase CLI (`firebase firestore:delete <ruta>
   --recursive --project demo`, desde Git Bash) después de un export

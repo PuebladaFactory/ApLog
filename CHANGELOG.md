@@ -2361,9 +2361,12 @@ Detalle de cada punto en `CLAUDE.md` → "Deuda conocida".
 **Frentes de refactor**
 - Finanzas (frentes aparte): cartera de cheques, pago de liquidaciones de
   vendedores como movimiento, plazo de pago por entidad.
-- Ajustes: retirar el `LogService` viejo (colección `logs`) y la Papelera
+- ~~Ajustes: retirar el `LogService` viejo (colección `logs`) y la Papelera
   legado (con `objeto-papelera`; la exportación y PDFMake ya se fueron en el
-  frente Informes).
+  frente Informes).~~ — HECHO (2026-11-04, `30526b9` y `beb4d26`): se fueron
+  `LogService` y la Papelera legado; `RegistroComponent` queda como histórico
+  congelado de `logs`, sólo lectura. Lo que quedaba de `StorageService` se fue
+  en el frente remanente de StorageService (ver abajo).
 - UX: el `<h1>` sin cerrar de `index.html` envuelve toda la app (ver "Deuda —
   tras el frente Lazy loading + fechas").
 - Frente futuro: el nombre de la entidad como enlace a su ficha en toda la
@@ -2697,8 +2700,10 @@ entrada, sigue habiendo deuda real:**
   ~~retirar el camino viejo (LiquidacionesOp, Proforma, LiquidacionService,
   LiquidacionBuilderService, rutas comentadas en liquidacion-routing y
   LiqGral)~~ — RESUELTO en el frente Lazy loading + fechas (LR1): no tenía ruta
-  ni consumidores vivos. Se quedan el Registro viejo y la Papelera legado
-  (frente Ajustes).
+  ni consumidores vivos. ~~Se quedan el Registro viejo y la Papelera legado
+  (frente Ajustes).~~ Hoy (2026-11-04): la Papelera legado se eliminó
+  (`30526b9`); el Registro viejo (`RegistroComponent`) sigue, como histórico
+  congelado de `logs`, sin pestaña en Ajustes (deuda en CLAUDE.md).
 - ~~InformeVenta (comisiones) quedan huérfanos al dar de baja una operación
   cerrada~~ — RESUELTO en el Frente Vendedores (`comisionesVenta`).
 - ~~Resúmenes: mes corrido por huso horario~~ — RESUELTO en el Frente
@@ -2706,3 +2711,106 @@ entrada, sigue habiendo deuda real:**
 - ~~Pantallas viejas que leen por `InformeOpService.obtenerPorIdsOperacion`~~
   — RESUELTO: el método y `proforma` se borraron en el frente Lazy loading +
   fechas (LR1 / LR1b).
+
+---
+
+## Finanzas: se cierra el camino de reversión de un InformeLiq emitido (Noviembre 2026)
+
+`20c190e`. Tres cambios en `revertirEmitido` y en el informe descargado, y una deuda
+corregida.
+- **Guarda defensiva en `revertirEmitido`:** chequea `totalAjustado` junto a `totalCobrado`,
+  con la misma condición y el mismo mensaje que `desvincularFactura`. Hoy es inalcanzable,
+  porque un ajuste sólo se imputa a un informe `'facturado'` (`validarDocumentoImputable`) y
+  la única salida de ese estado ya exige `totalAjustado === 0`. Va igual porque si el
+  invariante se rompe no hay vuelta atrás. Sin test.
+- **Compensación contada dos veces:** `revertirEmitido` liberaba las compensaciones con
+  `quitarCompensacion` pero dejaba `totalCompensado` como estaba. Ahora
+  `valoresFinancierosRevertido` recalcula en la misma transacción. `total` no cambia,
+  `totalCompensado` pasa a 0 y `saldo` queda igual a `total`, no en 0, para que se siga
+  cumpliendo `saldo = total - compensado - cobrado - ajustado`. `compensaciones` y los
+  valores de la emisión quedan intactos. En demo el único revertido ya tenía
+  `totalCompensado` en 0.
+- **El revertido no suma en el informe descargado:** la fila de totales de la hoja
+  Comprobantes sumaba también los revertidos. El revertido sigue listado pero no aporta,
+  según `informeLiqAportaATotales`, una tabla sobre los cinco estados donde sólo `emitido` y
+  `facturado` suman. Con alguna fila que no aporta, el total pasa a "Total vigentes" y una
+  nota al pie nombra los estados excluidos. 3 tests nuevos (36 en total).
+- **Deuda corregida:** "`revertirEmitido` no chequea `totalAjustado`" describía un escenario
+  imposible y se sacó. La reemplaza "el ajuste atrapado", con su restricción para la
+  migración: los ajustes de `'apertura'` se imputan sobre informes `'facturado'` (anotada en
+  `modulo-finanzas`, `migracion-vantruck` y CLAUDE.md).
+- Agrega `docs/auditorias/reversion-informe-liq-emitido-y-ajustes.md`.
+
+## Activar/desactivar queda en el log; la visibilidad escribe parcial (Noviembre 2026)
+
+`ca16b78`. Dos gestos que mutaban sin dejar rastro se deciden en sentidos opuestos, cada
+uno por un motivo. `activo` decide quién puede ser asignado, así que se registra. `visible`
+es una preferencia de presentación, así que no.
+- **`ActivacionEntidadService` (nuevo):** sin estado ni listener, con un método
+  parametrizado por colección. Escribe sólo `{ activo }` y pone la entrada de log en el
+  mismo batch. Si falla, registra el error y devuelve `Resultado` sin tirar. La acción es
+  `EDITAR`, no `BAJA`/`RESTAURAR`, porque para estas entidades `BAJA` ya es la baja con
+  papelera. Se borró el TODO del modal que proponía `'INTERNA'`.
+- **La visibilidad tenía tres defectos:**
+  - escribía el documento entero, con `idCliente`/`idChofer`/`idProveedor`; ahora escribe
+    sólo `{ visible }` por `updateConResultado`;
+  - mutaba el objeto que emite el BehaviorSubject; ahora el modal clona al abrirse y
+    revierte el clon si falla;
+  - tragaba el error en un `console.log`; ahora el error le llega al usuario.
+- **`LegajoService.toggleVisibilidad`:** quedó sin callers y se borró, con su log.
+- **Consecuencia:** `StorageService.updateItem` quedó sin callers.
+- **Relevado en demo:** 1 de 61 choferes tiene `idChofer` guardado. No se limpió; quedó
+  anotado en `migracion-vantruck`.
+- **Documentación:** en `subsistema-log` hay una sección nueva, "Asimetría activo /
+  visible", para que la diferencia no se lea como un olvido.
+
+## Eliminación de la Papelera legado y del log viejo (Noviembre 2026)
+
+`30526b9`. Sale el camino de **escritura** de `logs` y la restauración legada; el de lectura
+se conserva.
+- **Eliminados:** `PapeleraLegadoComponent` (ruta `ajustes/papelera-legado`, pestaña `tab5`),
+  `ObjetoPapeleraComponent`, `TableroService` completo, `LogService` completo (con la interfaz
+  `LogDoc`), `AsignacionService.reactivarItem` y su `registrarLog`, los miembros de
+  `StorageService` que sólo usaban ellos (`addItem`, `deleteItem`, `updateItem`,
+  `controlLog`, `users$`, `clientes$`, `choferes$`, entre otros) y cinco métodos de
+  `DbFirestoreService` sin caller.
+- **Motivo:** el camino legado restauraba peor que `restaurarOperacion` (escrituras sueltas,
+  sin atomicidad, dejaba la operación con los campos del cierre) y era el último escritor de
+  `logs`.
+- **Conservado:** `RegistroComponent`, histórico congelado de `logs` (lectura por
+  `DbFirestoreService`), y las colecciones `logs` y `papelera` en Firestore, intactas.
+- Bundle inicial 1.525.476 → 1.520.653 B; chunk de Ajustes 103,20 → 64,47 kB.
+
+## `logs` y `papelera` congeladas en firestore.rules (Noviembre 2026)
+
+`beb4d26`. Bucket nuevo `historicoSoloLectura` en `permitido()`: leen `dev`, `admin`, `user`
+y `demo`; ninguna escritura para nadie, `dev` incluido, para que una escritura remanente
+falle visible. Separado de `legacySoloLectura`, que deja leer a cualquier rol autenticado.
+Los buckets `logs` y `papelera` siguen existiendo para `registroLog`, `papeleraEventos` y
+`objetosEliminados`. Verificado con `functions/test-historico-rules.mjs` (100/100) contra el
+emulador. Sin desplegar.
+
+## Frente remanente de StorageService (Noviembre 2026)
+
+Elimina el store central viejo por completo. Auditoría:
+`docs/auditorias/remanente-storage-service-localstorage-y-arranque.md`.
+- **SS1 (en `aa3de7a`) — nombre de usuario en un solo lugar.** `UsuariosConsultaService`
+  (`servicios/gestion-usuarios/`) reemplaza la caché de `/users` en `localStorage` (que se
+  pisaba con deltas del listener, excluía a los `dev` y no se poblaba para `demo`) y las tres
+  copias de `getUsuario` de Registro, Registro Log y Papelera. Lectura puntual en memoria,
+  sólo `dev`/`admin`, por uid y cayendo a email. Reusa
+  `GestionUsuariosService.obtenerUsuarios` (sin filtro por rol). Spec nuevo: 9 tests.
+- **SS2 (`60c9a59`) — tres hilos muertos y el servicio.** Sale `clearAllLocalStorage` (login y
+  logout): las preferencias de `tablero-op` e `informe-op-listado` sobreviven y desaparece el
+  bug entre pestañas. Sale la clave `ruta` y `SidebarComponent.navegar`: el logo del sidebar
+  ahora navega a `/op`. Sale `proveedores$` de `ModalVehiculoComponent`. Borrados
+  `StorageService` y `DbFirestoreService.getAllColectionUsers`. `CargaComponent` sin
+  `initializerAdmin` ni campos sin uso (la espera de 3 s queda).
+- **SS3 — documentación.** Barrido de los símbolos muertos sobre código comentado, CLAUDE.md,
+  skills y `docs/`; secuencia de arranque documentada en CLAUDE.md; convención nueva de notas
+  fechadas en auditorías superadas (`docs/README.md`), aplicada a cuatro auditorías.
+- **Deuda nueva** (CLAUDE.md → "Deuda abierta"): la sesión sobrevive a la pantalla de login
+  (decidir antes del corte a Vantruck), preferencias de UI compartidas entre usuarios del
+  mismo navegador, `/carga` sin propósito claro, la pestaña "Registro" comentada, el criterio
+  de acceso de `demo` a Ajustes y tres módulos de `permitido()` sin equivalente en
+  `ModuloReglas`.

@@ -20,9 +20,16 @@ Nada de lo que sigue asume una de las dos. Cuando se decida, revisar esta skill 
 
 Deuda que no puede llegar a producción. Revisar esta lista antes de cualquier switch.
 
-Hoy no hay ninguno. (El último, "`restaurarOperacion` aproxima el estado del alta", se
-cerró al cambiar la semántica de la restauración: ver la skill `modulo-operaciones`,
-"Contrato vigente — `restaurarOperacion`".)
+- **Decisión pendiente — sesión que sobrevive a la pantalla de login** (desde el frente
+  remanente de StorageService, 2026-11-04): quien cerró el navegador sin desloguearse entra
+  sin contraseña escribiendo una ruta protegida. Hay que elegir una salida antes del corte
+  (no necesariamente implementarla, pero sí decidir si se corta con este comportamiento).
+  Opciones y contexto: skill `subsistema-log`, "Deuda abierta — sesión que sobrevive a la
+  pantalla de login".
+
+(El bloqueante anterior, "`restaurarOperacion` aproxima el estado del alta", se cerró al
+cambiar la semántica de la restauración: ver la skill `modulo-operaciones`, "Contrato
+vigente — `restaurarOperacion`".)
 
 ## Restricción — saldos de apertura de Finanzas
 
@@ -119,7 +126,11 @@ Papelera legado y todo escritor de `logs`.
 **Primera verificación del día del corte:** abrir `ajustes/registro` (`RegistroComponent`) en
 Vantruck y confirmar que lista el histórico real de `logs`. Motivo: en demo la colección `logs`
 está vacía, así que la pantalla sólo se probó sin filas (abre y consulta sin errores de
-consola); el render con datos nunca se pudo ejercitar antes de la promoción.
+consola); el render con datos nunca se pudo ejercitar antes de la promoción. **La pestaña
+"Registro" está comentada**: si no se le devuelve antes (ítem de abajo), esta verificación
+sólo se ejecuta escribiendo la URL `/ajustes/registro` a mano. Verificar también la columna
+Usuario: desde el frente remanente de StorageService resuelve nombre por uid
+(`UsuariosConsultaService`), incluidas las entradas escritas por un `dev`.
 
 Antes del corte:
 

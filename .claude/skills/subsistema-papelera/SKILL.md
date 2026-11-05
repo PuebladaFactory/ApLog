@@ -108,6 +108,14 @@ para eventos `'activo'`), objetos secundarios listados en línea sin modal propi
 Restaurar deshabilitado si `estado !== 'activo'`. El tab "Papelera (legado)" de
 `AjustesControlComponent` (que ya estaba comentado) se retiró con la pantalla.
 
+**Columna Usuario** (desde el frente remanente de StorageService, 2026-11-04):
+`UsuariosConsultaService.nombreDe(evento.userId, evento.userEmail)`, por uid y cayendo a
+email; sólo `dev`/`admin` resuelven nombre. `PapeleraService.prepararBajaEnBatch` no excluye
+a `dev`, así que hay eventos escritos por un `dev`: ahora resuelven nombre, antes no (la
+caché vieja de `/users` excluía a los `dev`). El evento conserva el usuario de la BAJA aun
+después de restaurado; quién restauró no queda registrado en el evento. Detalle del
+servicio: skill `subsistema-log`, "Nombre de usuario en las pantallas de auditoría".
+
 **Módulos que quedaron fuera de este frente — estado actual:** cuando se hizo el frente,
 Facturación, Liquidación y Vendedores siguieron escribiendo en la colección vieja `papelera`
 vía `StorageService`. Hoy ninguno lo hace: `StorageService.deleteItemPapelera*`/
@@ -202,8 +210,8 @@ era el último escritor de `logs`, así que salió en el mismo frente que el log
   `reactivarItemEnLista`, puro, que usa `restaurarOperacion`).
 - `StorageService`: `addItem`, `deleteItem`, `updateItem`, `syncChangesLimit`,
   `listenForChangesField`, `controlLog`, los observables `users$`, `clientes$` y `choferes$`
-  (y los subjects de clientes/choferes). Queda el subject privado de `users` porque lo usa
-  `getAllColection` (vía `initializerAdmin`); los lectores de usuarios usan `loadInfo('users')`.
+  (y los subjects de clientes/choferes). (Lo que quedaba del servicio se eliminó entero en
+  el frente remanente de StorageService, 2026-11-04.)
 - `DbFirestoreService`: `create`, `delete`, `getMostRecentLimit`,
   `getAllColectionRangeIdValue`, `getAllStateChangesByField`.
 - Interfaz `LogDoc` (`interfaces/log-doc.ts`): sin consumidores al irse la pantalla.

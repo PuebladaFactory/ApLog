@@ -122,8 +122,8 @@ componente que lo abre no pre-mastica arrays. Resolución de exhibición vive en
 Aplicado en `ModalObjetosActivosComponent`.
 
 **CRUD-con-Resultado en la capa de datos:** las escrituras CRUD directas a DbFirestore
-devuelven `Resultado` (éxito/error) para alimentar el log, reemplazando progresivamente
-las escrituras vía StorageService. `updateConResultado` es el primer caso. **Actualizado
+devuelven `Resultado` (éxito/error) para que el caller decida el log.
+`updateConResultado` es el primer caso. **Actualizado
 (2026-11-03):** `ModalObjetosActivosComponent` ya no lo usa: `activo` pasa por
 `ActivacionEntidadService.cambiarActivo` (batch con log EDITAR). Hoy lo usa
 `VisibilidadListadosComponent`, sin log por decisión (skill `subsistema-log`, "Asimetría
@@ -467,7 +467,29 @@ preferencia de UI que ya funciona bien; no toca la causa real (listener silencio
 - Si se toca la persistencia de preferencias (filtros, rango, ancho de columnas, hoy
   desparramados en 4 claves de `localStorage` manejadas inline en `tablero-op`),
   encapsularlas en un servicio chico dedicado — sigue siendo `localStorage` por debajo,
-  correcto para sobrevivir F5; solo cambia dónde vive el acceso.
+  correcto para sobrevivir F5; solo cambia dónde vive el acceso. Ver también la deuda
+  siguiente: las claves no distinguen usuario.
+
+## Deuda abierta — preferencias de UI compartidas entre usuarios del mismo navegador
+
+Cinco claves de `localStorage`, escritas y leídas inline por cada componente:
+- `tablero-op`: `tablero_op_range_v1` (rango), `tablero_op_filtros_v2` (filtros, más
+  `clienteSeleccionado` y `choferSeleccionado`), `tablero_op_colwidth_v1` (anchos de
+  columna) y `op_cols` (columnas visibles);
+- `informe-op-listado`: `informe_op_listado_range_v1` (rango).
+
+Hasta el frente remanente de StorageService (2026-11-04), `localStorage.clear()` corría en
+cada montaje de `/login` y en cada logout, así que estas claves "sobrevivían a F5" pero no
+al login. Desde que se sacó ese `clear()` sobreviven a todo: **el siguiente usuario del
+mismo navegador hereda las del anterior**, incluido el cliente o chofer filtrado. No es un
+problema de permisos (los datos se leen con el rol de quien está logueado), pero confunde.
+
+**Arreglo:** namespacear las claves por uid (`<clave>:<uid>`), idealmente dentro del
+servicio chico de preferencias de la deuda anterior. Al hacerlo, las claves viejas sin uid
+quedan huérfanas: borrarlas una vez o ignorarlas.
+
+Relacionado: `TableroOpComponent.restaurarRangoPropio` hace `JSON.parse` sin `try/catch`;
+ahora que la clave vive más, un valor corrupto rompe la pantalla hasta borrarlo a mano.
 
 ## Deuda abierta — fix de altura del modal limitado a tablero-op
 

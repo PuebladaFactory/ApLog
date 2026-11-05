@@ -42,15 +42,14 @@ interface FilaEntidadInformeOp {
  *  entidad con detalle expandible, edición puntual y creación de
  *  liquidaciones por período vía LiquidacionNuevaComponent (InformeLiqNuevo).
  *
- *  Vive en LiquidacionModule, integrado a LiqGralComponent (tab nuevo) —
- *  mismo lugar que LiquidacionesOpComponent (modelo viejo, sin tocar).
+ *  Vive en LiquidacionModule, integrado a LiqGralComponent (como pestaña).
  *  DateRangeService NO se provee acá: ya lo provee LiqGralComponent a
  *  todas sus rutas hijas, se inyecta tal cual. tipoConsulta (cliente/
- *  chofer/proveedor) es estado interno con selector propio — a diferencia
- *  del viejo, no viene de la URL/ruta.
+ *  chofer/proveedor) es estado interno con selector propio, no viene de
+ *  la URL/ruta.
  *
- *  Cero lookups en memoria (StorageService.loadInfo): entidad y
- *  contraParte.monto ya vienen desnormalizados en InformeOpNuevo. */
+ *  Cero lookups en memoria: entidad y contraParte.monto ya vienen
+ *  desnormalizados en InformeOpNuevo. */
 @Component({
   selector: 'app-informe-op-listado',
   standalone: false,

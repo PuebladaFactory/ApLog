@@ -592,9 +592,7 @@ export class DbFirestoreService {
   /** Update parcial de un documento devolviendo Resultado (éxito/error), para que
    *  el caller registre el log según el resultado. Primer método de la familia
    *  CRUD-con-Resultado (createConResultado / deleteConResultado vendrán igual).
-   *  Reemplaza progresivamente las escrituras vía StorageService.
-   *  TODO: refactor Log — el log centralizado de StorageService no aplica acá; el
-   *  caller debe loguear según el Resultado. */
+   *  No escribe log: el caller decide si loguea según el Resultado. */
   async updateConResultado(coleccion: string, id: string, data: any): Promise<Resultado> {
     try {
       await this.update(coleccion, data, id);

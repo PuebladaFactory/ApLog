@@ -31,6 +31,9 @@ Relevá el estado actual de **$ARGUMENTS** en el proyecto y dejá el resultado c
    sección "Contradicciones con la documentación vigente" del archivo y en la primera línea de
    la respuesta del chat, con la cita que lo prueba. No corrijas la documentación acá: la
    corrección se decide en el diseño y se aplica en el frente que la invalidó.
+7. **Las auditorías superadas llevan nota fechada en el encabezado** (convención en
+   `docs/README.md`). No la pone quien audita: la pone quien cierra el frente que dejó
+   superada una auditoría anterior.
 
 ## Pasos
 

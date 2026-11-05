@@ -30,8 +30,8 @@ export class ProveedorService implements OnDestroy {
     private proveedorFactoryService: ProveedorFactoryService,
   ) {}
 
-  // ---- Escrituras simples con log en el mismo batch (reemplaza StorageService
-  // para el CRUD directo de este módulo: proveedores y vehículos) ----
+  // ---- Escrituras simples con log en el mismo batch (CRUD directo de este
+  // módulo: proveedores y vehículos) ----
 
   private async crearConLog(coleccion: string, data: any, msj: string): Promise<string> {
     const id = this.db.generarId(coleccion);

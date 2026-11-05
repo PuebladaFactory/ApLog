@@ -231,7 +231,8 @@ migrado con el mismo patrón que Cliente/Chofer/Proveedor:
 **`StorageService` queda sin ningún uso en `LegajoService`/`CategoriaDocumentacionService`**
 tras este frente — import y constructor param eliminados de ambos (ya no había ningún
 método que lo necesitara). Después del Frente Papelera tampoco lo usan
-`ClienteService`/`ChoferService`/`ProveedorService`.
+`ClienteService`/`ChoferService`/`ProveedorService`. (El servicio entero se eliminó en el
+frente remanente de StorageService, 2026-11-04.)
 
 **Verificado:** árbol compila limpio (`tsc --noEmit` + `ng build`); el error de budget de
 bundle (8.65 MB vs. 7 MB) es el mismo preexistente de siempre, confirmado por
@@ -487,7 +488,9 @@ para escribir en `registroLog`. La escritura fallaba con `permission-denied`, y 
 2. **`AuthService.cerrarSesion()`: reorden.** El log de `LOGOUT` ahora se escribe
    ANTES de `signOut()` (no solo antes de `limpiar()`) — mientras el usuario todavía
    está autenticado de verdad. El resto de la función (`signOut`, `clearAllLocalStorage`,
-   `limpiar`, `navigate`) queda en el mismo orden relativo entre sí, ahora sin que el
+   `limpiar`, `navigate`; **hoy sin `clearAllLocalStorage`**, eliminado en el frente
+   remanente de StorageService — `limpiar()` es lo único que borra `usuarioSesion`)
+   queda en el mismo orden relativo entre sí, ahora sin que el
    log bloquee nada. Ya no hace falta un `try/catch` local alrededor de la llamada al
    log (cubierto por el punto 1). `registrarError()` en el `catch` de `cerrarSesion`
    queda donde estaba — ahí el usuario sigue autenticado, porque lo que falló fue el
@@ -660,6 +663,69 @@ bucket `historicoSoloLectura`: lectura para `dev`/`admin`/`user`/`demo`, ninguna
 para nadie, `dev` incluido. Así una escritura remanente falla visible en vez de pasar. El
 bucket `logs` sigue existiendo para `registroLog`, sin cambios. Verificado con
 `functions/test-historico-rules.mjs` contra el emulador. Sin desplegar: el deploy lo hace Nico.
+
+## Nombre de usuario en las pantallas de auditoría (frente remanente de StorageService, 2026-11-04)
+
+`RegistroComponent` (`logs`), `RegistroLogComponent` (`registroLog`) y `PapeleraComponent`
+(`papeleraEventos`) muestran la columna Usuario con
+`UsuariosConsultaService.nombreDe(userId, userEmail)` (`servicios/gestion-usuarios/`).
+Reemplaza a tres copias locales de `getUsuario(email)` que leían una caché de `/users` en
+`localStorage` (rota: se pisaba con deltas del listener, excluía a los `dev` y no se poblaba
+para `demo`).
+
+- **`cargar()`**, una vez por `ngOnInit`, sin caché entre pantallas. Sólo para `dev`/`admin`
+  lee `/users` completo, reusando `GestionUsuariosService.obtenerUsuarios` (sin filtro por
+  rol, a propósito). Para el resto no consulta: las reglas de `/users` se lo negarían. Si la
+  lectura falla, `console.error` y sigue sin resolución; nunca lanza.
+- **`nombreDe`**, síncrono: busca por `uid === userId` y después por `email === userEmail`.
+  Sin usuario, o con `name` vacío, ausente o sólo espacios, devuelve el `userEmail` de la
+  entrada (`''` si tampoco hay). El literal `'Desconocido'` de las entradas viejas se muestra
+  tal cual.
+- **Invariante de render:** cada pantalla guarda la promesa de `cargar()` y la espera antes de
+  pedir filas (`consultarRegistro`/`consultarId`; `cargarPagina`/`consultarPorIdObjet`;
+  `cargarPagina`/`cargarEvento`), así ninguna fila se pinta con emails que después no se
+  refrescan.
+- **Cambios visibles respecto de antes:** las entradas escritas por un `dev` en `logs` y en
+  `papeleraEventos` ahora resuelven nombre (la caché vieja excluía a los `dev`); las de un
+  usuario que cambió de email también (por uid); un usuario sin `name` muestra el email en
+  vez de una celda en blanco; `demo` ve emails en las tres pantallas (antes, en
+  `RegistroComponent`, la celda quedaba en blanco).
+- En `RegistroComponent` el buscador (`globalFilter` sobre siete campos) y el orden por
+  usuario siguen trabajando sobre `userEmail`; el placeholder lo dice ("Buscar: usuario
+  (email), acción, colección, detalle…").
+
+## Deuda abierta — sesión que sobrevive a la pantalla de login
+
+Desde el frente remanente de StorageService (SS2), abrir `/login` ya no corta la sesión de
+la app. Quien cierra el navegador sin desloguearse y escribe una ruta protegida entra sin
+contraseña: `usuarioSesion` persiste en `localStorage` (`UsuarioSesionService` lo rehidrata
+en su constructor y `RoleGuard` decide con eso) y la sesión de Firebase Auth en IndexedDB.
+`LoginComponent` tampoco detecta que ya hay sesión.
+
+Antes, el `localStorage.clear()` de `LoginComponent.ngOnInit` borraba `usuarioSesion` y la
+app "parecía" cerrada. Pero no cortaba nada real (Firebase Auth seguía autenticado: lo que
+producía era una desincronización), y dependía de pasar por `/login`: la navegación directa
+a una ruta protegida ya lo esquivaba. Restaurarlo borrando sólo `usuarioSesion` traería de
+vuelta el bug entre pestañas (`localStorage` es del origen: otra pestaña en `/login` deja
+sin sesión a todas).
+
+Salidas reales, **ninguna decidida**:
+- `browserSessionPersistence` en Firebase Auth (la sesión muere con la pestaña), con
+  `usuarioSesion` acompañando el mismo criterio;
+- atar `UsuarioSesionService` a `onAuthStateChanged`, para que la sesión de la app sea
+  siempre la de Firebase;
+- que `/login` detecte la sesión y ofrezca continuar o cerrarla.
+
+**Decidir antes del corte a Vantruck** (puntero en la skill `migracion-vantruck`).
+
+## Deuda abierta — la pestaña "Registro" está comentada
+
+En `AjustesControlComponent` la entrada `tab2` sigue en el array `tabs`, pero el bloque de la
+pestaña "Registro" del template está comentado. `RegistroComponent` (histórico congelado de
+`logs`) no tiene punto de entrada en la UI para ningún rol: sólo se llega escribiendo
+`/ajustes/registro`. Consecuencia para el corte: la primera verificación del día del corte
+en `migracion-vantruck` (render de esa pantalla con datos reales) sólo se puede ejecutar con
+la URL escrita.
 
 ## Deuda abierta — `RegistroComponent.consultarId` no encuentra ids string
 

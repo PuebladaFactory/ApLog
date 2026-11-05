@@ -45,16 +45,18 @@ Vantruck (ver la skill `migracion-vantruck`, subsección "Checklist — migraci�
   - `LiquidacionService` y `LiquidacionBuilderService`, con los miembros que quedaron
     huérfanos.
 - **LR2a–LR2d:** los miembros sin uso de servicios vivos, iterando la cascada hasta cero.
-  StorageService pasó de 1047 a 337 líneas y DbFirestoreService de 1547 a 1063 (conserva
-  el bloque comentado "NO BORRAARRR"); además ValidarService, ExcelService, PdfService y
-  otros.
+  DbFirestoreService pasó de 1547 a 1063 líneas (conserva el bloque comentado "NO
+  BORRAARRR"); además ValidarService, ExcelService, PdfService y otros. El store central
+  viejo, que en LR2 pasó de 1047 a 337 líneas, terminó de eliminarse en el frente
+  remanente de StorageService (2026-11-04).
 - **CI1:** imports, inyecciones `private` y variables locales sin uso
   (`tsc --noUnusedLocals`: 58 → 1).
 - **CI2:** archivos que nadie importaba (`constants/` duplicada, `FacturaReal`,
   interfaces de `informes-tabla`, `SupabaseStorageService`) y `@supabase/supabase-js`.
-- **Se quedan** (decisión D5; retirarlos es decisión de producto del frente Ajustes):
-  - Registro viejo (`logs`) y `LogService` — `LogService` se eliminó (2026-11-04);
-    `RegistroComponent` se conserva como histórico congelado (skill `subsistema-log`);
+- **Decisión D5 (qué se quedaba), ya resuelta:** de lo que D5 dejó para el frente Ajustes
+  sólo queda vivo `RegistroComponent`, como histórico congelado de `logs` (skill
+  `subsistema-log`). El resto se fue:
+  - ~~`LogService`~~ — eliminado (2026-11-04);
   - ~~Papelera legado + `ObjetoPapelera`~~ — eliminados (2026-11-04, skill
     `subsistema-papelera`). `ObjetoPapeleraComponent` estaba declarado en `SharedModule`
     (no exportado, abierto con `NgbModal`); aun así, en el build de producción su código
@@ -62,7 +64,7 @@ Vantruck (ver la skill `migracion-vantruck`, subsección "Checklist — migraci�
     NgModule no retienen código, el componente va donde se importa, y su único importador
     era `PapeleraLegadoComponent`. Medido en `build:demo`: chunk de Ajustes de 103,20 a
     64,47 kB, inicial de 1.525.476 a 1.520.653 B (−4,8 kB, `LogService` y los miembros
-    retirados de `StorageService`/`DbFirestoreService`), ningún otro chunk con cambios
+    retirados del store central viejo y de `DbFirestoreService`), ningún otro chunk con cambios
     relevantes;
   - ~~`exportToExcelInforme` / `exportToPdfInforme`~~ — se fueron antes que la Papelera,
     con su botón y sus servicios (frente Informes, IE4 e IE5).
@@ -142,11 +144,10 @@ en `fechaLegible`.
   (`app-root.parentElement` es el `H1`). Todo texto sin tamaño propio hereda 24 px,
   peso 500 y `line-height` 1,2. Sacarlo cambia la tipografía global: hace falta
   revisión visual pantalla por pantalla.
-- **`StorageService.proveedores$`:** siempre emite `[]` (nadie escribe esa clave de
-  `localStorage` y `clearAllLocalStorage()` la borra en cada login), y su único consumidor,
-  `modal-vehiculo`, asigna `$proveedores` sin usarlo. `clientes$`/`choferes$` y
-  `objeto-papelera`, que tenían el mismo problema, se fueron con la Papelera legado
-  (2026-11-04).
+- ~~**`proveedores$` del store central viejo:** siempre emitía `[]` y su único
+  consumidor, `modal-vehiculo`, lo asignaba sin usarlo~~ — CERRADA (2026-11-04, frente
+  remanente de StorageService): salió con el servicio. `clientes$`/`choferes$` y
+  `objeto-papelera` se habían ido antes, con la Papelera legado.
 - **Bundle:** ~~`pdfmake` (~2,5 MB) en el chunk de Ajustes~~ y ~~`exceljs` en `/op`~~ —
   RESUELTOS en el frente Informes: `pdfmake` salió del proyecto y ninguna ruta descarga
   una librería de exportación al entrar.

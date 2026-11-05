@@ -318,7 +318,6 @@ export class ClienteAltaComponent implements OnInit {
           }
           
           
-          //this.storageService.getAllSorted("clientes", 'idCliente', 'asc')
 //        this.selectCrudOp(result.op, result.item);
         //this.mostrarMasDatos(row);
         },

@@ -19,8 +19,8 @@ export class CategoriaDocumentacionService implements OnDestroy {
     private logRegistro: LogRegistroService,
   ) {}
 
-  // ---- Escrituras simples con log en el mismo batch (reemplaza StorageService
-  // para el CRUD directo de este módulo) ----
+  // ---- Escrituras simples con log en el mismo batch (CRUD directo de este
+  // módulo) ----
 
   private async crearConLog(coleccion: string, data: any, msj: string): Promise<string> {
     const id = this.db.generarId(coleccion);

@@ -51,8 +51,8 @@ fue tocado ni reemplazado.
   `AccionTabla<T>`→`AccionInformesTabla<T>`, `EventoAccionTabla<T>`→`EventoInformesTabla<T>`,
   `OrdenTabla`→`OrdenInformesTabla`; consumida por `InformesTablaComponent`,
   `facturacion-listado`, `facturacion-historico`).
-- **`interfaces/permiso.ts`** (nuevo): `ModuloPermiso` (unión cerrada de los 11 módulos
-  reales del proyecto) y `AccionPermiso` (unión abierta a propósito — se agregan valores
+- **`interfaces/permiso.ts`** (nuevo): `ModuloPermiso` (unión cerrada de los módulos
+  reales del proyecto: 11 al crearla, 12 hoy con `'configuracion'`) y `AccionPermiso` (unión abierta a propósito — se agregan valores
   ahí a medida que aparecen casos nuevos, sin tocar callsites existentes).
 - **`PermisosService`** (`servicios/permisos/`, nuevo): `matrizBase` traducida
   literalmente de la función `permitido()` de `firestore.rules` (no inventada).
@@ -72,7 +72,7 @@ fue tocado ni reemplazado.
   `'manager'` no aparece en ningún módulo de `permitido()` en `firestore.rules` — no tiene
   ningún acceso real a Firestore. Es un rol teórico sin uso actual (`RolUsuario` lo declara,
   pero ningún usuario real del proyecto lo tiene asignado hoy). `PermisosService` lo
-  deniega en `matrizBase` para los 11 módulos, a propósito — no es una omisión a corregir.
+  deniega en `matrizBase` en todos los módulos, a propósito — no es una omisión a corregir.
   La migración de los `*appRole` existentes a `*appPermiso` (bloques futuros) va a quitarle
   también el acceso visible en la UI (tarifas generales de cliente/chofer/proveedor, hoy
   con `'manager'` incluido en la lista de roles permitidos) en vez de mantenerlo como
@@ -186,10 +186,14 @@ requirieron ningún cambio):
 - `matrizBase` pasó a `Record<ModuloReglas, Record<AccionCrud, Record<RolUsuario,
   boolean>>>` — tipo nuevo `AccionCrud` (`'leer' | 'crear' | 'editar' | 'eliminar'`,
   agregado a `interfaces/permiso.ts`) y `ModuloReglas` (tipo interno de
-  `PermisosService`, los 11 módulos reales de `permitido()` — `entidades`, `legajos`,
-  `vendedores`, `operaciones`, `tarifas`, `tarifasHistorial`, `finanzas`,
-  `legacySoloLectura`, `numeradores`, `logs`, `papelera` — más `'usuarios'`, caso
-  especial). Transcripción literal de `permitido()`, entrada por entrada — incluye
+  `PermisosService`: al crearlo, los 11 módulos que tenía entonces `permitido()` —
+  `entidades`, `legajos`, `vendedores`, `operaciones`, `tarifas`, `tarifasHistorial`,
+  `finanzas`, `legacySoloLectura`, `numeradores`, `logs`, `papelera` — más `'usuarios'`,
+  caso especial. **Hoy `permitido()` tiene 19 módulos**; `ModuloReglas` transcribe 16 de
+  ellos (se sumaron `asignaciones`, `informesOp`, `resumenes`, `comisiones` y
+  `configuracion`) más `'usuarios'`. Los 3 de `permitido()` que faltan en `ModuloReglas`
+  están en la deuda "Módulos de `permitido()` sin equivalente en `ModuloReglas`").
+  Transcripción literal de `permitido()`, entrada por entrada — incluye
   módulos sin `ModuloPermiso` equivalente todavía (`numeradores`/`logs`/`papelera`),
   poblados igual por completitud para cuando haga falta.
 - `mapaModuloReglas: Record<Exclude<ModuloPermiso,'usuarios'>, ModuloReglas>`: traduce
@@ -651,3 +655,34 @@ acción oculta o deshabilitada que la regla dejaría hacer (clic perdido), nunca
 mostrada que la regla rechace. `matrizBase.logs` sí coincide con las reglas. Al corregirlo,
 tener en cuenta que el bucket `papelera` cubre `papeleraEventos` y `objetosEliminados` (la
 colección vieja `papelera` ya no tiene pantalla).
+
+Va al **frente diferido de reglas y matriz**, junto con las dos deudas siguientes.
+
+## Deuda abierta — criterio de acceso de `demo` al módulo Ajustes (frente diferido de reglas y matriz)
+
+Cinco capas dicen cosas distintas sobre si `demo` entra a Ajustes:
+- `canMatch` de `ajustes` en `raiz-routing` lo deja entrar (descarga el chunk);
+- las cuatro rutas hijas que no son `usuarios` (`registro`, `registro-log`, `papelera`,
+  `empresa`) también lo admiten;
+- el `redirectTo` de `ajustes` pelado lo manda a `usuarios`, la única a la que no puede
+  entrar (cae en `/limbo`);
+- el sidebar no le da puerta: gatea el menú entero con `usuarios.ver`, que es `dev`/`admin`;
+- las reglas le permiten leer esas colecciones.
+
+**Decidido, pendiente de aplicar:** Ajustes pasa a `dev`/`admin`. Costo conocido: `empresa`
+le da `demo` a propósito (comentario "F8b" en `ajustes-routing`, "solo lectura"), así que o
+`demo` lo pierde o esa pantalla se muda fuera de Ajustes. Las reglas no hace falta tocarlas
+para esto (leer más de lo que la UI muestra no es un agujero).
+
+## Deuda abierta — módulos de `permitido()` sin equivalente en `ModuloReglas` (frente diferido de reglas y matriz)
+
+`permitido()` en `firestore.rules` tiene 19 módulos; `ModuloReglas`/`matrizBase` de
+`PermisosService`, 16 (más `'usuarios'`). Faltan:
+- `historicoSoloLectura` (`logs` y `papelera` viejos, `beb4d26`): lectura para
+  `dev`/`admin`/`user`/`demo`, ninguna escritura para nadie;
+- `desarrollo` (sólo `dev`, herramientas de `/migracion`);
+- `vencimientos` (sólo lectura, la escribe la Cloud Function).
+
+Hoy ningún botón consulta esos módulos, así que no hay efecto visible. La regla del archivo
+es "transcripción literal de `permitido()`": al retomarla, agregarlos o dejar escrito por
+qué no.

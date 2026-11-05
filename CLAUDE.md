@@ -100,10 +100,19 @@ automático a rutas que no lo listen.
 de la sesión en memoria (sin observable — no hace falta reactividad en
 vivo, es sesión local). Getter síncrono `getUsuarioActual()`, más
 `esRol(...roles)` para chequeos. Persiste en `localStorage` bajo la
-clave `usuarioSesion` (propia, distinta de la vieja `usuario` que
-`StorageService` dejó de poblar). `AuthService` es responsable solo de
-Firebase Auth (login/logout); separa "autenticarse" de "quién soy y qué
-puedo hacer".
+clave `usuarioSesion` y la rehidrata de ahí de forma síncrona en su
+constructor, sin escuchar a Firebase Auth (no hay `onAuthStateChanged`).
+`limpiar()` (en el logout) es lo único que borra esa clave. `AuthService`
+es responsable solo de Firebase Auth (login/logout); separa
+"autenticarse" de "quién soy y qué puedo hacer".
+
+**Secuencia de arranque:** `/login` → `AuthService.iniciarSesion` (Firebase
+Auth, lectura de `/users/{uid}`, `setUsuario`, log LOGIN) → `/carga`, que
+espera 3 s y navega → `/op`, donde `HomeComponent.ngOnInit` corre los
+`init()` de los servicios por entidad. Tras un F5 no se pasa por `/carga`:
+la sesión sale de la rehidratación de `UsuarioSesionService` y
+`RoleGuard` decide con eso. Ver "Deuda abierta" → sesión que sobrevive a
+la pantalla de login.
 
 **`RoleGuard`/`*appRole`**: comparación plana contra `usuario.role`
 (`rolesEsperados.includes(usuario.role)` / `esRol(...)`), sin jerarquía.
@@ -162,6 +171,11 @@ no en reglas declarativas):
 doc ya trae su propio `uid`; devuelve `/users` completo). El filtro
 `role !== 'dev'` lo aplica `GestionUsuariosComponent.cargarUsuarios`, siempre —
 `dev` no se lista ni gestiona desde la app, exclusivamente por consola.
+**Que `obtenerUsuarios` no filtre por rol es deliberado:** tiene dos
+consumidores con criterios opuestos. Gestión de usuarios excluye a `dev`;
+`UsuariosConsultaService` (nombre de usuario en Registro, Registro Log y
+Papelera) los necesita, porque hay entradas de `logs` y `papeleraEventos`
+escritas por un `dev`. Cada consumidor filtra lo suyo.
 
 **Autoregistro cerrado:** `register-user` (ex `sign-up`) y
 `verify-email-address` eliminados junto con toda la maquinaria de
@@ -173,8 +187,8 @@ contraseña de un usuario existente) es independiente y se mantiene.
 
 ### State management
 
-El refactor arquitectónico migró el manejo de estado desde un store central único
-(`StorageService`) hacia servicios por entidad:
+El refactor arquitectónico migró el manejo de estado desde un store central único hacia
+servicios por entidad:
 
 **Módulos refactorizados** (Choferes, Proveedores, Clientes; Operaciones en progreso — subsistema Asignaciones: capa de servicios y fachada completas; switch completo de `tablero-diario` → `tablero-asignaciones` (tablero-diario, carga-tablero-diario y operaciones-table eliminados); `carga-multiple` migrado a `carga-asignacion` y switch completado (carga-multiple eliminado), con caller confirmado en tablero-op (`modalCargaMultiple()`); coordinadores `bajaOperacion`/`restaurarOperacion` en OperacionService completos (atómicos,
 batch + log único), con `tablero-op` ya usando `bajaOperacion` como caller para la baja
@@ -184,12 +198,12 @@ en memoria (NO en localStorage). El `init()` del servicio abre el listener de Fi
 y se llama al arrancar la app. Los componentes se suscriben directamente al observable
 del servicio.
 
-**`StorageService`** (`servicios/storage/storage.service.ts`): ya no mantiene estado de
-ningún módulo ni escribe en Firestore. Queda vivo sólo: `clearAllLocalStorage` (login y
-logout), `initializerAdmin` (cachea `users` en localStorage, con el subject privado
-`_users$`), `setInfo`/`loadInfo` (clave `ruta` en `CargaComponent`/`SidebarComponent`;
-`loadInfo('users')` en `RegistroComponent`, `RegistroLogComponent` y `PapeleraComponent`)
-y `proveedores$` (`ModalVehiculoComponent`, que lo asigna sin usarlo). Ver "Deuda abierta".
+**Store central viejo: eliminado por completo** (frente remanente de StorageService,
+2026-11-04). El estado de datos vive sólo en los servicios por entidad. `localStorage`
+queda para dos cosas, sin capa intermedia: la sesión (`usuarioSesion`, de
+`UsuarioSesionService`) y las preferencias de UI de `tablero-op` e `informe-op-listado`,
+que cada componente lee y escribe directo, con su propia clave. Nada borra
+`localStorage` entero.
 
 **Papelera:** el único mecanismo es `PapeleraService` sobre `papeleraEventos`/
 `objetosEliminados` (skill `subsistema-papelera`), escrito atómico vía
@@ -276,8 +290,8 @@ Por eso `Proforma CH` tiene mayor prioridad visual que `Proforma CL` en el badge
 |---|---|
 | `autentificacion/` | Firebase Auth, sesión de usuario |
 | `usuario-sesion/` | Fuente única de la sesión en memoria (rol, uid, email del usuario logueado). Sin listener — no reactivo en vivo. |
+| `gestion-usuarios/` | `GestionUsuariosService.obtenerUsuarios` (lectura puntual de `/users` completo, sin filtro por rol) y `UsuariosConsultaService`: resuelve el nombre de usuario en Registro, Registro Log y Papelera (`cargar()` + `nombreDe(userId, userEmail)`, por uid y después por email). Lectura puntual en memoria, sin localStorage, una por pantalla; sólo `dev`/`admin` leen `/users`, el resto y cualquier fallo degradan a email |
 | `database/` | CRUD Firestore |
-| `storage/` | Resto del store central viejo: caché en localStorage (`ruta`, `users`) y `clearAllLocalStorage`. No escribe en Firestore ni loguea (ver "State management") |
 | `log-registro/` | `LogRegistroService` (escritura, dentro del batch atómico de negocio) + `RegistroLogConsultaService` (lectura/paginación, para `RegistroLogComponent`) sobre `registroLog` — ver la skill `subsistema-log` |
 | `papelera/` | `PapeleraService` (preparación de escrituras de baja/restauración por referencia, dentro del batch atómico de negocio) + `PapeleraConsultaService` (lectura/paginación, para `PapeleraComponent`) sobre `papeleraEventos`/`objetosEliminados` — ver la skill `subsistema-papelera` |
 | `visualizador-objeto/` | `VisualizadorObjetoService` — dispatcher `coleccion -> modal de vista real`, usado por `RegistroLogComponent` y (desde el Frente Papelera) por `PapeleraComponent` vía el parámetro `snapshot` de `verObjeto` |
@@ -568,10 +582,9 @@ visibilidad, documentación): migradas al mecanismo nuevo (ver la skill
 principal + N relacionadas, ej. chofer + vehículos + legajo): un único
 `EscrituraBatch[]`/`commitBatch` por cascada, armado a mano en el método (no vía los
 helpers de 1 escritura), con un `agregarAlBatch` por cada escritura real — atomicidad
-completa sin perder granularidad de log (Frente 2). Ninguno de los dos casos pasa ya
-por `StorageService`. **Baja con papelera (actualizado, Frente Papelera):** ya NO usa
-`StorageService.deleteItemPapeleraCompuestoAsync()` para Cliente/Chofer/Proveedor/
-Operación — un único `EscrituraBatch[]`/`commitBatch` por cascada, igual que
+completa sin perder granularidad de log (Frente 2). **Baja con papelera (Frente
+Papelera):** para Cliente/Chofer/Proveedor/Operación es un único
+`EscrituraBatch[]`/`commitBatch` por cascada, igual que
 alta/edición, con `PapeleraService.prepararBajaEnBatch()` armando el evento +
 objetos archivados por referencia (en vez de un objeto compuesto embebido) y
 `restaurarXxx()` en el `XxxService` dueño para la restauración — ver la skill
@@ -729,7 +742,12 @@ Deuda técnica activa. Actualizar cuando se salda.
 - **Fix de altura del modal limitado a `tablero-op`** — el ajuste que estira `carga-asignacion` dentro del modal vive en `tablero-op.component.scss`: otro caller que abra ese modal tiene que replicarlo. Detalle: skill `modulo-operaciones`.
 - **Migración de `noOperativo`** — la colección anterior de no disponibilidad quedó sin lectores: 6 documentos en demo y los de producción (2 vigentes al relevar), con la forma y el trabajo de "Datos de la colección anterior" en `docs/disenos/no-disponibilidad.md`. **Va después de la migración de Choferes**: 3 de los 6 de demo tienen `idChofer` numéricos del modelo viejo que sólo resuelven con su mapeo; al revés, se pierden.
 - **Mapeo de `noOperativo` en `firestore.rules`** — se saca recién cuando termine esa migración.
-- **Lo que queda de `StorageService` (frente chico propio)** — `loadInfo('users')` en `RegistroComponent`, `RegistroLogComponent` y `PapeleraComponent` (nombre en vez de email); la clave `ruta` en `CargaComponent` y `SidebarComponent`; `clearAllLocalStorage` en login/logout; `proveedores$` en `ModalVehiculoComponent`, asignado sin usarse. **Mover las tres pantallas a `GestionUsuariosService` no es reemplazo directo:** `firestore.rules` permite leer `/users` sólo a `dev`/`admin` o al propio usuario, y las tres rutas admiten `demo`; hoy falla en silencio (`loadInfo` vacío, columna en blanco) y con una lectura en vivo pasaría a ser un error visible. Hay que resolver nombres sólo para `dev`/`admin` y mostrar el email para el resto. Además `obtenerUsuarios()` devuelve `/users` completo y el filtro `role !== 'dev'` lo aplica `GestionUsuariosComponent.cargarUsuarios`, y en `logs` hay entradas escritas por `dev`.
+- **Sesión que sobrevive a la pantalla de login** — desde el frente remanente de StorageService, abrir `/login` ya no corta la sesión de la app: quien cerró el navegador sin desloguearse y escribe una ruta protegida entra sin contraseña (`usuarioSesion` persiste en `localStorage`, la sesión de Firebase Auth en IndexedDB). Salidas posibles, ninguna decidida. **Decidir antes del corte a Vantruck.** Detalle: skill `subsistema-log`; puntero en `migracion-vantruck`.
+- **Preferencias de UI compartidas entre usuarios del mismo navegador** — las cinco claves de `localStorage` de `tablero-op` e `informe-op-listado` ya no se borran en el login: el cliente o chofer filtrado por un usuario le aparece al siguiente. Arreglo: namespacearlas por uid. Detalle: skill `modulo-operaciones`.
+- **`/carga` sin propósito claro** — sólo espera 3 s y navega a `/op`. Si el valor es visual, la espera debería justificarse; si no, la pantalla sobra. Frente de UX.
+- **La pestaña "Registro" está comentada en `AjustesControlComponent`** — `RegistroComponent` (histórico congelado de `logs`) no tiene entrada en la UI para ningún rol; sólo se llega escribiendo `/ajustes/registro`. Detalle: skill `subsistema-log`; afecta la primera verificación del corte en `migracion-vantruck`.
+- **Criterio de acceso de `demo` al módulo Ajustes** — cinco capas en desacuerdo (`canMatch`, rutas hijas, `redirectTo`, sidebar y reglas). Decidido, pendiente de aplicar: Ajustes pasa a `dev`/`admin`, con el costo de `empresa` (F8b). Frente diferido de reglas y matriz. Detalle: skill `botones-y-permisos`.
+- **Módulos de `permitido()` sin equivalente en `ModuloReglas`/`matrizBase`** — `historicoSoloLectura`, `desarrollo` y `vencimientos`. Mismo frente diferido. Detalle: skill `botones-y-permisos`.
 - **Filtro por colección del Registro de actividad incompleto** — `COLECCIONES_REGISTRO_LOG` (`registro-log-consulta.service.ts`) no tiene 10 colecciones que ya escriben en `registroLog`: `users`, `informesOp`, `informesLiq`, `movimientosFin`, `tarifas`, `tarifasEspeciales`, `registrosOpEventuales`, `vendedores`, `liquidacionesVenta` y `configuracion`. Sus entradas se ven sin filtrar, pero no se pueden filtrar por colección. Detalle: skill `subsistema-log`.
 - **Cuatro copias de `escapar`** — en `modal-no-disponibilidad`, `operaciones-editor`, `vendedor-historial` y `shared/utils/texto-html.util.ts`: unificar sobre `escaparHtml`/`textoAHtml` del util.
 - **Filtros vs. listener en background (frente futuro)** — en `tablero-op` los datos pueden quedar congelados al volver de background mientras los filtros muestran otro período; las suscripciones a `operaciones$` no manejan errores. Detalle: skill `modulo-operaciones`.
@@ -744,4 +762,5 @@ Deuda técnica activa. Actualizar cuando se salda.
 - **Generador y datos de demo** — en eventuales el pago al chofer puede superar el cobro y la limpieza no toca Storage. Detalle: skill `herramientas-demo`.
 - **Tras Lazy loading + fechas** — el `<h1>` sin cerrar de `index.html` envuelve toda la app y `src/test.ts` quedó como resto sin uso. Detalle: skill `lazy-loading-y-fechas`.
 - **Tras Ficha de entidad** — ng-bootstrap 15 sobre Angular 20 falla en runtime con `hostDirectives` (NG0309) y quedan anonimizadores de prueba sin uso. Detalle: skill `ficha-entidad`.
+- **CHANGELOG con huecos** — 18 de los últimos 25 commits (al 2026-11-04) no tienen entrada: el frente no-disponibilidad completo, papelera y restauración, tooling y documentación. Antes de completarlo hay que decidir dos cosas: la granularidad (una entrada por commit o una por frente) y si el archivo aporta hoy algo que no esté ya en las skills y en los mensajes de commit.
 - **Nombre de entidad como enlace a la ficha (frente futuro)** — el pedido F7 del cliente, ampliado a ≈ 34 plantillas, con análisis de riesgos y etapas ya hecho. Detalle: skill `ficha-entidad`.
