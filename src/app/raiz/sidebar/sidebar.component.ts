@@ -3,7 +3,6 @@ import { Subject, takeUntil } from 'rxjs';
 import { Legajo, estadoGeneralDeLegajo } from 'src/app/interfaces/legajo';
 import { ConIdType } from 'src/app/interfaces/conId';
 import { AuthService } from 'src/app/servicios/autentificacion/auth.service';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { LegajoService } from 'src/app/servicios/legajos/legajo.service';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 import Swal from 'sweetalert2';
@@ -34,7 +33,6 @@ export class SidebarComponent implements OnInit {
 
   constructor(
     private authService: AuthService,
-    private storageService: StorageService,
     private legajoService: LegajoService,
     public usuarioSesion: UsuarioSesionService,
   ) { }
@@ -90,17 +88,5 @@ export class SidebarComponent implements OnInit {
     });
   }
 
-  navegar(ruta:string){
-    let rutaActual = this.storageService.loadInfo("ruta")
-    //console.log("rutaActual", rutaActual);
-    if(rutaActual[0] !== ruta){
-      this.storageService.setInfo("ruta", [ruta]);
-      //this.storageService.updateObservable("ruta", [ruta]);
-    } else {
-      //console.log("nada");
-      
-    }
-    
-  }
 
 }

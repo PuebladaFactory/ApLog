@@ -1,12 +1,9 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { Subject, takeUntil } from 'rxjs';
 import { AsignacionVehiculo, Categoria, Vehiculo } from 'src/app/interfaces/chofer';
 import { ConIdType } from 'src/app/interfaces/conId';
-import { Proveedor } from 'src/app/interfaces/proveedor';
 import { CategoriaTarifa } from 'src/app/interfaces/tarifa';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ValidarService } from 'src/app/servicios/validar/validar.service';
 import { VehiculoFactoryService, VehiculoFormData } from 'src/app/servicios/choferes/vehiculo-factory.service';
 import { TarifarioService } from 'src/app/servicios/tarifario/tarifario.service';
@@ -24,11 +21,9 @@ export class ModalVehiculoComponent implements OnInit {
   @Input() fromParent: any;
   @Input() asignadoA!: AsignacionVehiculo;
 
-  $proveedores!: Proveedor;
   vehiculoForm:any;
   seguimientoForm:any;
   categoriasForm:any;
-  proveedorSeleccionado!: string;
   tipoCombustible:string[] = [];
   tarjetaCombustible!:boolean;
   publicidad!: boolean;
@@ -45,9 +40,8 @@ export class ModalVehiculoComponent implements OnInit {
    *  vigente, se muestra acá para que el usuario elija una válida. */
   categoriaLegacyDesconocida: string | null = null;
   edicion:boolean = false;
-  private destroy$ = new Subject<void>();
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, public activeModal: NgbActiveModal, private vehiculoFactoryService: VehiculoFactoryService, private tarifarioService: TarifarioService){
+  constructor(private fb: FormBuilder, public activeModal: NgbActiveModal, private vehiculoFactoryService: VehiculoFactoryService, private tarifarioService: TarifarioService){
     this.vehiculoForm = this.fb.group({
       dominio: ["", [Validators.required, Validators.minLength(6), Validators.maxLength(8), ValidarService.validarDominio]],
       marca:["",[Validators.required, Validators.maxLength(50)]],
@@ -73,11 +67,6 @@ export class ModalVehiculoComponent implements OnInit {
       Swal.fire('Sin tarifa general', 'Hace falta una tarifa general vigente para poder categorizar el vehículo.', 'warning');
     }
 
-    this.storageService.proveedores$
-    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-    .subscribe(data => {
-      this.$proveedores = data;
-    });
     console.log("1)",this.fromParent);
     if(this.fromParent !== undefined){
         this.edicion = true;
@@ -85,11 +74,6 @@ export class ModalVehiculoComponent implements OnInit {
         this.armarForms()
     }
 
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   guardarVehiculo(){
@@ -121,10 +105,6 @@ export class ModalVehiculoComponent implements OnInit {
     }
 
    }
-
-   changeProveedor(e:any){
-        this.proveedorSeleccionado = e.target.value;
-  }
 
   /* changeTipoCombustible(e: any) {
     this.tipoCombustible = e.target.value

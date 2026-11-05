@@ -93,31 +93,6 @@ export class DbFirestoreService {
   } */
 
   ////////////////////////////////////////////////////////////////////////////////////
-  getAllColectionUsers<T>(coleccion: string): Observable<ConIdType<T>[]> {
-    const dataCollectionPath = `${coleccion}`;
-    const colRef = collection(this.firestore, dataCollectionPath);
-    const q = query(colRef, where("role", "!=", "dev"));
-
-    return new Observable<ConIdType<T>[]>((observer) => {
-      const unsubscribe = onSnapshot(
-        q,
-        (snapshot) => {
-          const changes: ConIdType<T>[] = snapshot
-            .docChanges()
-            .map((change) => ({
-              id: change.doc.id,
-              ...(change.doc.data() as T),
-              type: change.type, // 'added', 'modified', 'removed'
-            }));
-          observer.next(changes);
-        },
-        (error) => observer.error(error),
-      );
-
-      // Cleanup
-      return { unsubscribe };
-    });
-  }
 
   /*     getAllColectionLimit<T>(coleccion:string, limite:number) {
       const dataCollection = `/${coleccion}`;

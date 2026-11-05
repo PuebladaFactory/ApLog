@@ -8,7 +8,6 @@ import {
 } from '@angular/fire/auth';
 import { Firestore, doc, getDoc } from '@angular/fire/firestore';
 import Swal from 'sweetalert2';
-import { StorageService } from '../storage/storage.service';
 import { LogRegistroService } from '../log-registro/log-registro.service';
 import { UsuarioSesionService } from '../usuario-sesion/usuario-sesion.service';
 import { Usuario } from '../../interfaces/usuario';
@@ -22,7 +21,6 @@ export class AuthService {
 
   constructor(
     private router: Router,
-    private storage: StorageService,
     private logRegistro: LogRegistroService,
     private usuarioSesion: UsuarioSesionService
   ) {}
@@ -91,7 +89,6 @@ export class AuthService {
         );
       }
       await signOut(this.auth);
-      this.storage.clearAllLocalStorage();
       this.usuarioSesion.limpiar();
       this.router.navigate(['/login']);
     } catch (error: any) {
