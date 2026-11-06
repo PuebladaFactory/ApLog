@@ -30,12 +30,12 @@ export class AuthService {
       const result = await signInWithEmailAndPassword(this.auth, email, password);
       const resultado = await this.obtenerDatosUsuario(result.user.uid);
 
-      if (resultado === null) {
-        this.router.navigate(['/unauthorized']);
-        return;
-      }
-
-      if (resultado === 'sin-rol') {
+      // Sin documento o sin rol: no hay sesión de ninguna de las dos clases.
+      // signOut (Auth quedó autenticado con este usuario) + limpiar() (la
+      // memoria podía tener la sesión de otro usuario, rehidratada).
+      if (resultado === null || resultado === 'sin-rol') {
+        await signOut(this.auth);
+        this.usuarioSesion.limpiar();
         this.router.navigate(['/limbo']);
         return;
       }
@@ -50,6 +50,10 @@ export class AuthService {
       this.router.navigate(['/carga']);
     } catch (error: any) {
       console.error(error.message);
+      // limpiar() ANTES del registrarError: la entrada queda firmada como
+      // 'Desconocido'. Un intento fallido no se puede atribuir a la sesión
+      // que hubiera en memoria (pueden ser otras credenciales).
+      this.usuarioSesion.limpiar();
       await this.logRegistro.registrarError(
         'LOGIN', 'users', 0, `Error al iniciar sesión: ${error.message}`
       );
@@ -79,23 +83,28 @@ export class AuthService {
 
   async cerrarSesion(): Promise<void> {
     const usuario = this.usuarioSesion.getUsuarioActual();
+    // El log se escribe ANTES de signOut(): las reglas de Firestore exigen
+    // autenticado() para escribir en registroLog, y una vez cerrada la sesión
+    // el token ya no sirve para eso. registrarAccion es best-effort: no lanza.
+    if (usuario) {
+      await this.logRegistro.registrarAccion(
+        'LOGOUT', 'users', 0, `Usuario ${usuario.email} cerró sesión.`
+      );
+    }
+    // limpiar() ANTES de signOut(), no en un finally: así, cuando Auth avise
+    // null, la app ya no tiene sesión que perder y un logout deliberado se
+    // distingue de una sesión perdida (eje de sesión, bloque 2b).
+    this.usuarioSesion.limpiar();
     try {
-      // El log se escribe ANTES de signOut(): las reglas de Firestore exigen
-      // autenticado() para escribir en registroLog, y una vez cerrada la sesión
-      // el token ya no sirve para eso.
-      if (usuario) {
-        await this.logRegistro.registrarAccion(
-          'LOGOUT', 'users', 0, `Usuario ${usuario.email} cerró sesión.`
-        );
-      }
       await signOut(this.auth);
-      this.usuarioSesion.limpiar();
-      this.router.navigate(['/login']);
     } catch (error: any) {
+      // Queda Auth autenticado y la app sin sesión: la dirección segura.
+      // La entrada sale firmada como 'Desconocido' (la sesión ya está limpia).
       console.error('Error al cerrar sesión:', error);
       await this.logRegistro.registrarError(
         'LOGOUT', 'users', 0, `Error al cerrar sesión: ${error.message}`
       );
     }
+    this.router.navigate(['/login']);
   }
 }

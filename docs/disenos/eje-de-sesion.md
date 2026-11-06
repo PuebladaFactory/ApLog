@@ -2,9 +2,9 @@
 
 Fecha: 2026-11-05 · Rama: `refactor` · Auditoría: `docs/auditorias/eje-de-sesion-auth-rehidratacion-y-guard.md`
 
-Estado: **spec, sin implementar.** Las contradicciones C1 a C6 quedaron decididas en el chat
-de diseño el 2026-11-05 y están resueltas abajo, igual que el timeout y el `role` inválido.
-Único punto abierto: el texto de `/limbo`, que sigue siendo una propuesta a confirmar.
+Estado: **spec cerrada, sin implementar.** Las contradicciones C1 a C6 quedaron decididas en el
+chat de diseño el 2026-11-05, igual que el timeout, el `role` inválido y el texto de `/limbo`.
+No queda nada pendiente para implementar los cuatro bloques.
 
 ## El problema
 
@@ -246,6 +246,16 @@ Deja el proyecto compilando. No depende de los demás bloques. El bloque 2 reesc
 | `null` | `limpiar()` | `signOut` | `/limbo` |
 | `'sin-rol'` | `limpiar()` | `signOut` | `/limbo` |
 | `catch` | `limpiar()` | sin cambios (no se autenticó) | se queda en `/login` (Swal) |
+| `signOut` lanza dentro de `null` o `'sin-rol'` | `limpiar()` (cae al `catch`) | sigue autenticado | se queda en `/login` (Swal) |
+
+La última fila la agregó la implementación del bloque 1 (2026-11-06): es la consecuencia
+directa del `catch` y cumple el invariante igual. La divergencia que deja —app sin sesión, Auth
+autenticado— es la dirección segura, y la resuelve la reconciliación del bloque 2 en el próximo
+arranque: lee Auth, relee `/users/{uid}`, no encuentra documento o rol y limpia.
+
+En el `catch`, `limpiar()` va **antes** del `registrarError`: la entrada queda firmada como
+`'Desconocido'`, que es lo correcto, porque no se puede distinguir un intento fallido del
+usuario logueado de un intento con otras credenciales sobre una sesión ajena.
 
 ### `AuthService.cerrarSesion`
 
@@ -295,7 +305,7 @@ ramas `null` y `'sin-rol'`. Las dos cosas están verificadas:
 Para la otra población (viene del guard, con sesión y rol), "Salir" pasa a ser un logout
 real, con log LOGOUT. Hoy dejaba las dos sesiones vivas.
 
-### Texto de `/limbo` — **PROPUESTA, a confirmar por Nico antes de implementarla**
+### Texto de `/limbo` — **CONFIRMADO por Nico el 2026-11-05**
 
 **Hoy dice:** "¡Bienvenido!" / "Su correo electrónico ha sido verificado exitosamente…". Es
 de la era de la verificación de email.
@@ -308,11 +318,10 @@ de la era de la verificación de email.
 El texto no puede afirmar que hay sesión ni hablar de email.
 
 > **Título:** "Sin acceso"
-> **Cuerpo:** "Tu usuario no tiene acceso a esta sección, o todavía no está habilitado en la
-> aplicación. Si creés que es un error, hablá con un administrador."
+> **Cuerpo:** "Su usuario no tiene acceso a esta sección, o todavía no está habilitado en la
+> aplicación. Si cree que es un error, comuníquese con un administrador."
 
-El botón "Salir" se mantiene. Si el texto no está confirmado al implementar, el bloque sale
-igual con la lógica y el texto espera.
+En usted, que es el registro del texto que reemplaza. El botón "Salir" se mantiene.
 
 ### Verificación manual (Nico)
 
@@ -993,7 +1002,8 @@ contradicción.
 
 ## Sin decidir
 
-1. **El texto de `/limbo`.** La propuesta del bloque 1 está escrita en voseo y el texto que
-   reemplaza está en usted ("Su correo electrónico ha sido verificado…"). Falta elegir el
-   registro que usa el resto de la app y confirmar el texto. El bloque 1 se implementa igual:
-   la lógica no depende del texto.
+Nada pendiente para implementar los cuatro bloques. El texto de `/limbo` quedó confirmado en
+usted el 2026-11-05.
+
+Queda para después del frente, fuera de alcance y ya anotado en C5: la **política de
+persistencia de la sesión**, que es en lo que se convierte el bloqueante de la promoción.

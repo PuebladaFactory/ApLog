@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { AuthService } from '../servicios/autentificacion/auth.service';
 
 @Component({
     selector: 'app-limbo',
@@ -8,11 +8,14 @@ import { Router } from '@angular/router';
     standalone: false
 })
 export class LimboComponent implements OnInit {
-  
-  constructor(private router: Router){}
+
+  constructor(private authService: AuthService){}
 
   ngOnInit(): void {}
 
-  volver(){this.router.navigate(['login']);}
+  // cerrarSesion tolera llegar sin sesión de app ni usuario de Auth (ramas
+  // sin documento / sin rol del login): el LOGOUT se loguea sólo con sesión
+  // y signOut sobre null es inocuo. Navega a /login.
+  volver(){this.authService.cerrarSesion();}
 
 }
