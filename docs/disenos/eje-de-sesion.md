@@ -448,6 +448,7 @@ llamar a ninguno.
 | 9 | uid X | `permission-denied` / `unauthenticated` | uid X | `fallo` (C2, decidido) | `limpiar()`: sobre el documento propio ese error sólo puede venir de un pedido sin autenticar |
 | 10 | uid X | `permission-denied` / `unauthenticated` | uid Y o ninguna | `fallo` | `limpiar()` |
 | 11 | uid X | ok, con `role` fuera de `RolUsuario` | cualquiera | `sin-rol` | `limpiar()` (decidido el 2026-11-05) |
+| 12 | uid X | error con un código que no es de conexión ni de permisos | cualquiera, uid X incluido | `fallo` | `limpiar()` (literal desde el 2026-11-06; antes lo decidía sólo la nota "nunca conserva") |
 
 **Notas sobre la tabla:**
 
@@ -470,6 +471,25 @@ llamar a ninguno.
   - Quien decide cerrar Auth es el gesto: `iniciarSesion`, `cerrarSesion` o el manejador del
     2b.
   - En un F5, ese estado se vuelve a leer, vuelve a dar el mismo resultado y es estable.
+- **El `uid` de la sesión lo pone Auth, no el documento** (decidido el 2026-11-06). En las
+  filas 2, 3 y 4, al establecer la sesión el `uid` se fuerza al de Auth en vez de confiar en el
+  campo del documento. El uid es la identidad y su fuente de verdad son Auth y la ruta del
+  documento; el campo es una desnormalización. Cubre los documentos de `/users` creados a mano
+  por consola sin ese campo, y el caso peor, un campo mal copiado, que crearía una sesión cuyo
+  uid no coincide con Auth y haría fallar toda la comparación de esta tabla.
+  - No arregla `GestionUsuariosService`, que sigue leyendo el campo del documento (CLAUDE.md,
+    "sin `ConId` porque el doc ya trae su propio `uid`"). Si un documento hecho a mano no lo
+    tiene, es en la pantalla de usuarios donde se va a notar. Fuera de alcance de este frente.
+- **Si el primer evento de `onAuthStateChanged` no llega** (decidido el 2026-11-06, a partir del
+  hallazgo 2 de la implementación del bloque 2): a `TIMEOUT_RECONCILIACION_MS` se reconcilia con
+  el estado de Auth desconocido y se decide como las filas 7 y 8 —conserva si hay sesión
+  rehidratada válida, `'fallo'` si no—. **`sesionResuelta()` siempre resuelve:** una pantalla en
+  blanco sin salida es peor que cualquier otra falla de este diseño.
+  - Por qué no `/login` al vencer: sin conexión, la inicialización de Auth hace un pedido de red
+    para recargar el usuario guardado, así que el primer evento puede tardar segundos de forma
+    legítima. Mandar a `/login` ahí rompería la promesa del F5 sin conexión.
+  - Si el evento llega tarde dispara su propia reconciliación, y el resultado es estable: con
+    conexión establece, sin conexión vuelve a conservar.
 - **Consecuencia aceptada de la fila 7** (por el marco):
   - Un `usuarioSesion` con el rol manipulado más un F5 sin conexión conserva el rol
     manipulado.
@@ -549,16 +569,30 @@ poder testearla sin Firebase.
 |---|---|---|---|
 | `establecida` | log LOGIN | `setUsuario` (reconciliación) | `/carga` |
 | `sin-documento` / `sin-rol` | `signOut` + `limpiar()` (bloque 1) | `limpiar()` (reconciliación y `iniciarSesion`) | `/limbo` |
-| `conservada` | `signOut` + `limpiar()` + Swal "No se pudo verificar tu usuario. Probá de nuevo." | `limpiar()` (`iniciarSesion`) | se queda en `/login` |
+| `conservada` | `signOut` + `limpiar()` + Swal "No se pudo verificar su usuario. Vuelva a intentar." | `limpiar()` (`iniciarSesion`) | se queda en `/login` |
 | `fallo` (incluye timeout) | `signOut` + `limpiar()` + el mismo Swal | `limpiar()` | se queda en `/login` |
-| `sin-auth` (Auth se cerró en el medio) | `limpiar()` + Swal de error | `limpiar()` | se queda en `/login` |
+| `sin-auth` (Auth ya no es el uid que se autenticó) | `limpiar()` + Swal "La sesión cambió mientras se iniciaba. Vuelva a intentar." | `limpiar()` | se queda en `/login` |
 | `catch` (credenciales, red) | `limpiar()` + `registrarError` + Swal | `limpiar()` | se queda en `/login` |
+
+**Textos en usted** (decidido el 2026-11-06), como el de `/limbo` y el resto de la app.
 
 **Por qué `conservada` es una falla en el login** (decisión de esta spec):
 
 - El gesto de loguearse exige un rol verificado, no uno rehidratado.
 - Además, si la red alcanzó para autenticar y no para leer `/users`, algo anda mal.
 - Conservar sí tiene sentido en un F5, que no es un gesto.
+
+**`'sin-auth'` en el login cubre dos subcasos** (hallazgo 1 de la implementación del bloque 2,
+2026-11-06): entre el `signIn` y la reconciliación, otra pestaña puede cerrar la sesión o entrar
+con otra cuenta. Los dos se tratan igual, con `limpiar()` y el mismo aviso.
+
+- En el subcaso "otro uid", la reconciliación estableció una sesión válida y verificada para ese
+  otro usuario, y el `limpiar()` del login la borra por una falla ajena.
+- Se acepta: hacen falta dos pestañas compitiendo dentro del mismo segundo, `limpiar()` sólo
+  afecta la memoria de esta pestaña más la clave de `localStorage`, y el próximo F5 de la otra
+  pestaña la reestablece desde Auth.
+- A cambio, el nombre `'sin-auth'` deja de ser literal: no significa sólo "Auth no tiene
+  usuario".
 
 ### Qué se ve mientras se espera (F5)
 
@@ -573,13 +607,36 @@ poder testearla sin Firebase.
   - la recarga del usuario que Auth hace al iniciar: un pedido de red cuando hay usuario
     guardado (`reloadAndSetCurrentUserOrClear`);
   - el `getDoc` de `/users/{uid}`.
-- Con conexión, se espera del orden de una fracción de segundo a un segundo y algo. No está
-  medido: se mide en la verificación manual.
 - Sin conexión, hasta `TIMEOUT_RECONCILIACION_MS`, y después entra con la sesión conservada
   (fila 7).
 
-**No se rediseña `/carga` para taparlo:** está fuera de alcance. Si la espera molesta, va al
-frente de UX de `/carga`, que ya está registrado.
+**Medido el 2026-11-06**, F5 sobre `/op/tablero` con `ng serve` (sin minificar), sesión válida y
+buena conexión. Primer pintado a los **1369,6 ms**:
+
+| Desde | Hasta | Qué |
+|---|---|---|
+| 46 ms | 79 ms | llega el HTML |
+| 48 ms | 197 ms | baja `main.js` |
+| 304 ms | 333 ms | baja el chunk de `RaizModule` |
+| 381 ms | 689 ms | `accounts:lookup`: Auth recupera la sesión guardada (308 ms) |
+| 707 ms | ~1240 ms | el `getDoc` de `/users/{uid}`, incluido el saludo inicial del canal de Firestore (~530 ms) |
+| 1241 ms | 1370 ms | el guard deja pasar, baja el chunk de operaciones y pinta |
+
+- Entre los 894 y los 1241 ms **el hilo principal está ocioso**: las tareas largas de JS suman
+  unos 330 ms y están todas antes de los 365 ms o después de los 1267. La espera son dos viajes
+  de red a Google, uno atrás del otro, no cómputo.
+- **Los ~840 ms de Firebase son estructurales.** Los dos viajes son forzosamente en serie: no se
+  lee `/users` sin el token, y no se decide la ruta sin el rol. Acortarlo exigiría decidir con
+  el rol de `localStorage` sin verificar, que es la mentira que este frente saca.
+- El blanco ya existía: antes de este bloque el guard resolvía síncrono y se pintaba al terminar
+  de bajar el chunk, en el orden de los 400 ms. Lo que cambió es que esos ~840 ms pasaron de
+  estar detrás de una pantalla dibujada a estar adelante del primer pintado.
+- En producción se acortan los 330 ms de JS y la bajada de los bundles, no los viajes a Google:
+  estimado entre 800 ms y 1 s.
+
+**No se rediseña `/carga` para taparlo:** está fuera de alcance, y `/carga` está del otro lado,
+en el camino del login. Lo que sí entra, en el bloque de cierre, es el spinner de arranque de
+`index.html` (ver abajo).
 
 ### Orden de instanciación (pregunta abierta 1 de la auditoría)
 
@@ -595,12 +652,18 @@ construir el guard, antes que hoy.
 **Cómo se comprueba:**
 - **Test unitario:** el guard no resuelve mientras `sesionResuelta()` esté pendiente (ver
   "Tests").
-- **Manual, en demo:**
-  - con una línea temporal `console.debug` en `HomeComponent.ngOnInit` que imprima
-    `inject(Auth).currentUser?.uid`, un F5 sobre `/op` tiene que mostrar el uid, nunca
-    `undefined`;
-  - la consola no tiene ningún `permission-denied`;
-  - la línea se quita antes de commitear.
+- **Manual, en demo, sin tocar código** (ajustado el 2026-11-06: la versión anterior pedía una
+  línea temporal de `console.debug` en `HomeComponent`, que es un "acordate de sacarla" antes
+  de commitear):
+  - la señal es **cero `permission-denied` en la consola** en un F5 sobre `/op`. Si los
+    listeners salieran antes de que Auth esté restaurado, saldrían sin identidad y las reglas
+    los negarían: el error aparecería ahí. Es binario y no necesita medir ningún orden.
+  - **Corrección del 2026-11-06:** la versión anterior de esta comprobación pedía ver en
+    Network la lectura de `users/{uid}` antes de los pedidos de los nueve listeners. No sirve:
+    el SDK de Firestore multiplexa las lecturas y los listeners sobre un mismo WebChannel
+    (`/google.firestore.v1.Firestore/Listen/channel`), así que en Network no hay un pedido por
+    documento, sino unos pocos del canal. El orden sólo se vería abriendo los payloads de los
+    POST, y para eso ya está el test unitario del guard.
 
 ### Verificación manual (Nico)
 
@@ -635,10 +698,21 @@ construir el guard, antes que hoy.
      a `/login`.
    - Anotar cuánto tarda B en enterarse.
    - Con el 2b, B tiene que ir sola a `/login` (ver el 2b).
-8. **F5 sin conexión** (DevTools → Network → Offline) con sesión válida.
-   - Pantalla en blanco hasta el timeout, después entra con la sesión conservada.
-   - No desloguea.
-9. **El orden de instanciación**, como se describe arriba.
+8. **F5 sin conexión**, con sesión válida. **Corregido el 2026-11-06: no se prueba con Network →
+   Offline.** Con `ng serve` no hay service worker, así que un F5 estando offline no puede ni
+   traer `index.html` y la app no arranca: no se estaría probando nada de esto. Se prueba
+   bloqueando dominios, que deja el servidor local intacto y corta sólo Firebase. DevTools →
+   Network → menú de tres puntos → "Network request blocking".
+   - a) Bloquear `*firestore.googleapis.com*`: Auth restaura normal y lo que falla es el
+     `getDoc` de `/users`. Esperado: pantalla en blanco hasta el timeout de 5 s, después entra
+     con la sesión conservada (fila 7), con las tablas vacías porque no hay datos. **No
+     desloguea.**
+   - b) Bloquear además `*identitytoolkit.googleapis.com*` y `*securetoken.googleapis.com*`:
+     falla también la recarga del usuario que Auth hace al inicializar. Esperado: lo mismo, sin
+     colgarse. Es el camino del primer evento que tarda o no llega.
+   - Sacar los bloqueos y F5 para confirmar que vuelve a establecer la sesión.
+9. **El orden de instanciación**, como se describe arriba: cero `permission-denied` en el F5
+   del caso 1.
 
 ## Bloque 2b — red de seguridad ante errores de sesión en los listeners
 
@@ -867,8 +941,8 @@ persistencia, fuera de alcance (C5).
 Hoy hay 45 en verde. Este frente agrega:
 
 - **`reconciliacion-sesion.util.spec.ts`:**
-  - `decidirReconciliacion`: la tabla completa, las 10 filas, con la variante de la fila 9
-    que se decida.
+  - `decidirReconciliacion`: la tabla completa, las 11 filas, ya con la fila 9 decidida como
+    `fallo` y con la fila 11 del `role` fuera de `RolUsuario`.
   - Comprueba que todas las salidas traen `usuario` o la orden de limpiar, nunca ninguna de
     las dos (el invariante).
   - Comprueba que un código desconocido nunca conserva.
@@ -879,7 +953,10 @@ Hoy hay 45 en verde. Este frente agrega:
   - reutiliza una terminada después de la marca;
   - inicia una cuando no hubo evento (C3);
   - no reutiliza una terminada **antes** de la marca;
-  - el timeout devuelve `'fallo'` y no cuelga.
+  - el timeout devuelve `'fallo'` y no cuelga;
+  - **si el primer evento de Auth no llega** (agregado el 2026-11-06), `sesionResuelta()`
+    resuelve igual al vencer `TIMEOUT_RECONCILIACION_MS`, conservando si hay sesión rehidratada
+    válida y con `'fallo'` si no.
 - **`role.guard.spec.ts`**, con un `UsuarioSesionService` falso:
   - las tres salidas (`true`, `UrlTree('/login')`, `UrlTree('/limbo')`), por `canMatch` y
     por `canActivate`;
@@ -888,8 +965,8 @@ Hoy hay 45 en verde. Este frente agrega:
 - **`sesion-invalida.util.spec.ts`:** `esErrorDeSesion` con:
   - cada código de la lista de los que nunca desloguean, que da `false`;
   - `unauthenticated`;
-  - `permission-denied` con Auth `null`, con uid distinto y con uid igual (este último
-    depende de C1);
+  - `permission-denied` con Auth `null`, con uid distinto y con uid igual: el último no actúa,
+    por C1;
   - sin sesión y sin `sesionPerdida`, que da `false`: es lo que hace que actúe una vez y que
     el logout deliberado no avise.
 

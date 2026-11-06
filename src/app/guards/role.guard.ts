@@ -14,11 +14,16 @@ export class RoleGuard {
   // ANTES de elegir la ruta, así un rol sin acceso no descarga el chunk del
   // módulo. canActivate se mantiene para las rutas internas de los módulos
   // (el chunk ya está cargado). canLoad (deprecado) salió: nadie lo usaba.
-  canMatch(route: Route, segments: UrlSegment[]): true | UrlTree {
+  // Eje de sesión, bloque 2: los dos esperan a que la sesión esté
+  // reconciliada con Firebase Auth antes de decidir (el router acepta
+  // MaybeAsync<GuardResult>). Siguen sin devolver nunca false.
+  async canMatch(route: Route, segments: UrlSegment[]): Promise<true | UrlTree> {
+    await this.usuarioSesion.sesionResuelta();
     return this.chequearAcceso(route.data);
   }
 
-  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): true | UrlTree {
+  async canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Promise<true | UrlTree> {
+    await this.usuarioSesion.sesionResuelta();
     return this.chequearAcceso(route.data);
   }
 
@@ -33,8 +38,10 @@ export class RoleGuard {
       return true;
     }
 
+    // Sin sesión → /login (antes /unauthorized). Con sesión y sin acceso a
+    // esta ruta → /limbo.
     return usuario === null
-      ? this.router.createUrlTree(['/unauthorized'])
+      ? this.router.createUrlTree(['/login'])
       : this.router.createUrlTree(['/limbo']);
   }
 }

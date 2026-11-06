@@ -6,18 +6,15 @@ import {
   signOut,
   sendPasswordResetEmail,
 } from '@angular/fire/auth';
-import { Firestore, doc, getDoc } from '@angular/fire/firestore';
 import Swal from 'sweetalert2';
 import { LogRegistroService } from '../log-registro/log-registro.service';
 import { UsuarioSesionService } from '../usuario-sesion/usuario-sesion.service';
-import { Usuario } from '../../interfaces/usuario';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   private auth = inject(Auth);
-  private firestore: Firestore = inject(Firestore);
 
   constructor(
     private router: Router,
@@ -27,27 +24,45 @@ export class AuthService {
 
   async iniciarSesion(email: string, password: string): Promise<void> {
     try {
+      // Eje de sesión, bloque 2: la reconciliación (UsuarioSesionService) es
+      // el único escritor de la sesión. Acá se autentica, se espera su
+      // resultado para este uid y se decide el gesto: navegación y log LOGIN.
+      // La marca va ANTES del signIn: el evento de Auth puede llegar antes de
+      // que signIn resuelva, después, o no llegar (mismo uid, C3).
+      const marca = this.usuarioSesion.marcaReconciliacion();
       const result = await signInWithEmailAndPassword(this.auth, email, password);
-      const resultado = await this.obtenerDatosUsuario(result.user.uid);
+      const resultado = await this.usuarioSesion.resultadoPara(result.user.uid, marca);
+
+      if (resultado === 'establecida') {
+        const usuario = this.usuarioSesion.getUsuarioActual();
+        await this.logRegistro.registrarAccion(
+          'LOGIN', 'users', 0, `Usuario ${usuario?.email} inició sesión.`
+        );
+        this.router.navigate(['/carga']);
+        return;
+      }
 
       // Sin documento o sin rol: no hay sesión de ninguna de las dos clases.
-      // signOut (Auth quedó autenticado con este usuario) + limpiar() (la
-      // memoria podía tener la sesión de otro usuario, rehidratada).
-      if (resultado === null || resultado === 'sin-rol') {
+      if (resultado === 'sin-documento' || resultado === 'sin-rol') {
         await signOut(this.auth);
         this.usuarioSesion.limpiar();
         this.router.navigate(['/limbo']);
         return;
       }
 
-      const usuario = resultado;
-      this.usuarioSesion.setUsuario(usuario);
+      // 'conservada' es una falla en el login: el gesto exige un rol
+      // verificado, no uno rehidratado. 'fallo' incluye el timeout.
+      if (resultado === 'conservada' || resultado === 'fallo') {
+        await signOut(this.auth);
+        this.usuarioSesion.limpiar();
+        Swal.fire('Error', 'No se pudo verificar su usuario. Vuelva a intentar.', 'error');
+        return;
+      }
 
-      await this.logRegistro.registrarAccion(
-        'LOGIN', 'users', 0, `Usuario ${usuario.email} inició sesión.`
-      );
-
-      this.router.navigate(['/carga']);
+      // 'sin-auth': Auth ya no es el uid que se autenticó (otra pestaña cerró
+      // la sesión o entró con otra cuenta en el medio).
+      this.usuarioSesion.limpiar();
+      Swal.fire('Error', 'La sesión cambió mientras se iniciaba. Vuelva a intentar.', 'error');
     } catch (error: any) {
       console.error(error.message);
       // limpiar() ANTES del registrarError: la entrada queda firmada como
@@ -59,20 +74,6 @@ export class AuthService {
       );
       Swal.fire('Error', error.message, 'error');
     }
-  }
-
-  private async obtenerDatosUsuario(uid: string): Promise<Usuario | 'sin-rol' | null> {
-    const docRef = doc(this.firestore, `users/${uid}`);
-    const docSnap = await getDoc(docRef);
-    if (!docSnap.exists()) {
-      console.error('No se encontró el documento de usuario.');
-      return null;
-    }
-    const data = docSnap.data();
-    if (!data['role']) {
-      return 'sin-rol';
-    }
-    return data as Usuario;
   }
 
   resetearPassword(email: string): Promise<void> {
