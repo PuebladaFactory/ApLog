@@ -811,7 +811,8 @@ esErrorDeSesion(codigo, authUid, sesionUid, sesionPerdida): boolean
 1. **`limpiar()`, sincrónicamente, antes de cualquier `await`.**
 2. `signOut`, tolerante. Si Auth ya está en `null`, es inocuo (bloque 1).
 3. `navigate(['/login'])`.
-4. Un aviso (Swal): "Tu sesión se cerró o venció. Volvé a iniciar sesión."
+4. Un aviso (Swal): "Su sesión se cerró o venció. Vuelva a iniciar sesión." (en usted, decidido
+   el 2026-11-06, como el resto de los textos del frente)
 
 No escribe LOGOUT: no es un gesto, y sin token válido las reglas lo rechazarían. Deja un
 `console.warn`.
@@ -870,7 +871,7 @@ loguearte":
 3. **Sin conexión con la app abierta**, un minuto en Offline.
    - No desloguea.
    - Al volver la conexión, los datos siguen actualizándose.
-4. **Si se adopta la recomendación de C1:** login con un usuario `manager` en demo.
+4. **El caso que prueba C1, ya decidido:** login con un usuario `manager` en demo.
    - Hace falta crearlo, por consola o por Gestión de usuarios: es una escritura en demo y la
      hace Nico.
    - La app queda como hoy: vacía, sin deslogueo y sin bucle.
@@ -878,6 +879,91 @@ loguearte":
      muestra C1.**
 5. **F5 con la sesión de Auth borrada** (bloque 2, caso 2): sigue terminando en `/login` sin
    el aviso, porque el guard no deja abrir listeners.
+
+### Corrección del 2026-11-07: el caso 1 falló en la verificación
+
+**Lo observado.** Con dos ventanas visibles y logout en A, la ventana B no navega a `/login` y
+no aparece el aviso. Sí desaparecen los botones de acciones, o sea que la reconciliación se
+enteró y limpió la sesión. En la consola de B, con el filtro `Sesión inválida` puesto y las
+advertencias activadas, **no aparece el `console.warn`**: la red nunca decidió actuar.
+
+**La causa.** `esErrorDeSesion` devolvió `false` porque el código del error llegó vacío. El
+diagnóstico dejó asentado que con los valores reales de ese momento —`'permission-denied'`, uid
+de Auth `null`, sesión `null`, marca `true`— la función da `true`, y que el único camino para
+que dé `false` es que el código llegue como `null`, es decir que `e instanceof FirestoreError`
+falle.
+
+**Dos correcciones, las dos van:**
+
+1. **La detección del código no depende de `instanceof`.** Una función pura
+   `codigoDeError(e): string | null` que reconozca la forma del error —`name` igual a
+   `'FirebaseError'` y un `code` de tipo string— en vez de la identidad de la clase. Un
+   `instanceof` atraviesa realms, copias del paquete y reempaquetados, y acá falló por algo de
+   eso. Con su test, incluido un objeto con la forma correcta que no es instancia de nada.
+
+2. **La salida corre dentro de la zona de Angular.** Está demostrado que todo ese camino corre
+   fuera: AngularFire crea Auth con `runOutsideAngular`, y de ahí viene el `Uncaught` de
+   `zone.js:165` del caso 1, contra el `ERROR` del `ErrorHandler` del caso 2. Una navegación
+   desde fuera de la zona puede no refrescar la vista. Va `ngZone.run(...)` alrededor de la
+   salida, y el orden pasa a ser `limpiar()` → navegar → avisar → `signOut` best-effort: lo que
+   el usuario ve no puede depender de una llamada que puede no resolver. `limpiar()` sigue
+   primero y sincrónico, que es lo que hace que actúe una sola vez.
+
+**Y una tercera, defensiva:** si `reportar` recibe un error cuyo código no puede determinar y
+hay algo que cerrar, deja un `console.warn` diciendo que no pudo clasificarlo. Esta falla fue
+invisible justamente porque no quedaba rastro de la decisión de no actuar.
+
+**Resultado, y lo que quedó sin explicar.** Con las tres aplicadas el caso 1 pasa: la ventana B
+se va sola a `/login`, con un aviso y con el `console.warn` en la consola. Pero **por qué
+fallaba el `instanceof` quedó sin explicación**. El diagnóstico verificó que hay una sola copia
+de `@firebase/firestore` en `node_modules`, una sola clase `FirestoreError` en el build, que el
+SDK arma el error del listener con esa misma clase, y que no hay dos instancias de los
+servicios; y descartó por conteo de mensajes que `reportar` hubiera lanzado. Por descarte tiene
+que haber sido la detección —ningún otro cambio del arreglo podía mover la decisión de
+`esErrorDeSesion`—, pero el mecanismo no se encontró. Queda anotado en vez de inventarle una
+causa. No se sigue investigando: reconocer el error por su forma es correcto independientemente
+de por qué fallaba la identidad, y se verificó que ese patrón no está usado en ningún otro lugar
+de `src/`.
+
+**Los casos 2, 3, 4 y 5 pasaron por el motivo equivocado** y hubo que repetirlos. Mientras la
+detección estaba rota la red era ciega y no actuaba nunca; como en esos cuatro el resultado
+correcto es "no pasa nada", los cuatro daban bien sin que la red decidiera nada. El único que la
+ejercitaba era el 1. En particular el caso 4, que es la prueba de C1, nunca se había ejercitado
+de verdad.
+
+## Bloque 2c — los catálogos en memoria no sobreviven al cambio de usuario
+
+Incorporado al frente el 2026-11-07, a partir del caso 4 de la verificación manual del 2b.
+Deja el proyecto compilando.
+
+**Lo observado, confirmado con `Ctrl+Shift+R`:** un `manager` que entra en la misma pestaña
+donde antes hubo un `admin`, sin recargar, ve el listado de clientes y el tablero de operaciones
+del usuario anterior. Con una recarga completa antes de loguearse, las tablas salen vacías. O
+sea que **las reglas aguantaron y la base nunca entregó nada**: lo que se ve es memoria del
+navegador.
+
+**Por qué entra al frente, siendo preexistente.** Lo era, y por eso estaba diferido; ahora está
+demostrado. Y es el escenario exacto por el que este frente tiene fecha: computadora compartida
+en Vantruck, el administrativo cierra sesión, entra el operador y ve la cartera del anterior
+hasta que algo fuerce una recarga. Que la base no haya entregado nada es un consuelo técnico.
+
+**La causa, del diagnóstico:** ninguno de los diez `BehaviorSubject` se vacía nunca —no hay un
+solo `.next([])` en los ocho servicios— y el logout no los toca. Cuando el listener muere con
+error no emite, así que el último valor queda. Y seis de los ocho `init()` no tienen guarda de
+"ya iniciado".
+
+**El arreglo: `init()` idempotente.** Cada uno cierra su suscripción anterior, vacía su estado y
+vuelve a suscribir. Sin señales entre servicios, sin tocar `DbFirestoreService` y sin riesgo de
+ciclos.
+
+- **Verificar antes de escribir nada:** si no hay guarda y la suscripción se corta con el
+  `destroy$` del servicio, que en un servicio root no se dispara nunca, entonces hoy **cada
+  recreación de `HomeComponent` abre listeners nuevos sin cerrar los viejos**, sobre diez
+  colecciones. Si es así, es un segundo motivo para el mismo arreglo y hay que dejarlo escrito.
+- `NoDisponibilidadService` tiene guarda propia (`iniciado`) y su callback de error la resetea:
+  entra al mismo criterio sin romper eso.
+- Fuera de alcance: vaciar los catálogos en el logout además de en el `init()`. Con el `init()`
+  idempotente, el único camino de vuelta a la pantalla pasa por ahí.
 
 ## Bloque 3 — `/login` honesto
 
@@ -936,6 +1022,37 @@ persistencia, fuera de alcance (C5).
    - Es el comportamiento esperado de este frente, no un bug: la política de persistencia
      queda fuera.
 
+## Bloque de cierre
+
+Lo que se hace una vez que los bloques 1, 2, 2b y 3 están verificados. Deja el proyecto
+compilando.
+
+1. **Retirar la ruta `unauthorized`** (C4), con barrido previo de `unauthorized` en `src/`
+   (`.ts` y `.html`). `PagenotfoundComponent` se conserva sirviendo `'**'`.
+
+2. **Spinner de arranque en `index.html`** (decidido el 2026-11-06, a partir de la medición de
+   "Qué se ve mientras se espera").
+
+   Hoy `<app-root>` está vacío: el navegador recibe el HTML a los 79 ms y no tiene nada para
+   dibujar hasta que Angular monta el primer componente, a los 1370 ms. Con un logo y un
+   spinner en HTML y CSS puros **adentro** de `<app-root>`, el navegador los pinta a los ~80 ms
+   y Angular los borra solo al renderizar, porque reemplaza el contenido de esa etiqueta.
+
+   - Sin tocar Angular, sin tocar el guard, sin ruta nueva y sin esperar nada.
+   - Cubre el blanco entero, no sólo los ~840 ms que este frente puso adelante.
+   - Entra en este frente y no en el de UX porque es este frente el que triplicó el blanco.
+   - **No es `/carga`,** que está del otro lado, en el camino del login, y no se pisa con esto.
+   - Oportunidad en el mismo archivo: la deuda ya registrada del `<h1>` sin cerrar de
+     `index.html`, que envuelve toda la app y quedó del frente de lazy loading. Es una línea y
+     se verifica en la misma carga. Queda a criterio de Nico si va en el mismo bloque.
+   - Dato para la decisión diferida de `/carga`: con el spinner puesto, el camino del login
+     tendría el spinner **y** los 3 s de `/carga`.
+
+3. **Las correcciones de documentación** de la sección siguiente.
+
+4. **Las deudas a registrar**, de las contradicciones C1, C5 y C6 y del hueco de cobertura del
+   log del bloque 2b.
+
 ## Tests unitarios
 
 Hoy hay 45 en verde. Este frente agrega:
@@ -991,6 +1108,11 @@ Para el bloque de cierre. **No se corrige ahora.**
   - la fila `usuario-sesion/` ("Sin listener — no reactivo en vivo");
   - la fila `autentificacion/`, si se quiere precisar que ya no lee `/users`;
   - la fila nueva o la mención de `SesionInvalidaService`.
+- **`PermisosService.matrizBase`, el comentario** que dice que `manager` no aparece en ningún
+  módulo de `permitido()` y por lo tanto no tiene acceso (hallazgo del 2026-11-07): es cierto
+  al pie de la letra y engañoso en lo que se entiende, porque `permitido()` da `leer` sobre
+  `legacySoloLectura` a cualquier rol autenticado, sin condición de rol, y ahí `manager` sí
+  lee. CLAUDE.md lo dice bien ("esa deja leer a cualquier rol autenticado") y no se toca.
 - **CLAUDE.md, "Deuda abierta":**
   - "Sesión que sobrevive a la pantalla de login": se reformula como política de persistencia
     pendiente (C5), no se borra;
