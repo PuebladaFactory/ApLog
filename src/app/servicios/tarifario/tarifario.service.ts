@@ -10,6 +10,7 @@ import { vigentesEnFecha } from 'src/app/shared/utils/vigencia-tarifa.util';
 import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 import { toISODateString } from 'src/app/servicios/fechas/date-range.service';
+import { SesionInvalidaService } from 'src/app/servicios/usuario-sesion/sesion-invalida.service';
 
 @Injectable({ providedIn: 'root' })
 export class TarifarioService implements OnDestroy {
@@ -28,11 +29,12 @@ export class TarifarioService implements OnDestroy {
   constructor(
     private db: DbFirestoreService,
     private logRegistro: LogRegistroService,
+    private sesionInvalida: SesionInvalidaService,
   ) {}
 
   init(): void {
     this.db.getAllStateChanges<Tarifa>('tarifas')
-      .pipe(takeUntil(this.destroy$))
+      .pipe(this.sesionInvalida.vigilar(), takeUntil(this.destroy$))
       .subscribe(changes => {
         let current = this._tarifas$.getValue();
         changes.forEach(change => {
@@ -50,7 +52,7 @@ export class TarifarioService implements OnDestroy {
       });
 
     this.db.getAllStateChanges<TarifaEspecial>('tarifasEspeciales')
-      .pipe(takeUntil(this.destroy$))
+      .pipe(this.sesionInvalida.vigilar(), takeUntil(this.destroy$))
       .subscribe(changes => {
         let current = this._tarifasEspeciales$.getValue();
         changes.forEach(change => {
@@ -68,7 +70,7 @@ export class TarifarioService implements OnDestroy {
       });
 
     this.db.getAllStateChanges<RegistroOpEventual>('registrosOpEventuales')
-      .pipe(takeUntil(this.destroy$))
+      .pipe(this.sesionInvalida.vigilar(), takeUntil(this.destroy$))
       .subscribe(changes => {
         let current = this._registrosEventuales$.getValue();
         changes.forEach(change => {

@@ -10,6 +10,7 @@ import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.
 import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
+import { SesionInvalidaService } from 'src/app/servicios/usuario-sesion/sesion-invalida.service';
 import {
   NoDisponibilidadFactoryService, PeriodoNoDisponibilidad,
 } from './no-disponibilidad-factory.service';
@@ -56,6 +57,7 @@ export class NoDisponibilidadService implements OnDestroy {
     private choferService: ChoferService,
     private proveedorService: ProveedorService,
     private usuarioSesion: UsuarioSesionService,
+    private sesionInvalida: SesionInvalidaService,
   ) {}
 
   // ── Lectura ─────────────────────────────────────────────────────
@@ -65,7 +67,7 @@ export class NoDisponibilidadService implements OnDestroy {
     if (this.iniciado) return;
     this.iniciado = true;
     this.db.getAllStateChanges<any>(NoDisponibilidadService.COLECCION)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(this.sesionInvalida.vigilar(), takeUntil(this.destroy$))
       .subscribe({
         next: changes => {
           let actual = this._noDisponibilidades$.getValue();

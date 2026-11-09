@@ -12,6 +12,7 @@ import { PapeleraService } from 'src/app/servicios/papelera/papelera.service';
 import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import { LegajoService } from 'src/app/servicios/legajos/legajo.service';
 import { ProveedorFactoryService, ProveedorFormData } from 'src/app/servicios/proveedores/proveedor-factory.service';
+import { SesionInvalidaService } from 'src/app/servicios/usuario-sesion/sesion-invalida.service';
 
 @Injectable({ providedIn: 'root' })
 export class ProveedorService implements OnDestroy {
@@ -28,6 +29,7 @@ export class ProveedorService implements OnDestroy {
     private choferService: ChoferService,
     private legajoService: LegajoService,
     private proveedorFactoryService: ProveedorFactoryService,
+    private sesionInvalida: SesionInvalidaService,
   ) {}
 
   // ---- Escrituras simples con log en el mismo batch (CRUD directo de este
@@ -59,7 +61,7 @@ export class ProveedorService implements OnDestroy {
 
   init(): void {
     this.db.getAllStateChanges<Proveedor>('proveedores')
-      .pipe(takeUntil(this.destroy$))
+      .pipe(this.sesionInvalida.vigilar(), takeUntil(this.destroy$))
       .subscribe(changes => {
         let current = this._proveedores$.getValue();
         changes.forEach(change => {

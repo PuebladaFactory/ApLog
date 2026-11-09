@@ -9,6 +9,7 @@ import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.
 import { PapeleraService } from 'src/app/servicios/papelera/papelera.service';
 import { LegajoService } from 'src/app/servicios/legajos/legajo.service';
 import { ChoferFactoryService, ChoferFormData } from 'src/app/servicios/choferes/chofer-factory.service';
+import { SesionInvalidaService } from 'src/app/servicios/usuario-sesion/sesion-invalida.service';
 
 @Injectable({ providedIn: 'root' })
 export class ChoferService implements OnDestroy {
@@ -27,6 +28,7 @@ export class ChoferService implements OnDestroy {
     private papeleraService: PapeleraService,
     private legajoService: LegajoService,
     private choferFactoryService: ChoferFactoryService,
+    private sesionInvalida: SesionInvalidaService,
   ) {}
 
   /** Compara dos vehículos ya normalizados a forma Firestore campo por campo (sin
@@ -71,7 +73,7 @@ export class ChoferService implements OnDestroy {
 
   init(): void {
     this.db.getAllStateChanges<Chofer>('choferes')
-      .pipe(takeUntil(this.destroy$))
+      .pipe(this.sesionInvalida.vigilar(), takeUntil(this.destroy$))
       .subscribe(changes => {
         let current = this._choferes$.getValue();
         changes.forEach(change => {
@@ -89,7 +91,7 @@ export class ChoferService implements OnDestroy {
       });
 
     this.db.getAllStateChanges<Vehiculo>('vehiculos')
-      .pipe(takeUntil(this.destroy$))
+      .pipe(this.sesionInvalida.vigilar(), takeUntil(this.destroy$))
       .subscribe(changes => {
         let current = this._vehiculos$.getValue();
         changes.forEach(change => {

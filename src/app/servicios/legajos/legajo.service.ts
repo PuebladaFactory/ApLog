@@ -6,6 +6,7 @@ import { ConIdType } from 'src/app/interfaces/conId';
 import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 import { LegajoFactoryService } from 'src/app/servicios/legajos/legajo-factory.service';
+import { SesionInvalidaService } from 'src/app/servicios/usuario-sesion/sesion-invalida.service';
 
 @Injectable({ providedIn: 'root' })
 export class LegajoService implements OnDestroy {
@@ -19,11 +20,12 @@ export class LegajoService implements OnDestroy {
     private db: DbFirestoreService,
     private logRegistro: LogRegistroService,
     private legajoFactoryService: LegajoFactoryService,
+    private sesionInvalida: SesionInvalidaService,
   ) {}
 
   init(): void {
     this.db.getAllStateChanges<Legajo>('legajos')
-      .pipe(takeUntil(this.destroy$))
+      .pipe(this.sesionInvalida.vigilar(), takeUntil(this.destroy$))
       .subscribe(changes => {
         let current = this._legajos$.getValue();
         changes.forEach(change => {

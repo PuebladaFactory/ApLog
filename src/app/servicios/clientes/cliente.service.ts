@@ -7,6 +7,7 @@ import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/d
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 import { PapeleraService } from 'src/app/servicios/papelera/papelera.service';
 import { ClienteFactoryService, ClienteFormData } from 'src/app/servicios/clientes/cliente-factory.service';
+import { SesionInvalidaService } from 'src/app/servicios/usuario-sesion/sesion-invalida.service';
 
 @Injectable({ providedIn: 'root' })
 export class ClienteService implements OnDestroy {
@@ -21,11 +22,12 @@ export class ClienteService implements OnDestroy {
     private logRegistro: LogRegistroService,
     private papeleraService: PapeleraService,
     private clienteFactoryService: ClienteFactoryService,
+    private sesionInvalida: SesionInvalidaService,
   ) {}
 
   init(): void {
     this.db.getAllStateChanges<Cliente>('clientes')
-      .pipe(takeUntil(this.destroy$))
+      .pipe(this.sesionInvalida.vigilar(), takeUntil(this.destroy$))
       .subscribe(changes => {
         let current = this._clientes$.getValue();
         changes.forEach(change => {

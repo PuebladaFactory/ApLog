@@ -5,6 +5,7 @@ import { CategoriaDocumentacion } from 'src/app/interfaces/legajo';
 import { ConIdType } from 'src/app/interfaces/conId';
 import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
+import { SesionInvalidaService } from 'src/app/servicios/usuario-sesion/sesion-invalida.service';
 
 @Injectable({ providedIn: 'root' })
 export class CategoriaDocumentacionService implements OnDestroy {
@@ -17,6 +18,7 @@ export class CategoriaDocumentacionService implements OnDestroy {
   constructor(
     private db: DbFirestoreService,
     private logRegistro: LogRegistroService,
+    private sesionInvalida: SesionInvalidaService,
   ) {}
 
   // ---- Escrituras simples con log en el mismo batch (CRUD directo de este
@@ -48,7 +50,7 @@ export class CategoriaDocumentacionService implements OnDestroy {
 
   init(): void {
     this.db.getAllStateChanges<CategoriaDocumentacion>('categoriasDocumentacion')
-      .pipe(takeUntil(this.destroy$))
+      .pipe(this.sesionInvalida.vigilar(), takeUntil(this.destroy$))
       .subscribe(changes => {
         let current = this._categorias$.getValue();
         changes.forEach(change => {

@@ -27,6 +27,7 @@ import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-s
 import { AnulacionInformeOp } from 'src/app/interfaces/informe-op-nuevo';
 import { ConsultaSujeto } from 'src/app/interfaces/no-disponibilidad';
 import { DisponibilidadService } from 'src/app/servicios/no-disponibilidad/disponibilidad.service';
+import { SesionInvalidaService } from 'src/app/servicios/usuario-sesion/sesion-invalida.service';
 import { resumirMotivos } from 'src/app/shared/utils/no-disponibilidad.util';
 
 export interface OperacionCreada {
@@ -72,6 +73,7 @@ export class OperacionService implements OnDestroy {
     private comisionVentaFactory: ComisionVentaFactoryService,
     private tarifario:        TarifarioService,
     private disponibilidad:   DisponibilidadService,
+    private sesionInvalida:   SesionInvalidaService,
   ) {}
 
   /**
@@ -86,7 +88,7 @@ export class OperacionService implements OnDestroy {
     this.cancelarRango$.next();
 
     this.db.getAllByDateValue<Operacion>('operaciones', 'fecha', desde, hasta, orden)
-      .pipe(takeUntil(merge(this.destroy$, this.cancelarRango$)))
+      .pipe(this.sesionInvalida.vigilar(), takeUntil(merge(this.destroy$, this.cancelarRango$)))
       .subscribe(docs => {
         const ops = docs.map(d => ({ ...d, idOperacion: d.id })) as ConId<Operacion>[];
         this._operaciones$.next(ops);
