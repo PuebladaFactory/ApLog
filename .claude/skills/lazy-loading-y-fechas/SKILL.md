@@ -20,7 +20,9 @@ Vantruck (ver la skill `migracion-vantruck`, subsección "Checklist — migraci�
 - `RaizModule` sin imports de feature: cada feature es su propio chunk. `/migracion` y
   sus herramientas en `DesarrolloModule` (`componentes/desarrollo.module.ts`), lazy, solo
   rol dev.
-- `RoleGuard` con `canMatch` y `canActivate` devolviendo `UrlTree`; se retiró `canLoad`
+- `RoleGuard` con `canMatch` y `canActivate` devolviendo `UrlTree` (desde el frente eje de
+  sesión, `Promise<true | UrlTree>`: esperan a que la sesión esté reconciliada con Firebase
+  Auth; siguen sin devolver nunca `false`); se retiró `canLoad`
   (deprecado).
 - Retirados: AG Grid (registro, módulos, CSS, 2 renderers, dependencias), jquery y
   DataTables (`scripts` y dependencias), los CDN de `index.html`, el `bootstrap.scss`

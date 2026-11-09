@@ -105,7 +105,11 @@ vive en el service de la entidad (`AsignacionService`), no en el componente (se 
 navegación) ni en localStorage (eliminado del frente). El componente espeja al destruirse y
 rehidrata al montarse. El borrador en curso tiene prioridad sobre Firestore al rehidratar (es lo
 más reciente). Patrón aplicable a cualquier componente con trabajo en curso que deba sobrevivir
-navegación.
+navegación. **Por usuario** (frente eje de sesión, bloque 2c): `setBorradorEnCurso` anota el
+uid de quien lo dejó y `getBorradorEnCurso` lo descarta si lo pide otro usuario de la misma
+pestaña. Igual `cargarFecha` vacía `asignacion$` si cambió el uid, y
+`OperacionService.cargarOperaciones` vacía `operaciones$`: un rol sin lectura no ve lo que
+cargó el anterior. La red de fondo es la carga completa de `/login` del cierre de sesión.
 
 **Dos memorias separadas para el estado del tablero al navegar:** borrador en curso (solo
 trabajo local no guardado, se espeja solo si `borradorSucio`) y última fecha vista (la

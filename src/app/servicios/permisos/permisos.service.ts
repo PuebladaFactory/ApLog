@@ -47,9 +47,12 @@ export class PermisosService {
   // acá: cada acción se consulta por separado. Cualquier cambio a esta
   // matriz debe reflejar un cambio real en firestore.rules, no al revés.
   //
-  // ⚠️ 'manager' no aparece en ningún módulo de permitido() — sin acceso
-  // real a Firestore en absoluto. Decisión explícita (no deuda): ver
-  // CLAUDE.md → "Frente Botones y Permisos".
+  // ⚠️ 'manager' no aparece por nombre en ningún módulo de permitido(), pero
+  // eso NO quiere decir que no lea nada: permitido() da 'leer' sobre
+  // 'legacySoloLectura' a cualquier rol autenticado, sin condición de rol, y
+  // ahí 'manager' sí lee. En los demás módulos, sin acceso. Ver la skill
+  // `botones-y-permisos` y la deuda de CLAUDE.md "`manager` sin lectura en lo
+  // que abre".
   private readonly matrizBase: Record<ModuloReglas, MatrizAcciones> = {
     entidades: {
       leer:     { dev: true, admin: true, manager: false, user: true,  demo: true },

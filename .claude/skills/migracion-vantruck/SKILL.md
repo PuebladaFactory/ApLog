@@ -20,12 +20,14 @@ Nada de lo que sigue asume una de las dos. Cuando se decida, revisar esta skill 
 
 Deuda que no puede llegar a producción. Revisar esta lista antes de cualquier switch.
 
-- **Decisión pendiente — sesión que sobrevive a la pantalla de login** (desde el frente
-  remanente de StorageService, 2026-11-04): quien cerró el navegador sin desloguearse entra
-  sin contraseña escribiendo una ruta protegida. Hay que elegir una salida antes del corte
-  (no necesariamente implementarla, pero sí decidir si se corta con este comportamiento).
-  Opciones y contexto: skill `subsistema-log`, "Deuda abierta — sesión que sobrevive a la
-  pantalla de login".
+- **Decisión pendiente — política de persistencia de la sesión** (antes "sesión que
+  sobrevive a la pantalla de login"). El frente eje de sesión cerró la divergencia entre la
+  sesión de la app y Firebase Auth y la pantalla de `/login` que mentía
+  (`docs/disenos/eje-de-sesion.md`). Lo que queda es política: quien cerró el navegador sin
+  desloguearse entra sin contraseña, porque la sesión de Firebase Auth persiste en
+  IndexedDB. Hay que decidir antes del corte si se promueve con este comportamiento o con
+  `browserSessionPersistence` (la sesión muere con la pestaña). Contexto: skill
+  `subsistema-log`, "Deuda abierta — política de persistencia de la sesión".
 
 (El bloqueante anterior, "`restaurarOperacion` aproxima el estado del alta", se cerró al
 cambiar la semántica de la restauración: ver la skill `modulo-operaciones`, "Contrato

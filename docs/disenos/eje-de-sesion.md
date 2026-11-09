@@ -1117,7 +1117,14 @@ Deja el proyecto compilando.
 **Archivos:**
 - `src/app/appLogin/login/login.component.ts`
 - `src/app/appLogin/login/login.component.html`
-- `src/app/appLogin/login/login.component.css`, si hace falta estilo para los botones
+- `src/app/appLogin/login/login.component.css`, si hace falta estilo para los botones (al
+  implementar no hizo falta), y `login.component.spec.ts`
+
+**El spinner es el `spinner-border` de Bootstrap, no `app-spinner`** (decidido al implementar,
+2026-11-09): `app-spinner` es un overlay de pantalla completa que vive en `SharedModule`, y
+`AppModule` —donde se declara `LoginComponent`— no lo importa. Usarlo obligaba a tocar
+`app.module.ts`, fuera de los archivos del bloque, y a sumar `SharedModule` al bundle inicial.
+Bootstrap ya es global.
 
 **Comportamiento:**
 
@@ -1272,7 +1279,10 @@ Para el bloque de cierre. **No se corrige ahora.**
   - la ruta `unauthorized` retirada (C4), con `PagenotfoundComponent` sirviendo sólo `'**'`;
   - **deuda nueva:** `manager` pasa `canMatch` en seis rutas y recibe `permission-denied` en
     los nueve listeners (C1), del frente diferido de reglas y matriz;
-  - **deuda nueva:** un `signOut` que falla deja el logout deshecho en el próximo F5 (C6).
+  - **deuda nueva:** un `signOut` que falla deja el logout deshecho en el próximo F5 (C6);
+  - **deuda nueva** (del barrido del 2c): los listeners de `VendedorService` y
+    `AsignacionService` no pasan por la red del 2b, porque no son del arranque ni estaban en
+    los ocho sitios. Si su sesión muere, no avisan.
 - **Skill `subsistema-log`:**
   - "Deuda abierta — sesión que sobrevive a la pantalla de login": las tres salidas listadas;
     dos quedan implementadas y la tercera, `browserSessionPersistence`, queda como política
@@ -1281,11 +1291,26 @@ Para el bloque de cierre. **No se corrige ahora.**
     `limpiar()` → `signOut` → navegar, y el `registrarError` de un `signOut` fallido queda
     firmado como `'Desconocido'`. El LOGIN ya no lo precede un `setUsuario` de
     `iniciarSesion`;
-  - el inventario de cobertura: un cierre de sesión por la red del 2b no escribe LOGOUT, a
-    propósito y sin token con el que escribirlo.
+  - el inventario de cobertura, con los dos huecos: un cierre de sesión por la red del 2b no
+    escribe LOGOUT, a propósito y sin token con el que escribirlo; y un logout sin conexión
+    sigue a los 3 s de la espera acotada y probablemente pierde la entrada, porque la caché es
+    de memoria y muere con la recarga. A cambio, antes de este frente un logout sin conexión
+    no terminaba nunca.
+- **CLAUDE.md, "State management" y "Patrones establecidos"** (agregado el 2026-11-09, del 2c):
+  - los catálogos en memoria se vacían cuando cambia el usuario, y los `init()` cortan la
+    suscripción anterior antes de volver a suscribir —hasta este frente acumulaban listeners
+    en cada recreación del shell—;
+  - **el cierre de sesión hace una carga completa de `/login`**, por los dos caminos. Es lo que
+    cierra el invariante de que no sobreviva el dato de otro usuario, y tiene una consecuencia
+    que un futuro lector necesita saber: después de `cerrarSesion()` no corre nada, la página
+    se va.
 - **Skill `migracion-vantruck`:** el puntero en "Bloqueantes para la promoción" ("Decisión
   pendiente — sesión que sobrevive a la pantalla de login") pasa a ser la decisión de
   política de persistencia.
+  - Dato para esa decisión, observado el 2026-11-09: en Chrome, al llegar a `/login` el gestor
+    de contraseñas completa usuario y contraseña del último usuario; en Firefox no. No lo
+    produce la app. Si en una computadora compartida el perfil del navegador también se
+    comparte, las contraseñas guardadas son la exposición real y no se arregla con código.
 - **Skill `lazy-loading-y-fechas`:** donde describe `RoleGuard` devolviendo
   `true | UrlTree`, ahora es una promesa de eso. Sigue sin `false`.
 - **Skill `botones-y-permisos`:** sin cambios de contenido. `PermisoDirective` evalúa una vez

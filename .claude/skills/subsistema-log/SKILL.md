@@ -104,6 +104,8 @@ entrada propia.
 | Herramientas de `/migracion` | `servicios/desarrollo/*` (generadores, limpieza, recálculos, normalización) y `servicios/migracion/*` (SDK de Firestore directo) | Varias | Ninguno: son sólo `dev`, que está excluido igual |
 | Cualquier mutación hecha por un usuario `dev` | — | — | Ninguno, por diseño |
 | LOGIN fallido | `AuthService.iniciarSesion` | — | Ninguno: sin usuario autenticado, las reglas rechazan la escritura (ver "Limitación conocida" en el complemento de login/logout) |
+| Cierre de sesión por la red de sesión inválida | `SesionInvalidaService` (eje de sesión, bloque 2b) | Ninguna escritura: limpia la sesión, `signOut` y recarga `/login` | **Ninguno, a propósito:** no es un gesto del usuario, y con la sesión ya inválida no hay token con el que escribir. Deja un `console.warn` |
+| LOGOUT sin conexión | `AuthService.cerrarSesion` | El `setDoc` del LOGOUT | Se espera como mucho 3 s antes de la carga completa de `/login`; si no se confirma, se pierde con la recarga (caché de memoria). Antes de esa espera acotada, un logout sin conexión quedaba colgado para siempre |
 
 **Asimetría `activo` / `visible` — decidida, no es un olvido (2026-11-03).** Los dos son
 un switch por entidad sobre un campo booleano del mismo documento, y sólo uno loguea:
@@ -520,6 +522,30 @@ la superficie de escritura sin autenticar de una colección de auditoría, no
 proporcional a resolver que un intento de login fallido no quede logueado. Fuera de
 alcance de este fix.
 
+#### Complemento — frente eje de sesión (2026-11)
+
+Cambió el orden de los dos métodos de `AuthService` (diseño completo en
+`docs/disenos/eje-de-sesion.md`):
+
+- **`cerrarSesion`:** log LOGOUT (si hay sesión) → `limpiar()` → `signOut` en su propio
+  `try/catch` → carga completa de `/login`. El LOGOUT sigue siendo lo primero, antes de
+  `signOut`, por el motivo del fix de arriba. Novedades:
+  - `limpiar()` va **antes** de `signOut`, no en un `finally`: así, cuando Auth avisa
+    `null`, la app ya no tiene sesión que perder y la red de sesión inválida distingue un
+    logout deliberado de una sesión perdida. Costo aceptado: el `registrarError` de un
+    `signOut` fallido queda firmado como `'Desconocido'`.
+  - La escritura del LOGOUT y la del `registrarError` se esperan como mucho 3 s
+    (`esperarConLimite`, `ESPERA_MAXIMA_CIERRE_MS`): la página no se va con la escritura
+    en vuelo, pero sin conexión el logout ya no queda colgado (ver la tabla de lo que no
+    deja rastro).
+  - Termina siempre en `location.replace` hacia `/login`, también si `signOut` lanza.
+- **`iniciarSesion`:** ya no hace `setUsuario` ni lee `/users`. La sesión la establece la
+  reconciliación de `UsuarioSesionService` (`onAuthStateChanged`), e `iniciarSesion`
+  espera su resultado para el uid recién autenticado y recién entonces escribe el LOGIN,
+  que sigue siendo del gesto. El `catch` hace `limpiar()` **antes** del `registrarError`:
+  un intento fallido no se puede atribuir a la sesión que hubiera en memoria (pueden ser
+  otras credenciales), así que queda firmado como `'Desconocido'`.
+
 ### Complemento — gestión de usuarios migrada a `LogRegistroService` (Agosto 2026)
 
 Las 4 Cloud Functions de gestión de usuarios (`crearUsuario`/`editarUsuario`/
@@ -694,29 +720,27 @@ para `demo`).
   usuario siguen trabajando sobre `userEmail`; el placeholder lo dice ("Buscar: usuario
   (email), acción, colección, detalle…").
 
-## Deuda abierta — sesión que sobrevive a la pantalla de login
+## Deuda abierta — política de persistencia de la sesión
 
-Desde el frente remanente de StorageService (SS2), abrir `/login` ya no corta la sesión de
-la app. Quien cierra el navegador sin desloguearse y escribe una ruta protegida entra sin
-contraseña: `usuarioSesion` persiste en `localStorage` (`UsuarioSesionService` lo rehidrata
-en su constructor y `RoleGuard` decide con eso) y la sesión de Firebase Auth en IndexedDB.
-`LoginComponent` tampoco detecta que ya hay sesión.
+Antes "sesión que sobrevive a la pantalla de login". Desde el frente remanente de
+StorageService (SS2), abrir `/login` dejó de cortar la sesión de la app. Había tres salidas
+reales; el frente eje de sesión (`docs/disenos/eje-de-sesion.md`) implementó dos:
+- ~~atar `UsuarioSesionService` a `onAuthStateChanged`~~ — HECHO: la sesión de la app se
+  reconcilia con Firebase Auth en cada arranque y en cada cambio de Auth; ya no puede haber
+  un usuario en la app que Firebase no tiene;
+- ~~que `/login` detecte la sesión y ofrezca continuar o cerrarla~~ — HECHO: con sesión
+  viva (ya reconciliada) muestra "Continuar" y "Cerrar sesión", sin redirigir sola.
 
-Antes, el `localStorage.clear()` de `LoginComponent.ngOnInit` borraba `usuarioSesion` y la
-app "parecía" cerrada. Pero no cortaba nada real (Firebase Auth seguía autenticado: lo que
-producía era una desincronización), y dependía de pasar por `/login`: la navegación directa
-a una ruta protegida ya lo esquivaba. Restaurarlo borrando sólo `usuarioSesion` traería de
-vuelta el bug entre pestañas (`localStorage` es del origen: otra pestaña en `/login` deja
-sin sesión a todas).
+**Queda la tercera, que es política y no arreglo:** `browserSessionPersistence` en
+Firebase Auth (la sesión muere con la pestaña). Hoy quien cierra el navegador sin
+desloguearse y vuelve entra sin contraseña, porque la sesión de Auth persiste en
+IndexedDB y la reconciliación la reconstruye. Por qué no iba sola, sin la reconciliación:
+al cerrar el navegador se borraba la sesión de Auth pero `usuarioSesion` sobrevivía en
+`localStorage`, el guard pasaba igual y los listeners volvían `permission-denied` sin
+manejo: app vacía en silencio. Con la reconciliación puesta ya es una decisión limpia.
 
-Salidas reales, **ninguna decidida**:
-- `browserSessionPersistence` en Firebase Auth (la sesión muere con la pestaña), con
-  `usuarioSesion` acompañando el mismo criterio;
-- atar `UsuarioSesionService` a `onAuthStateChanged`, para que la sesión de la app sea
-  siempre la de Firebase;
-- que `/login` detecte la sesión y ofrezca continuar o cerrarla.
-
-**Decidir antes del corte a Vantruck** (puntero en la skill `migracion-vantruck`).
+**Bloqueante de la promoción: decidir antes del corte a Vantruck** (puntero en la skill
+`migracion-vantruck`).
 
 ## Deuda abierta — la pestaña "Registro" está comentada
 

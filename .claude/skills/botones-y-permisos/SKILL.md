@@ -70,7 +70,9 @@ fue tocado ni reemplazado.
   el corregido.
   ⚠️ **Hallazgo de la traducción, resuelto como decisión explícita (no deuda):** el rol
   `'manager'` no aparece en ningún módulo de `permitido()` en `firestore.rules` — no tiene
-  ningún acceso real a Firestore. Es un rol teórico sin uso actual (`RolUsuario` lo declara,
+  ningún acceso real a Firestore (corrección del 2026-11-07: salvo lectura de
+  `legacySoloLectura`, que `permitido()` da a cualquier rol autenticado sin condición de
+  rol; ver la deuda "`manager` sin lectura en lo que abre" al final). Es un rol teórico sin uso actual (`RolUsuario` lo declara,
   pero ningún usuario real del proyecto lo tiene asignado hoy). `PermisosService` lo
   deniega en `matrizBase` en todos los módulos, a propósito — no es una omisión a corregir.
   La migración de los `*appRole` existentes a `*appPermiso` (bloques futuros) va a quitarle
@@ -691,3 +693,26 @@ para esto (leer más de lo que la UI muestra no es un agujero).
 Hoy ningún botón consulta esos módulos, así que no hay efecto visible. La regla del archivo
 es "transcripción literal de `permitido()`": al retomarla, agregarlos o dejar escrito por
 qué no.
+
+## Deuda abierta — `manager` sin lectura en lo que abre (frente diferido de reglas y matriz)
+
+Registrada por el frente eje de sesión (C1, `docs/disenos/eje-de-sesion.md`). `RoleGuard`
+deja pasar a `manager` en seis rutas de `raiz-routing` (`clientes`, `choferes`, `op`,
+`proveedores`, `liquidacion`, `legajos`), pero `permitido()` no le da `leer` en ninguno de
+esos módulos (sólo en `legacySoloLectura`). Los nueve listeners que abre
+`HomeComponent.ngOnInit` le devuelven `permission-denied` y ve la app vacía.
+
+La red de sesión inválida (`SesionInvalidaService`) **no actúa ahí, a propósito**: un
+`permission-denied` con Firebase Auth y la sesión de la app de acuerdo es la matriz de
+reglas contra el gating de la UI, no una sesión falsa. Con el criterio literal ("todo
+`permission-denied` cierra la sesión") un `manager` quedaba deslogueado en cada login.
+
+Salidas para el frente de reglas y matriz: sacarle a `manager` esas rutas, darle lectura en
+las reglas, o que `HomeComponent` no abra listeners que el rol no puede leer.
+
+## Nota — `PermisoDirective` y la sesión reconciliada
+
+`*appPermiso` evalúa una sola vez, en el setter del `@Input`. Desde el frente eje de
+sesión, `RoleGuard` espera a que la sesión esté reconciliada con Firebase Auth antes de
+activar cualquier ruta protegida, así que la directiva siempre evalúa sobre la sesión
+reconciliada, no sobre la rehidratada de `localStorage`.

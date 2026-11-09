@@ -9,10 +9,41 @@
   <!-- Bootstrap, bootstrap-icons y estilos globales entran por angular.json (styles). -->
 
   <link rel="manifest" href="manifest.webmanifest">
+  <!-- Spinner de arranque (eje de sesión, bloque de cierre): se pinta con el
+       HTML, antes de que cargue cualquier script, y Angular lo borra solo al
+       montar el primer componente, porque reemplaza el contenido de <app-root>.
+       CSS puro e inline: sin JavaScript, sin fuentes ni recursos que agreguen
+       pedidos. Tamaños en px porque html tiene font-size 60% (styles.scss). -->
+  <style>
+    .arranque {
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 24px; background: #fff;
+      font: 400 16px/1.2 Arial, Helvetica, sans-serif; margin: 0;
+    }
+    .arranque-logo {
+      width: 120px; height: 120px; border-radius: 50%;
+      border: 1px solid #32AAEE; box-shadow: 0 6px 4px #425e92;
+      display: flex; align-items: center; justify-content: center;
+      color: #32AAEE; font-size: 26px; font-weight: 700; text-shadow: 1px 1px 1px #425e92;
+    }
+    .arranque-rueda {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 4px solid #d6ebf8; border-top-color: #32AAEE;
+      animation: arranque-giro .8s linear infinite;
+    }
+    @keyframes arranque-giro { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .arranque-rueda { animation-duration: 2.4s; } }
+  </style>
 </head>
 <body>
   <h1>
-  <app-root></app-root>
+  <app-root>
+    <div class="arranque" role="status" aria-label="Cargando ApLog">
+      <div class="arranque-logo">AppLog</div>
+      <div class="arranque-rueda"></div>
+    </div>
+  </app-root>
   <noscript>Please enable JavaScript to continue using this application.</noscript>
 </body>
 </html>

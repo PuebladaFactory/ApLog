@@ -18,7 +18,6 @@ const appRoutes: Routes = [
   { path: 'carga', component: CargaComponent }, 
   { path: 'login', component: LoginComponent }, // la ruta al login
   { path: 'forgot-password', component: ForgotPasswordComponent },
-  { path: 'unauthorized', component: PagenotfoundComponent},
   { path: 'limbo', component: LimboComponent},
   // App principal (HomeComponent + sidebar + módulos de feature). Va AL
   // FINAL: las rutas de arriba tienen prioridad.

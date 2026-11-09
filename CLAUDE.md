@@ -79,8 +79,8 @@ Ruteo (frente Lazy loading + fechas):
   (y `/migracion`, `DesarrolloModule`).
 - `RoleGuard`: `canMatch` en las rutas de `raiz-routing` (un rol sin acceso no descarga
   el chunk) y `canActivate` en las rutas internas de cada módulo. Los dos devuelven
-  `true | UrlTree`; nunca `false` en `canMatch` (el router seguiría buscando y caería en
-  `'**'`).
+  `Promise<true | UrlTree>` (esperan a que la sesión esté reconciliada, ver "Autenticación
+  y roles"); nunca `false` en `canMatch` (el router seguiría buscando y caería en `'**'`).
 
 ### Autenticación y roles
 
@@ -97,28 +97,60 @@ enumera explícitamente los roles permitidos: `'dev'` no implica acceso
 automático a rutas que no lo listen.
 
 **`UsuarioSesionService`** (`servicios/usuario-sesion/`): fuente única
-de la sesión en memoria (sin observable — no hace falta reactividad en
-vivo, es sesión local). Getter síncrono `getUsuarioActual()`, más
-`esRol(...roles)` para chequeos. Persiste en `localStorage` bajo la
-clave `usuarioSesion` y la rehidrata de ahí de forma síncrona en su
-constructor, sin escuchar a Firebase Auth (no hay `onAuthStateChanged`).
-`limpiar()` (en el logout) es lo único que borra esa clave. `AuthService`
-es responsable solo de Firebase Auth (login/logout); separa
-"autenticarse" de "quién soy y qué puedo hacer".
+de la sesión en memoria, **reconciliada con Firebase Auth** (frente eje de
+sesión; diseño y contrato completos en `docs/disenos/eje-de-sesion.md`).
+Getters síncronos `getUsuarioActual()`/`getRol()`/`esRol(...roles)`, sin
+observable. Persiste en `localStorage` bajo la clave `usuarioSesion` y la
+rehidrata de forma síncrona en su constructor, validando `uid` no vacío y
+`role` de los cinco. Además escucha `onAuthStateChanged` durante toda la
+app: cada cambio de Auth relee `/users/{uid}` y establece o limpia la
+sesión según la tabla de `decidirReconciliacion`
+(`reconciliacion-sesion.util.ts`). **La identidad es la de Auth**: el `uid`
+de la sesión lo pone Auth, no el documento; un `role` fuera de los cinco
+es "sin rol". **La reconciliación es el único escritor de la sesión** en el
+camino de Auth y nunca llama a `signOut`. Si la lectura falla por conexión
+o timeout (`TIMEOUT_RECONCILIACION_MS`, 5 s) con la misma identidad, se
+conserva la sesión rehidratada (un F5 sin conexión no desloguea).
+`sesionResuelta()` es lo que espera el guard; siempre resuelve, también si
+el primer evento de Auth no llega. `AuthService` autentica, ya no lee
+`/users`: `iniciarSesion` espera el resultado de la reconciliación para el
+uid recién autenticado (`resultadoPara(uid, marca)`) y decide el gesto
+(log LOGIN y `/carga`, o `signOut` + `/limbo` sin documento o sin rol).
+
+**Cierre de sesión:** `AuthService.cerrarSesion` escribe el LOGOUT con
+espera acotada (3 s), `limpiar()`, `signOut` y termina **siempre** en una
+carga completa de `/login` (`location.replace`): deja en cero todo lo que
+hay en memoria —servicios, caché del SDK de Firestore— para que el próximo
+usuario de la pestaña no vea nada del anterior. `limpiar()` va antes de
+`signOut` a propósito (distingue un logout deliberado de una sesión
+perdida).
+
+**Red de sesión inválida (`SesionInvalidaService`):** los listeners del
+arranque pasan por `vigilar()`, un `tap` sobre el error que no lo traga. Si
+el error es de sesión (`unauthenticated`, o `permission-denied` con Auth
+contradiciendo a la app; con Auth y app de acuerdo es la matriz de reglas y
+no actúa), limpia, hace `signOut` acotado y recarga `/login`, donde
+`LoginComponent` muestra el aviso que viajó por `sessionStorage`. Actúa una
+sola vez aunque fallen todos los listeners juntos.
 
 **Secuencia de arranque:** `/login` → `AuthService.iniciarSesion` (Firebase
-Auth, lectura de `/users/{uid}`, `setUsuario`, log LOGIN) → `/carga`, que
-espera 3 s y navega → `/op`, donde `HomeComponent.ngOnInit` corre los
-`init()` de los servicios por entidad. Tras un F5 no se pasa por `/carga`:
-la sesión sale de la rehidratación de `UsuarioSesionService` y
-`RoleGuard` decide con eso. Ver "Deuda abierta" → sesión que sobrevive a
-la pantalla de login.
+Auth; la reconciliación lee `/users/{uid}` y hace `setUsuario`; log LOGIN)
+→ `/carga`, que espera 3 s y navega → `/op`, donde `HomeComponent.ngOnInit`
+corre los `init()` de los servicios por entidad. Tras un F5 no se pasa por
+`/carga`: el guard espera la reconciliación y decide con la sesión ya
+reconciliada; mientras tanto se ve el spinner de arranque de `index.html`.
+`/login` con sesión viva no muestra el formulario: ofrece "Continuar" o
+"Cerrar sesión", sin redirigir sola. Ver "Deuda abierta" → política de
+persistencia de la sesión.
 
 **`RoleGuard`/`esRol()`**: comparación plana contra `usuario.role`
 (`rolesEsperados.includes(usuario.role)` / `esRol(...)`), sin jerarquía.
-Sin sesión → `/unauthorized`. Con sesión pero sin acceso a la ruta →
-`/limbo` (misma pantalla que antes esperaba verificación de email; hoy
-es genéricamente "sesión válida, sin acceso a esto").
+Sin sesión → `/login`. Con sesión pero sin acceso a la ruta → `/limbo`.
+`/limbo` ("Sin acceso") recibe dos poblaciones: con sesión y rol pero sin
+acceso a esa ruta (viene del guard), y sin documento o sin rol (viene del
+login, ya sin sesión de ninguna de las dos clases). Su "Salir" llama a
+`cerrarSesion`. La ruta `/unauthorized` se retiró: lo que no matchea va a
+`'**'` (`PagenotfoundComponent`).
 
 **Custom Claims + Cloud Function `syncRoleClaim`:** trigger `onWrite` en
 `users/{uid}` que sincroniza `role` al Custom Claim de Firebase Auth
@@ -288,8 +320,8 @@ Por eso `Proforma CH` tiene mayor prioridad visual que `Proforma CL` en el badge
 
 | Servicio | Responsabilidad |
 |---|---|
-| `autentificacion/` | Firebase Auth, sesión de usuario |
-| `usuario-sesion/` | Fuente única de la sesión en memoria (rol, uid, email del usuario logueado). Sin listener — no reactivo en vivo. |
+| `autentificacion/` | `AuthService`: Firebase Auth (login, logout con carga completa de `/login`, reset de contraseña). No lee `/users`: espera el resultado de la reconciliación |
+| `usuario-sesion/` | `UsuarioSesionService`: fuente única de la sesión en memoria (rol, uid, email), reconciliada con Firebase Auth vía `onAuthStateChanged` (único escritor de la sesión; `sesionResuelta()` para el guard). Getters síncronos, sin observable. `SesionInvalidaService`: red ante errores de sesión en los listeners del arranque (`vigilar()`). Funciones puras en `reconciliacion-sesion.util.ts` y `sesion-invalida.util.ts`. Diseño: `docs/disenos/eje-de-sesion.md` |
 | `gestion-usuarios/` | `GestionUsuariosService.obtenerUsuarios` (lectura puntual de `/users` completo, sin filtro por rol) y `UsuariosConsultaService`: resuelve el nombre de usuario en Registro, Registro Log y Papelera (`cargar()` + `nombreDe(userId, userEmail)`, por uid y después por email). Lectura puntual en memoria, sin localStorage, una por pantalla; sólo `dev`/`admin` leen `/users`, el resto y cualquier fallo degradan a email |
 | `database/` | CRUD Firestore |
 | `log-registro/` | `LogRegistroService` (escritura, dentro del batch atómico de negocio) + `RegistroLogConsultaService` (lectura/paginación, para `RegistroLogComponent`) sobre `registroLog` — ver la skill `subsistema-log` |
@@ -562,6 +594,18 @@ ID canónico + los campos congelados al momento del alta. Criterio de qué va al
 ### Estado en memoria
 - BehaviorSubject en XxxService, nunca en localStorage para datos de colecciones
 - `init()` se llama desde HomeComponent al arrancar la app
+- **Ningún dato de otro usuario sobrevive en memoria** (frente eje de sesión, bloque 2c).
+  Los catálogos que sólo inicia `HomeComponent` (Choferes, Proveedores, Clientes,
+  Tarifario, CategoríaDocumentación, Legajos) cortan su suscripción anterior con un
+  Subject `reinicio$`, vacían su estado y vuelven a suscribir en cada `init()`: el
+  `destroy$` de un servicio root no se dispara nunca, y sin el corte cada recreación de
+  `HomeComponent` sumaba listeners. Los que llaman varios componentes contando con que
+  sea idempotente (`NoDisponibilidadService.init`, `VendedorService.init`) o que se
+  re-cargan por rango o fecha (`OperacionService.cargarOperaciones`,
+  `AsignacionService.cargarFecha`) vacían sólo si cambió el uid de la sesión (o si el
+  listener murió); el borrador en curso del tablero de asignaciones no se le entrega a
+  otro usuario. La red de fondo es la carga completa de `/login` del cierre de sesión.
+  Un servicio nuevo con estado en memoria tiene que cumplir lo mismo.
 - Los componentes se suscriben directamente al observable del servicio
 - **Getter síncrono:** cada XxxService expone un `getXxxActuales()` que devuelve el array
   actual del BehaviorSubject (`.getValue()`), para que otros services resuelvan entidades
@@ -742,9 +786,13 @@ Deuda técnica activa. Actualizar cuando se salda.
 - **Fix de altura del modal limitado a `tablero-op`** — el ajuste que estira `carga-asignacion` dentro del modal vive en `tablero-op.component.scss`: otro caller que abra ese modal tiene que replicarlo. Detalle: skill `modulo-operaciones`.
 - **Migración de `noOperativo`** — la colección anterior de no disponibilidad quedó sin lectores: 6 documentos en demo y los de producción (2 vigentes al relevar), con la forma y el trabajo de "Datos de la colección anterior" en `docs/disenos/no-disponibilidad.md`. **Va después de la migración de Choferes**: 3 de los 6 de demo tienen `idChofer` numéricos del modelo viejo que sólo resuelven con su mapeo; al revés, se pierden.
 - **Mapeo de `noOperativo` en `firestore.rules`** — se saca recién cuando termine esa migración.
-- **Sesión que sobrevive a la pantalla de login** — desde el frente remanente de StorageService, abrir `/login` ya no corta la sesión de la app: quien cerró el navegador sin desloguearse y escribe una ruta protegida entra sin contraseña (`usuarioSesion` persiste en `localStorage`, la sesión de Firebase Auth en IndexedDB). Salidas posibles, ninguna decidida. **Decidir antes del corte a Vantruck.** Detalle: skill `subsistema-log`; puntero en `migracion-vantruck`.
+- **Política de persistencia de la sesión** (antes "sesión que sobrevive a la pantalla de login") — el frente eje de sesión cerró la divergencia entre las dos fuentes (la sesión de la app ahora sigue a Firebase Auth) y la pantalla que mentía (`/login` con sesión viva ofrece continuar o cerrar). Lo que queda es política: quien cierra el navegador sin desloguearse y vuelve entra sin contraseña, porque la sesión de Firebase Auth persiste en IndexedDB. La salida candidata es `browserSessionPersistence` (la sesión muere con la pestaña); con la reconciliación puesta ya no deja la app vacía en silencio. **Bloqueante de la promoción: decidir antes del corte a Vantruck.** Detalle: skill `subsistema-log`; puntero en `migracion-vantruck`.
+- **`manager` sin lectura en lo que abre** (C1 del eje de sesión) — `manager` pasa `canMatch` en seis rutas (`clientes`, `choferes`, `op`, `proveedores`, `liquidacion`, `legajos`), pero `permitido()` no le da `leer` en ningún módulo salvo `legacySoloLectura`: los nueve listeners del arranque le devuelven `permission-denied` y ve la app vacía. La red de sesión inválida no actúa ahí a propósito (Auth y app de acuerdo = matriz, no sesión). Frente diferido de reglas y matriz. Detalle: skill `botones-y-permisos`.
+- **Un `signOut` que falla se deshace en el próximo F5** (C6 del eje de sesión) — `cerrarSesion` limpia la sesión de la app antes del `signOut`; si `signOut` lanza, Auth queda autenticado y la reconciliación del próximo arranque reconstruye la sesión. Aceptado: `signOut` es local y muy raro que falle. No se construyó una marca de "cierre pedido".
+- **Huecos conocidos en la cobertura del LOGOUT** — un cierre por la red de sesión inválida no escribe LOGOUT (no es un gesto y no hay token con el que escribirlo), y el LOGOUT de `cerrarSesion` se espera como mucho 3 s antes de la recarga: sin conexión se pierde (antes, el logout quedaba colgado para siempre). Detalle: skill `subsistema-log`.
+- **Listeners fuera de la red de sesión inválida** — `VendedorService.init` y `AsignacionService.cargarFecha` no pasan por `SesionInvalidaService.vigilar()` (no son del arranque): si su sesión muere, no avisan. Cumplen el invariante de memoria del bloque 2c, no el de la red.
 - **Preferencias de UI compartidas entre usuarios del mismo navegador** — las cinco claves de `localStorage` de `tablero-op` e `informe-op-listado` ya no se borran en el login: el cliente o chofer filtrado por un usuario le aparece al siguiente. Arreglo: namespacearlas por uid. Detalle: skill `modulo-operaciones`.
-- **`/carga` sin propósito claro** — sólo espera 3 s y navega a `/op`. Si el valor es visual, la espera debería justificarse; si no, la pantalla sobra. Frente de UX.
+- **`/carga` sin propósito claro** — sólo espera 3 s y navega a `/op`. Si el valor es visual, la espera debería justificarse; si no, la pantalla sobra. Dato para la decisión: desde el eje de sesión, `index.html` tiene un spinner de arranque, así que el camino del login tiene ese spinner **y** los 3 s de `/carga`. Frente de UX.
 - **La pestaña "Registro" está comentada en `AjustesControlComponent`** — `RegistroComponent` (histórico congelado de `logs`) no tiene entrada en la UI para ningún rol; sólo se llega escribiendo `/ajustes/registro`. Detalle: skill `subsistema-log`; afecta la primera verificación del corte en `migracion-vantruck`.
 - **Criterio de acceso de `demo` al módulo Ajustes** — cinco capas en desacuerdo (`canMatch`, rutas hijas, `redirectTo`, sidebar y reglas). Decidido, pendiente de aplicar: Ajustes pasa a `dev`/`admin`, con el costo de `empresa` (F8b). Frente diferido de reglas y matriz. Detalle: skill `botones-y-permisos`.
 - **Módulos de `permitido()` sin equivalente en `ModuloReglas`/`matrizBase`** — `historicoSoloLectura`, `desarrollo` y `vencimientos`. Mismo frente diferido. Detalle: skill `botones-y-permisos`.
