@@ -6,6 +6,7 @@ import { Asignacion, AsignacionItem, EstadoAsignacion } from 'src/app/interfaces
 import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 import { DisponibilidadService } from 'src/app/servicios/no-disponibilidad/disponibilidad.service';
+import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 import { Resultado } from 'src/app/interfaces/resultado';
 import { listarItemsNoDisponibles } from 'src/app/shared/utils/no-disponibilidad.util';
 
@@ -26,6 +27,10 @@ export class AsignacionService implements OnDestroy {
   private cancelarFecha$ = new Subject<void>();
 
   private _borradorEnCurso: BorradorEnCurso | null = null;
+  /** uid de quien dejó el borrador en curso (bloque 2c). */
+  private uidBorrador: string | null = null;
+  /** uid de la sesión que cargó `_asignacion$` (bloque 2c). */
+  private uidAsignacion: string | null = null;
 
   private _ultimaFechaVista: string | null = null;
 
@@ -33,6 +38,7 @@ export class AsignacionService implements OnDestroy {
     private db:          DbFirestoreService,
     private logRegistro: LogRegistroService,
     private disponibilidad: DisponibilidadService,
+    private usuarioSesion: UsuarioSesionService,
   ) {}
 
   // ---- Lectura / estado ----
@@ -40,6 +46,15 @@ export class AsignacionService implements OnDestroy {
   /** Abre listener vivo sobre el documento de la fecha. Cancela el listener anterior. */
   cargarFecha(fecha: string): void {
     this.cancelarFecha$.next();
+
+    // Bloque 2c (eje de sesión): si cambió el usuario, vaciar antes de volver a
+    // escuchar. Si el listener nuevo falla (ej. un rol sin lectura), no emite y
+    // quedaría a la vista el tablero que cargó el usuario anterior.
+    const uid = this.uidActual();
+    if (uid !== this.uidAsignacion) {
+      this._asignacion$.next(null);
+      this.uidAsignacion = uid;
+    }
     this.db.getDocObservable<Asignacion>(this.COLECCION, fecha)
       .pipe(takeUntil(merge(this.destroy$, this.cancelarFecha$)))
       .subscribe(data => {
@@ -225,11 +240,17 @@ export class AsignacionService implements OnDestroy {
    *  Lo llama el componente al destruirse, para sobrevivir a la navegación. */
   setBorradorEnCurso(fecha: string, items: AsignacionItem[]): void {
     this._borradorEnCurso = { fecha, items };
+    this.uidBorrador = this.uidActual();
   }
 
   /** Devuelve el borrador en curso, o null si no hay. Lo lee el componente al
    *  montarse para rehidratar lo que estaba editando. */
   getBorradorEnCurso(): BorradorEnCurso | null {
+    // Bloque 2c (eje de sesión): el borrador de otro usuario (que cerró sesión
+    // sin guardarlo, en la misma pestaña) no se le entrega al actual: se descarta.
+    if (this._borradorEnCurso !== null && this.uidBorrador !== this.uidActual()) {
+      this._borradorEnCurso = null;
+    }
     return this._borradorEnCurso;
   }
 
@@ -255,6 +276,10 @@ export class AsignacionService implements OnDestroy {
   /** Limpia la última fecha vista. */
   limpiarUltimaFechaVista(): void {
     this._ultimaFechaVista = null;
+  }
+
+  private uidActual(): string | null {
+    return this.usuarioSesion.getUsuarioActual()?.uid ?? null;
   }
 
   ngOnDestroy(): void {

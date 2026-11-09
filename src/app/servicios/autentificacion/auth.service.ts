@@ -9,6 +9,7 @@ import {
 import Swal from 'sweetalert2';
 import { LogRegistroService } from '../log-registro/log-registro.service';
 import { UsuarioSesionService } from '../usuario-sesion/usuario-sesion.service';
+import { ESPERA_MAXIMA_CIERRE_MS, cargarLoginDeCero, esperarConLimite } from '../usuario-sesion/sesion-invalida.util';
 
 @Injectable({
   providedIn: 'root'
@@ -87,10 +88,16 @@ export class AuthService {
     // El log se escribe ANTES de signOut(): las reglas de Firestore exigen
     // autenticado() para escribir en registroLog, y una vez cerrada la sesión
     // el token ya no sirve para eso. registrarAccion es best-effort: no lanza.
+    // Su setDoc resuelve cuando el servidor confirma: la escritura tiene que
+    // estar hecha antes de la recarga del final, o el LOGOUT se pierde. La
+    // espera es acotada: sin conexión setDoc no resuelve nunca y el logout
+    // quedaba colgado.
     if (usuario) {
-      await this.logRegistro.registrarAccion(
-        'LOGOUT', 'users', 0, `Usuario ${usuario.email} cerró sesión.`
+      const escritura = await esperarConLimite(
+        this.logRegistro.registrarAccion('LOGOUT', 'users', 0, `Usuario ${usuario.email} cerró sesión.`),
+        ESPERA_MAXIMA_CIERRE_MS,
       );
+      if (escritura === 'vencido') console.warn('Cierre de sesión: el LOGOUT no se confirmó a tiempo; puede no quedar registrado.');
     }
     // limpiar() ANTES de signOut(), no en un finally: así, cuando Auth avise
     // null, la app ya no tiene sesión que perder y un logout deliberado se
@@ -102,10 +109,15 @@ export class AuthService {
       // Queda Auth autenticado y la app sin sesión: la dirección segura.
       // La entrada sale firmada como 'Desconocido' (la sesión ya está limpia).
       console.error('Error al cerrar sesión:', error);
-      await this.logRegistro.registrarError(
-        'LOGOUT', 'users', 0, `Error al cerrar sesión: ${error.message}`
+      await esperarConLimite(
+        this.logRegistro.registrarError('LOGOUT', 'users', 0, `Error al cerrar sesión: ${error.message}`),
+        ESPERA_MAXIMA_CIERRE_MS,
       );
     }
-    this.router.navigate(['/login']);
+    // Eje de sesión, bloque 2c (cuarta pieza): carga completa de /login, al
+    // final y siempre, también si signOut lanzó. Deja en cero todo lo que hay
+    // en memoria —servicios, caché del SDK de Firestore— para que el próximo
+    // usuario de esta pestaña no vea nada del anterior. Después no corre nada.
+    cargarLoginDeCero();
   }
 }

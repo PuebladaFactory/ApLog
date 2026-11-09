@@ -54,6 +54,8 @@ export class OperacionService implements OnDestroy {
 
   private destroy$       = new Subject<void>();
   private cancelarRango$ = new Subject<void>();
+  /** uid de la sesión que cargó `_operaciones$` (bloque 2c). */
+  private uidOperaciones: string | null = null;
 
   constructor(
     private db:               DbFirestoreService,
@@ -86,6 +88,15 @@ export class OperacionService implements OnDestroy {
    */
   cargarOperaciones(desde: string, hasta: string, orden: 'asc' | 'desc' = 'desc'): void {
     this.cancelarRango$.next();
+
+    // Bloque 2c (eje de sesión): si cambió el usuario, vaciar antes de volver a
+    // consultar. Si la consulta nueva falla (ej. un rol sin lectura), no emite y
+    // quedarían a la vista las operaciones del usuario anterior.
+    const uid = this.usuarioSesion.getUsuarioActual()?.uid ?? null;
+    if (uid !== this.uidOperaciones) {
+      this._operaciones$.next([]);
+      this.uidOperaciones = uid;
+    }
 
     this.db.getAllByDateValue<Operacion>('operaciones', 'fecha', desde, hasta, orden)
       .pipe(this.sesionInvalida.vigilar(), takeUntil(merge(this.destroy$, this.cancelarRango$)))

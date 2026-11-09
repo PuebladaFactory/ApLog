@@ -1,11 +1,12 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, Subject, merge } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ConId } from 'src/app/interfaces/conId';
 import { AsignacionVenta, DatosPersonalesVendedor, VendedorNuevo } from 'src/app/interfaces/vendedor-nuevo';
 import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
+import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 
 /** Asignación vista desde el vendedor: a qué cliente y con qué porcentaje.
  *  (La asignación se guarda en el Cliente: Cliente.comisionesVenta.) */
@@ -31,22 +32,36 @@ export class VendedorService implements OnDestroy {
   readonly vendedores$ = this._vendedores$.asObservable();
 
   private destroy$ = new Subject<void>();
+  // Bloque 2c (eje de sesión): corta el listener al re-iniciar. El destroy$
+  // de un servicio root no se dispara nunca.
+  private reinicio$ = new Subject<void>();
   private iniciado = false;
+  /** uid de la sesión con la que se abrió el listener (bloque 2c). */
+  private uidIniciado: string | null = null;
 
   constructor(
     private db: DbFirestoreService,
     private logRegistro: LogRegistroService,
     private clienteService: ClienteService,
+    private usuarioSesion: UsuarioSesionService,
   ) {}
 
   // ── Lectura ─────────────────────────────────────────────────────
 
   /** Idempotente: el listener se abre una sola vez por sesión. */
   init(): void {
-    if (this.iniciado) return;
+    // Bloque 2c (eje de sesión): idempotente DENTRO de una sesión, porque lo
+    // llaman el shell del módulo y la herramienta de recálculo. Si cambió el
+    // usuario (o el listener murió), cerrar lo anterior, vaciar y volver a
+    // suscribir: si no, el usuario nuevo ve los vendedores que cargó el anterior.
+    const uid = this.usuarioSesion.getUsuarioActual()?.uid ?? null;
+    if (this.iniciado && uid === this.uidIniciado) return;
+    this.reinicio$.next();
+    this._vendedores$.next([]);
     this.iniciado = true;
+    this.uidIniciado = uid;
     this.db.getAllStateChanges<any>(VendedorService.COLECCION)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntil(merge(this.destroy$, this.reinicio$)))
       .subscribe({
         next: changes => {
           let actual = this._vendedores$.getValue();

@@ -1,5 +1,9 @@
 import { FirestoreError } from '@angular/fire/firestore';
-import { CODIGOS_DE_SESION, CODIGOS_QUE_NUNCA_ACTUAN, codigoDeError, esErrorDeSesion, hayAlgoQueCerrar } from './sesion-invalida.util';
+import {
+  CODIGOS_DE_SESION, CODIGOS_QUE_NUNCA_ACTUAN, MARCA_AVISO_SESION, TEXTO_AVISO_SESION,
+  codigoDeError, dejarMarcaAvisoSesion, esErrorDeSesion, esperarConLimite, hayAlgoQueCerrar,
+  tomarMarcaAvisoSesion,
+} from './sesion-invalida.util';
 
 describe('codigoDeError — el código por la forma del error, no por la clase', () => {
   it('un objeto plano con name FirebaseError y code string da el código (no es instancia de nada)', () => {
@@ -36,6 +40,59 @@ describe('codigoDeError — el código por la forma del error, no por la clase',
     ]) {
       expect(codigoDeError(e)).toBeNull();
     }
+  });
+});
+
+describe('marca del aviso en sessionStorage (bloque 2c, cuarta pieza)', () => {
+  function storageFalso() {
+    const datos = new Map<string, string>();
+    return {
+      datos,
+      getItem: (k: string) => datos.get(k) ?? null,
+      setItem: (k: string, v: string) => { datos.set(k, v); },
+      removeItem: (k: string) => { datos.delete(k); },
+    };
+  }
+
+  it('la marca que deja la red la toma el login una sola vez: se borra al leerla', () => {
+    const s = storageFalso();
+    dejarMarcaAvisoSesion(s);
+    expect(s.datos.has(MARCA_AVISO_SESION)).toBeTrue();
+    expect(tomarMarcaAvisoSesion(s)).toBeTrue();
+    expect(s.datos.has(MARCA_AVISO_SESION)).toBeFalse();
+    expect(tomarMarcaAvisoSesion(s)).toBeFalse();       // una recarga posterior no repite el aviso
+  });
+
+  it('sin marca no hay aviso', () => {
+    expect(tomarMarcaAvisoSesion(storageFalso())).toBeFalse();
+  });
+
+  it('un storage que lanza no rompe ni la red ni el login', () => {
+    const roto = {
+      getItem: () => { throw new Error('x'); },
+      setItem: () => { throw new Error('x'); },
+      removeItem: () => { throw new Error('x'); },
+    };
+    expect(() => dejarMarcaAvisoSesion(roto)).not.toThrow();
+    expect(tomarMarcaAvisoSesion(roto)).toBeFalse();
+  });
+
+  it('el texto del aviso es el de la spec, en usted', () => {
+    expect(TEXTO_AVISO_SESION).toBe('Su sesión se cerró o venció. Vuelva a iniciar sesión.');
+  });
+});
+
+describe('esperarConLimite — la página no se va con una escritura en vuelo, ni se cuelga', () => {
+  it('una promesa que resuelve a tiempo da listo', async () => {
+    expect(await esperarConLimite(Promise.resolve('ok'), 50)).toBe('listo');
+  });
+
+  it('una promesa que rechaza da listo (ya no está en vuelo) y no lanza', async () => {
+    expect(await esperarConLimite(Promise.reject(new Error('x')), 50)).toBe('listo');
+  });
+
+  it('una promesa que no resuelve nunca da vencido al límite (ej. setDoc sin conexión)', async () => {
+    expect(await esperarConLimite(new Promise(() => {}), 20)).toBe('vencido');
   });
 });
 

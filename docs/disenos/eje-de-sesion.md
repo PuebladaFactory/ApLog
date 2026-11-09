@@ -909,6 +909,12 @@ falle.
    el usuario ve no puede depender de una llamada que puede no resolver. `limpiar()` sigue
    primero y sincrónico, que es lo que hace que actúe una sola vez.
 
+   **Quedó sin función con la cuarta pieza del 2c** (2026-11-09): la salida de la red pasó a
+   ser una carga completa de `/login`, que no necesita ni la zona ni el router, así que
+   `SesionInvalidaService` dejó de inyectar `NgZone`, `Router` y Swal. La corrección fue
+   correcta cuando se hizo y el commit del 2b la deja documentada; el 2c la volvió innecesaria.
+   `limpiar()` sigue primero y sincrónico, que eso no cambió.
+
 **Y una tercera, defensiva:** si `reportar` recibe un error cuyo código no puede determinar y
 hay algo que cerrar, deja un `console.warn` diciendo que no pudo clasificarlo. Esta falla fue
 invisible justamente porque no quedaba rastro de la decisión de no actuar.
@@ -952,20 +958,149 @@ solo `.next([])` en los ocho servicios— y el logout no los toca. Cuando el lis
 error no emite, así que el último valor queda. Y seis de los ocho `init()` no tienen guarda de
 "ya iniciado".
 
-**El arreglo: `init()` idempotente.** Cada uno cierra su suscripción anterior, vacía su estado y
-vuelve a suscribir. Sin señales entre servicios, sin tocar `DbFirestoreService` y sin riesgo de
-ciclos.
+**El invariante, que es lo que hay que cumplir:** que no sobreviva en memoria el dato de otro
+usuario. Sin señales entre servicios, sin tocar `DbFirestoreService` y sin riesgo de ciclos.
 
-- **Verificar antes de escribir nada:** si no hay guarda y la suscripción se corta con el
-  `destroy$` del servicio, que en un servicio root no se dispara nunca, entonces hoy **cada
-  recreación de `HomeComponent` abre listeners nuevos sin cerrar los viejos**, sobre diez
-  colecciones. Si es así, es un segundo motivo para el mismo arreglo y hay que dejarlo escrito.
-- `NoDisponibilidadService` tiene guarda propia (`iniciado`) y su callback de error la resetea:
-  entra al mismo criterio sin romper eso.
-- Fuera de alcance: vaciar los catálogos en el logout además de en el `init()`. Con el `init()`
-  idempotente, el único camino de vuelta a la pantalla pasa por ahí.
+**El mecanismo, que no es uno solo** (corregido el 2026-11-09, al implementar: la redacción
+anterior decía "`init()` idempotente: cerrar, vaciar y volver a suscribir" para los ocho, y eso
+rompía dos de ellos).
 
-## Bloque 3 — `/login` honesto
+- **Los seis catálogos** (Choferes, Proveedores, Clientes, Tarifario, CategoríaDocumentación,
+  Legajos): `init()` corta lo anterior, vacía y vuelve a suscribir, siempre. Ahí el mecanismo
+  bruto coincide con el invariante, porque el único que los llama es `HomeComponent`.
+- **`NoDisponibilidadService` y `OperacionService`: sólo cuando cambia el usuario**, o cuando el
+  listener murió.
+  - El `init()` del primero lo llaman además `carga-asignacion`, `modal-no-disponibilidad`,
+    `operaciones-editor`, `tablero-asignaciones` y el generador de demo, todos contando con que
+    sea idempotente. Vaciar en cada llamada dejaría `estaCargado()` en `false` y la edición
+    fallaría con "Todavía no se cargaron…".
+  - El segundo no tiene `init()`: lo suyo es `cargarOperaciones`, que corre en cada cambio de
+    rango y ya cierra la consulta anterior con `cancelarRango$`. Vaciar siempre dejaría
+    `tablero-op` en "Mostrando 0 operaciones" en cada cambio de fechas, porque el spinner se
+    apaga solo a los 500 ms.
+- Fuera de alcance: vaciar los catálogos en el logout además de en el `init()`. Con esto, el
+  único camino de vuelta a la pantalla pasa por ahí.
+
+**Confirmado al implementar: hoy se acumulan listeners**, en 6 de los 8 servicios y sobre 9
+colecciones, no 10. Los ocho son `providedIn: 'root'`, así que su `destroy$` no se dispara
+nunca mientras la app se usa; los seis sin guarda abren listeners nuevos sin cerrar los viejos
+en cada recreación de `HomeComponent` —una ida y vuelta a `/limbo`, `/carga` o la página de
+error—. En los datos no se notaba porque el `'added'` deduplica, pero las lecturas y los
+listeners se multiplicaban. No se acumulaban operaciones (ya cortaba con `cancelarRango$`) ni
+no disponibilidades (tiene guarda).
+
+**Segunda pieza del mismo bloque: la reconciliación aplica su resultado dentro de la zona de
+Angular** (agregado el 2026-11-09). Al verificar el 2b se vieron advertencias `Firebase API
+called outside injection context: getDoc` en `UsuarioSesionService`.
+
+**De dónde vienen esas advertencias**, en tres partes, porque las dos primeras redacciones de
+esta sección se pasaron de largo para cada lado:
+
+1. El fenómeno es viejo y está en toda la app: `DbFirestoreService` produce decenas
+   equivalentes (`onSnapshot`, `collectionData`) desde mucho antes de este frente.
+2. La línea es nueva porque el código se mudó: el bloque 2 llevó la lectura de `/users` de
+   `AuthService` a `UsuarioSesionService`, así que la misma llamada que antes avisaba desde
+   `auth.service.ts` ahora avisa desde `usuario-sesion.service.ts`.
+3. **Pero el bloque 2 sí cambió algo de fondo:** antes esa lectura corría sólo al loguearse, y
+   ahora corre en cada F5 y en cada cambio de Auth, y está en el camino crítico porque el guard
+   la espera.
+
+Desde cuándo están a la vista no está establecido: pueden haber estado filtradas en la consola.
+
+**NO SE HIZO, y no hay que volver a proponerlo sin evidencia nueva** (decidido el 2026-11-09,
+al implementar el 2c). Envolver en `ngZone.run` no cambiaría nada, porque la zona ya se
+conserva por tres motivos verificados:
+
+- el callback de `onAuthStateChanged` se registra en el **constructor** de
+  `UsuarioSesionService`, que es contexto de inyección, así que `ɵzoneWrap` lo envuelve con
+  `zoneWrapFn`, que lo ejecuta con `ngZone.run`;
+- el build convierte `async/await` en generadores, y cada continuación pasa por un `.then` de
+  una promesa que zone.js parchea y que corre en la zona donde se registró, así que `aplicar`
+  termina corriendo en la zona de Angular;
+- en el login, `resultadoPara` lo llama `iniciarSesion`, que viene de un clic.
+
+La observación coincide: en la ventana B del caso 1 los botones desaparecieron. El único hueco
+teórico es el timer del primer evento, que corre en la zona donde se construyó el servicio, y
+en la práctica lo construye el router o un componente, dentro de la zona.
+
+Esto explica además por qué el caso 1 sí corría fuera de la zona: esa cadena nace de la Auth
+que AngularFire crea con `runOutsideAngular`, por el camino del error de un listener, no de un
+callback envuelto al registrarse.
+
+**Tercera pieza: el barrido** (agregado el 2026-11-09). Al implementar apareció
+`VendedorService`, que no estaba en la lista de los ocho: tiene `if (this.iniciado) return;` y
+nada resetea esa guarda, así que si su listener muere en un logout, tras un cambio de usuario en
+la misma pestaña los vendedores quedan viejos o congelados. Mismo defecto, noveno servicio.
+
+- La lista de los ocho salió de los listeners del arranque, o sea de los que alguien notó. Antes
+  de cerrar el bloque va un **barrido de símbolo**: todo servicio de `src/app/servicios/` que
+  mantenga estado de una colección en memoria y lo pueble con un listener o una consulta, esté o
+  no en el arranque.
+- A cada uno que aparezca se le aplica el invariante con el mecanismo que corresponda, el de los
+  seis o el del uid, según quién llame a su `init()`.
+
+**Cuarta pieza, y la que cierra el invariante: el cierre de sesión recarga la página**
+(decidido el 2026-11-09, después de que la primera verificación manual del 2c fallara).
+
+**Por qué.** Con las tres piezas anteriores puestas, el caso que motivó el bloque seguía dando
+mal: `admin`, logout sin recargar, `manager`, y las tablas con los datos del `admin`. El
+diagnóstico llegó a la caché local de Firestore: `onSnapshot` sin opciones levanta un primer
+snapshot desde la caché, con todos los documentos como `'added'`, **inmediatamente después** del
+vaciado del servicio y antes de que el servidor rechace el listener. El vaciado ocurre y la
+caché lo pisa.
+
+**No hace falta confirmar esa causa para decidir el arreglo, y por eso no se corrió la
+instrumentación.** La observación de `Ctrl+Shift+R` ya prueba que el dato viejo vive en memoria
+y muere con una carga de página, sea la caché de Firestore o cualquier otra cosa que el barrido
+no vea.
+
+**El arreglo: los dos caminos que terminan una sesión hacen una carga completa de `/login`.**
+
+- `AuthService.cerrarSesion` y la salida de `SesionInvalidaService`.
+- **Es exhaustivo por construcción**, que es la razón de fondo para elegirlo: el 2c va servicio
+  por servicio y depende de que el barrido los encuentre a todos; una carga de página deja en
+  cero todo lo que hay en memoria, incluido lo que no sabemos que existe. Después de perseguir
+  esto tres veces, gana el mecanismo que no depende de que la lista esté completa.
+- **No hacen falta `terminate` ni `clearIndexedDbPersistence`**, que fue lo primero que se
+  propuso: si Firestore tuviera persistencia en IndexedDB, la caché sobreviviría a un
+  `Ctrl+Shift+R` y el `manager` seguiría viendo datos. Como sale vacío, la caché es de memoria y
+  una carga de página la borra entera.
+- **El aviso de sesión vencida sobrevive por `sessionStorage`**, que es por pestaña: la red deja
+  la marca antes de recargar y `/login` la lee, la borra y muestra el aviso. Se eligió sobre
+  "avisar y después recargar" para que los datos del usuario anterior desaparezcan de la
+  pantalla al instante, sin depender de que alguien apriete un botón.
+- **El LOGOUT tiene que quedar escrito antes de la recarga.** Es una escritura a `registroLog`
+  en vuelo; si la página se descarga antes de que termine, el logout deja de registrarse, y la
+  cobertura del log es la única preocupación del log antes del corte a Vantruck.
+- **Qué cambia para el 2c:** las tres piezas anteriores se quedan, pero cambian de rol. Ya no
+  son lo que cierra el invariante: son lo que arregla **la acumulación de listeners**, que la
+  recarga no toca porque ocurre con el mismo usuario yendo y volviendo de `/limbo`.
+- **Costo:** el logout pasa a parpadear, del orden de un segundo. En una computadora compartida
+  es exactamente lo que se quiere.
+- Las ramas de `iniciarSesion` que terminan en `/limbo` (sin documento, sin rol) siguen con
+  navegación de router: no establecieron sesión nueva y `/limbo` no muestra datos. Si desde ahí
+  se usa "Salir", eso sí pasa por `cerrarSesion` y recarga.
+
+### Verificación manual del 2c (Nico)
+
+1. **El caso que lo motivó:** entrar como `admin`, cerrar sesión **sin recargar**, entrar como
+   `manager` en la misma pestaña. Las tablas tienen que salir vacías desde el arranque, igual
+   que con `Ctrl+Shift+R`.
+2. **Que no rompa el camino normal:** entrar como `admin`, cerrar sesión sin recargar, volver a
+   entrar como `admin`. Las tablas tienen que volver a llenarse.
+3. **Ida y vuelta a `/limbo`** con un usuario normal: al volver, los datos siguen estando y no
+   quedan listeners duplicados. Es esperable un parpadeo de tablas vacías antes de que se
+   llenen: eso es el corte y la resuscripción.
+4. **El módulo Vendedores** después de cambiar de usuario en la misma pestaña, que es el caso
+   que trajo el barrido.
+5. **El LOGOUT sigue quedando registrado:** cerrar sesión y después, con un usuario que pueda
+   verlo, mirar Ajustes → Registro de actividad.
+6. **El aviso de la red sobrevive a la recarga:** el caso 1 del 2b tiene que terminar en
+   `/login` con el aviso, igual que antes.
+7. **El botón Atrás después de cerrar sesión.** Si el navegador devuelve la pantalla anterior
+   con datos en vez de volver a cargar, hay que tratarlo; es el único hueco conocido de la
+   recarga.
+8. **Los cinco casos del 2b** siguen dando igual.
 
 Deja el proyecto compilando.
 
@@ -989,11 +1124,12 @@ Deja el proyecto compilando.
   cambiar de usuario.
   - **"Continuar"** → `router.navigate(['/op'])`, directo, sin pasar por la espera de
     `/carga`. `op` admite los cinco roles.
-  - **"Cerrar sesión"** → `await authService.cerrarSesion()`, y después
-    `sesionViva = null`.
-    - `cerrarSesion` navega a `/login`, que es la misma URL. Con la configuración por defecto
-      del router (`onSameUrlNavigation: 'ignore'`), el componente no se recrea.
-    - Por eso hay que actualizar el estado a mano, para que aparezca el formulario.
+  - **"Cerrar sesión"** → `authService.cerrarSesion()`, y nada más.
+    - **Corregido el 2026-11-09, después de la cuarta pieza del 2c:** la redacción anterior
+      decía que había que poner `sesionViva = null` a mano, porque `cerrarSesion` navegaba a
+      `/login` —la misma URL— y con `onSameUrlNavigation: 'ignore'` el componente no se
+      recreaba. Ya no aplica: `cerrarSesion` hace una carga completa de `/login`, así que el
+      componente nace de cero con la sesión ya limpia y el formulario aparece solo.
 - **Sin sesión:** el formulario, como hoy.
 
 Este componente sólo lee la sesión: el invariante no le aplica. Las salidas de sus botones son

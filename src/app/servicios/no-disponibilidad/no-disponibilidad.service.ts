@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, Subject, merge } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Anulacion } from 'src/app/interfaces/anulacion';
 import { ConId } from 'src/app/interfaces/conId';
@@ -45,7 +45,12 @@ export class NoDisponibilidadService implements OnDestroy {
   readonly noDisponibilidades$ = this._noDisponibilidades$.asObservable();
 
   private destroy$ = new Subject<void>();
+  // Bloque 2c (eje de sesión): corta las suscripciones de init() al
+  // re-iniciar. El destroy$ de un servicio root no se dispara nunca.
+  private reinicio$ = new Subject<void>();
   private iniciado = false;
+  /** uid de la sesión con la que se abrió el listener (bloque 2c). */
+  private uidIniciado: string | null = null;
   /** true desde el primer snapshot del listener. La colección puede estar
    *  vacía de verdad, así que `[]` no alcanza para saber si ya se leyó. */
   private cargado = false;
@@ -64,10 +69,19 @@ export class NoDisponibilidadService implements OnDestroy {
 
   /** Idempotente: el listener se abre una sola vez por sesión. */
   init(): void {
-    if (this.iniciado) return;
+    // Bloque 2c (eje de sesión): idempotente DENTRO de una sesión, porque lo
+    // llaman varios componentes. Si cambió el usuario (o el listener murió),
+    // cerrar lo anterior, vaciar y volver a suscribir: si no, el usuario nuevo
+    // ve las no disponibilidades que cargó el anterior.
+    const uid = this.usuarioSesion.getUsuarioActual()?.uid ?? null;
+    if (this.iniciado && uid === this.uidIniciado) return;
+    this.reinicio$.next();
+    this._noDisponibilidades$.next([]);
+    this.cargado = false;
     this.iniciado = true;
+    this.uidIniciado = uid;
     this.db.getAllStateChanges<any>(NoDisponibilidadService.COLECCION)
-      .pipe(this.sesionInvalida.vigilar(), takeUntil(this.destroy$))
+      .pipe(this.sesionInvalida.vigilar(), takeUntil(merge(this.destroy$, this.reinicio$)))
       .subscribe({
         next: changes => {
           let actual = this._noDisponibilidades$.getValue();

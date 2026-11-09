@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, Subject, merge } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Transaction } from '@angular/fire/firestore';
 import { EntidadTipo, Tarifa } from 'src/app/interfaces/tarifa';
@@ -25,6 +25,9 @@ export class TarifarioService implements OnDestroy {
   public registrosEventuales$ = this._registrosEventuales$.asObservable();
 
   private destroy$ = new Subject<void>();
+  // Bloque 2c (eje de sesión): corta las suscripciones de init() al
+  // re-iniciar. El destroy$ de un servicio root no se dispara nunca.
+  private reinicio$ = new Subject<void>();
 
   constructor(
     private db: DbFirestoreService,
@@ -33,8 +36,17 @@ export class TarifarioService implements OnDestroy {
   ) {}
 
   init(): void {
+    // Bloque 2c (eje de sesión): cerrar lo anterior, vaciar y volver a
+    // suscribir. Sin esto, un usuario que entra en la misma pestaña ve los
+    // datos del anterior (un listener que muere con error no emite, y el
+    // último valor queda), y cada recreación de HomeComponent sumaba
+    // listeners sin cerrar los viejos.
+    this.reinicio$.next();
+    this._tarifas$.next([]);
+    this._tarifasEspeciales$.next([]);
+    this._registrosEventuales$.next([]);
     this.db.getAllStateChanges<Tarifa>('tarifas')
-      .pipe(this.sesionInvalida.vigilar(), takeUntil(this.destroy$))
+      .pipe(this.sesionInvalida.vigilar(), takeUntil(merge(this.destroy$, this.reinicio$)))
       .subscribe(changes => {
         let current = this._tarifas$.getValue();
         changes.forEach(change => {
@@ -52,7 +64,7 @@ export class TarifarioService implements OnDestroy {
       });
 
     this.db.getAllStateChanges<TarifaEspecial>('tarifasEspeciales')
-      .pipe(this.sesionInvalida.vigilar(), takeUntil(this.destroy$))
+      .pipe(this.sesionInvalida.vigilar(), takeUntil(merge(this.destroy$, this.reinicio$)))
       .subscribe(changes => {
         let current = this._tarifasEspeciales$.getValue();
         changes.forEach(change => {
@@ -70,7 +82,7 @@ export class TarifarioService implements OnDestroy {
       });
 
     this.db.getAllStateChanges<RegistroOpEventual>('registrosOpEventuales')
-      .pipe(this.sesionInvalida.vigilar(), takeUntil(this.destroy$))
+      .pipe(this.sesionInvalida.vigilar(), takeUntil(merge(this.destroy$, this.reinicio$)))
       .subscribe(changes => {
         let current = this._registrosEventuales$.getValue();
         changes.forEach(change => {

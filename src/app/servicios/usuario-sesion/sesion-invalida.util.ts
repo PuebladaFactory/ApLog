@@ -26,6 +26,51 @@ export function codigoDeError(e: unknown): string | null {
   return name === 'FirebaseError' && typeof code === 'string' ? code : null;
 }
 
+/* ── Bloque 2c, cuarta pieza: el cierre de sesión termina en una carga
+ *    completa de /login. Deja en cero todo lo que hay en memoria (servicios,
+ *    caché del SDK de Firestore), incluido lo que no sabemos que existe. ── */
+
+/** Texto del aviso de sesión cerrada o vencida (red del 2b). */
+export const TEXTO_AVISO_SESION = 'Su sesión se cerró o venció. Vuelva a iniciar sesión.';
+
+/** Clave de sessionStorage (por pestaña) con la que el aviso cruza la recarga. */
+export const MARCA_AVISO_SESION = 'avisoSesionCerrada';
+
+/** Espera máxima de una escritura o un signOut antes de recargar: la página
+ *  no se va con eso en vuelo, pero una falla tampoco cuelga el cierre. */
+export const ESPERA_MAXIMA_CIERRE_MS = 3000;
+
+export function dejarMarcaAvisoSesion(storage: Pick<Storage, 'setItem'>): void {
+  try { storage.setItem(MARCA_AVISO_SESION, '1'); } catch { /* sin storage: sin aviso */ }
+}
+
+/** Lee la marca y la BORRA antes de devolverla, para que una recarga
+ *  posterior no repita el aviso. */
+export function tomarMarcaAvisoSesion(storage: Pick<Storage, 'getItem' | 'removeItem'>): boolean {
+  try {
+    const habia = storage.getItem(MARCA_AVISO_SESION) !== null;
+    storage.removeItem(MARCA_AVISO_SESION);
+    return habia;
+  } catch {
+    return false;
+  }
+}
+
+/** Espera `promesa` como mucho `ms`. Devuelve 'listo' o 'vencido'; nunca
+ *  lanza (un rechazo cuenta como 'listo': ya no está en vuelo). */
+export function esperarConLimite(promesa: Promise<unknown>, ms: number): Promise<'listo' | 'vencido'> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const vencida = new Promise<'vencido'>(resolve => { timer = setTimeout(() => resolve('vencido'), ms); });
+  const lista = promesa.then(() => 'listo' as const, () => 'listo' as const);
+  return Promise.race([lista, vencida]).finally(() => clearTimeout(timer));
+}
+
+/** Carga completa de /login, reemplazando la entrada del historial: la
+ *  pantalla autenticada no queda a un botón Atrás de distancia. */
+export function cargarLoginDeCero(): void {
+  window.location.replace(new URL('login', document.baseURI).href);
+}
+
 /** Hay algo que cerrar: sesión de la app o sesión perdida. */
 export function hayAlgoQueCerrar(sesionUid: string | null, sesionPerdida: boolean): boolean {
   return sesionUid !== null || sesionPerdida;

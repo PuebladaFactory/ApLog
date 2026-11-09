@@ -3,6 +3,8 @@ import { Component, OnInit } from '@angular/core';
 
 
 import { AuthService } from 'src/app/servicios/autentificacion/auth.service';
+import { TEXTO_AVISO_SESION, tomarMarcaAvisoSesion } from 'src/app/servicios/usuario-sesion/sesion-invalida.util';
+import Swal from 'sweetalert2';
 
 
 @Component({
@@ -28,6 +30,12 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Eje de sesión, bloque 2c: la red de sesión inválida recarga /login y deja
+    // la marca en sessionStorage. Se lee y se BORRA antes de mostrar, para que
+    // una recarga posterior no repita el aviso.
+    if (tomarMarcaAvisoSesion(sessionStorage)) {
+      Swal.fire({ icon: 'warning', text: TEXTO_AVISO_SESION });
+    }
   }
 
 

@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, Subject, merge } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { CategoriaDocumentacion } from 'src/app/interfaces/legajo';
 import { ConIdType } from 'src/app/interfaces/conId';
@@ -14,6 +14,9 @@ export class CategoriaDocumentacionService implements OnDestroy {
   public categorias$ = this._categorias$.asObservable();
 
   private destroy$ = new Subject<void>();
+  // Bloque 2c (eje de sesión): corta las suscripciones de init() al
+  // re-iniciar. El destroy$ de un servicio root no se dispara nunca.
+  private reinicio$ = new Subject<void>();
 
   constructor(
     private db: DbFirestoreService,
@@ -49,8 +52,15 @@ export class CategoriaDocumentacionService implements OnDestroy {
   }
 
   init(): void {
+    // Bloque 2c (eje de sesión): cerrar lo anterior, vaciar y volver a
+    // suscribir. Sin esto, un usuario que entra en la misma pestaña ve los
+    // datos del anterior (un listener que muere con error no emite, y el
+    // último valor queda), y cada recreación de HomeComponent sumaba
+    // listeners sin cerrar los viejos.
+    this.reinicio$.next();
+    this._categorias$.next([]);
     this.db.getAllStateChanges<CategoriaDocumentacion>('categoriasDocumentacion')
-      .pipe(this.sesionInvalida.vigilar(), takeUntil(this.destroy$))
+      .pipe(this.sesionInvalida.vigilar(), takeUntil(merge(this.destroy$, this.reinicio$)))
       .subscribe(changes => {
         let current = this._categorias$.getValue();
         changes.forEach(change => {

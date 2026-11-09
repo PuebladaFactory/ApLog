@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, merge } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Legajo } from 'src/app/interfaces/legajo';
@@ -21,6 +21,9 @@ export class ChoferService implements OnDestroy {
   public vehiculos$ = this._vehiculos$.asObservable();
 
   private destroy$ = new Subject<void>();
+  // Bloque 2c (eje de sesión): corta las suscripciones de init() al
+  // re-iniciar. El destroy$ de un servicio root no se dispara nunca.
+  private reinicio$ = new Subject<void>();
 
   constructor(
     private db: DbFirestoreService,
@@ -72,8 +75,16 @@ export class ChoferService implements OnDestroy {
   }
 
   init(): void {
+    // Bloque 2c (eje de sesión): cerrar lo anterior, vaciar y volver a
+    // suscribir. Sin esto, un usuario que entra en la misma pestaña ve los
+    // datos del anterior (un listener que muere con error no emite, y el
+    // último valor queda), y cada recreación de HomeComponent sumaba
+    // listeners sin cerrar los viejos.
+    this.reinicio$.next();
+    this._choferes$.next([]);
+    this._vehiculos$.next([]);
     this.db.getAllStateChanges<Chofer>('choferes')
-      .pipe(this.sesionInvalida.vigilar(), takeUntil(this.destroy$))
+      .pipe(this.sesionInvalida.vigilar(), takeUntil(merge(this.destroy$, this.reinicio$)))
       .subscribe(changes => {
         let current = this._choferes$.getValue();
         changes.forEach(change => {
@@ -91,7 +102,7 @@ export class ChoferService implements OnDestroy {
       });
 
     this.db.getAllStateChanges<Vehiculo>('vehiculos')
-      .pipe(this.sesionInvalida.vigilar(), takeUntil(this.destroy$))
+      .pipe(this.sesionInvalida.vigilar(), takeUntil(merge(this.destroy$, this.reinicio$)))
       .subscribe(changes => {
         let current = this._vehiculos$.getValue();
         changes.forEach(change => {
