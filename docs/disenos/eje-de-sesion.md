@@ -1072,6 +1072,14 @@ no vea.
 - **El LOGOUT tiene que quedar escrito antes de la recarga.** Es una escritura a `registroLog`
   en vuelo; si la página se descarga antes de que termine, el logout deja de registrarse, y la
   cobertura del log es la única preocupación del log antes del corte a Vantruck.
+  - Al implementar se encontró que hoy esa escritura **se espera sin límite**: `cerrarSesion`
+    hace `await` de un `setDoc` que resuelve recién cuando el servidor confirma, así que **un
+    logout sin conexión no termina nunca**. Es preexistente y lo cierra la espera acotada, de
+    3 s.
+  - El hueco nuevo, para el inventario de cobertura del log en el cierre: sin conexión, el
+    logout sigue a los 3 s y la entrada probablemente se pierde, porque la caché es de memoria
+    y muere con la recarga. Queda un `console.warn`. Es el mismo inventario donde va el cierre
+    por la red del 2b, que tampoco escribe LOGOUT.
 - **Qué cambia para el 2c:** las tres piezas anteriores se quedan, pero cambian de rol. Ya no
   son lo que cierra el invariante: son lo que arregla **la acumulación de listeners**, que la
   recarga no toca porque ocurre con el mismo usuario yendo y volviendo de `/limbo`.
@@ -1102,6 +1110,8 @@ no vea.
    recarga.
 8. **Los cinco casos del 2b** siguen dando igual.
 
+## Bloque 3 — `/login` honesto
+
 Deja el proyecto compilando.
 
 **Archivos:**
@@ -1117,8 +1127,15 @@ Deja el proyecto compilando.
   - lee `sesionViva = getUsuarioActual()` **después de la reconciliación**, no de
     `localStorage`;
   - pone `resolviendo = false`.
-- **Mientras resuelve, no muestra nada**, en la misma línea que el `@else {}` vacío que ya
-  existe.
+- **Mientras resuelve, muestra la tarjeta con un spinner adentro**, en el lugar donde después
+  van el formulario o los dos botones (decidido el 2026-11-09; la redacción anterior decía "no
+  muestra nada", en la línea del `@else {}` vacío que ya existe).
+  - Por qué: la medición del primer pintado dio que Auth tarda del orden de 300 a 400 ms en
+    restaurar la sesión, y eso es ahora lo que separa al visitante del formulario. Una página en
+    blanco en la pantalla donde todos aterrizan es peor que el parpadeo que se quiere evitar.
+  - Y después del bloque de cierre sería blanco de verdad: el spinner de `index.html` lo borra
+    Angular al montar el componente, así que si el componente no dibuja nada, no queda nada.
+  - El marco de la tarjeta ya está dibujado; lo único que cambia es qué va adentro.
 - **Con sesión viva:** muestra "Hay una sesión abierta como {{email}}" y dos botones. No
   muestra el formulario. **No redirige sola:** quien entra a `/login` con sesión puede querer
   cambiar de usuario.
