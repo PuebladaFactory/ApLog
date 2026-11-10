@@ -44,6 +44,22 @@ mantenida a mano funcionó.
    (que mapea a `finanzas`) y lee `operaciones` e `informesOp`. Los tres casos reales
    relevados son todos de esa forma.
 
+**Cuarto hallazgo, aparecido al implementar el bloque 1 y que ninguna de las dos auditorías
+miró:** las reglas tienen **dos** tablas, no una. `permitido()` es módulo × rol × acción y el
+cliente la duplica como `matrizBase`; `moduloDe()` es colección → módulo, con 75 entradas, y
+el cliente **no tiene equivalente: la falsifica con un cast.**
+`RegistroLogComponent.moduloDe` y `PapeleraComponent.moduloDe` hacen
+`return r.coleccion as ModuloPermiso`, y el comentario del primero declara que el cast es
+inofensivo "porque el botón simplemente no se renderiza" cuando no corresponde a ningún
+módulo real. Es decir: **la visibilidad del botón "ver objeto" está decidida por que una
+coincidencia de strings falle**, no por un permiso. El efecto real es que el affordance que el
+template sí tiene escrito a propósito —el botón deshabilitado con el tooltip "Sin vista
+disponible para esta colección"— queda suprimido para toda colección logueada cuyo nombre no
+sea un `ModuloPermiso`: `informesOp`, `informesLiq`, `movimientosFin`, `vehiculos`,
+`categoriasDocumentacion`, `users`, `tarifasEspeciales`, `registrosOpEventuales`,
+`liquidacionesVenta`, `comisionesVenta`, `noDisponibilidades`. En esas filas el usuario ve una
+celda vacía sin explicación. Se resuelve en el **bloque 9**.
+
 ---
 
 ## 2. Decisiones tomadas
@@ -243,6 +259,14 @@ sin consumidor de UI.
 operación escribe `informesOp`, `comisiones`, `resumenes` y `registroLog`. No son asunto de
 la UI. Que estén muertas en `matrizBase` es correcto.
 
+**Requisito de la poda: el razonamiento no se borra con las celdas.** Los comentarios de
+`asignaciones`, `informesOp`, `resumenes` y `comisiones` explican por qué `user` tiene
+escritura ahí, y ese razonamiento no está en ningún otro lugar del cliente. Al podar, va un
+bloque de comentario junto a `ModuloReglas` que liste los módulos de `permitido()` que la UI
+deliberadamente no consulta, con una línea por cada uno. Eso convierte la ausencia en una
+decisión escrita y cierra la deuda vieja en sus propios términos ("al retomarla, agregarlos o
+dejar escrito por qué no"): se elige dejar escrito por qué no.
+
 ### 4.2 Los dos `ModuloPermiso` nuevos, y el orden
 
 Gatear el sidebar de Tarifas y de Migración necesita `ModuloPermiso 'tarifas'` y
@@ -274,6 +298,14 @@ como los desvíos deliberados.
 Un **fixture único** con la matriz esperada. No es una tercera copia en el sentido malo: es
 la única copia mantenida a mano, y las otras dos se verifican contra ella.
 
+Va en JSON y al lado del servicio que verifica
+(`src/app/servicios/permisos/matriz-esperada.json`), porque `PermisosService` es la de las
+dos copias que se edita más seguido. JSON y no TypeScript porque lo tienen que leer los dos
+lados: el test de emulador es un `.mjs` de Node, que no puede importar TS. Con dos secciones
+que hacen explícito el alcance de cada test: los 9 módulos que se comparan contra
+`permitido()` (180 celdas) y `usuarios` aparte (20), que no pasa por `permitido()` y cuya
+divergencia con las reglas es deliberada.
+
 - **Test de emulador** (`functions/test-matriz-permisos-rules.mjs`): afirma que las reglas
   reales coinciden con el fixture, celda por celda. Cubre los 9 módulos que pasan por
   `permitido()` — **180 celdas**.
@@ -288,14 +320,27 @@ divergencia con `matrizBase` —`admin` en crear/editar/eliminar— es deliberad
 registra la intención, no la regla.
 
 Separarse en cualquier dirección rompe el build. Y el test de emulador **es** la cobertura
-que falta: las 180 celdas pasan de 27,5 % a 100 %, y `entidades`/`operaciones`/`finanzas`
-dejan de estar en cero.
+que falta: las 180 celdas quedan al 100 %, y `entidades`, `operaciones` y `finanzas` dejan de
+estar en cero. Los 10 módulos de `permitido()` que la UI no consulta quedan fuera del fixture
+a propósito y siguen cubiertos por los scripts que ya existen
+(`test-historico-rules`, `test-cierre-rules`, `test-vendedores-rules`,
+`test-asignaciones-rules`, `test-vencimientos-rules`, `test-legajos-rules`,
+`test-papelera-rules`, `test-registro-log-rules`): el fixture verifica el acuerdo entre
+cliente y reglas, que sólo existe donde la UI consulta.
 
 **Requisito sobre el test, que sale del hallazgo de las 14 celdas de sólo-rechazo:** un
 control positivo por rol en cada corrida. Si una corrida afirma rechazos de un rol, tiene que
 afirmar también al menos un permitido de ese mismo rol, o no distingue "denegó la matriz" de
 "el rol no llegó al token". Es la lección de que un caso cuyo resultado correcto es "no pasa
 nada" no prueba nada por sí solo, encontrada esta vez dentro de los tests.
+
+**Para `manager` el control positivo no puede salir del fixture.** Con `legacySoloLectura`
+podado, `manager` queda en `false` en las 180 celdas: 36 rechazos y ningún permitido, que es
+el caso de sólo-rechazo llevado al extremo. El control positivo tiene que ser una lectura de
+una colección de `legacySoloLectura`, que `permitido()` concede a cualquier rol autenticado
+sin condición de rol. Eso prueba que el token llegó con `role: 'manager'` y que las reglas lo
+evaluaron, y de paso cierra la pregunta abierta de si `let r = rol()` falla con un rol ausente
+del token.
 
 ### 4.5 El invariante cruzado
 
@@ -360,6 +405,16 @@ corregido).
 **Bloque 8 — Tarifas.** Las 7 comparaciones de rol directas a `*appPermiso`. Independiente de
 los anteriores salvo el Bloque 1; puede ir en paralelo.
 
+**Bloque 9 — los dos casts de colección a `ModuloPermiso`.** Agregado el 2026-11-10 a partir
+del cuarto hallazgo de la sección 1. `VisualizadorObjetoService` ya tiene el mapa colección →
+handler con sus cuatro entradas (`clientes`, `choferes`, `proveedores`, `operaciones`), así
+que es el dueño natural del permiso de cada una: `HandlerVisualizador` suma un campo
+`modulo: ModuloPermiso`, el servicio expone `moduloDe(coleccion): ModuloPermiso | null`, y
+`RegistroLogComponent.moduloDe` y `PapeleraComponent.moduloDe` dejan de castear y le
+preguntan. Quedan dos chequeos ortogonales y los dos intencionales: el permiso del módulo
+decide si el botón existe, `puedeVer` decide si está habilitado, y el tooltip empieza a
+aparecer donde corresponde. Independiente; va en cualquier momento después del Bloque 1.
+
 ---
 
 ## 6. Fuera de alcance
@@ -381,9 +436,8 @@ los anteriores salvo el Bloque 1; puede ir en paralelo.
 
 ## 7. Preguntas abiertas
 
-- Comportamiento de un rol ausente en el token dentro de `legacySoloLectura`: el
-  `let r = rol()` podría fallar antes de evaluar la rama. Ningún test lo ejerce. No bloquea
-  este frente; entra en el test de emulador del Bloque 2 si es barato.
+- ~~Comportamiento de un rol ausente en el token dentro de `legacySoloLectura`~~: queda
+  cubierto por el control positivo de `manager` del Bloque 2 (ver 4.4).
 - `liquidaciones` figura en CLAUDE.md como colección principal, no está en `moduloDe()` y
   ningún código la usa. Se corrige la documentación en el Bloque 0; si existe en Vantruck, es
   dato para la migración.
