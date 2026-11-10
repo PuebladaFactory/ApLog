@@ -77,8 +77,12 @@ Ruteo (frente Lazy loading + fechas):
   no llevan `/raiz`.
 - `RaizModule` declara solo el shell; cada feature es un chunk lazy desde `raiz-routing`
   (y `/migracion`, `DesarrolloModule`).
-- `RoleGuard`: `canMatch` en las rutas de `raiz-routing` (un rol sin acceso no descarga
-  el chunk) y `canActivate` en las rutas internas de cada módulo. Los dos devuelven
+- `RoleGuard`: `canMatch` en las rutas de `raiz-routing` (13, un rol sin acceso no descarga
+  el chunk) y `canActivate` en **sólo 8** rutas internas: las 5 hijas de `ajustes-routing`
+  y las 3 rutas `alta` de choferes/clientes/proveedores. **Las demás rutas internas no
+  tienen guard propio y heredan sólo el `canMatch` del padre** — incluidas las de Finanzas,
+  Legajos, Liquidación, Facturación, Operaciones, Reportes, Tarifas, Vendedores y
+  `/migracion`, y `listado` en los tres listados CRUD. Los dos devuelven
   `Promise<true | UrlTree>` (esperan a que la sesión esté reconciliada, ver "Autenticación
   y roles"); nunca `false` en `canMatch` (el router seguiría buscando y caería en `'**'`).
 
@@ -282,7 +286,7 @@ Escritura (alta/edición/baja simple, y baja/restauración con papelera):
 
 ### Capa de datos
 
-`DbFirestoreService` (`servicios/database/db-firestore.service.ts`) envuelve todas las operaciones de Firestore. Todas las colecciones viven bajo `/Vantruck/datos/`. Colecciones principales: `operaciones`, `clientes`, `choferes`, `proveedores`, `tarifas`, `tarifasEspeciales`, `registrosOpEventuales`, `facturaCliente`, `facturaChofer`, `liquidaciones`, `legajos`, `vendedores`, `comisionesVenta`, `liquidacionesVenta`, `movimientosFin`, `configuracion`, `logs`, `registroLog`, `users`.
+`DbFirestoreService` (`servicios/database/db-firestore.service.ts`) envuelve todas las operaciones de Firestore. Todas las colecciones viven bajo `/Vantruck/datos/`. Colecciones principales: `operaciones`, `clientes`, `choferes`, `proveedores`, `tarifas`, `tarifasEspeciales`, `registrosOpEventuales`, `facturaCliente`, `facturaChofer`, `legajos`, `vendedores`, `comisionesVenta`, `liquidacionesVenta`, `movimientosFin`, `configuracion`, `logs`, `registroLog`, `users`.
 
 ### Sistema de tarifas
 
@@ -437,8 +441,10 @@ reproducibles: `functions/test-emulator.mjs` (sync de claims + reglas
 básicas), `functions/test-gestion-usuarios.mjs` (las 4 funciones de
 gestión, 12 casos cubriendo la matriz de autorización completa),
 `functions/test-asignaciones-rules.mjs` (reglas de la categoría
-`asignaciones`: `user` puede leer/crear/eliminar, `demo` sin ningún
-acceso, `admin` de control — setea el Custom Claim directo vía Admin
+`asignaciones`: `user` puede leer/crear/eliminar, `demo` denegado en
+`leer` y `crear` —`editar` y `eliminar` de `demo` no se prueban, así que
+"sin ningún acceso" no está verificado por este script—, `admin` de
+control — setea el Custom Claim directo vía Admin
 SDK, no necesita el emulador de `functions`, alcanza con
 `--only firestore,auth`), `functions/test-vencimientos-scheduler.mjs`
 (siembra legajos con estado desactualizado, dispara
@@ -461,8 +467,7 @@ cualquier colección nueva debe agregarse a `moduloDe()` explícitamente
 antes de usarse en producción, o queda bloqueada).
 
 Categorías especiales:
-- `legacySoloLectura`: colecciones legado con escritura real confirmada
-  en código vivo pero fuera del alcance de este refactor
+- `legacySoloLectura`: colecciones legado fuera del alcance de este refactor
   (`facturaCliente`/`facturaChofer`/`facturaProveedor`,
   `facturaOpCliente`/.../`facturaOpProveedor`,
   `facOpLiqCliente`/.../`facOpLiqProveedor`,
@@ -473,6 +478,15 @@ Categorías especiales:
   que cualquier escritura remanente falle visiblemente en `demo` y se
   detecte antes de llegar a producción, en vez de heredar permisos
   amplios "por las dudas". Ver deuda abajo.
+  ⚠️ **Corregido el 2026-11-10 (auditoría de la matriz de permisos):** este bucket decía
+  tener "escritura real confirmada en código vivo". No la tiene: en `src/app` no queda
+  ninguna referencia a las 16 colecciones fuera de comentarios y de un título de columna
+  (`liq-gral.component.ts`, `tituloFacOpCliente`, que no es un path). El propósito
+  declarado —que una escritura remanente falle visible en demo— ya no puede cumplirse
+  porque no hay escritura que falle. El bucket se conserva igual: se deploya el día del
+  corte sobre los datos de Vantruck y su revisión va a la skill `migracion-vantruck`. Si
+  se retoma, el barrido tiene que hacerse sobre **cómo se construyen los paths**, no sobre
+  los nombres literales: `DbFirestoreService` los compone.
 - `historicoSoloLectura`: `logs` (log viejo) y `papelera` (Papelera legado),
   histórico congelado sin escritores en código desde que se eliminaron
   `LogService` y la Papelera legado. Lectura para `dev`/`admin`/`user`/`demo`
@@ -485,7 +499,8 @@ Categorías especiales:
   esos documentos, se hace por consola, igual que con las otras colecciones
   legadas. Verificado con `functions/test-historico-rules.mjs` contra el
   emulador (100/100, incluida la regresión de las tres colecciones nuevas).
-  Sin desplegar.
+  Desplegado en demo: las reglas de demo se deployan a medida que se modifican,
+  así que demo corre siempre con el archivo actualizado.
 - `_backup_*` (prefijo dinámico de colecciones de migración): solo
   `dev`, ni lectura para el resto.
 - `/users/{uid}`: excepción de path (no vive bajo `/Vantruck/datos/`).
@@ -669,7 +684,12 @@ Las operaciones que afectan múltiples entidades viven en XxxService, no en el c
 - `eliminarXxxConRelaciones()`: baja en cascada + papelera
 
 ### Tablas
-`TablaGenericaComponent` para todos los listados:
+
+Dos componentes de tabla, no uno. `TablaGenericaComponent` es el de los listados CRUD;
+`TablaListadoComponent` (`shared/tabla/tabla-listado/`, selector `app-tabla-listado`) es el
+camino nuevo, usado por Finanzas y Facturación — ver "Tabla de listado" más abajo.
+
+`TablaGenericaComponent` para los listados CRUD:
 - El componente padre define `columnas: ColumnaTabla[]`, arma `filas: any[]`
   con los datos aplanados y `_objeto` como referencia al original,
   y define `acciones: AccionTabla[]` con handlers
@@ -677,6 +697,37 @@ Las operaciones que afectan múltiples entidades viven en XxxService, no en el c
 - Los botones del toolbar (alta, descarga, visibilidad) quedan fuera de la tabla
 - Celdas: `claseCelda` (badge) y `accionCelda` (enlace que ejecuta una acción, ej. abrir
   la ficha de entidad), los dos opcionales
+
+### Tabla de listado
+
+`TablaListadoComponent` (`shared/tabla/tabla-listado/`, genérico `<T>`), con sus interfaces
+en `interfaces/tabla-listado.ts`. Es el camino nuevo y **el lugar donde hoy vive el gating
+por permiso de las acciones de fila** en Finanzas y Facturación.
+
+- **No filtra:** el caller le pasa `items` ya filtrado y lo recalcula cuando cambian datos o
+  filtros, no con un getter. Ordena internamente por encabezado.
+- `ColumnaListado<T>`: `key`, `label`, `valor(item)`, `orden?` (sin ella la columna no es
+  ordenable), `tipo` (`'texto'` | `'numero'` | `'moneda'`), `align`, `clase` (estática o por
+  fila) y `enlace?(item)`, que muestra la celda como `[routerLink]`.
+- `AccionListado<T>`: `id` (identidad de negocio — es lo que emite `(accion)` y lo que lee el
+  caller), `label`, `clase`, **`permiso?: 'modulo.accion'`** (misma sintaxis que
+  `*appPermiso`), `visible?(item)` y `deshabilitada?(item)`.
+- **El componente inyecta `PermisosService`** y resuelve `permiso` en `tienePermiso`,
+  filtrando a `accionesPermitidas` en `ngOnChanges` cuando cambia el input `acciones`. Sin
+  permiso la acción **no se muestra** (se oculta, no se deshabilita) — mismo criterio que
+  `*appPermiso` y que el getter `visible` de los `app-btn-*`. Sin el campo `permiso`, la
+  acción siempre se muestra.
+- **Permiso y regla de negocio quedan separados:** `permiso` decide si la acción existe;
+  `deshabilitada(item)` y el input `bloqueada` deciden si está habilitada. `ejecutar()`
+  repite el chequeo antes de emitir.
+- A diferencia de los `app-btn-*`, el `(click)` vive en el `<button>` real del componente y
+  el caller escucha el `@Output() accion`: **no tiene el bug del listener en el host** (ver
+  la skill `botones-y-permisos`).
+- Evalúa el permiso una sola vez por cambio de `acciones`, igual que `*appPermiso` en su
+  setter.
+- Consumidores (21 acciones): `finanzas-cuentas`, `cuenta-entidad`, `listado-movimientos`,
+  `borradores-liq`, `facturacion-emitidos`, `facturacion-facturados` y
+  `facturacion-revertidos`.
 
 ### Formularios en modo vista
 Usar `form.disable()` y `formTipoTarifa.disable()` en ngOnInit cuando
@@ -818,7 +869,7 @@ Deuda técnica activa. Actualizar cuando se salda.
 - **`manager` sin lectura en lo que abre** (C1 del eje de sesión) — `manager` pasa `canMatch` en seis rutas (`clientes`, `choferes`, `op`, `proveedores`, `liquidacion`, `legajos`), pero `permitido()` no le da `leer` en ningún módulo salvo `legacySoloLectura`: los nueve listeners del arranque le devuelven `permission-denied` y ve la app vacía. La red de sesión inválida no actúa ahí a propósito (Auth y app de acuerdo = matriz, no sesión). Frente diferido de reglas y matriz. Detalle: skill `botones-y-permisos`.
 - **Un `signOut` que falla se deshace en el próximo F5** (C6 del eje de sesión) — `cerrarSesion` limpia la sesión de la app antes del `signOut`; si `signOut` lanza, Auth queda autenticado y la reconciliación del próximo arranque reconstruye la sesión. Aceptado: `signOut` es local y muy raro que falle. No se construyó una marca de "cierre pedido".
 - **Huecos conocidos en la cobertura del LOGOUT** — un cierre por la red de sesión inválida no escribe LOGOUT (no es un gesto y no hay token con el que escribirlo; el cierre por inactividad sí lo escribe), y el LOGOUT de `cerrarSesion` y el del cierre por inactividad se esperan como mucho 3 s antes de la recarga: sin conexión se pierden (antes, el logout quedaba colgado para siempre). Detalle: skill `subsistema-log`.
-- **Listeners fuera de la red de sesión inválida** — `VendedorService.init` y `AsignacionService.cargarFecha` no pasan por `SesionInvalidaService.vigilar()` (no son del arranque): si su sesión muere, no avisan. Cumplen el invariante de memoria del bloque 2c, no el de la red.
+- **Listeners fuera de la red de sesión inválida** — si su sesión muere, no avisan. Cumplen el invariante de memoria del bloque 2c, no el de la red. Los 11 usos de `vigilar()` cubren sólo el arranque: `ChoferService.init` (×2), `ProveedorService.init`, `ClienteService.init`, `TarifarioService.init` (×3), `CategoriaDocumentacionService.init`, `LegajoService.init`, `NoDisponibilidadService.init` y `OperacionService.cargarOperaciones`. **Quedan afuera 14** (lista completa al 2026-11-10, auditoría de capas de acceso): `VendedorService.init`, `AsignacionService.cargarFecha`, `AsignacionService.getTableroPorFecha`, `VencimientosComponent.ngOnInit`, `RegistroComponent.consultarRegistro`, los cinco de `FinanzasConsultaService` (`observarInformesAbiertos`, `observarMovimientosConSaldo`, `observarMovimientosPorFecha`, `observarCuentaEntidad`, `observarFacturadosPorFechaFactura`), `InformeLiqConsultaService.observarPorEstado`, `InformeLiqService.observarBorradores`, `InformeOpService.observarPorPeriodo` y `observarAnuladosPorPeriodo`, `LiquidacionVentaService.observarPorPeriodos`, `ComisionVentaConsultaService.observarDelMes` y `observarPendientes`, y `ResumenOpConsultaService.observar`. Antes esta entrada nombraba sólo los dos primeros.
 - **Preferencias de UI compartidas entre usuarios del mismo navegador** — las cinco claves de `localStorage` de `tablero-op` e `informe-op-listado` ya no se borran en el login: el cliente o chofer filtrado por un usuario le aparece al siguiente. Arreglo: namespacearlas por uid. Detalle: skill `modulo-operaciones`.
 - **`/carga` sin propósito claro** — sólo espera 3 s y navega a `/op`. Si el valor es visual, la espera debería justificarse; si no, la pantalla sobra. Dato para la decisión: desde el eje de sesión, `index.html` tiene un spinner de arranque, así que el camino del login tiene ese spinner **y** los 3 s de `/carga`. Frente de UX.
 - **La pestaña "Registro" está comentada en `AjustesControlComponent`** — `RegistroComponent` (histórico congelado de `logs`) no tiene entrada en la UI para ningún rol; sólo se llega escribiendo `/ajustes/registro`. Detalle: skill `subsistema-log`; afecta la primera verificación del corte en `migracion-vantruck`.
