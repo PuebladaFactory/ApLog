@@ -12,6 +12,7 @@ type MatrizAcciones = Record<AccionCrud, MatrizRoles>;
 // (permitido()/moduloDe() no lo conocen, /users/{uid} tiene su propio match
 // block) pero vive en la misma matriz por conveniencia — ver puede().
 type ModuloReglas =
+  | 'desarrollo'
   | 'entidades'
   | 'legajos'
   | 'vendedores'
@@ -54,6 +55,17 @@ export class PermisosService {
   // `botones-y-permisos` y la deuda de CLAUDE.md "`manager` sin lectura en lo
   // que abre".
   private readonly matrizBase: Record<ModuloReglas, MatrizAcciones> = {
+    // Herramientas de desarrollo de /migracion (colección generacionesPrueba).
+    // En permitido() esta rama no distingue acción: es `r == 'dev'` para las
+    // cuatro. Se agrega acá porque el sidebar de Migración se gatea con
+    // 'desarrollo.ver' en el bloque 3, en reemplazo de la comparación de rol
+    // cruda que tiene hoy; hasta entonces no la consulta nadie.
+    desarrollo: {
+      leer:     { dev: true, admin: false, manager: false, user: false, demo: false },
+      crear:    { dev: true, admin: false, manager: false, user: false, demo: false },
+      editar:   { dev: true, admin: false, manager: false, user: false, demo: false },
+      eliminar: { dev: true, admin: false, manager: false, user: false, demo: false },
+    },
     entidades: {
       leer:     { dev: true, admin: true, manager: false, user: true,  demo: true },
       crear:    { dev: true, admin: true, manager: false, user: true,  demo: false },
@@ -204,12 +216,30 @@ export class PermisosService {
   };
 
   // ModuloPermiso (Angular) → módulo real de firestore.rules. Varios
-  // ModuloPermiso comparten el mismo módulo real porque sus colecciones no
-  // están separadas en moduloDe() hoy (liquidaciones/facturacion/reportes
-  // comparten 'finanzas' con Finanzas propiamente dicho — confirmado con el
-  // desarrollador en el Bloque 1, incluye resumenOpMensual→'finanzas' para
-  // Reportes). 'usuarios' queda afuera a propósito: es un caso especial que
-  // no usa esta tabla, ver puede().
+  // ModuloPermiso comparten el mismo módulo real cuando sus colecciones
+  // comparten módulo en moduloDe(): facturacion/liquidaciones/finanzas →
+  // 'finanzas', y clientes/choferes/proveedores → 'entidades'. 'usuarios'
+  // queda afuera a propósito: es un caso especial que no usa esta tabla, ver
+  // puede().
+  //
+  // ⚠️ 'reportes' apuntaba a 'finanzas' con la justificación de que sus
+  // colecciones no tenían módulo propio ("incluye resumenOpMensual→'finanzas'").
+  // Dejó de ser cierto con el frente Reportes: las pantallas de Reportes leen
+  // resumenesOp, que moduloDe() mapea a 'resumenes'. En 'leer' los dos módulos
+  // dan los mismos roles (dev/admin/demo), así que el mapeo equivocado no tenía
+  // efecto visible — pero en 'crear' y 'editar' difieren ('resumenes' da 'user',
+  // 'finanzas' no). Corregido acá.
+  //
+  // ⚠️ Compartir módulo es válido sólo mientras la pantalla lea de verdad las
+  // colecciones del módulo compartido, y hay tres casos donde el módulo que se
+  // gatea no es el que se lee: 'liquidaciones' gatea 'finanzas' pero
+  // informe-op-listado escribe informesOp; 'vendedores' gatea 'vendedores' pero
+  // el tablero lee comisionesVenta → 'comisiones'; 'operaciones' gatea
+  // 'operaciones' pero el tablero de asignaciones lee asignaciones (de ahí el
+  // override de limpiarTablero). Los tres coinciden en valor con el módulo
+  // correcto para las acciones que se consultan hoy, así que no hay efecto —
+  // pero es coincidencia, no diseño. El test del bloque 6 del frente lo
+  // verifica por ruta: docs/disenos/reglas-y-matriz-de-permisos.md, 4.5.
   private readonly mapaModuloReglas: Record<Exclude<ModuloPermiso, 'usuarios'>, ModuloReglas> = {
     clientes: 'entidades',
     choferes: 'entidades',
@@ -220,7 +250,9 @@ export class PermisosService {
     facturacion: 'finanzas',
     liquidaciones: 'finanzas',
     finanzas: 'finanzas',
-    reportes: 'finanzas',
+    reportes: 'resumenes',
+    tarifas: 'tarifas',
+    desarrollo: 'desarrollo',
     configuracion: 'configuracion',
   };
 

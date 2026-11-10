@@ -9,6 +9,8 @@ export type ModuloPermiso =
   | 'facturacion'
   | 'finanzas'
   | 'reportes'
+  | 'tarifas'         // sidebar de Tarifas y los 7 componentes del módulo
+  | 'desarrollo'      // sidebar de Migración (hoy una comparación de rol cruda)
   | 'configuracion'   // Ajustes → Datos de la empresa (F8b)
   | 'usuarios';
 
