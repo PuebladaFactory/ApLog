@@ -1,9 +1,33 @@
 ---
 name: botones-y-permisos
-description: Permisos de UI de ApLog — PermisosService, matrizBase por rol (dev/admin/manager/user/demo) y por acción, overrides, la directiva *appPermiso, los botones app-btn-* y AccionGenericaComponent, y su relación con firestore.rules. Leer antes de trabajar sobre botones de acción, visibilidad u ocultamiento por rol, esRol o los permisos de cualquier módulo.
+description: Permisos de UI de ApLog — PermisosService, matrizBase por rol (dev/admin/manager/user/demo) y por acción, overrides, la directiva *appPermiso, los botones app-btn-*, el campo permiso de TablaListadoComponent, y su relación con firestore.rules. Leer antes de trabajar sobre botones de acción, visibilidad u ocultamiento por rol, esRol o los permisos de cualquier módulo.
 ---
 
-### Frente Botones y Permisos (en progreso)
+## ⚠️ Leer esto antes que los bloques (nota del 2026-11-10)
+
+**Los bloques 1 a 7 son historia de decisiones, no estado actual.** Los bloques 3, 5 y 6
+describen componentes que frentes posteriores retiraron. Al 2026-11-10 **no existen** en
+`src/app`:
+
+- `AccionGenericaComponent` (`app-accion-generica`) — todo el Bloque 3;
+- `InformesTablaComponent` e `InformesAccionesCellComponent` — todo el Bloque 5;
+- los consumidores `proforma`, `liquidaciones-op`, `facturacion-listado`,
+  `facturacion-historico` y `nueva-facturacion/modal-detalle` — Bloque 6, sub-bloques 2, 3 y 4;
+- `AccionesCellRendererComponent` (retirado con LZ3) y la directiva `*appRole` (con LZ5b).
+
+En `shared/botones/` quedan sólo `btn-agregar`, `btn-editar`, `btn-eliminar` y `btn-leer`.
+Lo que hoy cumple el papel del Bloque 3 y del Bloque 5 es **`TablaListadoComponent`**
+(`shared/tabla/tabla-listado/`), con el campo `permiso: 'modulo.accion'` de
+`interfaces/tabla-listado.ts` — ver "Estado vigente" al final de este archivo y la sección
+"Tabla de listado" de CLAUDE.md.
+
+Las decisiones de los bloques siguen valiendo: ocultar en vez de deshabilitar, permiso y
+regla de negocio por fila separados, y `matrizBase` con granularidad por acción. Lo que no
+vale son los nombres de los componentes y la lista de consumidores. **Cualquier premisa
+tomada de los bloques sobre qué existe hoy hay que verificarla en el código antes de
+construir encima.**
+
+### Frente Botones y Permisos (cerrado)
 
 Continuación del Refactor de Roles y Seguridad, independiente del frente de Operaciones
 (que ya cerró el suyo). Ataca dos problemas relevados por auditoría de solo lectura:
@@ -57,8 +81,14 @@ fue tocado ni reemplazado.
 - **`PermisosService`** (`servicios/permisos/`, nuevo): `matrizBase` traducida
   literalmente de la función `permitido()` de `firestore.rules` (no inventada).
   `liquidaciones`/`facturacion`/`reportes` espejan `finanzas` 1:1 a propósito (confirmado
-  con el desarrollador): sus colecciones reales no tienen módulo propio en `moduloDe()`
-  de `firestore.rules` hoy, comparten `'finanzas'`. `overrides` (por `'modulo.accion'`)
+  con el desarrollador): sus colecciones reales no tenían módulo propio en `moduloDe()`
+  cuando se creó la matriz, y comparten `'finanzas'`.
+  ⚠️ **Corregido el 2026-11-10: para `reportes` ya no es cierto.** Desde el frente Reportes
+  las pantallas de Reportes leen `resumenesOp`, que `moduloDe()` mapea a `'resumenes'`, no a
+  `'finanzas'`. En `leer` los dos módulos dan los mismos roles (dev/admin/demo), así que hoy
+  no hay efecto visible, pero en `crear` y `editar` difieren (`resumenes` da `user`,
+  `finanzas` no). El mapeo apunta a un módulo que la pantalla no lee; se corrige en el frente
+  de reglas y matriz (`docs/disenos/reglas-y-matriz-de-permisos.md`, bloque 1). `overrides` (por `'modulo.accion'`)
   queda vacío en este bloque — se completa caso a caso en frentes futuros. Método
   `puede(modulo, accion?)`: sin sesión → `false`; override definido para el rol → gana;
   si no, se consulta `matrizBase`.
@@ -205,8 +235,10 @@ requirieron ningún cambio):
   (excluido con `Exclude<>`, error de compilación si algo intenta usarlo).
 - `mapaAccionCrud: Record<AccionPermiso, AccionCrud>`: `ver`/`vehiculos`/`verFactura`/
   `reimprimir` → `leer`; `agregar` → `crear`; `editar`/`vincularFactura`/`anular` →
-  `editar` (anular un `InformeLiq` es una actualización de estado, no un delete — ver
-  `LiquidacionService.anularLiquidacion`); `eliminar` → `eliminar`. Toda `AccionPermiso`
+  `editar` (anular un `InformeLiq` es una actualización de estado, no un delete; el método
+  que se citaba acá, `LiquidacionService.anularLiquidacion`, se retiró con el frente Lazy
+  loading + fechas — la anulación vive hoy en `InformeLiqService`, skill
+  `modulo-facturacion`); `eliminar` → `eliminar`. Toda `AccionPermiso`
   actual mapea sin ambigüedad; una `AccionPermiso` nueva que no encaje claramente queda
   con TODO explícito, no se asume.
 - **`usuarios` (Opción A, decisión explícita):** no pasa por `permitido()`/`moduloDe()` —
@@ -471,10 +503,13 @@ barrido de `*appRole`/`esRol()`/`ngClass` sueltos del audit original.
   listado. Decisión ya tomada: los botones `'Descargar X'`/`'X Visibles'` de estos mismos
   4 archivos quedan **sin tocar**, incluido el `ngClass` de `demo` en `'Visibles'` —
   fuera del alcance de este frente.
-- `vendedores-listado` (único de los 4 con layout de cards, no `TablaGenericaComponent`
-  — por eso no recibió el tratamiento del Bloque 4): `Editar`/`Eliminar` de cada card
-  conectados a `modulo="vendedores"` `accion="editar"`/`"eliminar"`, `ngClass` de
-  `esRol('demo')` quitado.
+- `vendedores-listado`: en su momento era el único de los 4 con layout de cards, no
+  `TablaGenericaComponent` — por eso no recibió el tratamiento del Bloque 4 —, y
+  `Editar`/`Eliminar` de cada card se conectaron a `modulo="vendedores"`
+  `accion="editar"`/`"eliminar"`, con el `ngClass` de `esRol('demo')` quitado.
+  ⚠️ **Corregido el 2026-11-10: ya no tiene cards.** `vendedores-listado.component.html`
+  usa `<app-tabla-generica … modulo="vendedores">`, así que el gating de fila sale hoy de
+  `TablaAccionesComponent`, igual que en los otros tres listados CRUD.
 - `sidebar.component.html`: los 4 `@if (usuarioSesion.esRol(...))` reemplazados por
   `*appPermiso` envolviendo el `<li>` completo (directiva estructural, no `@if`):
   `Configuración`→`'usuarios.ver'`, `Facturación`→`'facturacion.ver'`,
@@ -485,10 +520,16 @@ barrido de `*appRole`/`esRol()`/`ngClass` sueltos del audit original.
   (`esRol('dev')` a mano, sin relación con la matriz real); migrado fiel a
   `matrizBase.finanzas.leer`, `admin` y `demo` GANAN visibilidad del link — no es un bug,
   es la corrección de una restricción que nunca reflejó la matriz real de permisos. El
-  resto de los `<li>` del sidebar (clientes, choferes, proveedores, operaciones,
-  liquidación, legajos, vendedores, migración) quedan sin gating — protegidos por
-  `RoleGuard` a nivel de ruta, fuera de alcance. `usuarioSesion.getUsuarioActual()`
-  (nombre de usuario) y "Cerrar Sesión" no se tocaron.
+  resto de los `<li>` del sidebar quedan sin gating — protegidos por `RoleGuard` a nivel de
+  ruta, fuera de alcance. `usuarioSesion.getUsuarioActual()` (nombre de usuario) y "Cerrar
+  Sesión" no se tocaron.
+  ⚠️ **Corregido el 2026-11-10:** la lista original de "sin gating" decía "clientes,
+  choferes, proveedores, operaciones, liquidación, legajos, vendedores, migración", con dos
+  errores. **Migración sí tiene gate:** `@if ($usuario.role === 'dev')` en
+  `sidebar.component.html`, una comparación de rol cruda, sin `esRol` ni `PermisosService`.
+  Y **Tarifas falta en la lista**, y tampoco tiene gate. Los dos entran al frente de reglas y
+  matriz (`docs/disenos/reglas-y-matriz-de-permisos.md`), que gatea los 13 `<li>` con
+  `*appPermiso`.
 - `nueva-facturacion/modal-detalle.component.html`: único `*appRole` del archivo
   (`app-btn-eliminar name="Eliminar"`, dispara `bajaOp`) →
   `*appPermiso="'facturacion.eliminar'"`, quitando `'manager'`. Las columnas
@@ -565,21 +606,27 @@ operativas de punta a punta, con consumidores reales conectados:
    botones crudos; inputs `modulo`/`accion` directo en los 4 `app-btn-*` para el caso más
    común. Ambos consumen `PermisosService.puede(modulo, accion?)` — misma firma pública
    desde el Bloque 1, nunca modificada pese a que la implementación interna sí cambió.
-3. **Presentación** — los 4 `app-btn-*` (catálogo semántico cerrado por `name`) +
-   `AccionGenericaComponent` (botones crudos con texto/variante/ícono libres). Los 5
-   comparten el mismo bug estructural encontrado y corregido en el barrido
+3. **Presentación** — al cerrar el frente: los 4 `app-btn-*` (catálogo semántico cerrado
+   por `name`) + `AccionGenericaComponent` (botones crudos con texto/variante/ícono
+   libres). Los 5 compartían el mismo bug estructural encontrado y corregido en el barrido
    (`@HostBinding('style.pointer-events')`: el `(click)` vive en el host en los ~95 call
    sites, no en el `<button>` interno, así que `disabled` por sí solo no bloqueaba clics
    en el margen del botón — corregido de raíz para los 5, sin tocar ningún caller).
-4. **Consumidores** — `TablaAccionesComponent`/`TablaGenericaComponent`,
-   `InformesAccionesCellComponent`/`InformesTablaComponent` (con el mismo campo
-   `accionPermiso?` resolviendo los casos donde el id de negocio no coincide con el
-   `AccionPermiso` real, ej. `excel`/`pdf`→`reimprimir`), y ~15 componentes migrados
+4. **Consumidores** — al cerrar el frente: `TablaAccionesComponent`/
+   `TablaGenericaComponent`, `InformesAccionesCellComponent`/`InformesTablaComponent` (con
+   el campo `accionPermiso?` resolviendo los casos donde el id de negocio no coincide con
+   el `AccionPermiso` real, ej. `excel`/`pdf`→`reimprimir`), y ~15 componentes migrados
    directamente (`tablero-op`, `proforma`, `liquidaciones-op`, los 4 listados CRUD +
    `vendedores-listado`, `sidebar`, `nueva-facturacion/modal-detalle`,
    `tablero-asignaciones`) — todos con el `*appRole`/`esRol()`/`ngClass` suelto que tenían
    reemplazado por `modulo`/`accion` real, y su efecto por rol verificado contra la
    matriz en cada bloque, no asumido.
+
+⚠️ **Las capas 3 y 4 describen el cierre del frente, no el estado de hoy
+(nota del 2026-11-10).** `AccionGenericaComponent`, `InformesTablaComponent`,
+`InformesAccionesCellComponent` y los consumidores `proforma`, `liquidaciones-op`,
+`facturacion-listado`, `facturacion-historico` y `nueva-facturacion/modal-detalle` fueron
+retirados por frentes posteriores. Ver "Estado vigente" al final.
 
 **Permiso de no disponibilidad (posterior al cierre):** `AccionPermiso` `'noDisponibilidad'`,
 mapeada a `editar` en `mapaAccionCrud` (sin override): dev/admin/user sí, demo/manager no.
@@ -588,11 +635,12 @@ acciones de alta, edición, cierre y anulación del modal. Propia y no `operacio
 para que cambiar quién administra no disponibilidades no arrastre a la edición de
 operaciones. Detalle: skill `modulo-operaciones`, "No disponibilidad".
 
-**Estado final:** único `*appRole` restante en toda la app al cerrar el frente: los 6 sitios
+**Estado al cerrar el frente:** único `*appRole` restante en toda la app: los 6 sitios
 de Tarifas (cliente/choferes/proveedores × gral/especial), excluidos a propósito — frente de
-Tarifas aparte. Hoy la directiva `*appRole` ya no existe (ver la nota del Bloque 6). `AccionesCellRendererComponent` (wrapper de AG Grid sin caller activo,
-detectado en la auditoría original) queda sin consumidor real — no se le asignó uno en
-este frente porque no lo necesitaba, no es deuda nueva. Pendiente real, fuera de este
+Tarifas aparte. Hoy ni la directiva `*appRole` ni `AccionesCellRendererComponent` existen
+(retirados con LZ5b y LZ3). `AccionesCellRendererComponent` (wrapper de AG Grid sin caller activo,
+detectado en la auditoría original) quedó sin consumidor real — no se le asignó uno en
+este frente porque no lo necesitaba, no era deuda nueva. Pendiente real, fuera de este
 frente: conectar `modulo`/`accion` en el resto de los ~90 sitios de uso directo de los 4
 `app-btn-*` que la auditoría relevó pero que no tenían ningún `*appRole`/`esRol()`/`ngClass`
 de por medio (no eran un problema de seguridad/UX a cerrar, quedan para cuando se toque
@@ -657,13 +705,21 @@ más `PapeleraComponent.puedeRestaurar` e `InformeOpAnuladosComponent.puedeVerPa
 
 `PermisosService.matrizBase.papelera` tiene en `false` tres permisos que `firestore.rules`
 (rama `papelera` de `permitido()`) sí da: `admin.editar`, `user.leer` y `demo.leer`. Es UI
-desactualizada contra una regla que permite **más**, no un agujero: el efecto posible es una
-acción oculta o deshabilitada que la regla dejaría hacer (clic perdido), nunca una acción
-mostrada que la regla rechace. `matrizBase.logs` sí coincide con las reglas. Al corregirlo,
-tener en cuenta que el bucket `papelera` cubre `papeleraEventos` y `objetosEliminados` (la
-colección vieja `papelera` ya no tiene pantalla).
+desactualizada contra una regla que permite **más**, no un agujero. `matrizBase.logs` sí
+coincide con las reglas. Al corregirlo, tener en cuenta que el bucket `papelera` cubre
+`papeleraEventos` y `objetosEliminados` (la colección vieja `papelera` ya no tiene pantalla).
 
-Va al **frente diferido de reglas y matriz**, junto con las dos deudas siguientes.
+⚠️ **Corregido el 2026-11-10: el efecto que esta entrada describía no puede ocurrir.** Decía
+que el efecto posible era "una acción oculta o deshabilitada que la regla dejaría hacer (clic
+perdido)". No hay clic perdido ni nada: `puede()` llega a `matrizBase` sólo a través de
+`mapaModuloReglas`, y **ningún `ModuloPermiso` mapea a `'papelera'`**, así que las tres celdas
+son inalcanzables desde la UI. Es un caso particular de algo más grande que midió la auditoría
+de la matriz: 10 de los 17 módulos de `matrizBase` (200 de 340 booleanos) no se consultan
+nunca.
+
+Va al **frente diferido de reglas y matriz**
+(`docs/disenos/reglas-y-matriz-de-permisos.md`), que lo resuelve por eliminación: el módulo
+`papelera` sale de `matrizBase` en la poda.
 
 ## Deuda abierta — criterio de acceso de `demo` al módulo Ajustes (frente diferido de reglas y matriz)
 
@@ -702,13 +758,84 @@ deja pasar a `manager` en seis rutas de `raiz-routing` (`clientes`, `choferes`, 
 esos módulos (sólo en `legacySoloLectura`). Los nueve listeners que abre
 `HomeComponent.ngOnInit` le devuelven `permission-denied` y ve la app vacía.
 
+⚠️ **Precisión del 2026-11-10: "nueve" vale sólo para `manager`.** `HomeComponent.ngOnInit`
+abre nueve listeners siempre y un décimo (`noDisponibilidades`) bajo
+`PermisosService.puede('operaciones')`. `manager` no pasa ese chequeo, así que para él son
+nueve; `dev`/`admin`/`user`/`demo` abren **diez**. El número se citó fuera de contexto como
+si fuera el total del arranque.
+
 La red de sesión inválida (`SesionInvalidaService`) **no actúa ahí, a propósito**: un
 `permission-denied` con Firebase Auth y la sesión de la app de acuerdo es la matriz de
 reglas contra el gating de la UI, no una sesión falsa. Con el criterio literal ("todo
 `permission-denied` cierra la sesión") un `manager` quedaba deslogueado en cada login.
 
 Salidas para el frente de reglas y matriz: sacarle a `manager` esas rutas, darle lectura en
-las reglas, o que `HomeComponent` no abra listeners que el rol no puede leer.
+las reglas, retirar el rol hasta que exista un caso de uso, o que `HomeComponent` no abra
+listeners que el rol no puede leer.
+
+**Decidido el 2026-11-10** en `docs/disenos/reglas-y-matriz-de-permisos.md` (2.1 y 2.2): se
+le retiran las rutas y el rol queda declarado sin puertas ni permisos, y por separado el
+arranque deja de abrir listeners que el rol no puede leer. Retirar `RolUsuario.manager`
+queda disponible para después del corte.
+
+## Estado vigente (relevado el 2026-11-10)
+
+Lo que existe hoy, verificado por barrido en
+`docs/auditorias/capas-de-acceso-por-ruta.md`. Esta sección manda sobre los bloques de
+arriba cuando digan otra cosa.
+
+**Capa de dominio.** `PermisosService` (`servicios/permisos/`) sin cambios de firma:
+`puede(modulo, accion?)`, `matrizBase` por acción, `mapaModuloReglas` (11 entradas a 6
+módulos de reglas), `mapaAccionCrud` (18 entradas) y `overrides` con **6 claves y 10 valores
+por rol** — `operaciones.descargarTablero`, `operaciones.limpiarTablero`,
+`operaciones.descargarAsignaciones` y `descargarListado` de clientes/choferes/proveedores.
+Nueve de los diez restringen; el único que amplía es `operaciones.limpiarTablero → user`.
+
+**Capa de presentación — tres mecanismos, no dos:**
+
+1. **Los 4 `app-btn-*`** (`shared/botones/`: agregar, editar, eliminar, leer), con inputs
+   `modulo?`/`accion?` y el getter `visible`. Mantienen el fix de
+   `@HostBinding('style.pointer-events')`.
+2. **`*appPermiso`** (`shared/directives/permiso.directive.ts`), **35 usos** en templates:
+   sidebar (4), botones Descargar de los tres listados CRUD, Finanzas (cuenta-entidad,
+   cuentas, detalle-movimiento), Legajos (cargar-documentos, gestión de categorías,
+   tablero), `informe-op-listado`, y Operaciones (carga-asignación,
+   modal-no-disponibilidad, tablero-asignaciones, tablero-op).
+3. **`TablaListadoComponent`** (`shared/tabla/tabla-listado/`) — **lo que reemplazó al
+   Bloque 3 y al Bloque 5.** Las acciones de fila se declaran como `AccionListado<T>`
+   (`interfaces/tabla-listado.ts`) con el campo **`permiso?: 'modulo.accion'`**, misma
+   sintaxis que `*appPermiso`. El componente inyecta `PermisosService`, resuelve en
+   `tienePermiso` y filtra a `accionesPermitidas` en `ngOnChanges`: sin permiso la acción se
+   **oculta**, no se deshabilita. `visible?(item)` y `deshabilitada?(item)` siguen siendo la
+   regla de negocio por fila, ortogonal al permiso, y `ejecutar()` repite el chequeo antes
+   de emitir `(accion)`. A diferencia de los `app-btn-*`, el `(click)` vive en el `<button>`
+   real del componente y el caller escucha un `@Output()`, así que **no tiene el bug del
+   listener en el host**. Consumidores (21 acciones): `finanzas-cuentas`, `cuenta-entidad`,
+   `listado-movimientos`, `borradores-liq`, `facturacion-emitidos`,
+   `facturacion-facturados`, `facturacion-revertidos`.
+
+**Wrappers de tabla.** `TablaAccionesComponent`/`TablaGenericaComponent` siguen reenviando
+`modulo`: lo usan los tres listados CRUD, `gestion-usuarios`, `vendedores-listado` (que ya
+no tiene cards), `vencimientos`, `papelera` y `registro-log` — los dos últimos con
+`[modulo]="moduloDe(x)"` por fila.
+
+**`.puede()` directo en TS:** `DatosEmpresaComponent`, `HomeComponent.ngOnInit`,
+`GestionCategoriasDocumentacionComponent`, `TableroActividadComponent`,
+`VendedorAltaComponent`, `VendedorHistorialComponent`, `FichaEntidadComponent` e
+`InformeLiqNuevoDetalleComponent`.
+
+**Lo que todavía no pasa por `PermisosService`** — entra al frente de reglas y matriz:
+
+- **7 llamadas a `esRol()` que gatean UI** (la lista de la deuda de arriba está completa
+  *para ese símbolo*). Hay 2 más legítimas: el log que excluye a `dev` y la lectura de
+  `/users`.
+- **8 comparaciones de rol directas, sin `esRol` ni `PermisosService`:** el `<li>` de
+  Migración en el sidebar (`$usuario.role === 'dev'`) y 7 componentes de Tarifas
+  (`['dev','admin'].includes(usuario.role)` y `esDev`). **El barrido del símbolo `esRol(`
+  no las encuentra:** la clase es más amplia que el símbolo.
+- **5 `[ngClass]` con rol** (`pointer-events: none`): los tres botones "Visibles", el dropup
+  de `tablero-legajos` y la pestaña de `cargarDoc` — más el `svg` de restaurar de
+  `papelera`, donde `puedeRestaurar` mezcla regla de negocio y rol.
 
 ## Nota — `PermisoDirective` y la sesión reconciliada
 
