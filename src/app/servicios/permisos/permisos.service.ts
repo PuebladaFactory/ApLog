@@ -6,28 +6,57 @@ import { ModuloPermiso, AccionPermiso, AccionCrud } from 'src/app/interfaces/per
 type MatrizRoles = Record<RolUsuario, boolean>;
 type MatrizAcciones = Record<AccionCrud, MatrizRoles>;
 
-// Nombres de módulo reales de firestore.rules (función moduloDe()), no los
-// ModuloPermiso de Angular — varios ModuloPermiso comparten el mismo módulo
-// real (ver mapaModuloReglas). 'usuarios' no es un módulo de las reglas
-// (permitido()/moduloDe() no lo conocen, /users/{uid} tiene su propio match
-// block) pero vive en la misma matriz por conveniencia — ver puede().
+// Módulos de permitido() (firestore.rules) que la UI consulta, más 'usuarios'.
+// No son los ModuloPermiso de Angular: varios ModuloPermiso comparten el mismo
+// módulo de las reglas (ver mapaModuloReglas). 'usuarios' no es un módulo de
+// las reglas (permitido()/moduloDe() no lo conocen, /users/{uid} tiene su
+// propio match block) pero vive en la misma matriz por conveniencia — ver
+// puede(). Cada módulo de esta lista es alcanzable desde algún ModuloPermiso;
+// los de permitido() que faltan están ausentes a propósito, ver abajo.
+//
+// Módulos de permitido() que la UI deliberadamente NO consulta: ningún
+// ModuloPermiso los alcanza (quitados de matrizBase en el bloque 2 del frente
+// de reglas y matriz, docs/disenos/reglas-y-matriz-de-permisos.md, 4.1). No
+// son omisiones: son celdas que las reglas necesitan para escrituras que
+// ninguna pantalla ofrece como gesto propio. Su verificación vive en los
+// test-*-rules.mjs de functions/, no en matriz-esperada.json.
+//   - asignaciones: tablero de asignaciones (borrador). dev/admin/user con las
+//     4 acciones, sin distinción, porque 'user' arma, guarda y descarta el
+//     borrador; se separó de 'operaciones' por un bug real (limpiar un
+//     borrador fallaba para 'user'). La UI lo gatea con 'operaciones' más los
+//     overrides de limpiarTablero y descargarAsignaciones.
+//   - informesOp: el cierre de una operación, que hace 'user', lee el par de
+//     InformeOp (anti-duplicado) y lo crea. Editar y eliminar, sólo dev/admin.
+//   - comisiones: comisionesVenta. El cierre ('user') las escribe con
+//     set+merge (crear si no existe, editar si existe); 'user' no las lee.
+//   - tarifasHistorial: historial del tarifario viejo, append-only (nadie
+//     edita ni elimina, dev incluido).
+//   - legacySoloLectura: colecciones legado y código muerto; lectura para
+//     cualquier autenticado (manager incluido), escritura para nadie.
+//   - historicoSoloLectura: logs y papelera viejos, histórico congelado; la
+//     pantalla que lo lee (RegistroComponent) se gatea por ruta.
+//   - numeradores: lo escribe NumeradorService al asignar ids secuenciales
+//     dentro de un alta; sin gesto propio en la UI.
+//   - logs: registroLog. Toda mutación escribe su entrada en el mismo batch
+//     (por eso 'user' crea); la pantalla de lectura se gatea por ruta.
+//   - papelera: papeleraEventos/objetosEliminados. La baja ('user' da de baja
+//     operaciones abiertas) crea el evento; la pantalla se gatea por ruta.
+//   - vencimientos: la escribe sólo la Cloud Function
+//     verificarVencimientosDocumentacion; la UI sólo la lee.
+//
+// El cierre de una operación escribe informesOp, comisiones, resumenes y
+// registroLog: por eso 'user' tiene escritura en esos cuatro módulos de las
+// reglas aunque ninguna pantalla le ofrezca escribirlos directamente.
+// 'resumenes' sí está en esta lista porque lo alcanza 'reportes'.
 type ModuloReglas =
   | 'desarrollo'
   | 'entidades'
   | 'legajos'
   | 'vendedores'
   | 'operaciones'
-  | 'asignaciones'
   | 'tarifas'
-  | 'tarifasHistorial'
   | 'finanzas'
-  | 'informesOp'
   | 'resumenes'
-  | 'comisiones'
-  | 'legacySoloLectura'
-  | 'numeradores'
-  | 'logs'
-  | 'papelera'
   | 'configuracion'
   | 'usuarios';
 
@@ -38,22 +67,26 @@ export class PermisosService {
 
   constructor(private usuarioSesion: UsuarioSesionService) {}
 
-  // Transcripción LITERAL de la función permitido() de firestore.rules —
-  // no reinterpretada. Granularidad por acción (leer/crear/editar/eliminar),
-  // no por módulo: la versión anterior de esta matriz colapsaba las 4
-  // acciones a un solo booleano por [modulo][rol], lo que hacía que 'user'
-  // y 'demo' heredaran 'eliminar' en clientes/choferes/proveedores por el
-  // solo hecho de tener 'leer' en el módulo — el mismo bug que este frente
-  // busca cerrar, confirmado por pruebas manuales post-Bloque 4. Corregido
-  // acá: cada acción se consulta por separado. Cualquier cambio a esta
-  // matriz debe reflejar un cambio real en firestore.rules, no al revés.
+  // La porción de permitido() de firestore.rules que la UI consulta: un
+  // módulo por cada ModuloReglas, con granularidad por acción (leer/crear/
+  // editar/eliminar) — la versión anterior colapsaba las 4 acciones a un solo
+  // booleano por [modulo][rol], y 'user'/'demo' heredaban 'eliminar' en
+  // clientes/choferes/proveedores por tener 'leer'. Dos excepciones, las dos
+  // deliberadas: 'usuarios', que no está en permitido() (regla propia en
+  // /users/{uid}, ver su entrada), y `overrides`, los desvíos puntuales que el
+  // negocio pide sobre esta matriz sin cambiar las reglas.
   //
-  // ⚠️ 'manager' no aparece por nombre en ningún módulo de permitido(), pero
-  // eso NO quiere decir que no lea nada: permitido() da 'leer' sobre
+  // Duplica a mano las reglas, a propósito. La expectativa mantenida a mano es
+  // matriz-esperada.json: permisos.service.spec.ts verifica esta tabla contra
+  // ella y functions/test-matriz-permisos-rules.mjs verifica las reglas contra
+  // ella. Un cambio acá sin el mismo cambio en las reglas (o al revés) rompe
+  // uno de los dos.
+  //
+  // ⚠️ 'manager' está en false en todas las celdas, pero eso NO quiere decir
+  // que no lea nada en Firestore: permitido() da 'leer' sobre
   // 'legacySoloLectura' a cualquier rol autenticado, sin condición de rol, y
-  // ahí 'manager' sí lee. En los demás módulos, sin acceso. Ver la skill
-  // `botones-y-permisos` y la deuda de CLAUDE.md "`manager` sin lectura en lo
-  // que abre".
+  // ese módulo no está acá porque la UI no lo consulta. Ver la skill
+  // `botones-y-permisos`.
   private readonly matrizBase: Record<ModuloReglas, MatrizAcciones> = {
     // Herramientas de desarrollo de /migracion (colección generacionesPrueba).
     // En permitido() esta rama no distingue acción: es `r == 'dev'` para las
@@ -99,50 +132,15 @@ export class PermisosService {
       editar:   { dev: true, admin: true, manager: false, user: true,  demo: false },
       eliminar: { dev: true, admin: true, manager: false, user: false, demo: false },
     },
-    // Tablero de asignaciones (borrador): trabajo descartable/editable por
-    // naturaleza, distinto perfil de riesgo que la Operacion real ya
-    // persistida — por eso NO hereda las restricciones de 'operaciones'
-    // (fix de bug real: 'user' recibía "Missing or insufficient
-    // permissions" al limpiar un borrador, porque moduloDe() mapeaba
-    // 'asignaciones' al mismo módulo que 'operaciones', heredando su
-    // eliminar=false para 'user'). Sin distinción por acción en las
-    // reglas reales: dev/admin/user tienen las 4, demo/manager ninguna.
-    // Ningún ModuloPermiso de Angular consume esta entrada todavía (el
-    // Bloque 7 gatea tablero-asignaciones con modulo="operaciones" +
-    // overrides puntuales) — se agrega igual por fidelidad de
-    // transcripción con firestore.rules, para no dejar una categoría
-    // real de las reglas sin representar acá (causa raíz de este bug).
-    asignaciones: {
-      leer:     { dev: true, admin: true, manager: false, user: true, demo: false },
-      crear:    { dev: true, admin: true, manager: false, user: true, demo: false },
-      editar:   { dev: true, admin: true, manager: false, user: true, demo: false },
-      eliminar: { dev: true, admin: true, manager: false, user: true, demo: false },
-    },
     tarifas: {
       leer:     { dev: true, admin: true, manager: false, user: true,  demo: true },
       crear:    { dev: true, admin: true, manager: false, user: false, demo: false },
       editar:   { dev: true, admin: true, manager: false, user: false, demo: false },
       eliminar: { dev: true, admin: true, manager: false, user: false, demo: false },
     },
-    tarifasHistorial: {
-      // Append-only en las reglas reales: ni dev ni admin tienen editar/eliminar.
-      leer:     { dev: true,  admin: true,  manager: false, user: true,  demo: true },
-      crear:    { dev: true,  admin: true,  manager: false, user: false, demo: false },
-      editar:   { dev: false, admin: false, manager: false, user: false, demo: false },
-      eliminar: { dev: false, admin: false, manager: false, user: false, demo: false },
-    },
     finanzas: {
       leer:     { dev: true, admin: true, manager: false, user: false, demo: true },
       crear:    { dev: true, admin: true, manager: false, user: false, demo: false },
-      editar:   { dev: true, admin: true, manager: false, user: false, demo: false },
-      eliminar: { dev: true, admin: true, manager: false, user: false, demo: false },
-    },
-    // Frente Reportes (R15): 'user' cierra operaciones → lee (anti-duplicado)
-    // y crea el par de InformeOp. Editar/eliminar siguen siendo dev/admin.
-    // Sin consumidor desde ModuloPermiso todavía — fidelidad con las reglas.
-    informesOp: {
-      leer:     { dev: true, admin: true, manager: false, user: true,  demo: true },
-      crear:    { dev: true, admin: true, manager: false, user: true,  demo: false },
       editar:   { dev: true, admin: true, manager: false, user: false, demo: false },
       eliminar: { dev: true, admin: true, manager: false, user: false, demo: false },
     },
@@ -153,41 +151,6 @@ export class PermisosService {
       crear:    { dev: true, admin: true, manager: false, user: true,  demo: false },
       editar:   { dev: true, admin: true, manager: false, user: true,  demo: false },
       eliminar: { dev: true, admin: true, manager: false, user: false, demo: false },
-    },
-    // Comisiones de venta (comisionesVenta, Frente Vendedores): 'user' las
-    // escribe al cerrar (set+merge = crear si no existe, editar si existe),
-    // no las lee. Sin consumidor desde ModuloPermiso — fidelidad con las reglas.
-    comisiones: {
-      leer:     { dev: true, admin: true, manager: false, user: false, demo: true },
-      crear:    { dev: true, admin: true, manager: false, user: true,  demo: false },
-      editar:   { dev: true, admin: true, manager: false, user: true,  demo: false },
-      eliminar: { dev: true, admin: true, manager: false, user: false, demo: false },
-    },
-    legacySoloLectura: {
-      // Sin chequeo de rol en las reglas para 'leer' (cualquier autenticado);
-      // ni siquiera dev puede escribir — ver CLAUDE.md → "Security Rules".
-      leer:     { dev: true,  admin: true,  manager: true,  user: true,  demo: true },
-      crear:    { dev: false, admin: false, manager: false, user: false, demo: false },
-      editar:   { dev: false, admin: false, manager: false, user: false, demo: false },
-      eliminar: { dev: false, admin: false, manager: false, user: false, demo: false },
-    },
-    numeradores: {
-      leer:     { dev: true, admin: true, manager: false, user: true,  demo: false },
-      crear:    { dev: true, admin: true, manager: false, user: true,  demo: false },
-      editar:   { dev: true, admin: true, manager: false, user: true,  demo: false },
-      eliminar: { dev: false, admin: false, manager: false, user: false, demo: false },
-    },
-    logs: {
-      leer:     { dev: true, admin: true,  manager: false, user: true,  demo: true },
-      crear:    { dev: true, admin: true,  manager: false, user: true,  demo: false },
-      editar:   { dev: true, admin: false, manager: false, user: false, demo: false },
-      eliminar: { dev: true, admin: false, manager: false, user: false, demo: false },
-    },
-    papelera: {
-      leer:     { dev: true, admin: true,  manager: false, user: false, demo: false },
-      crear:    { dev: true, admin: true,  manager: false, user: true,  demo: false },
-      editar:   { dev: true, admin: false, manager: false, user: false, demo: false },
-      eliminar: { dev: true, admin: true,  manager: false, user: false, demo: false },
     },
     // Configuración de la app (F8b): `configuracion/empresa`. La leen todos
     // los roles con acceso (la usan los comprobantes); escriben dev/admin.

@@ -319,9 +319,30 @@ divergencia con `matrizBase` —`admin` en crear/editar/eliminar— es deliberad
 `admin` opera por Cloud Functions con Admin SDK, no por escritura directa. El fixture
 registra la intención, no la regla.
 
-Separarse en cualquier dirección rompe el build. Y el test de emulador **es** la cobertura
-que falta: las 180 celdas quedan al 100 %, y `entidades`, `operaciones` y `finanzas` dejan de
-estar en cero. Los 10 módulos de `permitido()` que la UI no consulta quedan fuera del fixture
+**Dónde se hace valer cada lado, que no es simétrico** (corregido el 2026-11-10 tras
+implementar el bloque 2; la versión anterior decía "separarse en cualquier dirección rompe el
+build", y es falso):
+
+- **El lado del cliente queda bloqueado.** El spec unitario corre en `npm run test:ci`, que
+  **se agregó al hook de Stop** (decidido el 2026-11-10, en el cierre del bloque 2). El hook
+  corre `tsc --noEmit -p tsconfig.hook.json`, `npm run test:ci` y `npm run build:demo`, en
+  ese orden: el más barato primero, para fallar rápido. Con eso, tocar `matrizBase` sin que
+  el fixture coincida deja de pasar el hook. Costo: ~12 s por corrida. Riesgo asumido: si
+  algún test se vuelve frágil o dependiente del entorno —`test:ci` necesita resolver Chrome
+  headless— el hook falla por motivos ajenos al cambio; por eso tiene que decir **qué paso**
+  falló, o se vuelve ruido que se termina apagando.
+- **El lado de las reglas no puede.** El test de emulador necesita el emulador levantado
+  (JRE, `firestore` y `auth`), así que no entra en un hook por cada Stop. Su punto de control
+  es el ritual de deploy, que ya existe y está escrito en CLAUDE.md: ninguna regla se deploya
+  sin pasar el emulador antes. Eso es proceso, no build, y hay que decirlo así: si alguien
+  cambia `firestore.rules` y deploya sin correr el `.mjs`, la divergencia viaja.
+
+La asimetría es tolerable porque las reglas cambian raro y su deploy es manual, pero la
+verificación es un bloqueo de un lado y una disciplina del otro. Decirlo como "rompe el
+build" sería volver a la convención que ya falló.
+
+El test de emulador **es** la cobertura que falta: las 180 celdas quedan al 100 %, y
+`entidades`, `operaciones` y `finanzas` dejan de estar en cero. Los 10 módulos de `permitido()` que la UI no consulta quedan fuera del fixture
 a propósito y siguen cubiertos por los scripts que ya existen
 (`test-historico-rules`, `test-cierre-rules`, `test-vendedores-rules`,
 `test-asignaciones-rules`, `test-vencimientos-rules`, `test-legajos-rules`,
@@ -336,11 +357,27 @@ nada" no prueba nada por sí solo, encontrada esta vez dentro de los tests.
 
 **Para `manager` el control positivo no puede salir del fixture.** Con `legacySoloLectura`
 podado, `manager` queda en `false` en las 180 celdas: 36 rechazos y ningún permitido, que es
-el caso de sólo-rechazo llevado al extremo. El control positivo tiene que ser una lectura de
-una colección de `legacySoloLectura`, que `permitido()` concede a cualquier rol autenticado
-sin condición de rol. Eso prueba que el token llegó con `role: 'manager'` y que las reglas lo
-evaluaron, y de paso cierra la pregunta abierta de si `let r = rol()` falla con un rol ausente
-del token.
+el caso de sólo-rechazo llevado al extremo. El control positivo es una lectura de una
+colección de `legacySoloLectura`, que `permitido()` concede a cualquier rol autenticado sin
+condición de rol.
+
+⚠️ **Ese control prueba menos de lo que esta spec afirmaba** (corregido el 2026-11-10). Decía
+que probaba "que el token llegó con `role: 'manager'`". No: el bloque 2 verificó que un token
+**sin** rol obtiene esa misma lectura, así que la afirmación distingue autenticado de no
+autenticado, no rol presente de rol ausente. Si `setCustomUserClaims` fallara en silencio para
+`manager`, los 36 rechazos pasarían igual — exactamente el modo de falla que el control existe
+para descartar.
+
+Y no hay forma de arreglarlo desde las reglas: **`manager` no tiene ni un permiso que lo
+distinga de un token sin rol**, porque no aparece por nombre en ningún módulo de
+`permitido()`. Entonces la verificación de que el rol llegó tiene que ser una afirmación de
+*setup*, fuera de las reglas: después de setear el Custom Claim, decodificar el token y
+afirmar que trae el `role` esperado. Va para los cinco roles, no sólo `manager`, y convierte
+"creemos que el token traía el rol" en un hecho chequeado.
+
+Corolario para la decisión 2.1: mientras `manager` no tenga ningún permiso propio, su
+comportamiento no es verificable al nivel de las reglas. Es un argumento más para retirar el
+rol después del corte.
 
 ### 4.5 El invariante cruzado
 
@@ -436,8 +473,14 @@ aparecer donde corresponde. Independiente; va en cualquier momento después del 
 
 ## 7. Preguntas abiertas
 
-- ~~Comportamiento de un rol ausente en el token dentro de `legacySoloLectura`~~: queda
-  cubierto por el control positivo de `manager` del Bloque 2 (ver 4.4).
+- ~~Comportamiento de un rol ausente en el token dentro de `legacySoloLectura`~~
+  **Respondido en el bloque 2 (2026-11-10): `let r = rol()` no falla con el rol ausente, y la
+  lectura se permite.** Un token autenticado sin `role` en sus claims lee las 16 colecciones
+  de `legacySoloLectura`. No es un agujero grave —toda cuenta la crea `dev`/`admin`, y esas
+  colecciones no tienen escritores ni lectores en código vivo— pero es un acceso que nadie
+  decidió: el bucket concede lectura a cualquier autenticado *incluido quien no tiene rol*,
+  no protege nada escribible, y se justificaba con una premisa falsa (ver 2.10). Dato para
+  cuando la migración retome el bucket, no para reabrirlo acá.
 - `liquidaciones` figura en CLAUDE.md como colección principal, no está en `moduloDe()` y
   ningún código la usa. Se corrige la documentación en el Bloque 0; si existe en Vantruck, es
   dato para la migración.

@@ -1,0 +1,69 @@
+{
+  "_nota": "Matriz esperada de permisos: la única copia mantenida a mano. PermisosService.matrizBase se verifica contra ella en permisos.service.spec.ts y firestore.rules (permitido()) en functions/test-matriz-permisos-rules.mjs. Los valores salen de leer permitido(), no de copiar matrizBase. Un cambio de permisos toca las tres: este archivo, las reglas y matrizBase. Diseño: docs/disenos/reglas-y-matriz-de-permisos.md, 4.4.",
+  "_reglas": "Los módulos de permitido() que la UI consulta (los que alcanza algún ModuloPermiso vía mapaModuloReglas). 9 módulos x 4 acciones x 5 roles = 180 celdas, comparadas contra las reglas reales y contra matrizBase.",
+  "reglas": {
+    "desarrollo": {
+      "leer":     { "dev": true, "admin": false, "manager": false, "user": false, "demo": false },
+      "crear":    { "dev": true, "admin": false, "manager": false, "user": false, "demo": false },
+      "editar":   { "dev": true, "admin": false, "manager": false, "user": false, "demo": false },
+      "eliminar": { "dev": true, "admin": false, "manager": false, "user": false, "demo": false }
+    },
+    "entidades": {
+      "leer":     { "dev": true, "admin": true, "manager": false, "user": true,  "demo": true },
+      "crear":    { "dev": true, "admin": true, "manager": false, "user": true,  "demo": false },
+      "editar":   { "dev": true, "admin": true, "manager": false, "user": true,  "demo": false },
+      "eliminar": { "dev": true, "admin": true, "manager": false, "user": false, "demo": false }
+    },
+    "legajos": {
+      "leer":     { "dev": true, "admin": true, "manager": false, "user": true,  "demo": true },
+      "crear":    { "dev": true, "admin": true, "manager": false, "user": true,  "demo": false },
+      "editar":   { "dev": true, "admin": true, "manager": false, "user": true,  "demo": false },
+      "eliminar": { "dev": true, "admin": true, "manager": false, "user": false, "demo": false }
+    },
+    "vendedores": {
+      "leer":     { "dev": true, "admin": true, "manager": false, "user": false, "demo": true },
+      "crear":    { "dev": true, "admin": true, "manager": false, "user": false, "demo": false },
+      "editar":   { "dev": true, "admin": true, "manager": false, "user": false, "demo": false },
+      "eliminar": { "dev": true, "admin": true, "manager": false, "user": false, "demo": false }
+    },
+    "operaciones": {
+      "leer":     { "dev": true, "admin": true, "manager": false, "user": true,  "demo": true },
+      "crear":    { "dev": true, "admin": true, "manager": false, "user": true,  "demo": false },
+      "editar":   { "dev": true, "admin": true, "manager": false, "user": true,  "demo": false },
+      "eliminar": { "dev": true, "admin": true, "manager": false, "user": false, "demo": false }
+    },
+    "tarifas": {
+      "leer":     { "dev": true, "admin": true, "manager": false, "user": true,  "demo": true },
+      "crear":    { "dev": true, "admin": true, "manager": false, "user": false, "demo": false },
+      "editar":   { "dev": true, "admin": true, "manager": false, "user": false, "demo": false },
+      "eliminar": { "dev": true, "admin": true, "manager": false, "user": false, "demo": false }
+    },
+    "finanzas": {
+      "leer":     { "dev": true, "admin": true, "manager": false, "user": false, "demo": true },
+      "crear":    { "dev": true, "admin": true, "manager": false, "user": false, "demo": false },
+      "editar":   { "dev": true, "admin": true, "manager": false, "user": false, "demo": false },
+      "eliminar": { "dev": true, "admin": true, "manager": false, "user": false, "demo": false }
+    },
+    "resumenes": {
+      "leer":     { "dev": true, "admin": true, "manager": false, "user": false, "demo": true },
+      "crear":    { "dev": true, "admin": true, "manager": false, "user": true,  "demo": false },
+      "editar":   { "dev": true, "admin": true, "manager": false, "user": true,  "demo": false },
+      "eliminar": { "dev": true, "admin": true, "manager": false, "user": false, "demo": false }
+    },
+    "configuracion": {
+      "leer":     { "dev": true, "admin": true,  "manager": false, "user": true,  "demo": true },
+      "crear":    { "dev": true, "admin": true,  "manager": false, "user": false, "demo": false },
+      "editar":   { "dev": true, "admin": true,  "manager": false, "user": false, "demo": false },
+      "eliminar": { "dev": true, "admin": false, "manager": false, "user": false, "demo": false }
+    }
+  },
+  "_soloCliente": "'usuarios': 20 celdas, comparadas sólo contra matrizBase. No pasa por permitido(): /users/{uid} tiene su propio match, con write sólo para dev. La divergencia con las reglas es deliberada: 'admin' dice sí en crear/editar/eliminar porque opera por las Cloud Functions de gestión de usuarios (Admin SDK, autorización propia en exigirObjetivoEditable), no por escritura directa. Este fixture registra la intención, no la regla.",
+  "soloCliente": {
+    "usuarios": {
+      "leer":     { "dev": true, "admin": true, "manager": false, "user": false, "demo": false },
+      "crear":    { "dev": true, "admin": true, "manager": false, "user": false, "demo": false },
+      "editar":   { "dev": true, "admin": true, "manager": false, "user": false, "demo": false },
+      "eliminar": { "dev": true, "admin": true, "manager": false, "user": false, "demo": false }
+    }
+  }
+}
