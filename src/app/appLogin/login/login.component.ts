@@ -4,8 +4,10 @@ import { Router } from '@angular/router';
 
 
 import { AuthService } from 'src/app/servicios/autentificacion/auth.service';
-import { TEXTO_AVISO_SESION, tomarMarcaAvisoSesion } from 'src/app/servicios/usuario-sesion/sesion-invalida.util';
+import { textoAvisoSesion, tomarMarcaAvisoSesion } from 'src/app/servicios/usuario-sesion/sesion-invalida.util';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
+import { SesionInvalidaService } from 'src/app/servicios/usuario-sesion/sesion-invalida.service';
+import { leerUltimaActividad, marcaVencida } from 'src/app/servicios/usuario-sesion/inactividad.util';
 import { Usuario } from 'src/app/interfaces/usuario';
 import Swal from 'sweetalert2';
 
@@ -36,6 +38,7 @@ export class LoginComponent implements OnInit {
     public authService: AuthService,
     private usuarioSesion: UsuarioSesionService,
     private router: Router,
+    private sesionInvalida: SesionInvalidaService,
   ) {
 
 
@@ -46,8 +49,11 @@ export class LoginComponent implements OnInit {
     // la marca en sessionStorage. Se lee y se BORRA antes de mostrar, para que
     // una recarga posterior no repita el aviso. Sincrónico y antes de esperar:
     // no depende de la reconciliación ni la pisa.
-    if (tomarMarcaAvisoSesion(sessionStorage)) {
-      Swal.fire({ icon: 'warning', text: TEXTO_AVISO_SESION });
+    // Bloque 4: la marca trae el motivo (sesión vencida o inactividad) y el
+    // texto se elige acá.
+    const motivo = tomarMarcaAvisoSesion(sessionStorage);
+    if (motivo !== null) {
+      Swal.fire({ icon: 'warning', text: textoAvisoSesion(motivo) });
     }
 
     // Eje de sesión, bloque 3: la sesión se lee DESPUÉS de la reconciliación,
@@ -56,7 +62,19 @@ export class LoginComponent implements OnInit {
     // entra a /login puede querer cambiar de usuario.
     this.resolviendo = true;
     await this.usuarioSesion.sesionResuelta();
-    this.sesionViva = this.usuarioSesion.getUsuarioActual();
+    const sesion = this.usuarioSesion.getUsuarioActual();
+
+    // Bloque 4: una sesión cuya marca de actividad ya venció (navegador
+    // cerrado sin desloguearse, de un día para el otro) no se ofrece para
+    // continuar. Se cierra acá, por la salida compartida y con el motivo de
+    // inactividad (escribe LOGOUT y recarga /login con el aviso). Mientras
+    // tanto queda el spinner: no hay botones que mostrar.
+    if (sesion !== null && marcaVencida(leerUltimaActividad(localStorage), Date.now())) {
+      this.sesionInvalida.cerrarSesionForzada('inactividad');
+      return;
+    }
+
+    this.sesionViva = sesion;
     this.resolviendo = false;
   }
 

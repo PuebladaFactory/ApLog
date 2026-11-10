@@ -129,9 +129,36 @@ perdida).
 arranque pasan por `vigilar()`, un `tap` sobre el error que no lo traga. Si
 el error es de sesión (`unauthenticated`, o `permission-denied` con Auth
 contradiciendo a la app; con Auth y app de acuerdo es la matriz de reglas y
-no actúa), limpia, hace `signOut` acotado y recarga `/login`, donde
-`LoginComponent` muestra el aviso que viajó por `sessionStorage`. Actúa una
-sola vez aunque fallen todos los listeners juntos.
+no actúa), cierra por la salida compartida con el motivo `'vencida'`. Actúa
+una sola vez aunque fallen todos los listeners juntos.
+
+**Salida compartida de un cierre forzado** (`SesionInvalidaService.cerrarSesionForzada(motivo)`):
+la usan la red de sesión inválida (`'vencida'`) y el vencimiento por
+inactividad (`'inactividad'`). Cierra Firebase Auth, no sólo la app (si no,
+un F5 reconstruiría la sesión): marca con el motivo en `sessionStorage`,
+`signOut` acotado y carga completa de `/login`, donde `LoginComponent`
+elige el texto del aviso según el motivo. Decide por el motivo
+(`cierreEscribeLogout`): con `'inactividad'` escribe LOGOUT (cierre real y
+atribuible, con token válido) con espera acotada antes de `limpiar()` y del
+`signOut`; con `'vencida'` no escribe LOGOUT (no hay token con el que
+escribirlo) y `limpiar()` va primero y sincrónico.
+
+**Vencimiento por inactividad (`InactividadService`, frente eje de sesión,
+bloque 4):** es la política de persistencia de la sesión. La sesión vence
+tras `INACTIVIDAD_MAXIMA_MS` (30 min) sin interacción en **ninguna**
+pestaña; `AVISO_PREVIO_MS` (1 min) antes aparece un aviso con cuenta
+regresiva y "Seguir conectado", y sin respuesta vence por la salida
+compartida. La marca de última actividad va en `localStorage`
+(`ultimaActividad`), compartida entre pestañas a propósito; la decisión es
+por marca de tiempo (`estadoInactividad` en `inactividad.util.ts`), no por
+tics. Actividad: click, tecla, scroll, touch y navegación entre rutas (el
+mouse no; el aviso tampoco, salvo su botón). Lo arranca
+`HomeComponent.ngOnInit` (`iniciar()`, idempotente); el login escribe la
+marca, y `/login` no ofrece "Continuar" sobre una sesión cuya marca ya
+venció: la cierra por la salida compartida. La persistencia de Firebase
+Auth queda en IndexedDB (no `browserSessionPersistence`: la amenaza real es
+la máquina compartida con la sesión abierta y nadie adelante, no el
+navegador cerrado). Diseño: `docs/disenos/eje-de-sesion.md`, "Bloque 4".
 
 **Secuencia de arranque:** `/login` → `AuthService.iniciarSesion` (Firebase
 Auth; la reconciliación lee `/users/{uid}` y hace `setUsuario`; log LOGIN)
@@ -140,8 +167,8 @@ corre los `init()` de los servicios por entidad. Tras un F5 no se pasa por
 `/carga`: el guard espera la reconciliación y decide con la sesión ya
 reconciliada; mientras tanto se ve el spinner de arranque de `index.html`.
 `/login` con sesión viva no muestra el formulario: ofrece "Continuar" o
-"Cerrar sesión", sin redirigir sola. Ver "Deuda abierta" → política de
-persistencia de la sesión.
+"Cerrar sesión", sin redirigir sola (salvo que la sesión ya haya vencido
+por inactividad: ahí la cierra).
 
 **`RoleGuard`/`esRol()`**: comparación plana contra `usuario.role`
 (`rolesEsperados.includes(usuario.role)` / `esRol(...)`), sin jerarquía.
@@ -232,9 +259,11 @@ del servicio.
 
 **Store central viejo: eliminado por completo** (frente remanente de StorageService,
 2026-11-04). El estado de datos vive sólo en los servicios por entidad. `localStorage`
-queda para dos cosas, sin capa intermedia: la sesión (`usuarioSesion`, de
-`UsuarioSesionService`) y las preferencias de UI de `tablero-op` e `informe-op-listado`,
-que cada componente lee y escribe directo, con su propia clave. Nada borra
+queda para tres cosas, sin capa intermedia: la sesión (`usuarioSesion`, de
+`UsuarioSesionService`), las preferencias de UI de `tablero-op` e `informe-op-listado`,
+que cada componente lee y escribe directo, con su propia clave, y la marca de
+última actividad (`ultimaActividad`, de `InactividadService`), compartida entre
+pestañas a propósito: la sesión vence cuando todas estuvieron quietas. Nada borra
 `localStorage` entero.
 
 **Papelera:** el único mecanismo es `PapeleraService` sobre `papeleraEventos`/
@@ -321,7 +350,7 @@ Por eso `Proforma CH` tiene mayor prioridad visual que `Proforma CL` en el badge
 | Servicio | Responsabilidad |
 |---|---|
 | `autentificacion/` | `AuthService`: Firebase Auth (login, logout con carga completa de `/login`, reset de contraseña). No lee `/users`: espera el resultado de la reconciliación |
-| `usuario-sesion/` | `UsuarioSesionService`: fuente única de la sesión en memoria (rol, uid, email), reconciliada con Firebase Auth vía `onAuthStateChanged` (único escritor de la sesión; `sesionResuelta()` para el guard). Getters síncronos, sin observable. `SesionInvalidaService`: red ante errores de sesión en los listeners del arranque (`vigilar()`). Funciones puras en `reconciliacion-sesion.util.ts` y `sesion-invalida.util.ts`. Diseño: `docs/disenos/eje-de-sesion.md` |
+| `usuario-sesion/` | `UsuarioSesionService`: fuente única de la sesión en memoria (rol, uid, email), reconciliada con Firebase Auth vía `onAuthStateChanged` (único escritor de la sesión; `sesionResuelta()` para el guard). Getters síncronos, sin observable. `SesionInvalidaService`: red ante errores de sesión en los listeners del arranque (`vigilar()`) y salida compartida de un cierre forzado (`cerrarSesionForzada(motivo)`). `InactividadService`: vencimiento por inactividad. Funciones puras en `reconciliacion-sesion.util.ts`, `sesion-invalida.util.ts` e `inactividad.util.ts`. Diseño: `docs/disenos/eje-de-sesion.md` |
 | `gestion-usuarios/` | `GestionUsuariosService.obtenerUsuarios` (lectura puntual de `/users` completo, sin filtro por rol) y `UsuariosConsultaService`: resuelve el nombre de usuario en Registro, Registro Log y Papelera (`cargar()` + `nombreDe(userId, userEmail)`, por uid y después por email). Lectura puntual en memoria, sin localStorage, una por pantalla; sólo `dev`/`admin` leen `/users`, el resto y cualquier fallo degradan a email |
 | `database/` | CRUD Firestore |
 | `log-registro/` | `LogRegistroService` (escritura, dentro del batch atómico de negocio) + `RegistroLogConsultaService` (lectura/paginación, para `RegistroLogComponent`) sobre `registroLog` — ver la skill `subsistema-log` |
@@ -786,10 +815,9 @@ Deuda técnica activa. Actualizar cuando se salda.
 - **Fix de altura del modal limitado a `tablero-op`** — el ajuste que estira `carga-asignacion` dentro del modal vive en `tablero-op.component.scss`: otro caller que abra ese modal tiene que replicarlo. Detalle: skill `modulo-operaciones`.
 - **Migración de `noOperativo`** — la colección anterior de no disponibilidad quedó sin lectores: 6 documentos en demo y los de producción (2 vigentes al relevar), con la forma y el trabajo de "Datos de la colección anterior" en `docs/disenos/no-disponibilidad.md`. **Va después de la migración de Choferes**: 3 de los 6 de demo tienen `idChofer` numéricos del modelo viejo que sólo resuelven con su mapeo; al revés, se pierden.
 - **Mapeo de `noOperativo` en `firestore.rules`** — se saca recién cuando termine esa migración.
-- **Política de persistencia de la sesión** (antes "sesión que sobrevive a la pantalla de login") — el frente eje de sesión cerró la divergencia entre las dos fuentes (la sesión de la app ahora sigue a Firebase Auth) y la pantalla que mentía (`/login` con sesión viva ofrece continuar o cerrar). Lo que queda es política: quien cierra el navegador sin desloguearse y vuelve entra sin contraseña, porque la sesión de Firebase Auth persiste en IndexedDB. La salida candidata es `browserSessionPersistence` (la sesión muere con la pestaña); con la reconciliación puesta ya no deja la app vacía en silencio. **Bloqueante de la promoción: decidir antes del corte a Vantruck.** Detalle: skill `subsistema-log`; puntero en `migracion-vantruck`.
 - **`manager` sin lectura en lo que abre** (C1 del eje de sesión) — `manager` pasa `canMatch` en seis rutas (`clientes`, `choferes`, `op`, `proveedores`, `liquidacion`, `legajos`), pero `permitido()` no le da `leer` en ningún módulo salvo `legacySoloLectura`: los nueve listeners del arranque le devuelven `permission-denied` y ve la app vacía. La red de sesión inválida no actúa ahí a propósito (Auth y app de acuerdo = matriz, no sesión). Frente diferido de reglas y matriz. Detalle: skill `botones-y-permisos`.
 - **Un `signOut` que falla se deshace en el próximo F5** (C6 del eje de sesión) — `cerrarSesion` limpia la sesión de la app antes del `signOut`; si `signOut` lanza, Auth queda autenticado y la reconciliación del próximo arranque reconstruye la sesión. Aceptado: `signOut` es local y muy raro que falle. No se construyó una marca de "cierre pedido".
-- **Huecos conocidos en la cobertura del LOGOUT** — un cierre por la red de sesión inválida no escribe LOGOUT (no es un gesto y no hay token con el que escribirlo), y el LOGOUT de `cerrarSesion` se espera como mucho 3 s antes de la recarga: sin conexión se pierde (antes, el logout quedaba colgado para siempre). Detalle: skill `subsistema-log`.
+- **Huecos conocidos en la cobertura del LOGOUT** — un cierre por la red de sesión inválida no escribe LOGOUT (no es un gesto y no hay token con el que escribirlo; el cierre por inactividad sí lo escribe), y el LOGOUT de `cerrarSesion` y el del cierre por inactividad se esperan como mucho 3 s antes de la recarga: sin conexión se pierden (antes, el logout quedaba colgado para siempre). Detalle: skill `subsistema-log`.
 - **Listeners fuera de la red de sesión inválida** — `VendedorService.init` y `AsignacionService.cargarFecha` no pasan por `SesionInvalidaService.vigilar()` (no son del arranque): si su sesión muere, no avisan. Cumplen el invariante de memoria del bloque 2c, no el de la red.
 - **Preferencias de UI compartidas entre usuarios del mismo navegador** — las cinco claves de `localStorage` de `tablero-op` e `informe-op-listado` ya no se borran en el login: el cliente o chofer filtrado por un usuario le aparece al siguiente. Arreglo: namespacearlas por uid. Detalle: skill `modulo-operaciones`.
 - **`/carga` sin propósito claro** — sólo espera 3 s y navega a `/op`. Si el valor es visual, la espera debería justificarse; si no, la pantalla sobra. Dato para la decisión: desde el eje de sesión, `index.html` tiene un spinner de arranque, así que el camino del login tiene ese spinner **y** los 3 s de `/carga`. Frente de UX.

@@ -10,6 +10,7 @@ import Swal from 'sweetalert2';
 import { LogRegistroService } from '../log-registro/log-registro.service';
 import { UsuarioSesionService } from '../usuario-sesion/usuario-sesion.service';
 import { ESPERA_MAXIMA_CIERRE_MS, cargarLoginDeCero, esperarConLimite } from '../usuario-sesion/sesion-invalida.util';
+import { escribirUltimaActividad } from '../usuario-sesion/inactividad.util';
 
 @Injectable({
   providedIn: 'root'
@@ -35,6 +36,10 @@ export class AuthService {
       const resultado = await this.usuarioSesion.resultadoPara(result.user.uid, marca);
 
       if (resultado === 'establecida') {
+        // Bloque 4: loguearse es actividad. Sin esto, una marca vieja de otra
+        // sesión (navegador cerrado sin desloguearse) haría vencer la sesión
+        // nueva apenas arranca el shell.
+        escribirUltimaActividad(localStorage, Date.now());
         const usuario = this.usuarioSesion.getUsuarioActual();
         await this.logRegistro.registrarAccion(
           'LOGIN', 'users', 0, `Usuario ${usuario?.email} inició sesión.`

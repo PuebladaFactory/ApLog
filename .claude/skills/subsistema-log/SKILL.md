@@ -91,7 +91,7 @@ entrada propia.
 | Comisiones | `liquidacionesVenta` | EMITIR, PAGAR, REVERTIR, ANULAR | `LiquidacionVentaService` | `comisionesVenta`, numerador |
 | Finanzas | `movimientosFin` | COBRAR / PAGAR (`registrar`, `registrarDevolucion`), AJUSTAR (`registrarAjuste`, `cerrarSaldo`), IMPUTAR, ANULAR | `MovimientoFinService` | `informesLiq` (valores financieros), numerador |
 | Datos de la empresa | `configuracion` | ALTA, EDITAR | `ConfiguracionEmpresaService` | — |
-| Usuarios | `users` | ALTA, EDITAR, BAJA (con `registrarMutacionSuelta`, después de la Cloud Function, best-effort y no atómico); LOGIN, LOGOUT | `ModalUsuarioComponent`, `GestionUsuariosComponent`, `AuthService` | — |
+| Usuarios | `users` | ALTA, EDITAR, BAJA (con `registrarMutacionSuelta`, después de la Cloud Function, best-effort y no atómico); LOGIN, LOGOUT (también el del cierre por inactividad, ver abajo) | `ModalUsuarioComponent`, `GestionUsuariosComponent`, `AuthService`, `SesionInvalidaService.cerrarSesionForzada('inactividad')` | — |
 | Sin mutación | `informesLiq`, `movimientosFin` | REIMPRIMIR (Excel/PDF de una liquidación; PDF de un recibo u orden de pago). `DESCARGAR` existe en `AccionLog` sin uso | `LiquidacionExportService`, `ReciboPdfService` | — |
 
 **Lo que muta y no deja rastro en `registroLog`:**
@@ -104,8 +104,8 @@ entrada propia.
 | Herramientas de `/migracion` | `servicios/desarrollo/*` (generadores, limpieza, recálculos, normalización) y `servicios/migracion/*` (SDK de Firestore directo) | Varias | Ninguno: son sólo `dev`, que está excluido igual |
 | Cualquier mutación hecha por un usuario `dev` | — | — | Ninguno, por diseño |
 | LOGIN fallido | `AuthService.iniciarSesion` | — | Ninguno: sin usuario autenticado, las reglas rechazan la escritura (ver "Limitación conocida" en el complemento de login/logout) |
-| Cierre de sesión por la red de sesión inválida | `SesionInvalidaService` (eje de sesión, bloque 2b) | Ninguna escritura: limpia la sesión, `signOut` y recarga `/login` | **Ninguno, a propósito:** no es un gesto del usuario, y con la sesión ya inválida no hay token con el que escribir. Deja un `console.warn` |
-| LOGOUT sin conexión | `AuthService.cerrarSesion` | El `setDoc` del LOGOUT | Se espera como mucho 3 s antes de la carga completa de `/login`; si no se confirma, se pierde con la recarga (caché de memoria). Antes de esa espera acotada, un logout sin conexión quedaba colgado para siempre |
+| Cierre de sesión por la red de sesión inválida | `SesionInvalidaService.cerrarSesionForzada('vencida')` (eje de sesión, bloque 2b) | Ninguna escritura: limpia la sesión, `signOut` y recarga `/login` | **Ninguno, a propósito:** no es un gesto del usuario, y con la sesión ya inválida no hay token con el que escribir. Deja un `console.warn`. El cierre por **inactividad** (bloque 4) sale por el mismo método y **sí escribe LOGOUT**: es un cierre real y atribuible, con token válido (`cierreEscribeLogout` decide por el motivo) |
+| LOGOUT sin conexión | `AuthService.cerrarSesion` y el cierre por inactividad | El `setDoc` del LOGOUT | Se espera como mucho 3 s antes de la carga completa de `/login`; si no se confirma, se pierde con la recarga (caché de memoria). Antes de esa espera acotada, un logout sin conexión quedaba colgado para siempre |
 
 **Asimetría `activo` / `visible` — decidida, no es un olvido (2026-11-03).** Los dos son
 un switch por entidad sobre un campo booleano del mismo documento, y sólo uno loguea:
@@ -720,27 +720,25 @@ para `demo`).
   usuario siguen trabajando sobre `userEmail`; el placeholder lo dice ("Buscar: usuario
   (email), acción, colección, detalle…").
 
-## Deuda abierta — política de persistencia de la sesión
+## ~~Deuda abierta — política de persistencia de la sesión~~ — RESUELTA (frente eje de sesión, bloque 4)
 
 Antes "sesión que sobrevive a la pantalla de login". Desde el frente remanente de
 StorageService (SS2), abrir `/login` dejó de cortar la sesión de la app. Había tres salidas
-reales; el frente eje de sesión (`docs/disenos/eje-de-sesion.md`) implementó dos:
+reales; el frente eje de sesión (`docs/disenos/eje-de-sesion.md`) cerró el problema así:
 - ~~atar `UsuarioSesionService` a `onAuthStateChanged`~~ — HECHO: la sesión de la app se
   reconcilia con Firebase Auth en cada arranque y en cada cambio de Auth; ya no puede haber
   un usuario en la app que Firebase no tiene;
 - ~~que `/login` detecte la sesión y ofrezca continuar o cerrarla~~ — HECHO: con sesión
-  viva (ya reconciliada) muestra "Continuar" y "Cerrar sesión", sin redirigir sola.
+  viva (ya reconciliada) muestra "Continuar" y "Cerrar sesión", sin redirigir sola;
+- ~~`browserSessionPersistence`~~ — DESCARTADA: la política se resolvió con el
+  **vencimiento por inactividad** (bloque 4, `InactividadService`: 30 min sin interacción en
+  ninguna pestaña, aviso un minuto antes). La amenaza real es la máquina compartida con la
+  sesión abierta y nadie adelante, no el navegador cerrado; `browserSessionPersistence` no
+  se dispara en ese caso y cobra loguearse en cada apertura y una sesión por pestaña. La
+  persistencia de Firebase Auth queda en IndexedDB.
 
-**Queda la tercera, que es política y no arreglo:** `browserSessionPersistence` en
-Firebase Auth (la sesión muere con la pestaña). Hoy quien cierra el navegador sin
-desloguearse y vuelve entra sin contraseña, porque la sesión de Auth persiste en
-IndexedDB y la reconciliación la reconstruye. Por qué no iba sola, sin la reconciliación:
-al cerrar el navegador se borraba la sesión de Auth pero `usuarioSesion` sobrevivía en
-`localStorage`, el guard pasaba igual y los listeners volvían `permission-denied` sin
-manejo: app vacía en silencio. Con la reconciliación puesta ya es una decisión limpia.
-
-**Bloqueante de la promoción: decidir antes del corte a Vantruck** (puntero en la skill
-`migracion-vantruck`).
+Ya no es bloqueante de la promoción. El cierre por inactividad escribe LOGOUT (ver la tabla
+de cobertura).
 
 ## Deuda abierta — la pestaña "Registro" está comentada
 

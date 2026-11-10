@@ -1,6 +1,7 @@
 import { FirestoreError } from '@angular/fire/firestore';
 import {
-  CODIGOS_DE_SESION, CODIGOS_QUE_NUNCA_ACTUAN, MARCA_AVISO_SESION, TEXTO_AVISO_SESION,
+  CODIGOS_DE_SESION, CODIGOS_QUE_NUNCA_ACTUAN, MARCA_AVISO_SESION, TEXTO_AVISO_INACTIVIDAD, TEXTO_AVISO_SESION,
+  textoAvisoSesion, cierreEscribeLogout,
   codigoDeError, dejarMarcaAvisoSesion, esErrorDeSesion, esperarConLimite, hayAlgoQueCerrar,
   tomarMarcaAvisoSesion,
 } from './sesion-invalida.util';
@@ -58,13 +59,31 @@ describe('marca del aviso en sessionStorage (bloque 2c, cuarta pieza)', () => {
     const s = storageFalso();
     dejarMarcaAvisoSesion(s);
     expect(s.datos.has(MARCA_AVISO_SESION)).toBeTrue();
-    expect(tomarMarcaAvisoSesion(s)).toBeTrue();
+    expect(tomarMarcaAvisoSesion(s)).toBe('vencida');
     expect(s.datos.has(MARCA_AVISO_SESION)).toBeFalse();
-    expect(tomarMarcaAvisoSesion(s)).toBeFalse();       // una recarga posterior no repite el aviso
+    expect(tomarMarcaAvisoSesion(s)).toBeNull();        // una recarga posterior no repite el aviso
   });
 
   it('sin marca no hay aviso', () => {
-    expect(tomarMarcaAvisoSesion(storageFalso())).toBeFalse();
+    expect(tomarMarcaAvisoSesion(storageFalso())).toBeNull();
+  });
+
+  it('la marca lleva el motivo (bloque 4): inactividad viaja y vuelve como inactividad', () => {
+    const s = storageFalso();
+    dejarMarcaAvisoSesion(s, 'inactividad');
+    expect(tomarMarcaAvisoSesion(s)).toBe('inactividad');
+  });
+
+  it('una marca vieja o desconocida (el "1" de antes del bloque 4) cuenta como vencida', () => {
+    const s = storageFalso();
+    s.setItem(MARCA_AVISO_SESION, '1');
+    expect(tomarMarcaAvisoSesion(s)).toBe('vencida');
+  });
+
+  it('cada motivo elige su texto; el de vencida no cambia', () => {
+    expect(textoAvisoSesion('vencida')).toBe(TEXTO_AVISO_SESION);
+    expect(textoAvisoSesion('inactividad')).toBe(TEXTO_AVISO_INACTIVIDAD);
+    expect(TEXTO_AVISO_INACTIVIDAD).toBe('Su sesión se cerró por inactividad. Vuelva a iniciar sesión.');
   });
 
   it('un storage que lanza no rompe ni la red ni el login', () => {
@@ -74,7 +93,7 @@ describe('marca del aviso en sessionStorage (bloque 2c, cuarta pieza)', () => {
       removeItem: () => { throw new Error('x'); },
     };
     expect(() => dejarMarcaAvisoSesion(roto)).not.toThrow();
-    expect(tomarMarcaAvisoSesion(roto)).toBeFalse();
+    expect(tomarMarcaAvisoSesion(roto)).toBeNull();
   });
 
   it('el texto del aviso es el de la spec, en usted', () => {
@@ -93,6 +112,15 @@ describe('esperarConLimite — la página no se va con una escritura en vuelo, n
 
   it('una promesa que no resuelve nunca da vencido al límite (ej. setDoc sin conexión)', async () => {
     expect(await esperarConLimite(new Promise(() => {}), 20)).toBe('vencido');
+  });
+});
+
+describe('cierreEscribeLogout — la salida compartida decide por el motivo (bloque 4)', () => {
+  it('por inactividad escribe LOGOUT: cierre real, atribuible y con token válido', () => {
+    expect(cierreEscribeLogout('inactividad')).toBeTrue();
+  });
+  it('la red del 2b no: la sesión ya es inválida y no hay token con el que escribir', () => {
+    expect(cierreEscribeLogout('vencida')).toBeFalse();
   });
 });
 

@@ -1182,6 +1182,69 @@ persistencia, fuera de alcance (C5).
    - Es el comportamiento esperado de este frente, no un bug: la política de persistencia
      queda fuera.
 
+## Bloque 4 — vencimiento de la sesión por inactividad
+
+Incorporado al frente el 2026-11-09, después del bloque de cierre, al decidir la política de
+persistencia. Deja el proyecto compilando.
+
+**La decisión y por qué esta y no `browserSessionPersistence`.** La amenaza real en Vantruck no
+es que alguien cierre el navegador y otro lo abra más tarde: es la máquina compartida con la
+sesión abierta y nadie adelante. La gente no cierra el navegador, se levanta. Sobre esa
+amenaza, `browserSessionPersistence` no se dispara nunca, y además cobra dos costos diarios —
+loguearse cada vez que se abre el navegador, y una sesión por pestaña, porque esa persistencia
+vive en la pestaña, así que abrir una segunda para comparar pantallas vuelve a pedir
+contraseña—. El vencimiento por inactividad apunta al caso real, no toca el uso normal y reusa
+la salida que ya existe. La persistencia de Auth queda como está (IndexedDB).
+
+**Lo que vence tiene que cerrar Firebase, no sólo la sesión de la app.** Si sólo se limpiara en
+memoria, un F5 reconstruiría la sesión desde Auth y no habría vencido nada. La salida es la del
+bloque 2b: `limpiar()`, marca en `sessionStorage`, `signOut` acotado y carga completa de
+`/login`, que ya está construida y verificada.
+
+**El ámbito de la actividad es el origen, no la pestaña.** La marca de última actividad va en
+`localStorage`, así que la sesión vence cuando **todas** las pestañas estuvieron quietas. Con un
+reloj por pestaña, quien trabaja en una perdería la sesión porque otra estuvo ociosa. Esto es
+origen-wide a propósito y es lo contrario del error de SS2: ahí el problema era atar una regla a
+visitar una URL; acá el origen es el ámbito correcto, porque es una persona en un navegador.
+
+**El vencimiento se calcula por marca de tiempo, no acumulando tics.** Los temporizadores de
+una pestaña en segundo plano se frenan —ya se vio en la verificación del 2b—, así que la
+comprobación es `ahora - ultimaActividad > límite`. El frenado sólo demora la detección.
+
+**Valores**, como constantes nombradas:
+- `INACTIVIDAD_MAXIMA_MS` = 30 minutos.
+- `AVISO_PREVIO_MS` = 1 minuto. A falta de respuesta, vence.
+
+**Qué cuenta como actividad:** interacción real del usuario —click, tecla, scroll, touch— y la
+navegación entre rutas. El movimiento del mouse no. La escritura de la marca va limitada a una
+cada pocos segundos, para no escribir en cada evento. **El aviso previo no cuenta como
+actividad**; el botón "Seguir conectado", sí.
+
+**Dónde vive:** un servicio de raíz en `servicios/usuario-sesion/`, con la parte decidible en un
+util puro y testeable (dada la última actividad y el ahora: seguir, avisar o vencer). Lo arranca
+`HomeComponent.ngOnInit`, que es el único lugar que se monta con sesión, y **tiene que ser
+idempotente**, porque ese `ngOnInit` corre cada vez que se recrea el shell: misma lección que el
+2c. No hace falta detenerlo: todo camino que termina una sesión recarga la página.
+
+- Queda fuera `/limbo`, que está fuera del shell: quien se queda ahí no tiene acceso a nada.
+
+**El aviso de `/login` tiene que distinguir el motivo:** "su sesión se cerró o venció" no sirve
+para la inactividad. La marca de `sessionStorage` pasa a llevar el motivo y `/login` elige el
+texto. El de inactividad, propuesto: "Su sesión se cerró por inactividad. Vuelva a iniciar
+sesión."
+
+**Verificación manual (Nico):**
+
+1. Con la app abierta y sin tocar nada, al minuto 29 aparece el aviso y al 30 termina en
+   `/login` con el texto de inactividad. Para no esperar media hora, bajar las dos constantes a
+   un valor chico y volver a subirlas.
+2. "Seguir conectado" en el aviso: la sesión sigue y el reloj se reinicia.
+3. Trabajando normalmente, no aparece nunca.
+4. **Dos pestañas:** trabajar en una y dejar la otra quieta más del límite. No tiene que vencer
+   ninguna.
+5. Después del vencimiento, un F5 no devuelve la sesión: Firebase también se cerró.
+6. Ida y vuelta a `/limbo` y volver a trabajar: el reloj no se duplica ni se rompe.
+
 ## Bloque de cierre
 
 Lo que se hace una vez que los bloques 1, 2, 2b y 3 están verificados. Deja el proyecto
@@ -1202,9 +1265,13 @@ compilando.
    - Cubre el blanco entero, no sólo los ~840 ms que este frente puso adelante.
    - Entra en este frente y no en el de UX porque es este frente el que triplicó el blanco.
    - **No es `/carga`,** que está del otro lado, en el camino del login, y no se pisa con esto.
-   - Oportunidad en el mismo archivo: la deuda ya registrada del `<h1>` sin cerrar de
-     `index.html`, que envuelve toda la app y quedó del frente de lazy loading. Es una línea y
-     se verifica en la misma carga. Queda a criterio de Nico si va en el mismo bloque.
+   - **El `<h1>` sin cerrar de `index.html` NO se toca** (decidido el 2026-11-09, al
+     implementar el cierre). Se había propuesto aprovechar que se abre el archivo, con el
+     argumento de que era una línea verificable en la misma carga. Es falso: todo el texto sin
+     tamaño propio hereda de ese `<h1>` —24 px, peso 500—, y con `html { font-size: 60% }` en
+     `styles.scss` cerrarlo bajaría ese texto al orden de los 10 px. Es un cambio tipográfico
+     global que pide revisión pantalla por pantalla. La deuda sigue donde estaba. El spinner no
+     depende de eso: lleva tamaños y peso explícitos.
    - Dato para la decisión diferida de `/carga`: con el spinner puesto, el camino del login
      tendría el spinner **y** los 3 s de `/carga`.
 

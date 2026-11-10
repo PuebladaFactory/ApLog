@@ -20,14 +20,13 @@ Nada de lo que sigue asume una de las dos. Cuando se decida, revisar esta skill 
 
 Deuda que no puede llegar a producción. Revisar esta lista antes de cualquier switch.
 
-- **Decisión pendiente — política de persistencia de la sesión** (antes "sesión que
-  sobrevive a la pantalla de login"). El frente eje de sesión cerró la divergencia entre la
-  sesión de la app y Firebase Auth y la pantalla de `/login` que mentía
-  (`docs/disenos/eje-de-sesion.md`). Lo que queda es política: quien cerró el navegador sin
-  desloguearse entra sin contraseña, porque la sesión de Firebase Auth persiste en
-  IndexedDB. Hay que decidir antes del corte si se promueve con este comportamiento o con
-  `browserSessionPersistence` (la sesión muere con la pestaña). Contexto: skill
-  `subsistema-log`, "Deuda abierta — política de persistencia de la sesión".
+- ~~**Decisión pendiente — política de persistencia de la sesión**~~ — RESUELTA, ya no es
+  bloqueante (antes "sesión que sobrevive a la pantalla de login"). El frente eje de sesión
+  cerró la divergencia entre la sesión de la app y Firebase Auth, la pantalla de `/login`
+  que mentía, y la política: la sesión vence por inactividad (bloque 4, 30 min sin
+  interacción en ninguna pestaña). La persistencia de Firebase Auth queda en IndexedDB; se
+  descartó `browserSessionPersistence`. Contexto: `docs/disenos/eje-de-sesion.md`,
+  "Bloque 4", y la skill `subsistema-log`.
 
 (El bloqueante anterior, "`restaurarOperacion` aproxima el estado del alta", se cerró al
 cambiar la semántica de la restauración: ver la skill `modulo-operaciones`, "Contrato

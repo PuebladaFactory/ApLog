@@ -9,6 +9,7 @@ import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
 import { TarifarioService } from 'src/app/servicios/tarifario/tarifario.service';
 import { NoDisponibilidadService } from 'src/app/servicios/no-disponibilidad/no-disponibilidad.service';
 import { PermisosService } from 'src/app/servicios/permisos/permisos.service';
+import { InactividadService } from 'src/app/servicios/usuario-sesion/inactividad.service';
 
 let version = 'v0.0.0'; // fallback por defecto
 
@@ -46,9 +47,12 @@ export class HomeComponent implements OnInit, OnDestroy {
   private alCambiarAncho = (e: MediaQueryListEvent) => this.aplicarModo(e.matches);
   private destroy$ = new Subject<void>();
 
-  constructor(private categoriaDocumentacionService: CategoriaDocumentacionService, private legajoService: LegajoService, private choferService: ChoferService, private proveedorService: ProveedorService, private clienteService: ClienteService, private tarifarioService: TarifarioService, private noDisponibilidadService: NoDisponibilidadService, private permisosService: PermisosService, private router: Router) { }
+  constructor(private categoriaDocumentacionService: CategoriaDocumentacionService, private legajoService: LegajoService, private choferService: ChoferService, private proveedorService: ProveedorService, private clienteService: ClienteService, private tarifarioService: TarifarioService, private noDisponibilidadService: NoDisponibilidadService, private permisosService: PermisosService, private router: Router, private inactividad: InactividadService) { }
 
   ngOnInit(): void {
+    // Eje de sesión, bloque 4: vencimiento por inactividad. Idempotente: este
+    // ngOnInit corre cada vez que se recrea el shell.
+    this.inactividad.iniciar();
     this.choferService.init();
     this.proveedorService.init();
     this.clienteService.init();

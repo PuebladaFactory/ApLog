@@ -33,6 +33,24 @@ export function codigoDeError(e: unknown): string | null {
 /** Texto del aviso de sesión cerrada o vencida (red del 2b). */
 export const TEXTO_AVISO_SESION = 'Su sesión se cerró o venció. Vuelva a iniciar sesión.';
 
+/** Texto del aviso de sesión cerrada por inactividad (bloque 4). */
+export const TEXTO_AVISO_INACTIVIDAD = 'Su sesión se cerró por inactividad. Vuelva a iniciar sesión.';
+
+/** Por qué se cerró la sesión: elige el texto del aviso en /login.
+ *  'vencida': la red de sesión inválida (2b). 'inactividad': el bloque 4. */
+export type MotivoCierreSesion = 'vencida' | 'inactividad';
+
+export function textoAvisoSesion(motivo: MotivoCierreSesion): string {
+  return motivo === 'inactividad' ? TEXTO_AVISO_INACTIVIDAD : TEXTO_AVISO_SESION;
+}
+
+/** ¿El cierre forzado escribe LOGOUT? Sólo por inactividad: es un cierre real
+ *  y atribuible, y el token todavía sirve para escribir. Con 'vencida' (la red
+ *  del 2b) la sesión ya es inválida y no hay token con el que escribir. */
+export function cierreEscribeLogout(motivo: MotivoCierreSesion): boolean {
+  return motivo === 'inactividad';
+}
+
 /** Clave de sessionStorage (por pestaña) con la que el aviso cruza la recarga. */
 export const MARCA_AVISO_SESION = 'avisoSesionCerrada';
 
@@ -40,19 +58,28 @@ export const MARCA_AVISO_SESION = 'avisoSesionCerrada';
  *  no se va con eso en vuelo, pero una falla tampoco cuelga el cierre. */
 export const ESPERA_MAXIMA_CIERRE_MS = 3000;
 
-export function dejarMarcaAvisoSesion(storage: Pick<Storage, 'setItem'>): void {
-  try { storage.setItem(MARCA_AVISO_SESION, '1'); } catch { /* sin storage: sin aviso */ }
+/** La marca lleva el motivo, para que /login elija el texto. */
+export function dejarMarcaAvisoSesion(
+  storage: Pick<Storage, 'setItem'>,
+  motivo: MotivoCierreSesion = 'vencida',
+): void {
+  try { storage.setItem(MARCA_AVISO_SESION, motivo); } catch { /* sin storage: sin aviso */ }
 }
 
 /** Lee la marca y la BORRA antes de devolverla, para que una recarga
- *  posterior no repita el aviso. */
-export function tomarMarcaAvisoSesion(storage: Pick<Storage, 'getItem' | 'removeItem'>): boolean {
+ *  posterior no repita el aviso. Devuelve el motivo, o null si no había
+ *  marca. Un valor desconocido (ej. el '1' de antes del bloque 4) cuenta
+ *  como 'vencida', el aviso que ya existía. */
+export function tomarMarcaAvisoSesion(
+  storage: Pick<Storage, 'getItem' | 'removeItem'>,
+): MotivoCierreSesion | null {
   try {
-    const habia = storage.getItem(MARCA_AVISO_SESION) !== null;
+    const valor = storage.getItem(MARCA_AVISO_SESION);
     storage.removeItem(MARCA_AVISO_SESION);
-    return habia;
+    if (valor === null) return null;
+    return valor === 'inactividad' ? 'inactividad' : 'vencida';
   } catch {
-    return false;
+    return null;
   }
 }
 

@@ -5,8 +5,10 @@ import Swal from 'sweetalert2';
 import { LoginComponent } from './login.component';
 import { AuthService } from 'src/app/servicios/autentificacion/auth.service';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
-import { MARCA_AVISO_SESION, TEXTO_AVISO_SESION } from 'src/app/servicios/usuario-sesion/sesion-invalida.util';
+import { MARCA_AVISO_SESION, TEXTO_AVISO_INACTIVIDAD, TEXTO_AVISO_SESION } from 'src/app/servicios/usuario-sesion/sesion-invalida.util';
 import { Usuario } from 'src/app/interfaces/usuario';
+import { SesionInvalidaService } from 'src/app/servicios/usuario-sesion/sesion-invalida.service';
+import { INACTIVIDAD_MAXIMA_MS, MARCA_ULTIMA_ACTIVIDAD } from 'src/app/servicios/usuario-sesion/inactividad.util';
 
 /* Eje de sesión, bloque 3: /login deja de mentir. */
 describe('LoginComponent — /login honesto (bloque 3)', () => {
@@ -16,6 +18,7 @@ describe('LoginComponent — /login honesto (bloque 3)', () => {
   let usuarioActual: Usuario | null;
   let auth: jasmine.SpyObj<AuthService>;
   let router: jasmine.SpyObj<Router>;
+  let sesionInvalida: jasmine.SpyObj<SesionInvalidaService>;
 
   const usuario = { uid: 'X', email: 'x@vantruck.com', role: 'admin' } as Usuario;
   const texto = () => (fixture.nativeElement as HTMLElement).textContent ?? '';
@@ -27,11 +30,13 @@ describe('LoginComponent — /login honesto (bloque 3)', () => {
     const sesionResuelta = new Promise<void>(r => (resolver = r));
     auth = jasmine.createSpyObj<AuthService>('AuthService', ['cerrarSesion', 'iniciarSesion']);
     router = jasmine.createSpyObj<Router>('Router', ['navigate']);
+    sesionInvalida = jasmine.createSpyObj<SesionInvalidaService>('SesionInvalidaService', ['cerrarSesionForzada']);
     TestBed.configureTestingModule({
       declarations: [LoginComponent],
       providers: [
         { provide: AuthService, useValue: auth },
         { provide: Router, useValue: router },
+        { provide: SesionInvalidaService, useValue: sesionInvalida },
         {
           provide: UsuarioSesionService,
           useValue: { sesionResuelta: () => sesionResuelta, getUsuarioActual: () => usuarioActual },
@@ -40,12 +45,16 @@ describe('LoginComponent — /login honesto (bloque 3)', () => {
       schemas: [NO_ERRORS_SCHEMA],
     });
     sessionStorage.removeItem(MARCA_AVISO_SESION);
+    localStorage.removeItem(MARCA_ULTIMA_ACTIVIDAD);
     spyOn(Swal, 'fire');
     fixture = TestBed.createComponent(LoginComponent);
     componente = fixture.componentInstance;
   });
 
-  afterEach(() => sessionStorage.removeItem(MARCA_AVISO_SESION));
+  afterEach(() => {
+    sessionStorage.removeItem(MARCA_AVISO_SESION);
+    localStorage.removeItem(MARCA_ULTIMA_ACTIVIDAD);
+  });
 
   async function resolverCon(u: Usuario | null): Promise<void> {
     fixture.detectChanges();          // ngOnInit
@@ -108,6 +117,36 @@ describe('LoginComponent — /login honesto (bloque 3)', () => {
     await resolverCon(null);
     expect(Swal.fire).toHaveBeenCalledOnceWith(jasmine.objectContaining({ text: TEXTO_AVISO_SESION }));
     expect(sessionStorage.getItem(MARCA_AVISO_SESION)).toBeNull();
+    expect(hayFormulario()).toBeTrue();
+  });
+
+  it('con la marca de inactividad, el texto de inactividad (bloque 4)', async () => {
+    sessionStorage.setItem(MARCA_AVISO_SESION, 'inactividad');
+    await resolverCon(null);
+    expect(Swal.fire).toHaveBeenCalledOnceWith(jasmine.objectContaining({ text: TEXTO_AVISO_INACTIVIDAD }));
+    expect(sessionStorage.getItem(MARCA_AVISO_SESION)).toBeNull();
+  });
+
+  it('bloque 4: con la marca de actividad vencida no ofrece continuar; cierra por la salida compartida', async () => {
+    localStorage.setItem(MARCA_ULTIMA_ACTIVIDAD, String(Date.now() - INACTIVIDAD_MAXIMA_MS - 60_000));
+    await resolverCon(usuario);
+    expect(sesionInvalida.cerrarSesionForzada).toHaveBeenCalledOnceWith('inactividad');
+    expect(texto()).not.toContain('Continuar');
+    expect(hayFormulario()).toBeFalse();
+    expect(hayRueda()).toBeTrue();                    // spinner hasta la recarga
+  });
+
+  it('bloque 4: con la marca al día, ofrece continuar y no cierra nada', async () => {
+    localStorage.setItem(MARCA_ULTIMA_ACTIVIDAD, String(Date.now()));
+    await resolverCon(usuario);
+    expect(sesionInvalida.cerrarSesionForzada).not.toHaveBeenCalled();
+    expect(texto()).toContain('Hay una sesión abierta como');
+  });
+
+  it('bloque 4: sin sesión, una marca vencida no dispara ningún cierre', async () => {
+    localStorage.setItem(MARCA_ULTIMA_ACTIVIDAD, String(Date.now() - INACTIVIDAD_MAXIMA_MS - 60_000));
+    await resolverCon(null);
+    expect(sesionInvalida.cerrarSesionForzada).not.toHaveBeenCalled();
     expect(hayFormulario()).toBeTrue();
   });
 
