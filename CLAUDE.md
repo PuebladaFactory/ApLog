@@ -639,7 +639,15 @@ ID canónico + los campos congelados al momento del alta. Criterio de qué va al
 
 ### Estado en memoria
 - BehaviorSubject en XxxService, nunca en localStorage para datos de colecciones
-- `init()` se llama desde HomeComponent al arrancar la app
+- `HomeComponent.ngOnInit` llama al arrancar la app el `init()` de seis catálogos:
+  `ChoferService`, `ProveedorService`, `ClienteService`, `TarifarioService`,
+  `CategoriaDocumentacionService` y `LegajoService`. Sus módulos de reglas están
+  declarados en `MODULOS_ARRANQUE` (`home.component.ts`), que `invariante-rutas.spec.ts`
+  cruza con los roles que admiten las rutas. `NoDisponibilidadService.init` también lo
+  llama Home, pero condicionado a `puede('operaciones')` (hoy un no-op) y además lo
+  llaman sus propios componentes. **No son del arranque:** `VendedorService.init`,
+  `OperacionService.cargarOperaciones` y `AsignacionService.cargarFecha`, que los llaman
+  sus propios componentes.
 - **Ningún dato de otro usuario sobrevive en memoria** (frente eje de sesión, bloque 2c).
   Los catálogos que sólo inicia `HomeComponent` (Choferes, Proveedores, Clientes,
   Tarifario, CategoríaDocumentación, Legajos) cortan su suscripción anterior con un

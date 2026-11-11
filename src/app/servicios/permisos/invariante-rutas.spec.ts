@@ -4,6 +4,7 @@ import { AccionCrud } from 'src/app/interfaces/permiso';
 import { routes as rutasRaiz } from 'src/app/raiz/raiz-routing.module';
 import { routes as rutasAjustes } from 'src/app/raiz/ajustes/ajustes-routing.module';
 import { routes as rutasLegajos } from 'src/app/raiz/legajos/legajos-routing.module';
+import { MODULOS_ARRANQUE } from 'src/app/raiz/home/home.component';
 import matrizEsperada from './matriz-esperada.json';
 
 /**
@@ -28,8 +29,12 @@ import matrizEsperada from './matriz-esperada.json';
  * pasa a ser una pregunta obligatoria y revisable en cada ruta guardada; que la
  * respuesta sea cierta lo revisa una persona.
  *
- * No incluye los listeners que HomeComponent abre para todas las rutas: eso es
- * un chequeo global, no de una pantalla.
+ * Las declaraciones `lee` no incluyen los listeners que HomeComponent abre para
+ * todas las rutas: eso es un chequeo global, no de una pantalla, y lo cubre la
+ * afirmación (e). Sus roles no se escriben a mano: son la unión de los `roles`
+ * de las rutas, así que admitir un rol nuevo en cualquier ruta la dispara
+ * también. MODULOS_ARRANQUE tiene el mismo límite que `lee`: es una declaración
+ * a mano y el test no verifica que coincida con lo que abre ngOnInit.
  */
 
 type Matriz = Record<string, Record<AccionCrud, Record<RolUsuario, boolean>>>;
@@ -95,6 +100,24 @@ describe('Invariante ruta x rol x módulo', () => {
           if (seccionDe(m)?.[m]?.leer?.[rol] !== true) {
             violaciones.push(`ruta '${r.ruta}' admite al rol '${rol}', que no tiene 'leer' en el módulo '${m}'`);
           }
+        }
+      }
+    }
+    expect(violaciones).toEqual([]);
+  });
+
+  it('(e) todo rol que alguna ruta admite puede leer los módulos del arranque', () => {
+    // Roles derivados de las rutas, no escritos a mano (ver el encabezado).
+    const rutasPorRol = new Map<string, string[]>();
+    for (const r of RUTAS) {
+      for (const rol of r.roles as string[]) rutasPorRol.set(rol, [...(rutasPorRol.get(rol) ?? []), r.ruta]);
+    }
+    const violaciones: string[] = [];
+    for (const [rol, rutas] of rutasPorRol) {
+      for (const m of MODULOS_ARRANQUE) {
+        if (seccionDe(m)?.[m]?.leer?.[rol as RolUsuario] !== true) {
+          violaciones.push(`el rol '${rol}' (lo admite la ruta '${rutas[0]}'${rutas.length > 1 ? ` y ${rutas.length - 1} más` : ''}) ` +
+            `no tiene 'leer' en el módulo '${m}', que el arranque (HomeComponent) abre para todas las rutas`);
         }
       }
     }

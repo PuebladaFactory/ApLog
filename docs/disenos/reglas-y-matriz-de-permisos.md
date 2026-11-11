@@ -301,9 +301,19 @@ la única copia mantenida a mano, y las otras dos se verifican contra ella.
 Va en JSON y al lado del servicio que verifica
 (`src/app/servicios/permisos/matriz-esperada.json`), porque `PermisosService` es la de las
 dos copias que se edita más seguido. JSON y no TypeScript porque lo tienen que leer los dos
-lados: el test de emulador es un `.mjs` de Node, que no puede importar TS. Con dos secciones
-que hacen explícito el alcance de cada test: los 9 módulos que se comparan contra
-`permitido()` (180 celdas) y `usuarios` aparte (20), que no pasa por `permitido()` y cuya
+lados: el test de emulador es un `.mjs` de Node, que no puede importar TS.
+
+**Alcance, ampliado en el Bloque 6a:** la sección `reglas` cubre **los 19 módulos de
+`permitido()`, 380 celdas**, no sólo los que la UI consulta. Nació con 9 porque el fixture se
+pensó como "el acuerdo entre cliente y reglas, que sólo existe donde la UI consulta", pero el
+invariante cruzado de 4.5 necesita chequear rutas cuyas pantallas leen módulos fuera de ese
+conjunto —Ajustes lee `logs`, `papelera` e `historicoSoloLectura`— y un test no puede
+chequear una ruta cuyos módulos no están en el fixture. Así que el fixture pasa a ser **la
+matriz esperada de `permitido()`, entera**, y `matrizBase` espeja sólo el subconjunto que la
+UI consulta: los 9 módulos de reglas que alcanza algún `ModuloPermiso`. Los otros 10 están en
+el fixture y no en `matrizBase`, y el spec unitario afirma esa ausencia en las dos
+direcciones, para que nadie vuelva a meter un módulo muerto en la matriz del cliente.
+`usuarios` sigue aparte en `soloCliente` (20 celdas): no pasa por `permitido()` y su
 divergencia con las reglas es deliberada.
 
 - **Test de emulador** (`functions/test-matriz-permisos-rules.mjs`): afirma que las reglas
@@ -352,13 +362,14 @@ La asimetría es tolerable porque las reglas cambian raro y su deploy es manual,
 verificación es un bloqueo de un lado y una disciplina del otro. Decirlo como "rompe el
 build" sería volver a la convención que ya falló.
 
-El test de emulador **es** la cobertura que falta: las 180 celdas quedan al 100 %, y
-`entidades`, `operaciones` y `finanzas` dejan de estar en cero. Los 10 módulos de `permitido()` que la UI no consulta quedan fuera del fixture
-a propósito y siguen cubiertos por los scripts que ya existen
-(`test-historico-rules`, `test-cierre-rules`, `test-vendedores-rules`,
-`test-asignaciones-rules`, `test-vencimientos-rules`, `test-legajos-rules`,
-`test-papelera-rules`, `test-registro-log-rules`): el fixture verifica el acuerdo entre
-cliente y reglas, que sólo existe donde la UI consulta.
+El test de emulador **es** la cobertura que falta. Con la ampliación del Bloque 6a llega al
+**100 % de `permitido()`**: 380 celdas, contra el 27,5 % de las 320 comparables que había al
+empezar el frente. `entidades`, `operaciones` y `finanzas` dejan de estar en cero. Los
+scripts por módulo que ya existían (`test-historico-rules`, `test-cierre-rules`,
+`test-vendedores-rules`, `test-asignaciones-rules`, `test-vencimientos-rules`,
+`test-legajos-rules`, `test-papelera-rules`, `test-registro-log-rules`) quedan como
+verificación específica de cada frente: redundantes con el fixture para las celdas de
+`permitido()`, no para lo que cada uno prueba de más.
 
 **Requisito sobre el test, que sale del hallazgo de las 14 celdas de sólo-rechazo:** un
 control positivo por rol en cada corrida. Si una corrida afirma rechazos de un rol, tiene que
