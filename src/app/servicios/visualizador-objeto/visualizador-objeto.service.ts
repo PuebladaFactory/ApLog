@@ -6,6 +6,7 @@ import { ClienteAltaComponent } from 'src/app/raiz/clientes/cliente-alta/cliente
 import { ChoferesAltaComponent } from 'src/app/raiz/choferes/choferes-alta/choferes-alta.component';
 import { ProveedoresAltaComponent } from 'src/app/raiz/proveedores/proveedores-alta/proveedores-alta.component';
 import { ModalDetalleOpComponent } from 'src/app/raiz/operaciones/modal-detalle-op/modal-detalle-op.component';
+import { ModuloPermiso } from 'src/app/interfaces/permiso';
 
 interface HandlerVisualizador {
   componente: any;
@@ -15,6 +16,8 @@ interface HandlerVisualizador {
   /** true si el modal usa el contrato tipado (@Input() op/modo) en vez de
    *  fromParent — hoy solo ModalDetalleOpComponent (operaciones). */
   contratoNuevo?: boolean;
+  /** Módulo de permiso que gobierna si el botón "ver objeto" existe para esta colección. */
+  modulo: ModuloPermiso;
 }
 
 /**
@@ -34,11 +37,23 @@ export class VisualizadorObjetoService {
   private db = inject(DbFirestoreService);
 
   private readonly mapeo: Record<string, HandlerVisualizador> = {
-    clientes: { componente: ClienteAltaComponent, idField: 'idCliente', tamano: 'lg' },
-    choferes: { componente: ChoferesAltaComponent, idField: 'idChofer', tamano: 'lg' },
-    proveedores: { componente: ProveedoresAltaComponent, idField: 'idProveedor', tamano: 'lg' },
-    operaciones: { componente: ModalDetalleOpComponent, idField: 'idOperacion', tamano: 'lg', contratoNuevo: true },
+    clientes: { componente: ClienteAltaComponent, idField: 'idCliente', tamano: 'lg', modulo: 'clientes' },
+    choferes: { componente: ChoferesAltaComponent, idField: 'idChofer', tamano: 'lg', modulo: 'choferes' },
+    proveedores: { componente: ProveedoresAltaComponent, idField: 'idProveedor', tamano: 'lg', modulo: 'proveedores' },
+    operaciones: { componente: ModalDetalleOpComponent, idField: 'idOperacion', tamano: 'lg', contratoNuevo: true, modulo: 'operaciones' },
   };
+
+  /** Módulo de permiso del botón "ver objeto" de `coleccion`, o null si la
+   *  colección no tiene vista mapeada.
+   *
+   *  null significa "no hay vista": el botón se renderiza SIN gate de permiso y
+   *  deshabilitado (puedeVer da false y el template pone el tooltip "Sin vista
+   *  disponible para esta colección"). No hace falta permiso para un botón que
+   *  no hace nada. El permiso gobierna si el botón existe; puedeVer, si está
+   *  habilitado. Son ortogonales. */
+  moduloDe(coleccion: string): ModuloPermiso | null {
+    return this.mapeo[coleccion]?.modulo ?? null;
+  }
 
   /** true si `coleccion` tiene un modal de vista mapeado — el caller usa esto para
    *  deshabilitar el botón "ver objeto" sin intentar abrir nada. */

@@ -157,15 +157,9 @@ export class RegistroLogComponent implements OnInit {
     this.visualizador.verObjeto(r.coleccion, r.idObjet);
   }
 
-  moduloDe(r: RegistroLog): ModuloPermiso {
-    // Cast deliberado: r.coleccion es la colección real de Firestore, que para
-    // las colecciones con ModuloPermiso real coincide 1:1 (clientes/choferes/
-    // proveedores/operaciones/legajos). Para colecciones sin correspondencia
-    // (users, vehiculos, asignaciones, categoriasDocumentacion), el cast no
-    // corresponde a ningún ModuloPermiso real — inofensivo: PermisosService.puede()
-    // devuelve false de forma segura (encadenamiento opcional en
-    // matrizBase[moduloReal]?.[...]) y el botón simplemente no se renderiza
-    // (visible=false en BtnLeerComponent).
-    return r.coleccion as ModuloPermiso;
+  /** Sin vista mapeada, undefined: el botón se muestra sin gate y deshabilitado
+   *  (ver VisualizadorObjetoService.moduloDe). */
+  moduloDe(r: RegistroLog): ModuloPermiso | undefined {
+    return this.visualizador.moduloDe(r.coleccion) ?? undefined;
   }
 }

@@ -155,9 +155,10 @@ export class PapeleraComponent implements OnInit {
     return secundarios.map(r => `${r.coleccion}: ${r.idOriginal}`).join(', ');
   }
 
-  moduloDe(evento: PapeleraEvento): ModuloPermiso {
-    // Cast deliberado, mismo criterio que RegistroLogComponent.moduloDe.
-    return evento.coleccionPrincipal as ModuloPermiso;
+  /** Sin vista mapeada, undefined: el botón se muestra sin gate y deshabilitado
+   *  (ver VisualizadorObjetoService.moduloDe). */
+  moduloDe(evento: PapeleraEvento): ModuloPermiso | undefined {
+    return this.visualizador.moduloDe(evento.coleccionPrincipal) ?? undefined;
   }
 
   /** Detalle del objeto principal: snapshot archivado si el evento sigue 'activo'
