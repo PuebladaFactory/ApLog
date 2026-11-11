@@ -99,7 +99,11 @@ service cloud.firestore {
         // escriben; demo lee.
         'movimientosFin': 'finanzas',
 
-        // Legado activo — solo lectura a propósito (ver CLAUDE.md)
+        // Legado SIN escritores en código vivo — solo lectura a propósito. Sin
+        // escritura remanente, el propósito original del bucket (que una
+        // escritura olvidada falle visible en demo) ya no puede cumplirse. Su
+        // revisión va a la migración (ver CLAUDE.md → "Security Rules",
+        // legacySoloLectura).
         'facturaCliente': 'legacySoloLectura', 'facturaChofer': 'legacySoloLectura',
         'facturaProveedor': 'legacySoloLectura',
         'facturaOpCliente': 'legacySoloLectura', 'facturaOpChofer': 'legacySoloLectura',
@@ -196,8 +200,10 @@ service cloud.firestore {
         // y la Papelera legado; se niega toda escritura, 'dev' incluido, para
         // que una escritura remanente falle visible. Se separa de
         // 'legacySoloLectura' porque esa deja leer a cualquier rol autenticado,
-        // y 'manager' está denegado en todos los módulos a propósito: acá leen
-        // sólo dev/admin/user/demo, los mismos que leían antes del congelamiento.
+        // y 'manager' está denegado a propósito en todos los módulos SALVO
+        // 'legacySoloLectura', cuya rama no mira el rol (es su única celda
+        // permitida de toda la matriz): acá leen sólo dev/admin/user/demo, los
+        // mismos que leían antes del congelamiento.
         (modulo == 'historicoSoloLectura' && (
           accion == 'leer' && r in ['dev','admin','user','demo']
         )) ||
@@ -223,7 +229,7 @@ service cloud.firestore {
           // que era fallback de la resolución de choferes en flujos de
           // Operaciones/Liquidaciones (código ya eliminado). Hoy su único caller
           // es PapeleraComponent (detalle con snapshot), en la ruta
-          // ajustes/papelera, que admite sólo dev/admin/demo: ningún camino de
+          // ajustes/papelera, que admite sólo dev/admin: ningún camino de
           // 'user' lee papeleraEventos ni objetosEliminados. Grant sin camino
           // alcanzable, pendiente de decisión (no retirado).
           (r == 'user' && accion in ['leer','crear']) ||
