@@ -12,43 +12,49 @@ const routes: Routes = [
       path: 'clientes',
       loadChildren: () => import('./clientes/clientes.module').then(m => m.ClientesModule),
       canMatch: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['dev','admin','manager','user', 'demo'] }, // Accesible para todos los roles
+      data: { roles: ['dev','admin','user','demo'] }, // Los roles que leen 'entidades' en las reglas
     },  
     {
       path: 'choferes',
       loadChildren: () => import('./choferes/choferes.module').then(m => m.ChoferesModule),
       canMatch: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['dev','admin','manager','user', 'demo'] }, // Accesible para todos los roles
+      data: { roles: ['dev','admin','user','demo'] }, // Los roles que leen 'entidades' en las reglas
     },  
     {
       path: 'op',
       loadChildren: () => import('./operaciones/operaciones.module').then(m => m.OperacionesModule),
       canMatch: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['dev','admin','manager','user', 'demo'] }, // Accesible para todos los roles
+      data: { roles: ['dev','admin','user','demo'] }, // Los roles que leen 'operaciones' en las reglas
     },  
     {
       path: 'proveedores',
       loadChildren: () => import('./proveedores/proveedores.module').then(m => m.ProveedoresModule),
       canMatch: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['dev','admin','manager','user', 'demo'] }, // Accesible para todos los roles
+      data: { roles: ['dev','admin','user','demo'] }, // Los roles que leen 'entidades' en las reglas
     },  
     {
       path: 'liquidacion',
       loadChildren: () => import('./liquidacion/liquidacion.module').then(m => m.LiquidacionModule),
       canMatch: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['dev','admin','manager','user', 'demo'] }, // Accesible para todos los roles
+      // Los roles que leen 'finanzas' en las reglas (informesLiq). 'user' sale: no
+      // puede leer informesLiq, y lo único que hacía en el módulo era leer
+      // informesOp, que ya ve en Operaciones.
+      data: { roles: ['dev','admin','demo'] },
     },             
     {
       path: 'legajos',
       loadChildren: () => import('./legajos/legajos.module').then(m => m.LegajosModule),
       canMatch: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['dev','admin','manager','user', 'demo'] }, // Accesible para todos los roles
+      data: { roles: ['dev','admin','user','demo'] }, // Los roles que leen 'legajos' en las reglas
     },
     {
       path: 'ajustes',
       loadChildren: () => import('./ajustes/ajustes.module').then(m => m.AjustesModule),
       canMatch: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['dev','admin', 'demo'] }, // Accesible para todos los roles
+      // dev/admin. 'demo' pierde la pantalla de datos de la empresa, que nunca
+      // tuvo puerta: el menú ya estaba gateado con usuarios.ver (dev/admin), así
+      // que sólo se llegaba escribiendo la URL. Cierra F8b.
+      data: { roles: ['dev','admin'] },
     },
     {
       path: 'nuevaFacturacion',

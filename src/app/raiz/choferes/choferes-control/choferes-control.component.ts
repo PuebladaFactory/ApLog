@@ -26,7 +26,7 @@ import { tabActivaDesdeUrl } from 'src/app/shared/utils/tabs-url.util';
 export class ChoferesControlComponent implements OnInit {
   
   tabs = [
-    { id: 'tab1', name: 'Alta/Listado', route: 'choferes/listado', alias: ['choferes/alta'] },
+    { id: 'tab1', name: 'Alta/Listado', route: 'choferes/listado' },
     // Pestañas de tarifas retiradas en TC-R2: las tarifas viven en /tarifas.
 
   ];

@@ -18,19 +18,19 @@ const routes: Routes = [
       },
       {path: 'registro', component:RegistroComponent,
         canActivate: [RoleGuard],
-        data: { roles: ['dev', 'admin', 'demo'] }, // no se permiten usuarios
+        data: { roles: ['dev', 'admin'] },
       },
       {path: 'registro-log', component:RegistroLogComponent,
         canActivate: [RoleGuard],
-        data: { roles: ['dev', 'admin', 'demo'] }, // mismo criterio que 'registro' (screen de auditoría, no se permiten usuarios)
+        data: { roles: ['dev', 'admin'] },
       },
       {path: 'papelera', component:PapeleraComponent,
         canActivate: [RoleGuard],
-        data: { roles: ['dev', 'admin', 'demo'] }, // no se permiten usuarios
+        data: { roles: ['dev', 'admin'] },
       },
       {path: 'empresa', component:DatosEmpresaComponent,
         canActivate: [RoleGuard],
-        data: { roles: ['dev', 'admin', 'demo'] }, // demo: solo lectura (F8b)
+        data: { roles: ['dev', 'admin'] }, // F8b: demo sale (nunca tuvo puerta: el menú ya era dev/admin)
       },
   ]}
 ];

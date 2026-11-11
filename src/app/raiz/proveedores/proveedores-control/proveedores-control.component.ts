@@ -26,7 +26,7 @@ import { tabActivaDesdeUrl } from 'src/app/shared/utils/tabs-url.util';
 export class ProveedoresControlComponent implements OnInit {
 
   tabs = [
-    { id: 'tab1', name: 'Alta/Listado', route: 'proveedores/listado', alias: ['proveedores/alta'] },
+    { id: 'tab1', name: 'Alta/Listado', route: 'proveedores/listado' },
     // Pestañas de tarifas retiradas en TC-R2: las tarifas viven en /tarifas.
 
   ];

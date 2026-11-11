@@ -5,6 +5,7 @@ import { TableroLegajosComponent } from './tablero-legajos/tablero-legajos.compo
 import { ConsultaLegajosComponent } from './consulta-legajos/consulta-legajos.component';
 import { CargarDocumentosComponent } from './cargar-documentos/cargar-documentos.component';
 import { VencimientosComponent } from './vencimientos/vencimientos.component';
+import { RoleGuard } from 'src/app/guards/role.guard';
 
 const routes: Routes = [
   {path: '', component:ControlComponent,
@@ -12,7 +13,10 @@ const routes: Routes = [
       {path: '', redirectTo: 'tablero', pathMatch: 'full' },
       {path: 'tablero', component:TableroLegajosComponent},
       {path: 'consulta', component:ConsultaLegajosComponent},
-      {path: 'cargarDoc', component:CargarDocumentosComponent},
+      {path: 'cargarDoc', component:CargarDocumentosComponent,
+        canActivate: [RoleGuard],
+        data: { roles: ['dev', 'admin', 'user'] }, // legajos.crear, el mismo permiso que la pestaña (legajos.agregar)
+      },
       {path: 'vencimientos', component:VencimientosComponent},
   ]  },
 ];
