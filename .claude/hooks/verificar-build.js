@@ -2,32 +2,37 @@
 /**
  * Hook Stop — impide que un turno termine con el proyecto sin compilar.
  *
- * Tres pasos, de la mas rapida a la mas lenta, para fallar rapido:
+ * Cuatro pasos, de la mas rapida a la mas lenta, para fallar rapido:
  *
- *   1. tsc --noEmit -p tsconfig.hook.json, que incluye TODO src/.
+ *   1. Chequeo estatico de forma (verificar-esrol.js, en proceso): esRol() con
+ *      dos o mas roles literales esta prohibido; una lista de acceso se toma de
+ *      una constante compartida (spec 2.13). Es instantaneo, por eso va primero.
+ *
+ *   2. tsc --noEmit -p tsconfig.hook.json, que incluye TODO src/.
  *      Necesaria porque tsconfig.app.json solo compila lo alcanzable desde
  *      main.ts: un .ts que todavia nadie importa NO se verifica, y el bloque 1
  *      de cualquier frente son justamente archivos sin consumidores.
- *      Excluye los .spec.ts (los compila el paso 2).
+ *      Excluye los .spec.ts (los compila el paso 3).
  *
- *   2. npm run test:ci (Karma + Chrome headless). Entre otros, corre
+ *   3. npm run test:ci (Karma + Chrome headless). Entre otros, corre
  *      permisos.service.spec.ts, que compara matrizBase contra
  *      matriz-esperada.json: un spec que hay que acordarse de correr no es una
  *      verificacion (docs/disenos/reglas-y-matriz-de-permisos.md, 4.4). Puede
  *      fallar por entorno (no encuentra o no levanta Chrome) y no por un test
  *      roto: el mensaje dice cual de los dos fue.
  *
- *   3. npm run build:demo, que ademas verifica los templates de Angular, cosa
+ *   4. npm run build:demo, que ademas verifica los templates de Angular, cosa
  *      que tsc no hace. NO `npm run build`, que dispara prebuild/set-version.js
  *      y regeneraria src/environments/version.ts en cada turno.
  *
- * El mensaje de bloqueo nombra el paso que fallo. Mudo si los tres pasan.
+ * El mensaje de bloqueo nombra el paso que fallo. Mudo si los cuatro pasan.
  *
  * Solo corre si hay archivos .ts/.html/.scss/.json modificados segun git.
  */
 
 const { execSync } = require('node:child_process');
 const fs = require('node:fs');
+const { verificarEsRol } = require('./verificar-esrol');
 
 // .json por matriz-esperada.json, el pivote de la verificacion de permisos (spec 4.4): un
 // cambio de reglas en sus 9 modulos obliga a tocarlo, y ese toque es lo que hace correr el
@@ -74,16 +79,20 @@ function diagnosticarTests(salida, lineas) {
 
 const PASADAS = [
   {
-    etiqueta: 'el paso 1 de 3, la verificacion de tipos (npx tsc --noEmit -p tsconfig.hook.json)',
+    etiqueta: 'el paso 1 de 4, el chequeo de forma de esRol (.claude/hooks/verificar-esrol.js)',
+    funcion: verificarEsRol,
+  },
+  {
+    etiqueta: 'el paso 2 de 4, la verificacion de tipos (npx tsc --noEmit -p tsconfig.hook.json)',
     comando: 'npx tsc --noEmit -p tsconfig.hook.json',
   },
   {
-    etiqueta: 'el paso 2 de 3, los tests (npm run test:ci)',
+    etiqueta: 'el paso 3 de 4, los tests (npm run test:ci)',
     comando: 'npm run test:ci',
     diagnosticar: diagnosticarTests,
   },
   {
-    etiqueta: 'el paso 3 de 3, el build de verificacion (npm run build:demo)',
+    etiqueta: 'el paso 4 de 4, el build de verificacion (npm run build:demo)',
     comando: 'npm run build:demo',
   },
 ];
@@ -182,7 +191,7 @@ if (!hayCodigoModificado) {
 }
 
 for (const pasada of PASADAS) {
-  const detalle = correr(pasada.comando, pasada.diagnosticar);
+  const detalle = pasada.funcion ? pasada.funcion() : correr(pasada.comando, pasada.diagnosticar);
   if (detalle) {
     bloquear(
       `Fallo ${pasada.etiqueta}. ` +

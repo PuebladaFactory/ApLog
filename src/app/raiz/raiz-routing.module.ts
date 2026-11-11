@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { HomeComponent } from './home/home.component';
 import { RoleGuard } from '../guards/role.guard';
+import { ROLES_AJUSTES } from '../constantes/roles-acceso';
 
 
 export const routes: Routes = [
@@ -57,7 +58,7 @@ export const routes: Routes = [
       // lee: [] porque el shell no lee nada y sus cinco hijas tienen canActivate
       // propio con su declaración de lo que leen. El vacío es una afirmación,
       // no una omisión: no completarlo con lo que leen las hijas.
-      data: { roles: ['dev','admin'], lee: [] },
+      data: { roles: ROLES_AJUSTES, lee: [] },
     },
     {
       path: 'nuevaFacturacion',

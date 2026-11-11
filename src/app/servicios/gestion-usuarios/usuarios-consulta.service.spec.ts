@@ -1,5 +1,6 @@
 import { RolUsuario, Usuario } from 'src/app/interfaces/usuario';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
+import { PermisosService } from 'src/app/servicios/permisos/permisos.service';
 import { GestionUsuariosService } from './gestion-usuarios.service';
 import { UsuariosConsultaService } from './usuarios-consulta.service';
 
@@ -21,14 +22,16 @@ describe('UsuariosConsultaService', () => {
   let sesion: jasmine.SpyObj<UsuarioSesionService>;
   let servicio: UsuariosConsultaService;
 
+  // PermisosService real sobre la sesión simulada: el caso prueba la regla de
+  // lectura de /users (usuarios.ver), no una lista copiada.
   function conRol(rol: RolUsuario): void {
-    sesion.esRol.and.callFake((...roles: RolUsuario[]) => roles.includes(rol));
+    sesion.getRol.and.returnValue(rol);
   }
 
   beforeEach(() => {
     gestion = jasmine.createSpyObj<GestionUsuariosService>('GestionUsuariosService', ['obtenerUsuarios']);
-    sesion = jasmine.createSpyObj<UsuarioSesionService>('UsuarioSesionService', ['esRol']);
-    servicio = new UsuariosConsultaService(gestion, sesion);
+    sesion = jasmine.createSpyObj<UsuarioSesionService>('UsuarioSesionService', ['getRol']);
+    servicio = new UsuariosConsultaService(gestion, new PermisosService(sesion));
   });
 
   it('con rol demo no consulta Firestore y muestra el email', async () => {

@@ -78,13 +78,11 @@ Ruteo (frente Lazy loading + fechas):
 - `RaizModule` declara solo el shell; cada feature es un chunk lazy desde `raiz-routing`
   (y `/migracion`, `DesarrolloModule`).
 - `RoleGuard`: `canMatch` en las rutas de `raiz-routing` (13, un rol sin acceso no descarga
-  el chunk) y `canActivate` en **sólo 6** rutas internas: las 5 hijas de `ajustes-routing`
-  y `legajos/cargarDoc`. **Las demás rutas internas no tienen guard propio y heredan sólo
-  el `canMatch` del padre** — incluidas las de Finanzas, Liquidación, Facturación,
-  Operaciones, Reportes, Tarifas, Vendedores y `/migracion`, las otras cuatro de Legajos y
-  `listado` en los tres listados CRUD. La matriz completa de qué rol entra a qué ruta está
-  en `docs/disenos/reglas-y-matriz-de-permisos.md`, sección 3; acá no se duplica. Los dos
-  devuelven
+  el chunk) y `canActivate` en **sólo 8** rutas internas: las 5 hijas de `ajustes-routing`
+  y las 3 rutas `alta` de choferes/clientes/proveedores. **Las demás rutas internas no
+  tienen guard propio y heredan sólo el `canMatch` del padre** — incluidas las de Finanzas,
+  Legajos, Liquidación, Facturación, Operaciones, Reportes, Tarifas, Vendedores y
+  `/migracion`, y `listado` en los tres listados CRUD. Los dos devuelven
   `Promise<true | UrlTree>` (esperan a que la sesión esté reconciliada, ver "Autenticación
   y roles"); nunca `false` en `canMatch` (el router seguiría buscando y caería en `'**'`).
 
@@ -442,13 +440,13 @@ JRE instalado por el emulador de Firestore). Scripts de prueba
 reproducibles: `functions/test-emulator.mjs` (sync de claims + reglas
 básicas), `functions/test-gestion-usuarios.mjs` (las 4 funciones de
 gestión, 12 casos cubriendo la matriz de autorización completa),
-`functions/test-asignaciones-rules.mjs` (reglas de la categoría
-`asignaciones`: `user` puede leer/crear/eliminar, `demo` denegado en
-`leer` y `crear` —`editar` y `eliminar` de `demo` no se prueban, así que
-"sin ningún acceso" no está verificado por este script—, `admin` de
-control — setea el Custom Claim directo vía Admin
-SDK, no necesita el emulador de `functions`, alcanza con
-`--only firestore,auth`), `functions/test-vencimientos-scheduler.mjs`
+`functions/test-asignaciones-rules.mjs` (test mantenido de la categoría
+`asignaciones`, su única verificación: la matriz completa del módulo,
+4 acciones × 5 roles, con afirmación de setup del `role` en el ID token
+por rol e id propio por corrida con precondición antes de cada celda, al
+mismo estándar que `test-matriz-permisos-rules.mjs` — setea el Custom
+Claim directo vía Admin SDK, no necesita el emulador de `functions`,
+alcanza con `--only firestore,auth`), `functions/test-vencimientos-scheduler.mjs`
 (siembra legajos con estado desactualizado, dispara
 `verificarVencimientosDocumentacion` manualmente vía el endpoint HTTP que
 el emulador de Functions expone para scheduled functions —
@@ -501,8 +499,16 @@ Categorías especiales:
   esos documentos, se hace por consola, igual que con las otras colecciones
   legadas. Verificado con `functions/test-historico-rules.mjs` contra el
   emulador (100/100, incluida la regresión de las tres colecciones nuevas).
-  Desplegado en demo: las reglas de demo se deployan a medida que se modifican,
-  así que demo corre siempre con el archivo actualizado.
+  Desplegado en demo.
+
+⚠️ **`firestore.rules` y lo que demo está ejecutando no son lo mismo.** El deploy de reglas
+a demo es manual y lo hace Nico cuando cambian, así que **entre un commit que toca
+`firestore.rules` y ese deploy, demo corre reglas más viejas que el archivo**. El archivo es
+la fuente de verdad del diseño; qué está corriendo demo en un momento dado lo sabe quien
+deployó. No lo des por sincronizado: si una verificación depende de las reglas vivas de demo
+y no del emulador, preguntá antes. (Esta nota reemplaza una frase anterior que afirmaba que
+demo corre siempre con el archivo actualizado, lo cual describía la práctica como si fuera
+un invariante.)
 - `_backup_*` (prefijo dinámico de colecciones de migración): solo
   `dev`, ni lectura para el resto.
 - `/users/{uid}`: excepción de path (no vive bajo `/Vantruck/datos/`).
@@ -512,7 +518,9 @@ Categorías especiales:
 - `asignaciones`: categoría propia, desacoplada de `operaciones` (antes
   `moduloDe()` las mapeaba juntas). `dev`/`admin`/`user` tienen las 4
   acciones sin distinción (`r in ['dev','admin','user']`, sin chequeo de
-  `accion`); `demo`/`manager` sin ningún acceso. Un tablero de
+  `accion`); `demo` lee (frente de reglas y matriz, decisión 2.6: el
+  tablero es una pantalla de lectura para demo) y sigue sin crear,
+  editar ni eliminar; `manager` sin ningún acceso. Un tablero de
   asignaciones es trabajo descartable/editable por naturaleza
   (borrador), perfil de riesgo distinto al de la `Operacion` real ya
   persistida — no debe heredar las restricciones de `operaciones`
@@ -521,11 +529,11 @@ Categorías especiales:
   limpiar un borrador (`asignaciones` heredaba `eliminar=false` de
   `operaciones`) pese a que el gating del cliente (Bloque 7 del frente
   Botones y Permisos) ya lo permitía correctamente — la corrección era
-  puramente de reglas, sin tocar Angular/`PermisosService` salvo
-  agregar la entrada `matrizBase.asignaciones` por fidelidad de
-  transcripción (sin consumidor real desde `ModuloPermiso` todavía).
-  Verificado con `functions/test-asignaciones-rules.mjs` contra el
-  emulador antes de deploy (mismo patrón que `test-emulator.mjs`).
+  puramente de reglas. El módulo no está en `matriz-esperada.json` (ni
+  en `matrizBase`) porque ningún `ModuloPermiso` lo alcanza, así que
+  `test-matriz-permisos-rules.mjs` no lo cubre: su verificación es
+  `functions/test-asignaciones-rules.mjs`, con la matriz completa del
+  módulo (4 acciones × 5 roles) contra el emulador.
 - `desarrollo`: módulo solo para `dev` (todas las acciones:
   `(modulo == 'desarrollo' && r == 'dev')` en `permitido()`), para las
   herramientas de desarrollo de demo. Hoy: `generacionesPrueba` (lotes del
@@ -639,15 +647,7 @@ ID canónico + los campos congelados al momento del alta. Criterio de qué va al
 
 ### Estado en memoria
 - BehaviorSubject en XxxService, nunca en localStorage para datos de colecciones
-- `HomeComponent.ngOnInit` llama al arrancar la app el `init()` de seis catálogos:
-  `ChoferService`, `ProveedorService`, `ClienteService`, `TarifarioService`,
-  `CategoriaDocumentacionService` y `LegajoService`. Sus módulos de reglas están
-  declarados en `MODULOS_ARRANQUE` (`home.component.ts`), que `invariante-rutas.spec.ts`
-  cruza con los roles que admiten las rutas. `NoDisponibilidadService.init` también lo
-  llama Home, pero condicionado a `puede('operaciones')` (hoy un no-op) y además lo
-  llaman sus propios componentes. **No son del arranque:** `VendedorService.init`,
-  `OperacionService.cargarOperaciones` y `AsignacionService.cargarFecha`, que los llaman
-  sus propios componentes.
+- `init()` se llama desde HomeComponent al arrancar la app
 - **Ningún dato de otro usuario sobrevive en memoria** (frente eje de sesión, bloque 2c).
   Los catálogos que sólo inicia `HomeComponent` (Choferes, Proveedores, Clientes,
   Tarifario, CategoríaDocumentación, Legajos) cortan su suscripción anterior con un
@@ -876,16 +876,19 @@ Deuda técnica activa. Actualizar cuando se salda.
 - **Fix de altura del modal limitado a `tablero-op`** — el ajuste que estira `carga-asignacion` dentro del modal vive en `tablero-op.component.scss`: otro caller que abra ese modal tiene que replicarlo. Detalle: skill `modulo-operaciones`.
 - **Migración de `noOperativo`** — la colección anterior de no disponibilidad quedó sin lectores: 6 documentos en demo y los de producción (2 vigentes al relevar), con la forma y el trabajo de "Datos de la colección anterior" en `docs/disenos/no-disponibilidad.md`. **Va después de la migración de Choferes**: 3 de los 6 de demo tienen `idChofer` numéricos del modelo viejo que sólo resuelven con su mapeo; al revés, se pierden.
 - **Mapeo de `noOperativo` en `firestore.rules`** — se saca recién cuando termine esa migración.
-- **`manager` declarado sin rutas ni permisos** — saldada la parte C1 del eje de sesión (ya no pasa ningún `canMatch`, así que no vuelve a ver la app vacía con `permission-denied`: cualquier URL lo manda a `/limbo` y el login lo deposita ahí). Lo que queda: el rol existe en `RolUsuario`, `matrizBase` lo deniega en los diez módulos y no hay ningún usuario con él. Retirarlo queda para después del corte — es mecánico y TypeScript encuentra cada sitio, pero toca 40 celdas de `matrizBase`, la validación de `crearUsuario` y el desplegable de gestión. Mientras no tenga ningún permiso propio, su comportamiento **no es verificable al nivel de las reglas**: no hay nada que lo distinga de un token sin rol. Detalle: `docs/disenos/reglas-y-matriz-de-permisos.md`, 2.1.
+- **`manager` sin lectura en lo que abre** (C1 del eje de sesión) — `manager` pasa `canMatch` en seis rutas (`clientes`, `choferes`, `op`, `proveedores`, `liquidacion`, `legajos`), pero `permitido()` no le da `leer` en ningún módulo salvo `legacySoloLectura`: los nueve listeners del arranque le devuelven `permission-denied` y ve la app vacía. La red de sesión inválida no actúa ahí a propósito (Auth y app de acuerdo = matriz, no sesión). Frente diferido de reglas y matriz. Detalle: skill `botones-y-permisos`.
 - **Un `signOut` que falla se deshace en el próximo F5** (C6 del eje de sesión) — `cerrarSesion` limpia la sesión de la app antes del `signOut`; si `signOut` lanza, Auth queda autenticado y la reconciliación del próximo arranque reconstruye la sesión. Aceptado: `signOut` es local y muy raro que falle. No se construyó una marca de "cierre pedido".
 - **Huecos conocidos en la cobertura del LOGOUT** — un cierre por la red de sesión inválida no escribe LOGOUT (no es un gesto y no hay token con el que escribirlo; el cierre por inactividad sí lo escribe), y el LOGOUT de `cerrarSesion` y el del cierre por inactividad se esperan como mucho 3 s antes de la recarga: sin conexión se pierden (antes, el logout quedaba colgado para siempre). Detalle: skill `subsistema-log`.
 - **Listeners fuera de la red de sesión inválida** — si su sesión muere, no avisan. Cumplen el invariante de memoria del bloque 2c, no el de la red. Los 11 usos de `vigilar()` cubren sólo el arranque: `ChoferService.init` (×2), `ProveedorService.init`, `ClienteService.init`, `TarifarioService.init` (×3), `CategoriaDocumentacionService.init`, `LegajoService.init`, `NoDisponibilidadService.init` y `OperacionService.cargarOperaciones`. **Quedan afuera 14** (lista completa al 2026-11-10, auditoría de capas de acceso): `VendedorService.init`, `AsignacionService.cargarFecha`, `AsignacionService.getTableroPorFecha`, `VencimientosComponent.ngOnInit`, `RegistroComponent.consultarRegistro`, los cinco de `FinanzasConsultaService` (`observarInformesAbiertos`, `observarMovimientosConSaldo`, `observarMovimientosPorFecha`, `observarCuentaEntidad`, `observarFacturadosPorFechaFactura`), `InformeLiqConsultaService.observarPorEstado`, `InformeLiqService.observarBorradores`, `InformeOpService.observarPorPeriodo` y `observarAnuladosPorPeriodo`, `LiquidacionVentaService.observarPorPeriodos`, `ComisionVentaConsultaService.observarDelMes` y `observarPendientes`, y `ResumenOpConsultaService.observar`. Antes esta entrada nombraba sólo los dos primeros.
 - **Preferencias de UI compartidas entre usuarios del mismo navegador** — las cinco claves de `localStorage` de `tablero-op` e `informe-op-listado` ya no se borran en el login: el cliente o chofer filtrado por un usuario le aparece al siguiente. Arreglo: namespacearlas por uid. Detalle: skill `modulo-operaciones`.
 - **`/carga` sin propósito claro** — sólo espera 3 s y navega a `/op`. Si el valor es visual, la espera debería justificarse; si no, la pantalla sobra. Dato para la decisión: desde el eje de sesión, `index.html` tiene un spinner de arranque, así que el camino del login tiene ese spinner **y** los 3 s de `/carga`. Frente de UX.
+- **La pestaña "Registro" está comentada en `AjustesControlComponent`** — `RegistroComponent` (histórico congelado de `logs`) no tiene entrada en la UI para ningún rol; sólo se llega escribiendo `/ajustes/registro`. Detalle: skill `subsistema-log`; afecta la primera verificación del corte en `migracion-vantruck`.
+- **Criterio de acceso de `demo` al módulo Ajustes** — cinco capas en desacuerdo (`canMatch`, rutas hijas, `redirectTo`, sidebar y reglas). Decidido, pendiente de aplicar: Ajustes pasa a `dev`/`admin`, con el costo de `empresa` (F8b). Frente diferido de reglas y matriz. Detalle: skill `botones-y-permisos`.
+- **Módulos de `permitido()` sin equivalente en `ModuloReglas`/`matrizBase`** — `historicoSoloLectura`, `desarrollo` y `vencimientos`. Mismo frente diferido. Detalle: skill `botones-y-permisos`.
 - **Filtro por colección del Registro de actividad incompleto** — `COLECCIONES_REGISTRO_LOG` (`registro-log-consulta.service.ts`) no tiene 10 colecciones que ya escriben en `registroLog`: `users`, `informesOp`, `informesLiq`, `movimientosFin`, `tarifas`, `tarifasEspeciales`, `registrosOpEventuales`, `vendedores`, `liquidacionesVenta` y `configuracion`. Sus entradas se ven sin filtrar, pero no se pueden filtrar por colección. Detalle: skill `subsistema-log`.
 - **Cuatro copias de `escapar`** — en `modal-no-disponibilidad`, `operaciones-editor`, `vendedor-historial` y `shared/utils/texto-html.util.ts`: unificar sobre `escaparHtml`/`textoAHtml` del util.
 - **Filtros vs. listener en background (frente futuro)** — en `tablero-op` los datos pueden quedar congelados al volver de background mientras los filtros muestran otro período; las suscripciones a `operaciones$` no manejan errores. Detalle: skill `modulo-operaciones`.
-- **Permisos de UI dispersos — lo que queda** — de los 7 `esRol()` que gateaban UI se migraron 5 en el frente de reglas y matriz. Faltan `PapeleraComponent.puedeRestaurar` e `InformeOpAnuladosComponent.puedeVerPapelera`, que mezclan regla de negocio con rol y necesitan diseño (bloque 10). Y aparte quedan **7 comparaciones de rol directas** en los componentes de Tarifas (`['dev','admin'].includes(usuario.role)` y `esDev`): no usan `esRol`, así que un barrido de ese símbolo no las encuentra (bloque 8). Detalle: skill `botones-y-permisos` y `docs/disenos/reglas-y-matriz-de-permisos.md`.
+- **Permisos de UI dispersos** — quedan `esRol()` puntuales sin migrar a `PermisosService`, con riesgo de mostrar acciones que las Security Rules rechazan: `esRol('demo')` en los templates de `ChoferesListadoComponent`, `ClientesListadoComponent`, `ProveedoresListadoComponent`, `TableroLegajosComponent` y el `ControlComponent` de Legajos, más `PapeleraComponent.puedeRestaurar` e `InformeOpAnuladosComponent.puedeVerPapelera`. Detalle: skill `botones-y-permisos`.
 - **Tarifas tras el cierre** — quedan residuos inertes en datos de demo (`idTarifa`/`tarifaAsignada`, `adExtra: null`) y `tarifa-gral-cliente.ts` sigue vivo por la Liquidación vieja. Detalle: skill `modulo-tarifas`.
 - **Migración conjunta Choferes/Vehículos/Legajos** — los IDs legacy se resuelven por relación cruzada, así que esas colecciones no se pueden migrar aisladas; revisar también las `fechaVto` en milisegundos. Detalle: skill `migracion-vantruck`.
 - **El ajuste atrapado** — un ajuste imputado sólo se puede quitar anulando el movimiento, y sólo mientras el informe siga en `'facturado'`; un ajuste vigente sobre un informe en cualquier otro estado no se puede quitar por ningún camino existente. La app hoy no lo produce; los ajustes de `'apertura'` de la migración tienen que imputarse sobre informes `'facturado'` o nacen atrapados. Detalle: skill `modulo-finanzas` (y `migracion-vantruck`).

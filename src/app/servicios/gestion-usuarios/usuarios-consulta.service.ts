@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Usuario } from 'src/app/interfaces/usuario';
-import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
+import { PermisosService } from 'src/app/servicios/permisos/permisos.service';
 import { GestionUsuariosService } from './gestion-usuarios.service';
 
 /**
@@ -24,7 +24,7 @@ export class UsuariosConsultaService {
 
   constructor(
     private gestionUsuarios: GestionUsuariosService,
-    private usuarioSesion: UsuarioSesionService,
+    private permisosService: PermisosService,
   ) {}
 
   /**
@@ -58,7 +58,9 @@ export class UsuariosConsultaService {
 
   private async leer(): Promise<void> {
     this.usuarios = [];
-    if (!this.usuarioSesion.esRol('dev', 'admin')) return;
+    // La regla de lectura de /users (soloCliente.usuarios.leer), no la lista de
+    // acceso a Ajustes: que hoy coincidan en dev/admin no las hace la misma.
+    if (!this.permisosService.puede('usuarios', 'ver')) return;
     try {
       this.usuarios = await this.gestionUsuarios.obtenerUsuarios();
     } catch (e) {
