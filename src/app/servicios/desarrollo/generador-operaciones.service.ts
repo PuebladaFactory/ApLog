@@ -696,7 +696,10 @@ export class GeneradorOperacionesService {
     if (!this.esEntornoDemo()) {
       throw new Error(`Generador bloqueado: el proyecto es '${environment.firebase.projectId}', no demo.`);
     }
-    if (this.usuarioSesion.getRol() !== 'dev') {
+    // Affordance de rol SIN contraparte en permisos (spec 2.12, clase 3): escribe
+    // colecciones reales, no 'desarrollo'. Su protección real es la guarda de
+    // projectId de arriba, no un permiso.
+    if (!this.usuarioSesion.esRol('dev')) {
       throw new Error('Generador bloqueado: requiere rol dev.');
     }
   }

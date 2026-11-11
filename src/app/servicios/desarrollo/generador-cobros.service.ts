@@ -481,7 +481,10 @@ export class GeneradorCobrosService {
     if (!this.esEntornoDemo()) {
       throw new Error(`Generador de cobros bloqueado: el proyecto es '${environment.firebase.projectId}', no demo.`);
     }
-    if (this.usuarioSesion.getRol() !== 'dev') {
+    // Affordance de rol SIN contraparte en permisos (spec 2.12, clase 3): escribe
+    // colecciones reales, no 'desarrollo'. Su protección real es la guarda de
+    // projectId de arriba, no un permiso.
+    if (!this.usuarioSesion.esRol('dev')) {
       throw new Error('Generador de cobros bloqueado: requiere rol dev.');
     }
   }

@@ -305,7 +305,11 @@ export class RecalculoComisionesService {
   }
 
   private verificarAcceso(): void {
-    if (this.usuarioSesion.getRol() !== 'dev') {
+    // Affordance de rol SIN contraparte en permisos (spec 2.12, clase 3): escribe
+    // colecciones donde 'admin' también tiene permiso, y es dev-only a propósito
+    // por ser una operación masiva sobre datos históricos. Las reglas no
+    // distinguen masivo de individual: gatearla por permiso la abriría a admin.
+    if (!this.usuarioSesion.esRol('dev')) {
       throw new Error('Recálculo bloqueado: requiere rol dev.');
     }
   }

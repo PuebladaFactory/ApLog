@@ -140,7 +140,10 @@ export class LimpiezaDemoService {
     if (!this.esEntornoDemo()) {
       throw new Error(`Limpieza bloqueada: el proyecto es '${this.proyecto}', no '${LimpiezaDemoService.PROYECTO_DEMO}'.`);
     }
-    if (this.usuarioSesion.getRol() !== 'dev') {
+    // Affordance de rol SIN contraparte en permisos (spec 2.12, clase 3): escribe
+    // colecciones reales, no 'desarrollo'. Su protección real es la guarda de
+    // projectId de arriba, no un permiso.
+    if (!this.usuarioSesion.esRol('dev')) {
       throw new Error('Limpieza bloqueada: requiere rol dev.');
     }
   }
