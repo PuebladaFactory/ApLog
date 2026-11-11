@@ -442,7 +442,24 @@ queda un estado transitorio de menú completo con todo cayendo en `/limbo`.
 *Corrección del 2026-11-10: la versión anterior de este bloque sólo nombraba `cargarDoc` de
 los cinco `ngClass`, y la spec no le asignaba bloque a los 7 `esRol()` de gating de UI, que
 son uno de los cuatro objetivos del relevamiento. Cinco de esos siete son los `ngClass` de
-este bloque; los otros dos van al Bloque 10.*
+este bloque; los otros dos van al Bloque 10. Con eso el conteo de los 7 cierra: 5 en el
+Bloque 3, 2 en el Bloque 10.*
+
+**Decidido el 2026-11-10 sobre el dropup de `tablero-legajos`: el gate se saca, sin
+reemplazo.** El filtro de Proveedores del tablero estaba bloqueado para `demo` con
+`[ngClass]="{'isDisabled': esRol('demo')}"`, pero filtrar una lista que el rol puede leer no
+es una acción privilegiada: `demo` tiene `legajos.leer`, y expresar "no puede filtrar" exigiría
+inventar una `AccionPermiso` propia o un override. El bloqueo por `pointer-events` tampoco era
+real —con teclado se usaba igual—, así que no había nada que conservar. `demo` gana el filtro.
+Es el único punto del frente donde un rol gana algo en vez de perderlo.
+
+**Dos hallazgos del Bloque 3 que corrigen el relevamiento.** Primero: los tres botones
+"Visibles" de los listados CRUD **son escritura**, no filtros — abren
+`VisibilidadListadosComponent`, que hace `db.updateConResultado(tipo, id, { visible })`. Su
+gate correcto es `<modulo>.editar` → `entidades.editar`, que niega a `demo` igual que el
+`esRol('demo')` que reemplaza, y además a `manager`. Segundo: cada listado tiene **dos**
+controles distintos con el mismo rótulo — ese botón, y un radio "Visibles / Todos" que es un
+filtro local sin gate ni necesidad de uno. La auditoría los trataba como uno.
 
 **Bloque 4 — routing.** `canMatch`: `manager` afuera de las seis; `user` afuera de
 `liquidacion`; `ajustes` a d·a. `canActivate` de `legajos/cargarDoc` y de las cuatro hojas de
