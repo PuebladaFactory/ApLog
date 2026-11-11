@@ -14,7 +14,7 @@ import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
 import { OperacionService } from 'src/app/servicios/operaciones/operacion.service';
 import { UsuariosConsultaService } from 'src/app/servicios/gestion-usuarios/usuarios-consulta.service';
-import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
+import { PermisosService } from 'src/app/servicios/permisos/permisos.service';
 
 /** Pantalla nueva de papelera, basada en el mecanismo por referencia
  *  (PapeleraEvento/objetosEliminados, ver CLAUDE.md → "Frente Papelera") — SOLO
@@ -55,7 +55,7 @@ export class PapeleraComponent implements OnInit {
     private proveedorService: ProveedorService,
     private operacionService: OperacionService,
     public usuariosConsulta: UsuariosConsultaService,
-    public usuarioSesion: UsuarioSesionService,
+    private permisosService: PermisosService,
     private route: ActivatedRoute,
     private router: Router,
   ) {}
@@ -172,8 +172,29 @@ export class PapeleraComponent implements OnInit {
     await this.visualizador.verObjeto(evento.coleccionPrincipal, evento.idPrincipal, snapshot);
   }
 
+  /** Dos mitades independientes:
+   *  - Regla de negocio: sólo un evento 'activo' se restaura (uno ya
+   *    restaurado, no de nuevo).
+   *  - Permiso: crear en el módulo de la colección principal de la fila
+   *    (clientes, choferes, proveedores u operaciones, vía
+   *    VisualizadorObjetoService.moduloDe), porque la restauración vuelve a
+   *    poner el documento en su colección.
+   *
+   *  LIMITACIÓN: el gate cubre sólo la escritura principal. La restauración
+   *  escribe en un mismo batch o transacción, además: los objetos secundarios
+   *  del evento (ej. vehículos de un chofer), el item del tablero en
+   *  'asignaciones' (sólo en operaciones), el delete de cada objeto en
+   *  objetosEliminados y el reemplazo del evento en papeleraEventos (módulo
+   *  'papelera'), y la entrada de registroLog (módulo 'logs'). 'papelera' y
+   *  'logs' no tienen ModuloPermiso: ninguna UI los consulta (el bloque 2 los
+   *  sacó de matrizBase), y agregarlos por este chequeo no se justifica
+   *  mientras sea un no-op (dev y admin, los únicos que llegan a esta
+   *  pantalla, tienen todas esas escrituras). El chequeo NO es la conjunción
+   *  completa de las escrituras del gesto (spec 2.11). */
   puedeRestaurar(evento: PapeleraEvento): boolean {
-    return evento.estado === 'activo' && !this.usuarioSesion.esRol('demo');
+    if (evento.estado !== 'activo') return false;
+    const modulo = this.visualizador.moduloDe(evento.coleccionPrincipal);
+    return modulo !== null && this.permisosService.puede(modulo, 'agregar');
   }
 
   async restaurar(evento: ConId<PapeleraEvento>): Promise<void> {

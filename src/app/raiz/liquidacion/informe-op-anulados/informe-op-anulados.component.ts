@@ -7,6 +7,7 @@ import { InformeOpNuevo } from 'src/app/interfaces/informe-op-nuevo';
 import { DateRange, DateRangeService, toISODateString } from 'src/app/servicios/fechas/date-range.service';
 import { InformeOpService } from 'src/app/servicios/informes-op/informe-op.service';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
+import { ROLES_AJUSTES } from 'src/app/constantes/roles-acceso';
 import { nombreEntidadInforme, nombreEntidadRef } from 'src/app/shared/utils/entidad-informe.util';
 import { InformeOpDetalleComponent } from 'src/app/shared/modales/informe-op-detalle/informe-op-detalle.component';
 
@@ -131,9 +132,11 @@ export class InformeOpAnuladosComponent implements OnInit, OnDestroy {
     return `${inf.datosOperacion.chofer.apellido} ${inf.datosOperacion.chofer.nombre}`;
   }
 
-  /** La ruta de papelera admite dev/admin/demo (RoleGuard en ajustes-routing). */
+  /** Los roles que admite la ruta ajustes/papelera. La lista es COMPARTIDA con
+   *  esa ruta (ROLES_AJUSTES), no copiada: un cambio de acceso a Ajustes mueve
+   *  las dos cosas a la vez. */
   get puedeVerPapelera(): boolean {
-    return this.usuarioSesion.esRol('dev', 'admin', 'demo');
+    return this.usuarioSesion.esRol(...ROLES_AJUSTES);
   }
 
   verInforme(inf: ConId<InformeOpNuevo>): void {

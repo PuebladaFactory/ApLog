@@ -182,8 +182,67 @@ Coherente con las reglas (`tarifas.leer` es d·a·u·x, las escrituras d·a) y `
 ver el tarifario para operar. No se le aplica el criterio de 2.3 porque acá el dato no está
 en otra pantalla.
 
-**Decidido:** el módulo queda d·a·u·x. Se migran las 7 comparaciones de rol directas de los
-componentes de Tarifas (`['dev','admin'].includes(usuario.role)` y `esDev`) a `*appPermiso`.
+**Decidido:** el módulo queda d·a·u·x. Y en los componentes de Tarifas hay **dos patrones
+distintos**, no uno, que el Bloque 8 trató por separado:
+
+- **`puedeEditar` (los siete componentes) se migra a `PermisosService`.** Queda como booleano
+  y no como `*appPermiso`: en los cuatro formularios corta la lógica de guardar dentro de la
+  clase, y en las tres pantallas aparece en `@if` compuestos con otra condición, así que no
+  es visibilidad pura.
+- **`esDev` (cuatro de los siete) no se migra: se normaliza.** Gatea el campo "Vigencia desde
+  (solo dev — migración de datos)", que retrodata la vigencia de una tarifa. **Las reglas no
+  pueden expresar eso:** escribir una tarifa con `vigenciaDesde` retroactivo es la misma
+  escritura que cualquier otra. Mapearlo a `desarrollo.ver` sería semánticamente falso —ese
+  módulo es `generacionesPrueba`— y crearía la confusión de gatear un módulo y leer otro.
+  Pasa de `=== 'dev'` crudo a `esRol('dev')`, que es el símbolo que un barrido encuentra, con
+  un comentario que diga por qué no tiene contraparte.
+
+### 2.11 Un gesto puede abarcar dos acciones, y entonces el gate es la conjunción
+
+Hallazgo del Bloque 8, que corrigió una premisa de esta spec. Se asumió que el tarifario es
+append-only y que por lo tanto toda escritura resuelve a `crear`. No es así:
+`TarifarioService.versionarEnTransaccion` escribe en la misma transacción la versión nueva
+(`crear`) **y** un update sobre la anterior para marcarla `activo: false` (`editar`); y
+`darDeBajaTarifa` es sólo un update.
+
+Si cualquiera de las dos escrituras se deniega, la transacción entera falla. Así que el gate
+correcto es `puede('tarifas','agregar') && puede('tarifas','editar')`, no una de las dos.
+Hoy da lo mismo —`tarifas` concede las tres escrituras a `dev`/`admin`— pero si alguna vez un
+rol tuviera `crear` sin `editar`, pedir sólo `agregar` mostraría un botón que el servidor
+rechaza.
+
+**El patrón, para cualquier gesto futuro:** la matriz tiene granularidad por acción y
+`PermisosService` no tiene forma de expresar "este gesto necesita dos". La conjunción va en
+el callsite, con un comentario que nombre las dos escrituras. Antes de gatear un botón que
+dispara una transacción, hay que mirar **todas** las escrituras que esa transacción hace, no
+sólo la principal.
+
+### 2.12 Los chequeos de rol que no tienen contraparte en permisos
+
+El relevamiento buscaba "dónde quedan `esRol()` sueltos" y la respuesta se ensanchó tres
+veces: 7 `esRol()`, después 8 comparaciones directas que ese símbolo no encuentra
+(`['dev','admin'].includes(usuario.role)`, `role === 'dev'`), y en el barrido final del
+Bloque 8 otras 7 guardas `getRol() !== 'dev'` en `servicios/desarrollo/`. Es la lección del
+frente aplicada a sí mismo: la clase es más ancha que el símbolo, cada vez.
+
+Al cerrar, **todo chequeo de rol que queda en el código cae en una de tres clases**, y
+ninguna es deuda:
+
+1. **`RoleGuard`** — `rolesEsperados.includes(usuario.role)`. Es el mecanismo de acceso por
+   ruta; el rol es su entrada.
+2. **El rol como dato, no como permiso** — `UsuarioSesionService.esRol` (la implementación del
+   helper), el filtro `role !== 'dev'` de `GestionUsuariosComponent`, y la jerarquía de
+   `editarDeshabilitado` y `ModalUsuarioComponent`, que replica `exigirObjetivoEditable` de
+   las Cloud Functions: *qué usuarios puede editar quién* es una regla sobre roles, no sobre
+   módulos.
+3. **Affordances de rol sin contraparte en las reglas** — el `esDev` de los cuatro
+   formularios de Tarifas y las 7 guardas de `servicios/desarrollo/`. Las reglas no pueden
+   expresarlas: retrodatar una vigencia es la misma escritura que cualquier otra, y una
+   operación masiva sobre datos históricos es la misma escritura que una individual. Peor:
+   gatearlas por permiso las **abriría** a `admin`, que tiene `resumenes.editar`,
+   `comisiones.editar` y `entidades.editar`, cuando son dev-only a propósito. Todas quedan
+   normalizadas a `esRol('dev')` con un comentario que explica por qué no se migran, para que
+   el próximo barrido no las marque como deuda.
 
 ### 2.9 `ajustes` pasa a d·a, y el costo de `empresa` ya estaba pagado
 
