@@ -1,6 +1,5 @@
 import { Component, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
-import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-sesion.service";
 import { tabActivaDesdeUrl } from "src/app/shared/utils/tabs-url.util";
 
 @Component({
@@ -18,10 +17,10 @@ import { tabActivaDesdeUrl } from "src/app/shared/utils/tabs-url.util";
         Tablero Legajos
       </div>
       <div
+        *appPermiso="'legajos.agregar'"
         class="tab"
         [class.active]="selectedTab === 'tab2'"
         (click)="selectTab('tab2')"
-        [ngClass]="{ isDisabled: usuarioSesion.esRol('demo') }"
       >
         Cargar Documentos
       </div>
@@ -58,10 +57,7 @@ export class ControlComponent implements OnInit {
     return tabActivaDesdeUrl(this.tabs, this.router.url);
   }
 
-  constructor(
-    private router: Router,
-    public usuarioSesion: UsuarioSesionService,
-  ) {}
+  constructor(private router: Router) {}
 
   ngOnInit(): void {
     //this.selectTab("tab1");

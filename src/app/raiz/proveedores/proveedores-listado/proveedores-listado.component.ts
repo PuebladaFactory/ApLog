@@ -18,7 +18,6 @@ import { DbFirestoreService } from "src/app/servicios/database/db-firestore.serv
 import { ProveedorService } from "src/app/servicios/proveedores/proveedor.service";
 import { ChoferService } from "src/app/servicios/choferes/chofer.service";
 import { ModalVehiculoComponent } from "../../choferes/modal-vehiculo/modal-vehiculo.component";
-import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-sesion.service";
 import { FichaEntidadService } from "src/app/servicios/ficha-entidad/ficha-entidad.service";
 
 @Component({
@@ -53,7 +52,6 @@ export class ProveedoresListadoComponent implements OnInit, OnDestroy {
     private dbFirestore: DbFirestoreService,
     private proveedorService: ProveedorService,
     private choferService: ChoferService,
-    public usuarioSesion: UsuarioSesionService,
     private fichaEntidad: FichaEntidadService,
   ) {}
 

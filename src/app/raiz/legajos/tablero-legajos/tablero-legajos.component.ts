@@ -9,7 +9,6 @@ import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
 import { LegajoService } from 'src/app/servicios/legajos/legajo.service';
 import { CategoriaDocumentacionService } from 'src/app/servicios/categoria-documentacion/categoria-documentacion.service';
-import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 import { VisibilidadListadosComponent } from 'src/app/shared/modales/visibilidad-listados/visibilidad-listados.component';
 import { GestionCategoriasDocumentacionComponent } from 'src/app/raiz/legajos/gestion-categorias-documentacion/gestion-categorias-documentacion.component';
 import { FichaEntidadService } from 'src/app/servicios/ficha-entidad/ficha-entidad.service';
@@ -43,7 +42,6 @@ export class TableroLegajosComponent implements OnInit, OnDestroy {
     private legajoService: LegajoService,
     private categoriaDocumentacionService: CategoriaDocumentacionService,
     private modalService: NgbModal,
-    public usuarioSesion: UsuarioSesionService,
     private fichaEntidad: FichaEntidadService,
   ) {}
 

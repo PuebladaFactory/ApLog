@@ -6,7 +6,7 @@
         <button type="button" class="btn boton-filtros me-3" style="width: 150px;" (click)="abrirGestionCategorias()" *appPermiso="'legajos.editar'">
           Gestionar Categorías
         </button>
-        <div class="btn-group dropup " [ngClass]="{'isDisabled':usuarioSesion.esRol('demo')}">
+        <div class="btn-group dropup ">
             <button type="button" class="btn boton-filtros">
               {{filtrosProveedores ? filtrosProveedores : "Proveedores"}}
             </button>

@@ -19,7 +19,7 @@
             <hr />
             <div class="accordion mt-3" id="accordionExample">
                 <ul>
-                    <li>
+                    <li *appPermiso="'clientes.ver'">
                         <a [routerLink]="['/clientes']">
                             <h2 class="d-flex mt-3" type="button">
                                 <svg
@@ -41,7 +41,7 @@
                             </h2>
                         </a>
                     </li>
-                    <li>
+                    <li *appPermiso="'choferes.ver'">
                         <a [routerLink]="['/choferes']">
                             <h2 class="d-flex mt-3" type="button">
                                 <svg
@@ -60,7 +60,7 @@
                             </h2>
                         </a>
                     </li>
-                    <li>
+                    <li *appPermiso="'proveedores.ver'">
                         <a [routerLink]="['/proveedores']">
                             <h2 class="d-flex mt-3" type="button">
                                 <svg
@@ -79,7 +79,7 @@
                             </h2>
                         </a>
                     </li>
-                    <li>
+                    <li *appPermiso="'tarifas.ver'">
                         <a [routerLink]="['/tarifas']">
                             <h2 class="d-flex mt-3" type="button">
                                 <svg
@@ -101,7 +101,7 @@
                             </h2>
                         </a>
                     </li>
-                    <li>
+                    <li *appPermiso="'operaciones.ver'">
                         <a [routerLink]="['/op']">
                             <h2 class="d-flex mt-3" type="button">
                                 <svg
@@ -121,7 +121,7 @@
                             </h2>
                         </a>
                     </li>
-                    <li>
+                    <li *appPermiso="'liquidaciones.ver'">
                         <a [routerLink]="['/liquidacion']">
                             <h2 class="d-flex mt-3" type="button">
                                 <svg
@@ -207,7 +207,7 @@
                                 </h2>
                             </a>
                         </li>
-                        <li>
+                        <li *appPermiso="'legajos.ver'">
                             <a [routerLink]="['/legajos']">
                                 <h2 class="d-flex mt-3" type="button">
                                     <svg
@@ -270,7 +270,7 @@
                         </li>
                     
 
-                    <li>
+                    <li *appPermiso="'vendedores.ver'">
                         <a [routerLink]="['/vendedores']">
                             <h2 class="d-flex mt-3" type="button">
                                 <svg
@@ -312,8 +312,7 @@
                                 </h2>
                             </a>
                         </li>
-                        @if ($usuario.role === 'dev') {
-                        <li>
+                        <li *appPermiso="'desarrollo.ver'">
                             <a [routerLink]="['/migracion']">
                                 <h2 class="d-flex mt-3" type="button">
                                     <svg
@@ -335,7 +334,6 @@
                                 </h2>
                             </a>
                         </li>
-                        }
 
                 </ul>
 

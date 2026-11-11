@@ -331,6 +331,17 @@ build", y es falso):
   algún test se vuelve frágil o dependiente del entorno —`test:ci` necesita resolver Chrome
   headless— el hook falla por motivos ajenos al cambio; por eso tiene que decir **qué paso**
   falló, o se vuelve ruido que se termina apagando.
+  El hook dispara por extensión, y **`.json` entró en la lista junto a `.ts`/`.html`/`.scss`
+  por este frente**: el fixture es el pivote de la verificación, cualquier cambio de reglas
+  que afecte a los 9 módulos obliga a tocarlo, y ese toque es lo que hace correr el spec.
+  Sin `.json`, el camino más natural para introducir una divergencia —actualizar el fixture
+  y olvidarse del cliente— no disparaba nada. `.rules` deliberadamente **no** entró: si
+  cambia sólo `firestore.rules`, el spec compara `matrizBase` contra el fixture y ninguno de
+  los dos cambió, así que disparar el hook no aportaría.
+  Se consideró y **no se implementó** que el hook imprima un recordatorio de correr el test
+  de emulador cuando `firestore.rules` esté entre los archivos modificados. Sería el único
+  refuerzo posible del lado que no se puede bloquear, al costo de romper el silencio del
+  hook en ese caso. Queda disponible.
 - **El lado de las reglas no puede.** El test de emulador necesita el emulador levantado
   (JRE, `firestore` y `auth`), así que no entra en un hook por cada Stop. Su punto de control
   es el ritual de deploy, que ya existe y está escrito en CLAUDE.md: ninguna regla se deploya
@@ -419,10 +430,19 @@ cambio verificado no se mezcla con uno sin verificar.
 fijada por el Bloque 1. La poda define el alcance del fixture, así que van juntos. Al cerrar,
 los dos tests verdes contra el estado actual de las reglas.
 
-**Bloque 3 — sidebar y pestañas.** Los 13 `<li>` con `*appPermiso`; la pestaña de `cargarDoc`
-de `ngClass` a `*appPermiso`; la de Registro restaurada. Va **antes** del routing: así, cuando
-el Bloque 4 le cierre las rutas, `manager` ya no tiene menú. Al revés queda un estado
-transitorio de menú completo con todo cayendo en `/limbo`.
+**Bloque 3 — gating de UI: sidebar, pestañas y los `ngClass` por rol.** Los 13 `<li>` con
+`*appPermiso`; la pestaña de `cargarDoc` de `ngClass` a `*appPermiso`; la de Registro
+restaurada; y los otros cuatro `[ngClass]` que gatean por rol con `pointer-events: none`
+(los tres botones "Visibles" de los listados CRUD y el dropup de `tablero-legajos`). Van
+juntos porque son la misma operación en la misma capa —cambiar un chequeo de rol por un
+chequeo de permiso— y migrar uno dejando cuatro idénticos sería arbitrario. Va **antes** del
+routing: así, cuando el Bloque 4 le cierre las rutas, `manager` ya no tiene menú. Al revés
+queda un estado transitorio de menú completo con todo cayendo en `/limbo`.
+
+*Corrección del 2026-11-10: la versión anterior de este bloque sólo nombraba `cargarDoc` de
+los cinco `ngClass`, y la spec no le asignaba bloque a los 7 `esRol()` de gating de UI, que
+son uno de los cuatro objetivos del relevamiento. Cinco de esos siete son los `ngClass` de
+este bloque; los otros dos van al Bloque 10.*
 
 **Bloque 4 — routing.** `canMatch`: `manager` afuera de las seis; `user` afuera de
 `liquidacion`; `ajustes` a d·a. `canActivate` de `legajos/cargarDoc` y de las cuatro hojas de

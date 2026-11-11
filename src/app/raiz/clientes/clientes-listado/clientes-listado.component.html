@@ -15,10 +15,10 @@
     </div>
     <div class="align-self-start ms-2 mt-3 mb-1">
       <button
+        *appPermiso="'clientes.editar'"
         class="btn btn-primary boton-alta"
         type="button"
-        (click)="visibilidadClientes()"
-        [ngClass]="{'isDisabled': usuarioSesion.esRol('demo')}">
+        (click)="visibilidadClientes()">
         Clientes Visibles
       </button>
     </div>

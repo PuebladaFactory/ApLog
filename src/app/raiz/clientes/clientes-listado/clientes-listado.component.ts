@@ -10,7 +10,6 @@ import { ClienteAltaComponent } from '../cliente-alta/cliente-alta.component';
 import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
 import { EntidadesExportService } from 'src/app/servicios/entidades/entidades-export.service';
 import { VisibilidadListadosComponent } from 'src/app/shared/modales/visibilidad-listados/visibilidad-listados.component';
-import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 import { FichaEntidadService } from 'src/app/servicios/ficha-entidad/ficha-entidad.service';
 
 @Component({
@@ -36,7 +35,6 @@ export class ClientesListadoComponent implements OnInit, OnDestroy {
     private modalService: NgbModal,
     private entidadesExport: EntidadesExportService,
     private clienteService: ClienteService,
-    public usuarioSesion: UsuarioSesionService,
     private fichaEntidad: FichaEntidadService,
   ) {}
 

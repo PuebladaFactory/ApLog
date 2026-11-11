@@ -12,7 +12,6 @@ import { EntidadesExportService } from "src/app/servicios/entidades/entidades-ex
 import { VisibilidadListadosComponent } from "src/app/shared/modales/visibilidad-listados/visibilidad-listados.component";
 import { ChoferService } from "src/app/servicios/choferes/chofer.service";
 import { ProveedorService } from "src/app/servicios/proveedores/proveedor.service";
-import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-sesion.service";
 import { FichaEntidadService } from "src/app/servicios/ficha-entidad/ficha-entidad.service";
 
 @Component({
@@ -42,7 +41,6 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
     private entidadesExport: EntidadesExportService,
     private choferService: ChoferService,
     private proveedorService: ProveedorService,
-    public usuarioSesion: UsuarioSesionService,
     private fichaEntidad: FichaEntidadService,
   ) {}
 
