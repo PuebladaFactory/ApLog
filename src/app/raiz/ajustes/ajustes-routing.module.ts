@@ -8,29 +8,32 @@ import { PapeleraComponent } from './papelera/papelera.component';
 import { RegistroLogComponent } from './registro-log/registro-log.component';
 import { DatosEmpresaComponent } from './datos-empresa/datos-empresa.component';
 
-const routes: Routes = [
+export const routes: Routes = [
   {path: '', component:AjustesControlComponent,
     children: [
       { path: '', redirectTo: 'usuarios', pathMatch: 'full' },
       {path: 'usuarios', component:GestionUsuariosComponent,
             canActivate: [RoleGuard],
-            data: { roles: ['dev', 'admin'] },
+            // Lee /users (GestionUsuariosService.obtenerUsuarios). 'usuarios' es
+            // clave de soloCliente: no pasa por permitido(), su regla es el
+            // match propio de /users/{uid}.
+            data: { roles: ['dev', 'admin'], lee: ['usuarios'] },
       },
       {path: 'registro', component:RegistroComponent,
         canActivate: [RoleGuard],
-        data: { roles: ['dev', 'admin'] },
+        data: { roles: ['dev', 'admin'], lee: ['historicoSoloLectura'] },
       },
       {path: 'registro-log', component:RegistroLogComponent,
         canActivate: [RoleGuard],
-        data: { roles: ['dev', 'admin'] },
+        data: { roles: ['dev', 'admin'], lee: ['logs'] },
       },
       {path: 'papelera', component:PapeleraComponent,
         canActivate: [RoleGuard],
-        data: { roles: ['dev', 'admin'] },
+        data: { roles: ['dev', 'admin'], lee: ['papelera'] },
       },
       {path: 'empresa', component:DatosEmpresaComponent,
         canActivate: [RoleGuard],
-        data: { roles: ['dev', 'admin'] }, // F8b: demo sale (nunca tuvo puerta: el menú ya era dev/admin)
+        data: { roles: ['dev', 'admin'], lee: ['configuracion'] }, // F8b: demo sale (nunca tuvo puerta: el menú ya era dev/admin)
       },
   ]}
 ];

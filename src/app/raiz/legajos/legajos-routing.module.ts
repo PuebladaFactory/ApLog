@@ -7,7 +7,7 @@ import { CargarDocumentosComponent } from './cargar-documentos/cargar-documentos
 import { VencimientosComponent } from './vencimientos/vencimientos.component';
 import { RoleGuard } from 'src/app/guards/role.guard';
 
-const routes: Routes = [
+export const routes: Routes = [
   {path: '', component:ControlComponent,
     children: [
       {path: '', redirectTo: 'tablero', pathMatch: 'full' },
@@ -15,7 +15,7 @@ const routes: Routes = [
       {path: 'consulta', component:ConsultaLegajosComponent},
       {path: 'cargarDoc', component:CargarDocumentosComponent,
         canActivate: [RoleGuard],
-        data: { roles: ['dev', 'admin', 'user'] }, // legajos.crear, el mismo permiso que la pestaña (legajos.agregar)
+        data: { roles: ['dev', 'admin', 'user'], lee: ['legajos', 'entidades'] }, // legajos.crear, el mismo permiso que la pestaña (legajos.agregar)
       },
       {path: 'vencimientos', component:VencimientosComponent},
   ]  },
