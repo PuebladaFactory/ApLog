@@ -17,6 +17,12 @@ interface TablasPermisos {
 
 const ROLES: RolUsuario[] = ['dev', 'admin', 'manager', 'user', 'demo'];
 const ACCIONES: AccionCrud[] = ['leer', 'crear', 'editar', 'eliminar'];
+// Los 10 módulos de ModuloReglas (tipo interno de PermisosService, sin valor
+// en runtime): los que la UI consulta, más 'usuarios'.
+const MODULOS_REGLAS = [
+  'desarrollo', 'entidades', 'legajos', 'vendedores', 'operaciones',
+  'tarifas', 'finanzas', 'resumenes', 'configuracion', 'usuarios',
+];
 
 const reglas = matrizEsperada.reglas as Matriz;
 const soloCliente = matrizEsperada.soloCliente as Matriz;
@@ -37,19 +43,30 @@ describe('PermisosService', () => {
   });
 
   describe('matrizBase contra matriz-esperada.json', () => {
-    it('el fixture tiene 9 módulos de reglas y usuarios aparte', () => {
-      expect(Object.keys(reglas).length).toBe(9);
+    it('el fixture tiene los 19 módulos de permitido() y usuarios aparte', () => {
+      expect(Object.keys(reglas).length).toBe(19);
       expect(Object.keys(soloCliente)).toEqual(['usuarios']);
     });
 
-    it('tiene exactamente los mismos módulos que el fixture', () => {
-      expect(Object.keys(tablas.matrizBase).sort()).toEqual(Object.keys(esperada).sort());
+    it('matrizBase tiene exactamente los 10 de ModuloReglas, todos en el fixture', () => {
+      expect(Object.keys(tablas.matrizBase).sort()).toEqual([...MODULOS_REGLAS].sort());
+      const faltan = MODULOS_REGLAS.filter(m => !(m in esperada));
+      expect(faltan).toEqual([]);
     });
 
-    it('coincide celda por celda (200 celdas)', () => {
+    // La otra dirección: los módulos de permitido() que la UI no consulta no
+    // vuelven a matrizBase sin querer (el bloque 2 los podó por muertos).
+    it('los módulos del fixture fuera de ModuloReglas no están en matrizBase', () => {
+      const restantes = Object.keys(esperada).filter(m => !MODULOS_REGLAS.includes(m));
+      expect(restantes.length).toBe(10);
+      const colados = restantes.filter(m => m in tablas.matrizBase);
+      expect(colados).toEqual([]);
+    });
+
+    it('coincide celda por celda en los módulos de matrizBase (200 celdas)', () => {
       const diferencias: string[] = [];
       let celdas = 0;
-      for (const modulo of Object.keys(esperada)) {
+      for (const modulo of MODULOS_REGLAS) {
         for (const accion of ACCIONES) {
           for (const rol of ROLES) {
             celdas++;

@@ -490,10 +490,12 @@ habían saldado o reducido sin que nadie las tocara.
 La corrección de proceso, aplicada desde el Bloque 4 en adelante: **la actualización de
 CLAUDE.md va en el commit del bloque que la causa**, no diferida. Lo que queda para este
 bloque de cierre es sólo lo que no se puede escribir antes de que el frente termine: el
-`asignaciones` de la sección "Security Rules" (depende del Bloque 5), el repaso final de la
-skill `botones-y-permisos` contra el estado post-frente, y la entrada del CHANGELOG si se
-decide que ese archivo sigue aportando (es una de sus dos preguntas abiertas y está fuera del
-alcance de este frente).
+repaso final de la skill `botones-y-permisos` contra el estado post-frente —sus bloques 1 a 7
+siguen nombrando `matrizBase.asignaciones`, que el Bloque 2 podó, aunque la nota del
+encabezado ya los marca como historia— y la entrada del CHANGELOG si se decide que ese
+archivo sigue aportando (es una de sus dos preguntas abiertas y está fuera del alcance de
+este frente). El `asignaciones` de la sección "Security Rules" de CLAUDE.md lo actualiza el
+propio Bloque 5, por la regla de arriba.
 
 **Bloque 9 — los dos casts de colección a `ModuloPermiso`.** Agregado el 2026-11-10 a partir
 del cuarto hallazgo de la sección 1. `VisualizadorObjetoService` ya tiene el mapa colección →

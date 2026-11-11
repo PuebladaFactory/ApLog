@@ -1,10 +1,11 @@
 /**
  * Script de verificación contra el emulador de Firestore + Auth.
  * Afirma que permitido() de firestore.rules coincide con la sección "reglas"
- * de src/app/servicios/permisos/matriz-esperada.json, celda por celda:
- * 9 módulos x 4 acciones x 5 roles = 180 celdas. La otra mitad del contrato
- * (matrizBase contra el mismo fixture) la verifica permisos.service.spec.ts.
- * Diseño: docs/disenos/reglas-y-matriz-de-permisos.md, 4.4.
+ * de src/app/servicios/permisos/matriz-esperada.json, celda por celda: los 19
+ * módulos de permitido() x 4 acciones x 5 roles = 380 celdas. La otra mitad
+ * del contrato (matrizBase, que espeja sólo los módulos que la UI consulta,
+ * contra el mismo fixture) la verifica permisos.service.spec.ts.
+ * Diseño: docs/disenos/reglas-y-matriz-de-permisos.md, 4.4 y 4.5.
  *
  * Cada módulo se prueba sobre una colección representativa bajo
  * /Vantruck/datos/, y cada acción como la operación real de Firestore:
@@ -14,25 +15,26 @@
  *
  * Tres clases de afirmación, contadas por separado en el resumen:
  *
- * 1. Las 180 celdas del fixture.
+ * 1. Las 380 celdas del fixture.
  *
  * 2. Controles por rol. Lo que prueba que un rechazo significa "denegó la
  *    matriz" y no "el rol no llegó al token" es el SETUP: después de setear el
  *    Custom Claim se decodifica el ID token y se afirma que trae el `role`
  *    pedido; si no, el script aborta ahí, sin reportar rechazos que no
- *    significan nada. Es la única evidencia posible para 'manager', que está
- *    en false en las 180 celdas y no aparece por nombre en ningún módulo de
- *    permitido(): ninguna regla lo distingue de un token sin rol. Para
- *    dev/admin/user/demo se afirma además al menos un permitido del fixture.
+ *    significan nada. Es la única evidencia posible para 'manager': su único
+ *    permitido es leer legacySoloLectura, una rama de permitido() que no mira
+ *    el rol, y no aparece por nombre en ningún módulo, así que ninguna regla lo
+ *    distingue de un token sin rol. Se afirma además al menos un permitido del
+ *    fixture por rol (para 'manager', esa lectura: cuenta como celda propia,
+ *    no como prueba de que su rol llegó).
  *
- * 3. Los dos casos de legacySoloLectura (facturaCliente): 'manager' lee, y un
- *    token autenticado SIN `role` también lee. El segundo DOCUMENTA el
- *    comportamiento actual, no lo aprueba: muestra que esa lectura distingue
- *    autenticado de no autenticado, no rol presente de rol ausente (por eso no
- *    sirve de control positivo). El bucket legacySoloLectura se revisa en la
- *    migración (docs/disenos/reglas-y-matriz-de-permisos.md, 2.10); cuando
- *    cambie, este caso tiene que fallar y forzar la decisión, no cambiar en
- *    silencio.
+ * 3. El caso de legacySoloLectura con un token autenticado SIN `role`: también
+ *    lee. DOCUMENTA el comportamiento actual, no lo aprueba: muestra que esa
+ *    lectura distingue autenticado de no autenticado, no rol presente de rol
+ *    ausente (por eso no sirve de control positivo). El bucket
+ *    legacySoloLectura se revisa en la migración
+ *    (docs/disenos/reglas-y-matriz-de-permisos.md, 2.10); cuando cambie, este
+ *    caso tiene que fallar y forzar la decisión, no cambiar en silencio.
  *
  * Aislamiento: la corrida es válida sobre un emulador recién levantado y
  * sobre uno con datos de corridas anteriores. Cada corrida usa un id propio
@@ -91,6 +93,8 @@ const ROLES = ["dev", "admin", "manager", "user", "demo"];
 const ACCIONES = ["leer", "crear", "editar", "eliminar"];
 
 // Colección representativa de cada módulo, según moduloDe() de firestore.rules.
+// El emulador arranca vacío y la corrida sólo toca sus propios docs, así que la
+// elección no depende de los datos de demo.
 const COLECCION = {
   desarrollo: "generacionesPrueba",
   entidades: "clientes",
@@ -101,8 +105,18 @@ const COLECCION = {
   finanzas: "movimientosFin",
   resumenes: "resumenesOp",
   configuracion: "configuracion",
+  vencimientos: "vencimientos",
+  asignaciones: "asignaciones",
+  tarifasHistorial: "historialTarifasGralCliente",
+  informesOp: "informesOp",
+  comisiones: "comisionesVenta",
+  legacySoloLectura: "tableroDiario",   // código muerto confirmado, sin caller
+  historicoSoloLectura: "papelera",     // Papelera legado, sin escritores
+  numeradores: "numeradores",
+  logs: "registroLog",
+  papelera: "papeleraEventos",
 };
-const COLECCION_LEGACY = "facturaCliente"; // moduloDe → legacySoloLectura
+const CELDAS_ESPERADAS = 19 * 4 * 5; // 380
 
 const ruta = (coleccion, id) => `Vantruck/datos/${coleccion}/${id}`;
 // Id de esta corrida: todo documento y todo usuario que el script toca lleva
@@ -128,7 +142,7 @@ async function precondicion(adminDb, accion, path) {
 const CLASES = {
   celdas: "Celdas del fixture",
   controles: "Controles por rol",
-  legacy: "Casos de legacySoloLectura",
+  legacy: "legacySoloLectura con token sin rol",
 };
 const conteo = Object.fromEntries(Object.keys(CLASES).map((c) => [c, { pass: 0, fail: 0 }]));
 let claseActual = "celdas";
@@ -198,7 +212,6 @@ async function sembrar(adminDb) {
       batch.set(adminDb.doc(ruta(coleccion, `eliminar-${rol}-${sufijo}`)), { semilla: true });
     }
   }
-  batch.set(adminDb.doc(ruta(COLECCION_LEGACY, `leer-${sufijo}`)), { semilla: true });
   await batch.commit();
 }
 
@@ -251,21 +264,14 @@ async function main() {
       }
     }
 
-    if (rol === "manager") {
-      // Clase 3. No es el control positivo de 'manager' (ese es el setup):
-      // un token sin rol obtiene la misma lectura, ver el caso de abajo.
-      claseActual = "legacy";
-      await afirmar(rol, `manager leer legacySoloLectura (${COLECCION_LEGACY})`, true,
-        () => getDoc(doc(db, ruta(COLECCION_LEGACY, `leer-${sufijo}`))));
-    }
   }
 
   // Clase 2, segunda parte: con el rol ya probado en el token, al menos un
-  // permitido del fixture por rol. 'manager' no tiene ninguno en el fixture ni
-  // en permitido() fuera de legacySoloLectura: su evidencia es sólo el setup.
+  // permitido del fixture por rol. El de 'manager' es leer legacySoloLectura,
+  // que no mira el rol: su evidencia de que el rol llegó sigue siendo el setup.
   console.log("\n=== Controles por rol: al menos un permitido del fixture ===");
   claseActual = "controles";
-  for (const rol of ROLES.filter((r) => r !== "manager")) {
+  for (const rol of ROLES) {
     const { permitidos, rechazos } = porRol[rol];
     reportar(`'${rol}' tiene al menos un permitido del fixture`, permitidos > 0,
       `${permitidos} permitidos, ${rechazos} rechazos`);
@@ -281,11 +287,12 @@ async function main() {
   claseActual = "controles";
   afirmarRolEnToken(null, idTokenSinRol);
   claseActual = "legacy";
+  const colLegacy = COLECCION.legacySoloLectura;
   try {
-    await getDoc(doc(db, ruta(COLECCION_LEGACY, `leer-${sufijo}`)));
-    reportar(`token sin rol leer legacySoloLectura (${COLECCION_LEGACY}) → permitido (documenta, no aprueba)`, true);
+    await getDoc(doc(db, ruta(colLegacy, `leer-${sufijo}`)));
+    reportar(`token sin rol leer legacySoloLectura (${colLegacy}) → permitido (documenta, no aprueba)`, true);
   } catch (err) {
-    reportar(`token sin rol leer legacySoloLectura (${COLECCION_LEGACY}) → permitido (documenta, no aprueba)`, false,
+    reportar(`token sin rol leer legacySoloLectura (${colLegacy}) → permitido (documenta, no aprueba)`, false,
       `code=${err.code} — cambió el comportamiento de legacySoloLectura: decidir (spec, 2.10)`);
   }
 
@@ -296,8 +303,10 @@ async function main() {
     fallas += fail;
     console.log(`${titulo}: ${pass} PASS / ${fail} FAIL`);
   }
-  console.log(`(celdas del fixture recorridas: ${celdas} de 180)\n`);
-  process.exit(fallas > 0 || celdas !== 180 ? 1 : 0);
+  console.log(`(celdas del fixture recorridas: ${celdas} de ${CELDAS_ESPERADAS})\n`);
+  console.log("Permitidos por rol (afirmados y pasados):");
+  for (const rol of ROLES) console.log(`  ${rol}: ${porRol[rol].permitidos} permitidos, ${porRol[rol].rechazos} rechazos`);
+  process.exit(fallas > 0 || celdas !== CELDAS_ESPERADAS ? 1 : 0);
 }
 
 main().catch((err) => {

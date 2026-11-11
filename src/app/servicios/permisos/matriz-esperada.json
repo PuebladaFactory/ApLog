@@ -1,6 +1,6 @@
 {
   "_nota": "Matriz esperada de permisos: la única copia mantenida a mano. PermisosService.matrizBase se verifica contra ella en permisos.service.spec.ts y firestore.rules (permitido()) en functions/test-matriz-permisos-rules.mjs. Los valores salen de leer permitido(), no de copiar matrizBase. Un cambio de permisos toca las tres: este archivo, las reglas y matrizBase. Diseño: docs/disenos/reglas-y-matriz-de-permisos.md, 4.4.",
-  "_reglas": "Los módulos de permitido() que la UI consulta (los que alcanza algún ModuloPermiso vía mapaModuloReglas). 9 módulos x 4 acciones x 5 roles = 180 celdas, comparadas contra las reglas reales y contra matrizBase.",
+  "_reglas": "La matriz esperada de permitido() entera: sus 19 módulos x 4 acciones x 5 roles = 380 celdas, comparadas contra las reglas reales (test-matriz-permisos-rules.mjs). Transcripta tal como está, no como debería ser (legacySoloLectura da leer a los cinco roles, manager incluido, porque esa rama no mira el rol). matrizBase espeja sólo el subconjunto que la UI consulta, los 10 módulos de ModuloReglas (9 de estos más usuarios): los otros 10 no los alcanza ningún ModuloPermiso. Esa diferencia es deliberada, no una omisión, y permisos.service.spec.ts la afirma en las dos direcciones.",
   "reglas": {
     "desarrollo": {
       "leer":     { "dev": true, "admin": false, "manager": false, "user": false, "demo": false },
@@ -55,6 +55,66 @@
       "crear":    { "dev": true, "admin": true,  "manager": false, "user": false, "demo": false },
       "editar":   { "dev": true, "admin": true,  "manager": false, "user": false, "demo": false },
       "eliminar": { "dev": true, "admin": false, "manager": false, "user": false, "demo": false }
+    },
+    "vencimientos": {
+      "leer":     { "dev": true, "admin": true, "manager": false, "user": true, "demo": true },
+      "crear":    { "dev": false, "admin": false, "manager": false, "user": false, "demo": false },
+      "editar":   { "dev": false, "admin": false, "manager": false, "user": false, "demo": false },
+      "eliminar": { "dev": false, "admin": false, "manager": false, "user": false, "demo": false }
+    },
+    "asignaciones": {
+      "leer":     { "dev": true, "admin": true, "manager": false, "user": true, "demo": true },
+      "crear":    { "dev": true, "admin": true, "manager": false, "user": true, "demo": false },
+      "editar":   { "dev": true, "admin": true, "manager": false, "user": true, "demo": false },
+      "eliminar": { "dev": true, "admin": true, "manager": false, "user": true, "demo": false }
+    },
+    "tarifasHistorial": {
+      "leer":     { "dev": true, "admin": true, "manager": false, "user": true, "demo": true },
+      "crear":    { "dev": true, "admin": true, "manager": false, "user": false, "demo": false },
+      "editar":   { "dev": false, "admin": false, "manager": false, "user": false, "demo": false },
+      "eliminar": { "dev": false, "admin": false, "manager": false, "user": false, "demo": false }
+    },
+    "informesOp": {
+      "leer":     { "dev": true, "admin": true, "manager": false, "user": true, "demo": true },
+      "crear":    { "dev": true, "admin": true, "manager": false, "user": true, "demo": false },
+      "editar":   { "dev": true, "admin": true, "manager": false, "user": false, "demo": false },
+      "eliminar": { "dev": true, "admin": true, "manager": false, "user": false, "demo": false }
+    },
+    "comisiones": {
+      "leer":     { "dev": true, "admin": true, "manager": false, "user": false, "demo": true },
+      "crear":    { "dev": true, "admin": true, "manager": false, "user": true, "demo": false },
+      "editar":   { "dev": true, "admin": true, "manager": false, "user": true, "demo": false },
+      "eliminar": { "dev": true, "admin": true, "manager": false, "user": false, "demo": false }
+    },
+    "legacySoloLectura": {
+      "leer":     { "dev": true, "admin": true, "manager": true, "user": true, "demo": true },
+      "crear":    { "dev": false, "admin": false, "manager": false, "user": false, "demo": false },
+      "editar":   { "dev": false, "admin": false, "manager": false, "user": false, "demo": false },
+      "eliminar": { "dev": false, "admin": false, "manager": false, "user": false, "demo": false }
+    },
+    "historicoSoloLectura": {
+      "leer":     { "dev": true, "admin": true, "manager": false, "user": true, "demo": true },
+      "crear":    { "dev": false, "admin": false, "manager": false, "user": false, "demo": false },
+      "editar":   { "dev": false, "admin": false, "manager": false, "user": false, "demo": false },
+      "eliminar": { "dev": false, "admin": false, "manager": false, "user": false, "demo": false }
+    },
+    "numeradores": {
+      "leer":     { "dev": true, "admin": true, "manager": false, "user": true, "demo": false },
+      "crear":    { "dev": true, "admin": true, "manager": false, "user": true, "demo": false },
+      "editar":   { "dev": true, "admin": true, "manager": false, "user": true, "demo": false },
+      "eliminar": { "dev": false, "admin": false, "manager": false, "user": false, "demo": false }
+    },
+    "logs": {
+      "leer":     { "dev": true, "admin": true, "manager": false, "user": true, "demo": true },
+      "crear":    { "dev": true, "admin": true, "manager": false, "user": true, "demo": false },
+      "editar":   { "dev": true, "admin": false, "manager": false, "user": false, "demo": false },
+      "eliminar": { "dev": true, "admin": false, "manager": false, "user": false, "demo": false }
+    },
+    "papelera": {
+      "leer":     { "dev": true, "admin": true, "manager": false, "user": true, "demo": true },
+      "crear":    { "dev": true, "admin": true, "manager": false, "user": true, "demo": false },
+      "editar":   { "dev": true, "admin": true, "manager": false, "user": false, "demo": false },
+      "eliminar": { "dev": true, "admin": true, "manager": false, "user": false, "demo": false }
     }
   },
   "_soloCliente": "'usuarios': 20 celdas, comparadas sólo contra matrizBase. No pasa por permitido(): /users/{uid} tiene su propio match, con write sólo para dev. La divergencia con las reglas es deliberada: 'admin' dice sí en crear/editar/eliminar porque opera por las Cloud Functions de gestión de usuarios (Admin SDK, autorización propia en exigirObjetivoEditable), no por escritura directa. Este fixture registra la intención, no la regla.",
