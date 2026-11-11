@@ -6,7 +6,7 @@ import { TarifarioService } from 'src/app/servicios/tarifario/tarifario.service'
 import { deltaTarifa, textoAumentoTarifa } from 'src/app/shared/utils/historial-tarifa.util';
 import { TarifaFormData } from 'src/app/servicios/tarifario/tarifa-factory.service';
 import { TarifaGuardadoService } from 'src/app/servicios/tarifario/tarifa-guardado.service';
-import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
+import { PermisosService } from 'src/app/servicios/permisos/permisos.service';
 
 @Component({
   selector: 'app-tarifas-general',
@@ -29,12 +29,15 @@ export class TarifasGeneralComponent implements OnInit, OnDestroy {
   constructor(
     private tarifarioService: TarifarioService,
     private tarifaGuardadoService: TarifaGuardadoService,
-    private usuarioSesion: UsuarioSesionService,
+    private permisosService: PermisosService,
   ) {}
 
   ngOnInit(): void {
-    const usuario = this.usuarioSesion.getUsuarioActual();
-    this.puedeEditar = !!usuario && ['dev', 'admin'].includes(usuario.role);
+    // Escritura de tarifas: una tarifa nueva es 'crear'; editar o aumentar
+    // crea la versión nueva y desactiva la anterior (update) en la misma
+    // transacción (TarifarioService.versionarEnTransaccion), así que el gesto
+    // necesita las dos acciones.
+    this.puedeEditar = this.permisosService.puede('tarifas', 'agregar') && this.permisosService.puede('tarifas', 'editar');
 
     this.tarifarioService.tarifas$
       .pipe(takeUntil(this.destroy$))

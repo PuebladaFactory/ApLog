@@ -87,13 +87,35 @@ corte.
 ### 2.2 El arranque no abre listeners que el rol no pueda leer
 
 Corolario de 2.1, pero vale para cualquier rol futuro cuyas rutas excedan sus lecturas.
-`HomeComponent.ngOnInit` abre 10 listeners; nueve son fijos y uno —`noDisponibilidades`— ya
-se abre sólo si `puede('operaciones')`. **El patrón existe y está en producción: se extiende
-a los otros nueve.**
 
-Precondición dura: **antes de extenderlo hay que corregir `mapaModuloReglas.reportes`**
-(ver 2.6). `puede(modulo)` sin acción resuelve a `'leer'`, así que extender el patrón sobre
-un mapeo equivocado lo congela.
+**Reescrito el 2026-11-11, al implementar el Bloque 7.** La versión anterior decía que
+`HomeComponent.ngOnInit` abre nueve listeners fijos más `noDisponibilidades` condicionado, y
+que el patrón del condicional "se extiende a los otros nueve". Verificado contra el
+componente, eso no corresponde:
+
+- El conjunto fijo son **seis llamadas** —`ChoferService`, `ProveedorService`,
+  `ClienteService`, `TarifarioService`, `CategoriaDocumentacionService` y `LegajoService`—
+  que abren nueve listeners entre todas, y tocan **cuatro módulos**: `entidades`, `tarifas`,
+  `informesOp` (por `registrosOpEventuales`, que `moduloDe()` mapea ahí) y `legajos`.
+- **Los cuatro roles que pueden llegar a la app tienen `leer` en los cuatro.** No hay ningún
+  listener que condicionar: nueve condicionales que nunca evalúan falso son ruido, no
+  protección.
+- El condicional que sí existe, `noDisponibilidades` sobre `puede('operaciones')`, **también
+  es un no-op hoy**: los cuatro leen `operaciones`. Tenía sentido cuando `manager` entraba a
+  `/op`; el Bloque 4 lo volvió inofensivo. Se conserva porque es el patrón correcto, no
+  porque haga algo.
+- `VendedorService.init`, `OperacionService.cargarOperaciones` y
+  `AsignacionService.cargarFecha` **no son del arranque**: los llaman sus propios
+  componentes. La frase de CLAUDE.md "`init()` se llama desde HomeComponent al arrancar la
+  app" vale sólo para los seis catálogos, y se corrige en este bloque.
+
+**Lo que sí falta es que esa seguridad deje de ser una coincidencia.** El invariante de 4.5
+cubre lo que lee cada ruta y deja afuera, a propósito, lo que el arranque abre para todas.
+Así que el entregable del Bloque 7 es la verificación, no los condicionales: el conjunto de
+módulos del arranque se declara, y el mismo spec afirma que **todo rol que alguna ruta admite
+puede leer todo lo que el arranque abre**. El conjunto de roles no se escribe a mano: se
+deriva de los `roles` de las rutas, así que volver a admitir un rol en una ruta dispara
+también esta afirmación. Las dos quedan enganchadas.
 
 ### 2.3 `liquidacion`: se le retira el módulo a `user`
 

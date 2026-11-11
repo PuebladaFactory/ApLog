@@ -5,6 +5,7 @@ import { ConIdType } from 'src/app/interfaces/conId';
 import { CategoriaTarifa, MetadataAumento, Seccion, Tarifa } from 'src/app/interfaces/tarifa';
 import { TarifaFormData } from 'src/app/servicios/tarifario/tarifa-factory.service';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
+import { PermisosService } from 'src/app/servicios/permisos/permisos.service';
 
 type ModoAumento = 'unico' | 'segmentado' | 'manual';
 type TipoRedondeo = 'unidad' | 'decena' | 'centena' | 'miles';
@@ -32,12 +33,19 @@ export class TarifaAumentoComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private usuarioSesion: UsuarioSesionService,
+    private permisosService: PermisosService,
   ) {}
 
   ngOnInit(): void {
-    const usuario = this.usuarioSesion.getUsuarioActual();
-    this.puedeEditar = !!usuario && ['dev', 'admin'].includes(usuario.role);
-    this.esDev = usuario?.role === 'dev';
+    // Escritura de tarifas: una tarifa nueva es 'crear'; editar o aumentar
+    // crea la versión nueva y desactiva la anterior (update) en la misma
+    // transacción (TarifarioService.versionarEnTransaccion), así que el gesto
+    // necesita las dos acciones.
+    this.puedeEditar = this.permisosService.puede('tarifas', 'agregar') && this.permisosService.puede('tarifas', 'editar');
+    // Affordance de rol SIN contraparte en permisos: retrodatar vigenciaDesde
+    // (migración de datos) es la misma escritura de Firestore que cualquier
+    // otra y las reglas no pueden distinguirla. No migrar a PermisosService.
+    this.esDev = this.usuarioSesion.esRol('dev');
     this.construirForm();
   }
 
