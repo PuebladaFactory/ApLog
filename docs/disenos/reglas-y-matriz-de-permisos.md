@@ -479,6 +479,22 @@ corregido).
 **Bloque 8 — Tarifas.** Las 7 comparaciones de rol directas a `*appPermiso`. Independiente de
 los anteriores salvo el Bloque 1; puede ir en paralelo.
 
+**Bloque 11 — cierre documental del frente.** Agregado el 2026-11-10. El Bloque 0 corrigió
+lo que la documentación decía **falso antes** del frente; nadie había previsto que **cada
+bloque invalida documentación propia**. Pasó en el Bloque 4: el párrafo "Ruteo" de CLAUDE.md,
+reescrito en el Bloque 0 para decir "8 `canActivate`: las 5 hijas de Ajustes y las 3 rutas
+`alta`", quedó falso en el momento en que ese bloque retiró las tres `alta` y le agregó una a
+`cargarDoc`. Y la sección "Deuda abierta" arrastraba cinco entradas que los Bloques 1 a 4
+habían saldado o reducido sin que nadie las tocara.
+
+La corrección de proceso, aplicada desde el Bloque 4 en adelante: **la actualización de
+CLAUDE.md va en el commit del bloque que la causa**, no diferida. Lo que queda para este
+bloque de cierre es sólo lo que no se puede escribir antes de que el frente termine: el
+`asignaciones` de la sección "Security Rules" (depende del Bloque 5), el repaso final de la
+skill `botones-y-permisos` contra el estado post-frente, y la entrada del CHANGELOG si se
+decide que ese archivo sigue aportando (es una de sus dos preguntas abiertas y está fuera del
+alcance de este frente).
+
 **Bloque 9 — los dos casts de colección a `ModuloPermiso`.** Agregado el 2026-11-10 a partir
 del cuarto hallazgo de la sección 1. `VisualizadorObjetoService` ya tiene el mapa colección →
 handler con sus cuatro entradas (`clientes`, `choferes`, `proveedores`, `operaciones`), así

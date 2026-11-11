@@ -1,30 +1,70 @@
 /**
- * Script de verificación manual contra el emulador de Firestore + Auth.
- * NO es un test automatizado del proyecto — script de un solo uso para
- * confirmar el fix de firestore.rules: 'asignaciones' desacoplado de
- * 'operaciones', 'user' puede eliminar (limpiar borrador), 'demo' no
- * tiene ningún acceso a 'asignaciones'.
+ * Script de verificación contra el emulador de Firestore + Auth: la matriz
+ * completa del módulo 'asignaciones' de permitido() en firestore.rules,
+ * 4 acciones x 5 roles = 20 celdas.
  *
- * Cómo correrlo (con el emulador ya levantado en otra terminal):
- *   firebase emulators:start --only firestore,auth
- *   cd functions
- *   node test-asignaciones-rules.mjs
+ * Es la ÚNICA verificación de ese módulo. 'asignaciones' no está en
+ * src/app/servicios/permisos/matriz-esperada.json porque ningún ModuloPermiso
+ * lo alcanza, así que test-matriz-permisos-rules.mjs no lo cubre. Un cambio en
+ * la rama 'asignaciones' de permitido() se refleja acá, en ESPERADO.
  *
- * Setea el Custom Claim directo vía Admin SDK (sin pasar por
- * syncRoleClaim/functions) — alcanza porque permitido() en
- * firestore.rules lee request.auth.token.role, no el documento
- * Firestore de /users/{uid}.
+ * Matriz esperada (ESPERADO, más abajo):
+ *   - dev, admin, user: las cuatro acciones. 'asignaciones' está desacoplado de
+ *     'operaciones' (el tablero es un borrador descartable): 'user' limpia un
+ *     borrador aunque en 'operaciones' no tenga eliminar.
+ *   - demo: sólo leer (docs/disenos/reglas-y-matriz-de-permisos.md, 2.6): el
+ *     tablero de asignaciones es una pantalla de lectura para demo. Crear,
+ *     editar y eliminar siguen denegadas. Los dos overrides de PermisosService
+ *     que le niegan la descarga (operaciones.descargarTablero y
+ *     operaciones.descargarAsignaciones) se conservan a propósito.
+ *   - manager: ninguna.
+ *
+ * Cada acción es la operación real de Firestore: leer = get, crear = set sobre
+ * un id nuevo, editar = update sobre un doc sembrado, eliminar = delete sobre un
+ * doc sembrado (uno por rol, para que un delete permitido no le saque el doc al
+ * rol siguiente). Los docs que se leen, editan y eliminan los siembra el rol
+ * 'user' por el cliente, como en la app, y después se loguea el rol bajo prueba.
+ *
+ * Setup por rol: después de setear el Custom Claim se decodifica el ID token y
+ * se afirma que trae el `role` pedido; si no, aborta. Para un rol con todo
+ * denegado (hoy 'manager') es la única evidencia de que un rechazo significa
+ * "denegó la regla" y no "el rol no llegó al token": ninguna regla lo distingue
+ * de un token sin rol.
+ *
+ * Aislamiento: la corrida es válida sobre un emulador recién levantado y sobre
+ * uno con datos de corridas anteriores. Cada corrida usa un id propio
+ * (timestamp + 8 hex de un UUID) en todos sus documentos y usuarios, y antes de
+ * cada celda verifica con el Admin SDK (que no pasa por las reglas) la
+ * precondición: `crear` apunta a un documento que no existe (si existiera,
+ * Firestore lo evaluaría como update y la celda mediría la rama 'editar'), y
+ * `leer`/`editar`/`eliminar` a uno que esta corrida sembró. Si no se cumple,
+ * aborta. No limpia lo que dejaron otras corridas: nunca lo toca.
+ *
+ * Toda la salida va a stdout; el script no escribe archivos.
+ *
+ * Cómo correrlo, desde la raíz del repo (levanta el emulador de cero y lo
+ * apaga al terminar):
+ *   firebase emulators:exec --only firestore,auth --project demo "node functions/test-asignaciones-rules.mjs"
+ * O, con el emulador ya levantado en otra terminal
+ * (firebase emulators:start --only firestore,auth):
+ *   node functions/test-asignaciones-rules.mjs
+ *
+ * Setea el Custom Claim directo vía Admin SDK (sin pasar por syncRoleClaim):
+ * alcanza porque permitido() lee request.auth.token.role, no /users/{uid}.
  */
+
+import { randomUUID } from "node:crypto";
 
 import { initializeApp as initAdminApp } from "firebase-admin/app";
 import { getAuth as getAdminAuth } from "firebase-admin/auth";
+import { getFirestore as getAdminFirestore } from "firebase-admin/firestore";
 
 import { initializeApp as initClientApp } from "firebase/app";
 import {
   getAuth as getClientAuth,
   connectAuthEmulator,
   signInWithEmailAndPassword,
-  getIdTokenResult,
+  getIdToken,
 } from "firebase/auth";
 import {
   getFirestore as getClientFirestore,
@@ -32,6 +72,7 @@ import {
   doc,
   setDoc,
   getDoc,
+  updateDoc,
   deleteDoc,
 } from "firebase/firestore";
 
@@ -40,112 +81,148 @@ process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080";
 process.env.FIREBASE_AUTH_EMULATOR_HOST = "127.0.0.1:9099";
 process.env.GCLOUD_PROJECT = PROJECT_ID;
 
-let pass = 0;
-let fail = 0;
-function reportar(nombre, ok, detalle) {
-  if (ok) {
-    pass++;
-    console.log(`✅ PASS — ${nombre}${detalle ? " — " + detalle : ""}`);
-  } else {
-    fail++;
-    console.log(`❌ FAIL — ${nombre}${detalle ? " — " + detalle : ""}`);
+const ROLES = ["dev", "admin", "manager", "user", "demo"];
+const ACCIONES = ["leer", "crear", "editar", "eliminar"];
+const TODAS = { leer: true, crear: true, editar: true, eliminar: true };
+const NINGUNA = { leer: false, crear: false, editar: false, eliminar: false };
+
+// La rama 'asignaciones' de permitido(), escrita como matriz (ver el encabezado).
+const ESPERADO = {
+  dev: TODAS,
+  admin: TODAS,
+  user: TODAS,
+  manager: NINGUNA,
+  demo: { ...NINGUNA, leer: true },
+};
+const CELDAS = ROLES.length * ACCIONES.length;
+
+const ruta = (id) => `Vantruck/datos/asignaciones/${id}`;
+// Id de esta corrida: todo documento y todo usuario que el script toca lleva
+// este sufijo, así que ninguno puede venir de otra corrida (ver el encabezado).
+const sufijo = `${Date.now()}-${randomUUID().slice(0, 8)}`;
+const ids = (rol) => ({
+  leer: `leer-${sufijo}`,
+  crear: `nuevo-${rol}-${sufijo}`,
+  editar: `editar-${sufijo}`,
+  eliminar: `eliminar-${rol}-${sufijo}`,
+});
+
+// Garantía de aislamiento, verificada antes de cada celda con el Admin SDK:
+// `crear` apunta a un doc que NO existe; `leer`/`editar`/`eliminar` a uno que
+// existe porque esta corrida lo sembró. Si no se cumple, aborta.
+async function precondicion(adminDb, accion, path) {
+  const existe = (await adminDb.doc(path).get()).exists;
+  const debeExistir = accion !== "crear";
+  if (existe !== debeExistir) {
+    throw new Error(`Precondición rota para '${accion}' sobre ${path}: ` +
+      `${debeExistir ? "debía existir (sembrado por esta corrida) y no existe" : "no debía existir y existe"}.`);
   }
 }
 
-async function crearUsuarioConRol(adminAuth, role) {
-  const email = `test-${role}-${Date.now()}@example.com`;
-  const password = "Test1234!";
-  const userRecord = await adminAuth.createUser({ email, password });
-  await adminAuth.setCustomUserClaims(userRecord.uid, { role });
-  return { uid: userRecord.uid, email, password };
+const CLASES = { setup: "Setup por rol (role en el ID token)", celdas: "Celdas de 'asignaciones'" };
+const conteo = Object.fromEntries(Object.keys(CLASES).map((c) => [c, { pass: 0, fail: 0 }]));
+let claseActual = "celdas";
+function reportar(nombre, ok, detalle) {
+  conteo[claseActual][ok ? "pass" : "fail"]++;
+  if (ok) console.log(`✅ PASS — ${nombre}${detalle ? " — " + detalle : ""}`);
+  else console.log(`❌ FAIL — ${nombre}${detalle ? " — " + detalle : ""}`);
 }
 
-async function loguearComo(clientAuth, email, password) {
+// Payload del ID token decodificado a mano (base64url del JWT): lo que se
+// afirma es lo que viaja en el token.
+function claimsDelToken(idToken) {
+  const payload = idToken.split(".")[1];
+  return JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+}
+
+function afirmarRolEnToken(rolPedido, idToken) {
+  const llego = claimsDelToken(idToken).role;
+  const ok = llego === rolPedido;
+  claseActual = "setup";
+  reportar(`setup: el ID token trae role='${rolPedido}'`, ok, `llegó role=${JSON.stringify(llego)}`);
+  claseActual = "celdas";
+  if (!ok) {
+    throw new Error(`Setup inválido: se pidió role='${rolPedido}' y el ID token trae role=${JSON.stringify(llego)}. ` +
+      "Se aborta antes de afirmar celdas con un token que no tiene el rol.");
+  }
+}
+
+async function afirmar(nombre, esperado, fn) {
+  let permitido;
+  let code;
+  try { await fn(); permitido = true; }
+  catch (err) { permitido = false; code = err.code; }
+  const ok = esperado ? permitido : !permitido && code === "permission-denied";
+  reportar(`${nombre} → ${esperado ? "permitido" : "denegado"}`, ok,
+    permitido ? (esperado ? "" : "se permitió y no debía") : `code=${code}`);
+}
+
+async function crearUsuario(adminAuth, role) {
+  const email = `asignaciones-${role}-${sufijo}@example.com`;
+  const password = "Test1234!";
+  const u = await adminAuth.createUser({ email, password });
+  await adminAuth.setCustomUserClaims(u.uid, { role });
+  return { email, password };
+}
+
+// ID token crudo (JWT), con refresh forzado para que traiga el Custom Claim.
+async function loguearComo(clientAuth, { email, password }) {
   await signInWithEmailAndPassword(clientAuth, email, password);
-  await getIdTokenResult(clientAuth.currentUser, true); // forzar refresh del token
-  return getIdTokenResult(clientAuth.currentUser);
+  return getIdToken(clientAuth.currentUser, true);
 }
 
 async function main() {
   const adminApp = initAdminApp({ projectId: PROJECT_ID });
   const adminAuth = getAdminAuth(adminApp);
+  const adminDb = getAdminFirestore(adminApp);
 
   const clientApp = initClientApp({ apiKey: "fake-api-key", projectId: PROJECT_ID });
   const clientAuth = getClientAuth(clientApp);
   connectAuthEmulator(clientAuth, "http://127.0.0.1:9099", { disableWarnings: true });
-  const clientDb = getClientFirestore(clientApp);
-  connectFirestoreEmulator(clientDb, "127.0.0.1", 8080);
+  const db = getClientFirestore(clientApp);
+  connectFirestoreEmulator(db, "127.0.0.1", 8080);
 
-  // ---------- 'user': debe poder leer/crear/editar/eliminar en 'asignaciones' ----------
-  console.log("\n=== Rol 'user' ===");
-  const userCred = await crearUsuarioConRol(adminAuth, "user");
-  const tokenUser = await loguearComo(clientAuth, userCred.email, userCred.password);
-  console.log("role en el ID token:", tokenUser.claims.role);
+  const credenciales = {};
+  for (const rol of ROLES) credenciales[rol] = await crearUsuario(adminAuth, rol);
 
-  const docUser = doc(clientDb, "Vantruck/datos/asignaciones/testBorradorUser");
-  try {
-    await setDoc(docUser, { itemsBorrador: [], asignado: false });
-    reportar("'user' puede CREAR un borrador de asignaciones", true);
-  } catch (err) {
-    reportar("'user' puede CREAR un borrador de asignaciones", false, `code=${err.code}`);
+  // Siembra como 'user', por el cliente: lo que cada rol lee, edita y elimina.
+  // Si 'user' perdiera crear, la siembra falla acá y la corrida aborta.
+  console.log("\n=== Siembra (como 'user') ===");
+  afirmarRolEnToken("user", await loguearComo(clientAuth, credenciales.user));
+  await setDoc(doc(db, ruta(`leer-${sufijo}`)), { itemsBorrador: [], semilla: true });
+  await setDoc(doc(db, ruta(`editar-${sufijo}`)), { itemsBorrador: [], semilla: true });
+  for (const rol of ROLES) {
+    await setDoc(doc(db, ruta(`eliminar-${rol}-${sufijo}`)), { itemsBorrador: [], semilla: true });
   }
 
-  try {
-    await getDoc(docUser);
-    reportar("'user' puede LEER un borrador de asignaciones", true);
-  } catch (err) {
-    reportar("'user' puede LEER un borrador de asignaciones", false, `code=${err.code}`);
+  let celdas = 0;
+  for (const rol of ROLES) {
+    console.log(`\n=== Rol '${rol}' ===`);
+    afirmarRolEnToken(rol, await loguearComo(clientAuth, credenciales[rol]));
+    for (const accion of ACCIONES) {
+      celdas++;
+      const path = ruta(ids(rol)[accion]);
+      const ref = doc(db, path);
+      const operacion = {
+        leer: () => getDoc(ref),
+        crear: () => setDoc(ref, { itemsBorrador: [], creadoPor: rol }),
+        editar: () => updateDoc(ref, { editadoPor: rol }),
+        eliminar: () => deleteDoc(ref),
+      }[accion];
+      await precondicion(adminDb, accion, path);
+      await afirmar(`${rol} ${accion} asignaciones`, ESPERADO[rol][accion], operacion);
+    }
   }
 
-  try {
-    await deleteDoc(docUser);
-    reportar("'user' puede ELIMINAR (limpiar) un borrador de asignaciones — bug reportado", true);
-  } catch (err) {
-    reportar("'user' puede ELIMINAR (limpiar) un borrador de asignaciones — bug reportado", false, `code=${err.code}`);
+  console.log("\n=== Resumen por clase ===");
+  let fallas = 0;
+  for (const [clase, titulo] of Object.entries(CLASES)) {
+    const { pass, fail } = conteo[clase];
+    fallas += fail;
+    console.log(`${titulo}: ${pass} PASS / ${fail} FAIL`);
   }
-
-  // ---------- 'demo': no debe tener NINGÚN acceso a 'asignaciones' ----------
-  console.log("\n=== Rol 'demo' ===");
-  const demoCred = await crearUsuarioConRol(adminAuth, "demo");
-  const tokenDemo = await loguearComo(clientAuth, demoCred.email, demoCred.password);
-  console.log("role en el ID token:", tokenDemo.claims.role);
-
-  const docDemoTarget = doc(clientDb, "Vantruck/datos/asignaciones/testBorradorUser2");
-  // Sembrar un doc con el usuario 'user' primero para poder probar lectura como demo
-  await loguearComo(clientAuth, userCred.email, userCred.password);
-  await setDoc(doc(clientDb, "Vantruck/datos/asignaciones/testBorradorParaDemo"), { itemsBorrador: [] });
-  await loguearComo(clientAuth, demoCred.email, demoCred.password);
-
-  try {
-    await getDoc(doc(clientDb, "Vantruck/datos/asignaciones/testBorradorParaDemo"));
-    reportar("'demo' NO puede LEER asignaciones", false, "la lectura se permitió y no debía");
-  } catch (err) {
-    reportar("'demo' NO puede LEER asignaciones", err.code === "permission-denied", `code=${err.code}`);
-  }
-
-  try {
-    await setDoc(docDemoTarget, { itemsBorrador: [] });
-    reportar("'demo' NO puede CREAR en asignaciones", false, "la escritura se permitió y no debía");
-  } catch (err) {
-    reportar("'demo' NO puede CREAR en asignaciones", err.code === "permission-denied", `code=${err.code}`);
-  }
-
-  // ---------- 'admin': sin cambios, debe seguir teniendo las 4 acciones ----------
-  console.log("\n=== Rol 'admin' (control, sin cambios esperados) ===");
-  const adminCred = await crearUsuarioConRol(adminAuth, "admin");
-  await loguearComo(clientAuth, adminCred.email, adminCred.password);
-
-  const docAdmin = doc(clientDb, "Vantruck/datos/asignaciones/testBorradorAdmin");
-  try {
-    await setDoc(docAdmin, { itemsBorrador: [] });
-    await deleteDoc(docAdmin);
-    reportar("'admin' puede crear Y eliminar en asignaciones (sin cambios)", true);
-  } catch (err) {
-    reportar("'admin' puede crear Y eliminar en asignaciones (sin cambios)", false, `code=${err.code}`);
-  }
-
-  console.log(`\n=== Resultado: ${pass} PASS / ${fail} FAIL ===\n`);
-  process.exit(fail > 0 ? 1 : 0);
+  console.log(`(celdas recorridas: ${celdas} de ${CELDAS})\n`);
+  process.exit(fallas > 0 || celdas !== CELDAS ? 1 : 0);
 }
 
 main().catch((err) => {

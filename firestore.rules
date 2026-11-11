@@ -162,7 +162,8 @@ service cloud.firestore {
           (r == 'demo' && accion == 'leer')
         )) ||
         (modulo == 'asignaciones' && (
-          r in ['dev','admin','user']
+          r in ['dev','admin','user'] ||
+          (r == 'demo' && accion == 'leer')
         )) ||
         (modulo == 'tarifas' && (
           r in ['dev','admin'] || (r in ['user','demo'] && accion == 'leer')
